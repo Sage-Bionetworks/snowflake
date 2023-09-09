@@ -2,6 +2,11 @@
 
 This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations. The managed access of snowflake will be governed by [RBAC](https://medium.com/snowflake/managed-access-schema-framework-in-rbac-1b63341be418)
 
+## Connecting to Snowflake
+
+> [!IMPORTANT]
+> The Sage snowflake overlords see all, please make sure you are careful with your queries.  Always use `limit` when you are exploring tables!
+
 Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowflakecomputing.com
 
 1. Ask internally at Sage for snowflake access.  You are permitted to explore in the UI, but long standing views and tables should be created via PR and will be created via the SYSADMIN role by users that can assume the sysadmin privilege.
@@ -9,3 +14,6 @@ Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowf
 1. Follow the instructions in the vscode extension to connect to snowflake.  I recommend setting up your ~/.snowflake/config file.
 1. Look at examples in the analytics/exploration.sql to see how you can query the warehouse.
 
+## Contributing
+
+If there is a query you expect to run frequently, lets contribute it to the analytics folder!
