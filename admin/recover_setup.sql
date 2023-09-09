@@ -705,8 +705,108 @@ from '@recover_dev/main/parquet/dataset_healthkitv2samples'
 
 select * from healthkitv2samples limit 10;
 // dataset_healthkitv2statistics
+
+CREATE TABLE IF NOT EXISTS healthkitv2statistics
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_healthkitv2statistics'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into healthkitv2statistics
+from '@recover_dev/main/parquet/dataset_healthkitv2statistics'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from healthkitv2statistics limit 10;
 // dataset_healthkitv2workouts
+
+CREATE TABLE IF NOT EXISTS healthkitv2workouts
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_healthkitv2workouts'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into healthkitv2workouts
+from '@recover_dev/main/parquet/dataset_healthkitv2workouts'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from healthkitv2workouts limit 10;
 // dataset_healthkitv2workouts_events
+
+CREATE TABLE IF NOT EXISTS healthkitv2workouts_events
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_healthkitv2workouts_events'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into healthkitv2workouts_events
+from '@recover_dev/main/parquet/dataset_healthkitv2workouts_events'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from healthkitv2workouts_events limit 10;
 // dataset_symptomlog
+
+CREATE TABLE IF NOT EXISTS symptomlog
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_symptomlog'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into symptomlog
+from '@recover_dev/main/parquet/dataset_symptomlog'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from symptomlog limit 10;
 // dataset_symptomlog_value_symptoms
+CREATE TABLE IF NOT EXISTS symptomlog_value_symptoms
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_symptomlog_value_symptoms'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into symptomlog_value_symptoms
+from '@recover_dev/main/parquet/dataset_symptomlog_value_symptoms'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from symptomlog_value_symptoms limit 10;
 // dataset_symptomlog_value_treatments
+CREATE TABLE IF NOT EXISTS symptomlog_value_treatments
+  USING TEMPLATE (
+    SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
+      FROM TABLE(
+        INFER_SCHEMA(
+          LOCATION=>'@recover_dev/main/parquet/dataset_symptomlog_value_treatments'
+          , FILE_FORMAT=>'my_parquet'
+        )
+      ));
+
+COPY into symptomlog_value_treatments
+from '@recover_dev/main/parquet/dataset_symptomlog_value_treatments'
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+select * from symptomlog_value_treatments limit 10;
