@@ -139,7 +139,6 @@ create TABLE NODESNAPSHOTS (
 	snapshot_date DATE
 );
 
-
 LIST @nodesnapshots_raw;
 
 copy into NODESNAPSHOTS from (
@@ -238,7 +237,6 @@ copy into verificationsubmissionsnapshots from (
 // Will need to convert these to external stages for scheduled copying
 CREATE STAGE teammembersnapshots
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-
 CREATE TABLE teammembersnapshots (
 	snapshot_timestamp TIMESTAMP,
     change_timestamp TIMESTAMP,
@@ -269,11 +267,9 @@ copy into teammembersnapshots from (
 GRANT SELECT ON TABLE teammembersnapshots TO ROLE PUBLIC;
 
 DROP STAGE teammembersnapshots;
-
 // file upload records
 CREATE STAGE fileupload
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-
 CREATE TABLE fileupload (
 	timestamp TIMESTAMP,
     user_id NUMBER,
@@ -306,7 +302,6 @@ copy into fileupload from (
    from @fileupload/)
    pattern='.*record_date=.*/.*'
 ;
-
 select * from fileupload limit 5;
 DROP STAGE fileupload;
 GRANT SELECT ON TABLE fileupload TO ROLE PUBLIC;
@@ -314,7 +309,6 @@ GRANT SELECT ON TABLE fileupload TO ROLE PUBLIC;
 //file snapshots
 CREATE STAGE filesnapshots
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-
 CREATE TABLE filesnapshots (
 	change_type STRING,
     change_timestamp TIMESTAMP,
@@ -384,7 +378,7 @@ CREATE TABLE processedaccess (
     user_agent STRING,
     host STRING,
     origin STRING,
-	x_forwarded_for STRING,
+	  x_forwarded_for STRING,
     via STRING,
     thread_id NUMBER,
     elapse_ms NUMBER,
@@ -446,12 +440,6 @@ copy into processedaccess from (
 ;
 GRANT SELECT ON TABLE processedaccess TO ROLE PUBLIC;
 
-// DROP STAGE filesnapshots;
-// LIST @processedaccess;
-// DROP STAGE processedaccess;
-
-// select * from processedaccess order by record_date desc limit 10;
-
 /// Create views
 
 // Use a window function to get the latest user profile snapshot and create a table
@@ -487,9 +475,11 @@ CREATE TABLE synapse_data_warehouse.synapse.certified_question_information (
     type STRING,
     question_text STRING
 );
+// Loaded the table manually...
 use role securityadmin;
 GRANT SELECT ON TABLE synapse_data_warehouse.synapse.certified_question_information TO ROLE PUBLIC;
 
+// Create certified quiz question latest
 CREATE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
     where INSTANCE =
@@ -498,6 +488,7 @@ CREATE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
 USE ROLE securityadmin;
 GRANT SELECT ON VIEW synapse_data_warehouse.synapse.certifiedquizquestion_latest TO ROLE PUBLIC;
 
+// Create certified quiz latest
 CREATE TABLE synapse_data_warehouse.synapse.certifiedquiz_latest AS
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
     where INSTANCE =
