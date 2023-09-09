@@ -455,8 +455,8 @@ GRANT SELECT ON TABLE processedaccess TO ROLE PUBLIC;
 /// Create views
 
 // Use a window function to get the latest user profile snapshot and create a table
-
-CREATE VIEW synapse_data_warehouse.synapse.userprofilesnapshot as WITH
+use ROLE SYSADMIN;
+CREATE VIEW synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
    SELECT
      s.*
@@ -468,10 +468,11 @@ CREATE VIEW synapse_data_warehouse.synapse.userprofilesnapshot as WITH
 SELECT *
 FROM
   RANKED_NODES where n = 1;
-GRANT SELECT ON VIEW synapse_data_warehouse.synapse.userprofilesnapshot TO ROLE PUBLIC;
 
+USE ROLE securityadmin;
+GRANT SELECT ON VIEW synapse_data_warehouse.synapse.userprofile_latest TO ROLE PUBLIC;
 
-
+USE ROLE SYSADMIN;
 CREATE TABLE synapse_data_warehouse.synapse.certified_question_information (
     question_index NUMBER,
     question_group_number NUMBER,
@@ -489,4 +490,15 @@ CREATE TABLE synapse_data_warehouse.synapse.certified_question_information (
 use role securityadmin;
 GRANT SELECT ON TABLE synapse_data_warehouse.synapse.certified_question_information TO ROLE PUBLIC;
 
-  
+CREATE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
+    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
+    where INSTANCE =
+    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
+
+USE ROLE securityadmin;
+GRANT SELECT ON VIEW synapse_data_warehouse.synapse.certifiedquizquestion_latest TO ROLE PUBLIC;
+
+CREATE TABLE synapse_data_warehouse.synapse.certifiedquiz_latest AS
+    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
+    where INSTANCE =
+    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
