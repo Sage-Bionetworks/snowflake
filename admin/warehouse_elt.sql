@@ -11,10 +11,10 @@ GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE P
 GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
 
 // User profile snapshot
-CREATE STAGE userprofilesnapshot
+CREATE STAGE IF NOT EXISTS userprofilesnapshot
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
-create table userprofilesnapshot (
+create table IF NOT EXISTS userprofilesnapshot (
     change_timestamp TIMESTAMP,
     snapshot_timestamp TIMESTAMP,
     id NUMBER,
@@ -52,8 +52,7 @@ copy into userprofilesnapshot from (
 ;
 
 // create certified quiz
-
-create table certifiedquiz (
+create table IF NOT EXISTS certifiedquiz (
     response_id NUMBER,
     user_id NUMBER,
     passed BOOLEAN,
@@ -63,7 +62,7 @@ create table certifiedquiz (
     record_date DATE
 );
 
-create table certifiedquizquestion (
+create table IF NOT EXISTS certifiedquizquestion (
     response_id NUMBER,
     question_index NUMBER,
     is_correct BOOLEAN,
@@ -85,32 +84,31 @@ create table filedownload (
     record_date DATE
 );
 
-create table aclsnapshots (
-    change_timestamp TIMESTAMP,
-    change_type STRING,
-    snapshot_timestamp TIMESTAMP,
-    owner_id NUMBER,
-    owner_type STRING,
-    created_on TIMESTAMP,
-    resource_access STRING,
-    snapshot_date DATE
+create table IF NOT EXISTS aclsnapshots (
+  change_timestamp TIMESTAMP,
+  change_type STRING,
+  snapshot_timestamp TIMESTAMP,
+  owner_id NUMBER,
+  owner_type STRING,
+  created_on TIMESTAMP,
+  resource_access STRING,
+  snapshot_date DATE
 );
 
-
-create table team_snapshots (
-    change_timestamp TIMESTAMP,
-    snapshot_timestamp TIMESTAMP,
-    id NUMBER,
-    name STRING,
-    can_public_join BOOLEAN,
-    created_on TIMESTAMP,
-    created_by NUMBER,
-    modified_on TIMESTAMP,
-    modified_by NUMBER,
-    snapshot_date DATE
+create table IF NOT EXISTS team_snapshots (
+  change_timestamp TIMESTAMP,
+  snapshot_timestamp TIMESTAMP,
+  id NUMBER,
+  name STRING,
+  can_public_join BOOLEAN,
+  created_on TIMESTAMP,
+  created_by NUMBER,
+  modified_on TIMESTAMP,
+  modified_by NUMBER,
+  snapshot_date DATE
 );
 
-create TABLE usergroupsnapshots (
+create TABLE IF NOT EXISTS usergroupsnapshots (
 	CHANGE_TIMESTAMP TIMESTAMP,
 	SNAPSHOT_TIMESTAMP TIMESTAMP,
 	ID NUMBER,
@@ -121,7 +119,7 @@ create TABLE usergroupsnapshots (
 
 // node snapshots
 CREATE STAGE nodesnapshots_raw
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
 create TABLE NODESNAPSHOTS (
 	change_type STRING,
@@ -190,15 +188,15 @@ create TABLE verificationsubmissionsnapshots (
 	snapshot_timestamp TIMESTAMP,
 	created_on TIMESTAMP,
 	created_by NUMBER,
-    state_history STRING,
-    change_timestamp TIMESTAMP,
-    change_type STRING,
-    id NUMBER,
+  state_history STRING,
+  change_timestamp TIMESTAMP,
+  change_type STRING,
+  id NUMBER,
 	snapshot_date DATE
 );
 
 CREATE STAGE verificationsubmissionsnapshots
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
 // This was the original way i did it, but..
 // There is a simplier way
@@ -243,13 +241,13 @@ copy into verificationsubmissionsnapshots from (
 // These are internal stages, that need to be dropped
 // Will need to convert these to external stages for scheduled copying
 CREATE STAGE IF NOT EXISTS teammembersnapshots
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS teammembersnapshots (
 	snapshot_timestamp TIMESTAMP,
-    change_timestamp TIMESTAMP,
-    team_id NUMBER,
-    member_id NUMBER,
-    is_admin BOOLEAN,
+  change_timestamp TIMESTAMP,
+  team_id NUMBER,
+  member_id NUMBER,
+  is_admin BOOLEAN,
 	snapshot_date DATE
 );
 
@@ -275,16 +273,16 @@ copy into teammembersnapshots from (
 DROP STAGE teammembersnapshots;
 // file upload records
 CREATE STAGE IF NOT EXISTS fileupload
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS fileupload (
 	timestamp TIMESTAMP,
-    user_id NUMBER,
-    project_id NUMBER,
-    file_handle_id NUMBER,
-    association_object_id NUMBER,
-    association_object_type STRING,
-    stack STRING,
-    instance STRING,
+  user_id NUMBER,
+  project_id NUMBER,
+  file_handle_id NUMBER,
+  association_object_id NUMBER,
+  association_object_type STRING,
+  stack STRING,
+  instance STRING,
 	record_date DATE
 );
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
@@ -308,32 +306,31 @@ copy into fileupload from (
    from @fileupload/)
    pattern='.*record_date=.*/.*'
 ;
-select * from fileupload limit 5;
 DROP STAGE fileupload;
 //file snapshots
 CREATE STAGE IF NOT EXISTS filesnapshots
   file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS filesnapshots (
 	change_type STRING,
-    change_timestamp TIMESTAMP,
-    change_user_id NUMBER,
-    snapshot_timestamp TIMESTAMP,
-    id NUMBER,
-    created_by NUMBER,
-    created_on TIMESTAMP,
-    modified_on TIMESTAMP,
+  change_timestamp TIMESTAMP,
+  change_user_id NUMBER,
+  snapshot_timestamp TIMESTAMP,
+  id NUMBER,
+  created_by NUMBER,
+  created_on TIMESTAMP,
+  modified_on TIMESTAMP,
 	concrete_type STRING,
-    content_md5 STRING,
-    content_type STRING,
-    file_name STRING,
-    storage_location_id NUMBER,
-    content_size NUMBER,
-    bucket STRING,
-    key STRING,
-    preview_id NUMBER,
-    is_preview BOOLEAN,
-    status STRING,
-    snapshot_date DATE
+  content_md5 STRING,
+  content_type STRING,
+  file_name STRING,
+  storage_location_id NUMBER,
+  content_size NUMBER,
+  bucket STRING,
+  key STRING,
+  preview_id NUMBER,
+  is_preview BOOLEAN,
+  status STRING,
+  snapshot_date DATE
 );
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into filesnapshots from (
@@ -443,19 +440,21 @@ copy into processedaccess from (
 ;
 
 // Use a window function to get the latest user profile snapshot and create a table
-use ROLE SYSADMIN;
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as WITH
+CREATE TABLE synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
    SELECT
      s.*
    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM
      synapse_data_warehouse.synapse_raw.userprofilesnapshot s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '14 DAYS')
+   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
 ) 
 SELECT *
 FROM
   RANKED_NODES where n = 1;
+
+select count(*)
+from synapse_data_warehouse.synapse.userprofile_latest;
 
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
     question_index NUMBER,
@@ -484,3 +483,31 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest A
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
     where INSTANCE =
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
+
+
+// Create View of user profile and cert join
+CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
+  with user_cert_joined as (
+    select *
+    from synapse_data_warehouse.synapse.userprofile_latest user
+    LEFT JOIN (
+      select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
+    ) cert
+    ON user.ID = cert.USER_ID
+  )
+  select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
+  from user_cert_joined
+;
+//110486
+select count(*)
+from synapse_data_warehouse.synapse.user_certified
+where PASSED is null;
+
+select PASSED, count(*)
+from synapse_data_warehouse.synapse.user_certified
+group by PASSED;
+
+// This doesn't have me...
+select *
+from synapse_data_warehouse.synapse_raw.certifiedquiz
+where USER_ID = 3324230;
