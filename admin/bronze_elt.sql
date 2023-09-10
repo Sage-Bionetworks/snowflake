@@ -439,23 +439,6 @@ copy into processedaccess from (
    pattern='.*record_date=.*/.*'
 ;
 
-// Use a window function to get the latest user profile snapshot and create a table
-CREATE TABLE synapse_data_warehouse.synapse.userprofile_latest as WITH
-  RANKED_NODES AS (
-   SELECT
-     s.*
-   , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM
-     synapse_data_warehouse.synapse_raw.userprofilesnapshot s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
-) 
-SELECT *
-FROM
-  RANKED_NODES where n = 1;
-
-select count(*)
-from synapse_data_warehouse.synapse.userprofile_latest;
-
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
     question_index NUMBER,
     question_group_number NUMBER,
@@ -498,16 +481,4 @@ CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
   select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
   from user_cert_joined
 ;
-//110486
-select count(*)
-from synapse_data_warehouse.synapse.user_certified
-where PASSED is null;
 
-select PASSED, count(*)
-from synapse_data_warehouse.synapse.user_certified
-group by PASSED;
-
-// This doesn't have me...
-select *
-from synapse_data_warehouse.synapse_raw.certifiedquiz
-where USER_ID = 3324230;

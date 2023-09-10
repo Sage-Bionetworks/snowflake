@@ -47,3 +47,17 @@ from no_dups;
 select distinct USER_AGENT
 from processedaccess
 where request_url like '%/table/sql/transform' ;
+
+//110486
+select count(*)
+from synapse_data_warehouse.synapse.user_certified
+where PASSED is null;
+
+select PASSED, count(*)
+from synapse_data_warehouse.synapse.user_certified
+group by PASSED;
+
+// This doesn't have me...
+select *
+from synapse_data_warehouse.synapse_raw.certifiedquiz
+where USER_ID = 3324230;
