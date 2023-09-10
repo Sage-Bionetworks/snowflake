@@ -33,7 +33,6 @@ CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
   from user_cert_joined
 ;
 
-
 // Use a window function to get the latest user profile snapshot and create a table
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
@@ -48,5 +47,31 @@ SELECT *
 FROM
   RANKED_NODES where n = 1;
 
-select count(*)
-from synapse_data_warehouse.synapse.userprofile_latest;
+SELECT *
+FROM synapse_data_warehouse.synapse_raw.teamsnapshots
+LIMIT 10;
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as WITH
+  RANKED_NODES AS (
+   SELECT
+     s.*
+   , "row_number"() OVER (PARTITION BY s.member_id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
+   FROM
+     synapse_data_warehouse.synapse_raw.teammembersnapshots s
+   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+)
+SELECT *
+FROM
+  RANKED_NODES where n = 1;
+
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.team_latest as WITH
+  RANKED_NODES AS (
+   SELECT
+     s.*
+   , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
+   FROM
+     synapse_data_warehouse.synapse_raw.teamsnapshots s
+   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+)
+SELECT *
+FROM
+  RANKED_NODES where n = 1;
