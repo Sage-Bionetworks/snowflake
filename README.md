@@ -17,3 +17,19 @@ Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowf
 ## Contributing
 
 If there is a query you expect to run frequently, lets contribute it to the analytics folder!
+
+
+## Administration
+
+### User/Role Management
+Users and roles are to be created by the `useradmin`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
+
+```
+CREATE USER flastname
+    PASSWORD = 'generate_one',
+    LOGIN_NAME = 'flastname',
+    EMAIL = '...@sagebase.org',
+    MUST_CHANGE_PASSWORD = TRUE,
+    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
+    DEFAULT_ROLE = 'PUBLIC';
+```
