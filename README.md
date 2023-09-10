@@ -26,9 +26,9 @@ This is just a test, but I am going to attempt to follow the [medallion data arc
 
 ```mermaid
 graph TD;
-    Bronze: AWS Glue-->Silver;
-    Silver: Snowflake-->Gold;
-    Gold: Snowflake;
+    Bronze-->Silver;
+    Silver-->Gold;
+    Gold;
 ```
 
 ### User/Role Management
