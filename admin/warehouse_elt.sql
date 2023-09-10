@@ -3,6 +3,13 @@ use database synapse_data_warehouse;
 use schema synapse_raw;
 -- supported types: https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
 
+use role securityadmin;
+// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
+
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
+
 // User profile snapshot
 CREATE STAGE userprofilesnapshot
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
@@ -235,9 +242,9 @@ copy into verificationsubmissionsnapshots from (
 // Create teammember snapshot
 // These are internal stages, that need to be dropped
 // Will need to convert these to external stages for scheduled copying
-CREATE STAGE teammembersnapshots
+CREATE STAGE IF NOT EXISTS teammembersnapshots
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-CREATE TABLE teammembersnapshots (
+CREATE TABLE IF NOT EXISTS teammembersnapshots (
 	snapshot_timestamp TIMESTAMP,
     change_timestamp TIMESTAMP,
     team_id NUMBER,
@@ -264,13 +271,12 @@ copy into teammembersnapshots from (
    from @teammembersnapshots/)
    pattern='.*snapshot_date=.*/.*'
 ;
-GRANT SELECT ON TABLE teammembersnapshots TO ROLE PUBLIC;
 
 DROP STAGE teammembersnapshots;
 // file upload records
-CREATE STAGE fileupload
+CREATE STAGE IF NOT EXISTS fileupload
 file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-CREATE TABLE fileupload (
+CREATE TABLE IF NOT EXISTS fileupload (
 	timestamp TIMESTAMP,
     user_id NUMBER,
     project_id NUMBER,
@@ -304,12 +310,10 @@ copy into fileupload from (
 ;
 select * from fileupload limit 5;
 DROP STAGE fileupload;
-GRANT SELECT ON TABLE fileupload TO ROLE PUBLIC;
-
 //file snapshots
-CREATE STAGE filesnapshots
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
-CREATE TABLE filesnapshots (
+CREATE STAGE IF NOT EXISTS filesnapshots
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+CREATE TABLE IF NOT EXISTS filesnapshots (
 	change_type STRING,
     change_timestamp TIMESTAMP,
     change_user_id NUMBER,
@@ -363,13 +367,12 @@ copy into filesnapshots from (
    from @filesnapshots/)
    pattern='.*snapshot_date=.*/.*'
 ;
-GRANT SELECT ON TABLE filesnapshots TO ROLE PUBLIC;
 
 // processed access records
-CREATE STAGE processedaccess
-file_format = (TYPE = PARQUET COMPRESSION = AUTO);
+CREATE STAGE IF NOT EXISTS processedaccess
+  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
-CREATE TABLE processedaccess (
+CREATE TABLE IF NOT EXISTS processedaccess (
 	session_id STRING,
     timestamp TIMESTAMP,
     user_id NUMBER,
@@ -438,13 +441,10 @@ copy into processedaccess from (
    from @processedaccess/)
    pattern='.*record_date=.*/.*'
 ;
-GRANT SELECT ON TABLE processedaccess TO ROLE PUBLIC;
-
-/// Create views
 
 // Use a window function to get the latest user profile snapshot and create a table
 use ROLE SYSADMIN;
-CREATE VIEW synapse_data_warehouse.synapse.userprofile_latest as WITH
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
    SELECT
      s.*
@@ -457,11 +457,7 @@ SELECT *
 FROM
   RANKED_NODES where n = 1;
 
-USE ROLE securityadmin;
-GRANT SELECT ON VIEW synapse_data_warehouse.synapse.userprofile_latest TO ROLE PUBLIC;
-
-USE ROLE SYSADMIN;
-CREATE TABLE synapse_data_warehouse.synapse.certified_question_information (
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
     question_index NUMBER,
     question_group_number NUMBER,
     version STRING,
@@ -476,20 +472,15 @@ CREATE TABLE synapse_data_warehouse.synapse.certified_question_information (
     question_text STRING
 );
 // Loaded the table manually...
-use role securityadmin;
-GRANT SELECT ON TABLE synapse_data_warehouse.synapse.certified_question_information TO ROLE PUBLIC;
 
 // Create certified quiz question latest
-CREATE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
     where INSTANCE =
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
 
-USE ROLE securityadmin;
-GRANT SELECT ON VIEW synapse_data_warehouse.synapse.certifiedquizquestion_latest TO ROLE PUBLIC;
-
 // Create certified quiz latest
-CREATE TABLE synapse_data_warehouse.synapse.certifiedquiz_latest AS
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
     where INSTANCE =
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
