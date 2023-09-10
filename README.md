@@ -21,16 +21,6 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 ## Administration
 
-### Data Architecture
-This is just a test, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
-
-```mermaid
-graph TD;
-    A[Bronze - Raw JSON in S3]-->B[Silver - AWS Glue to Parquet in S3];
-    B-->C[Silver - Parquet in S3 to Snowflake];
-    C-->D[Gold - Snowflake to BI tools];
-```
-
 ### User/Role Management
 Users and roles are to be created by the `useradmin`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
 
@@ -43,3 +33,20 @@ CREATE USER flastname
     DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
     DEFAULT_ROLE = 'PUBLIC';
 ```
+
+## Data Architecture
+
+### Synapse Data Warehouse
+
+This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
+
+```mermaid
+graph TD;
+    A[Bronze - Raw JSON in S3]-->B[Silver - AWS Glue to Parquet in S3];
+    B-->C[Silver - Parquet in S3 to Snowflake];
+    C-->D[Gold - Snowflake to BI tools];
+```
+
+## RECOVER (POC)
+
+The RECOVER data is processed via AWS and is compressed to parquet datasets.  The parquet datasets are then ingested into snowflake for easy querying and validation.
