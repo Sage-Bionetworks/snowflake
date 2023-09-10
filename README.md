@@ -21,6 +21,16 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 ## Administration
 
+### Data Architecture
+This is just a test, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). 
+
+```mermaid
+graph TD;
+    Bronze (S3 -> AWS GLUE -> parquet)-->Silver;
+    Silver (Parquet -> Snowflake)-->Gold;
+    Gold (Snowflake -> Tableau);
+```
+
 ### User/Role Management
 Users and roles are to be created by the `useradmin`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
 
