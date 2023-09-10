@@ -21,8 +21,10 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 ## Administration
 
+For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview.
+
 ### User/Role Management
-Users and roles are to be created by the `useradmin`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
+Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
 
 ```
 CREATE USER flastname
@@ -33,6 +35,11 @@ CREATE USER flastname
     DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
     DEFAULT_ROLE = 'PUBLIC';
 ```
+
+### Warehouses/databases
+
+Warehouse and databases _must be_ created by the `SYSADMIN` role. Different roles can be created for different projects so that certain users have permissions to create schemas and tables under this role. That said, currently it's easiest to have the `SYSADMIN` role also create many of the schemas and tables to ensure the correct security policies are set.
+
 
 ## Data Architecture
 
