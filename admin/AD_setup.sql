@@ -25,3 +25,23 @@ create table test_me (
     );
 drop table test_me;
 
+use role ad_team;
+COPY INTO "SAGE_TEST"."AD_TEAM"."DIVERSE_COHORTS_FILEVIEW"
+FROM '@"SAGE_TEST"."AD_TEAM"."%DIVERSE_COHORTS_FILEVIEW"/__snowflake_temp_import_files__/'
+FILES = ('Job-301735543709776341820576351.csv')
+FILE_FORMAT = (
+    TYPE=CSV,
+    SKIP_HEADER=1,
+    FIELD_DELIMITER=',',
+    TRIM_SPACE=FALSE,
+    FIELD_OPTIONALLY_ENCLOSED_BY='"',
+    DATE_FORMAT=AUTO,
+    TIME_FORMAT=AUTO,
+    TIMESTAMP_FORMAT=AUTO
+)
+ON_ERROR=ABORT_STATEMENT
+PURGE=TRUE;
+
+SELECT *
+FROM sage_test.ad_team.diverse_cohorts_fileview
+limit 10;
