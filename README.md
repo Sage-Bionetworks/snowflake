@@ -22,12 +22,13 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 ## Administration
 
 ### Data Architecture
-This is just a test, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). 
+This is just a test, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
 
 ```mermaid
 graph TD;
-    A[S3: JSON - Bronze]-->B[AWS Glue];
-    B-->C[S3: Parquet];
+    A[Bronze - Raw JSON in S3]-->B[Silver - AWS Glue to Parquet in S3];
+    B-->C[Silver - Parquet in S3 to Snowflake];
+    C-->D[Gold - Snowflake to BI tools];
 ```
 
 ### User/Role Management
