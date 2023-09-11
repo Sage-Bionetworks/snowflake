@@ -47,9 +47,6 @@ SELECT *
 FROM
   RANKED_NODES where n = 1;
 
-SELECT *
-FROM synapse_data_warehouse.synapse_raw.teamsnapshots
-LIMIT 10;
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as WITH
   RANKED_NODES AS (
    SELECT
@@ -57,7 +54,6 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as W
    , "row_number"() OVER (PARTITION BY s.member_id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM
      synapse_data_warehouse.synapse_raw.teammembersnapshots s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
 )
 SELECT *
 FROM
@@ -70,7 +66,6 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.team_latest as WITH
    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM
      synapse_data_warehouse.synapse_raw.teamsnapshots s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
 )
 SELECT *
 FROM
