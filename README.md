@@ -41,9 +41,9 @@ CREATE USER flastname
 Warehouse and databases _must be_ created by the `SYSADMIN` role. Different roles can be created for different projects so that certain users have permissions to create schemas and tables under this role. That said, currently it's easiest to have the `SYSADMIN` role also create many of the schemas and tables to ensure the correct security policies are set.
 
 
-## Data Architecture
+## Synapse Data Warehouse (PoC)
 
-### Synapse Data Warehouse
+### Data Architecture
 
 This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
 
@@ -58,6 +58,6 @@ graph TD;
 
 The RECOVER data is processed via AWS and is compressed to parquet datasets.  The parquet datasets are then ingested into snowflake for easy querying and validation.
 
-## GENIE (POC)
+## GENIE (PoC)
 
 The GENIE public releases are loaded into snowflake via this [script](admin/genie_elt.py).  You must have a snowflake connection section, please copy and fill out this [template](.env_template) with your username and password.
