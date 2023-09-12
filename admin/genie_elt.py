@@ -2,6 +2,7 @@
 import os
 
 from dotenv import dotenv_values
+import pandas as pd
 from snowflake.snowpark import Session
 import synapseclient
 
@@ -101,13 +102,15 @@ def main():
 
         for release_file_key, release_file_ent in release_file_map.items():
             tbl_name = release_file_key.replace("data_", "").replace(".txt", "")
+            temp = pd.read_csv(release_file_ent.path, sep="\t", comment="#")
+            temp.to_csv(release_file_ent.path + ".tsv", sep="\t", index=False)
             create_table(
                 snow_sesh=session,
                 database="GENIE",
                 schema=f"public_{release_name}",
                 table=tbl_name,
                 stage="RELEASE_FILES",
-                filepath=release_file_ent.path
+                filepath=release_file_ent.path + ".tsv"
             )
 
 
