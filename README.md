@@ -54,7 +54,7 @@ graph TD;
     C-->D[Gold - Snowflake];
 ```
 
-## RECOVER (POC)
+## RECOVER (PoC)
 
 The RECOVER data is processed via AWS and is compressed to parquet datasets.  The parquet datasets are then ingested into snowflake for easy querying and validation.
 
