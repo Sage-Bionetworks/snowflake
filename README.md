@@ -49,11 +49,15 @@ This is just prototype, but I am going to attempt to follow the [medallion data 
 
 ```mermaid
 graph TD;
-    A[Bronze - Raw JSON in S3]-->B[Silver - AWS Glue to Parquet in S3];
-    B-->C[Silver - Parquet in S3 to Snowflake];
-    C-->D[Gold - Snowflake to BI tools];
+    A[Bronze - Raw JSON in S3]-->B[Silver - Raw JSON ETL Parquet in S3];
+    B-->C[Silver - Parquet in S3 ELT Snowflake];
+    C-->D[Gold - Snowflake];
 ```
 
 ## RECOVER (POC)
 
 The RECOVER data is processed via AWS and is compressed to parquet datasets.  The parquet datasets are then ingested into snowflake for easy querying and validation.
+
+## GENIE (POC)
+
+The GENIE public releases are loaded into snowflake via this [script](admin/genie_elt.py).  You must have a snowflake connection section, please copy and fill out this [template](.env_template) with your username and password.
