@@ -93,33 +93,3 @@ for release in releases:
                      table=tbl_name,
                      stage="RELEASE_FILES",
                      filepath=release_file_ent.path)
-
-
-#     session.sql(
-#         'CREATE TABLE IF NOT EXISTS "sample" ('
-#         "PATIENT_ID STRING,"
-#         "SAMPLE_ID STRING,"
-#         "AGE_AT_SEQ_REPORT STRING,"
-#         "ONCOTREE_CODE STRING,"
-#         "SAMPLE_TYPE STRING,"
-#         "SEQ_ASSAY_ID STRING,"
-#         "CANCER_TYPE STRING,"
-#         "CANCER_TYPE_DETAILED STRING,"
-#         "SAMPLE_TYPE_DETAILED STRING)"
-#     ).collect()
-#     session.sql(
-#         'CREATE TABLE IF NOT EXISTS "patient" ('
-#         "PATIENT_ID STRING,"
-#         "SEX STRING,"
-#         "PRIMARY_RACE STRING,"
-#         "ETHNICITY STRING,"
-#         "CENTER STRING,"
-#         "INT_CONTACT STRING,"
-#         "INT_DOD STRING,"
-#         "YEAR_CONTACT STRING,"
-#         "DEAD STRING,"
-#         "YEAR_DEATH STRING)"
-#     ).collect()
-
-
-# session.read.options({"field_delimiter": ",", "skip_header": 1}).schema(user_schema).csv("@mystage/testCSV.csv")
