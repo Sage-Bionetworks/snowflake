@@ -54,3 +54,7 @@ group by name;
 --     on genie_mem.team_id = team_latest.id
 -- )
 -- select name, count(*) from test group by name;
+
+
+USE ROLE SYSADMIN;
+USE DATABASE GENIE;
