@@ -30,8 +30,6 @@ CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 
-
-
 use role securityadmin;
 GRANT ROLE genie_admin
 TO USER "alex.paynter@sagebase.org";
@@ -56,7 +54,6 @@ GRANT ROLE recover_admin
 TO USER "rixing.xu@sagebase.org";
 GRANT ROLE recover_admin
 TO USER thomasyu888;
-
 GRANT USAGE ON WAREHOUSE recover_xsmall
 TO ROLE recover_admin;
 
