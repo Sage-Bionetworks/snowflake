@@ -14,6 +14,9 @@ GRANT APPLY MASKING POLICY on ACCOUNT
 to ROLE masking_admin;
 GRANT ROLE masking_admin
 TO USER thomasyu888;
+
+GRANT ROLE masking_admin
+TO USER "thomas.yu@sagebase.org";
 use role masking_admin;
 CREATE OR REPLACE MASKING POLICY email_mask AS (val string) returns string ->
   CASE
@@ -21,10 +24,14 @@ CREATE OR REPLACE MASKING POLICY email_mask AS (val string) returns string ->
     ELSE regexp_replace(val,'.+\@','*****@') -- leave email domain unmasked
   END;
 
-ALTER TABLE IF EXISTS synapse_data_warehouse.synapse.userprofile_latest
+use database synapse_data_warehouse;
+use schema synapse;
+ALTER TABLE IF EXISTS userprofile_latest
 MODIFY COLUMN email
 SET MASKING POLICY email_mask;
 
-ALTER TABLE IF EXISTS synapse_data_warehouse.synapse_raw.userprofilesnapshot_raw
+use database synapse_data_warehouse;
+use schema synapse_raw;
+ALTER TABLE IF EXISTS userprofilesnapshot_raw
 MODIFY COLUMN email
 SET MASKING POLICY email_mask;
