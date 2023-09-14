@@ -1,94 +1,55 @@
+// SAML integration
+use role accountadmin;
+create security integration IF NOT EXISTS GOOGLE_SSO
+    type = saml2
+    enabled = true
+    saml2_issuer = ''
+    saml2_sso_url = ''
+    saml2_provider = 'custom'
+    saml2_x509_cert=''
+    saml2_sp_initiated_login_page_label = 'GOOGLE_SSO'
+    saml2_enable_sp_initiated = true
+    SAML2_SNOWFLAKE_ACS_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com/fed/login'
+    SAML2_SNOWFLAKE_ISSUER_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com';
 
-use role useradmin;
+DESC security integration GOOGLE_SSO;
+ALTER security integration GOOGLE_SSO set SAML2_SIGN_REQUEST = true;
 
-CREATE USER avlinden
-    PASSWORD = '',
-    LOGIN_NAME = 'avlinden',
-    EMAIL = 'abby.vanderlinden@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'PUBLIC',
-    DEFAULT_NAMESPACE = 'SYNAPSE_DATA_WAREHOUSE.TEST_RAW';
-
-CREATE USER avu
-    PASSWORD = '',
-    LOGIN_NAME = 'avu',
-    EMAIL = 'anh.nguyet.vu@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'PUBLIC',
-    DEFAULT_NAMESPACE = 'SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW';
-
-CREATE USER lfoschini
-    PASSWORD = '',
-    LOGIN_NAME = 'lfoschini',
-    EMAIL = 'luca.foschini@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'PUBLIC',
-    DEFAULT_NAMESPACE = 'SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW';
-
-CREATE USER psnyder
-    PASSWORD = '',
-    LOGIN_NAME = 'psnyder',
-    EMAIL = 'phil.snyder@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'recover_admin',
-    DEFAULT_NAMESPACE = 'RECOVER.PILOT';
-
-CREATE USER rxu
-    PASSWORD = '',
-    LOGIN_NAME = 'rxu',
-    EMAIL = 'rixing.xu@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'recover_admin',
-    DEFAULT_NAMESPACE = 'RECOVER.PILOT';
-
-CREATE USER xguo
-    PASSWORD = '',
-    LOGIN_NAME = 'xguo',
-    EMAIL = 'xindi.guo@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'genie_admin',
-    DEFAULT_NAMESPACE = 'genie.public_13_1';
-
-CREATE USER cnayan
-    PASSWORD = '',
-    LOGIN_NAME = 'cnayan',
-    EMAIL = 'chelsea.nayan@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'genie_admin',
-    DEFAULT_NAMESPACE = 'genie.public_13_1';
 USE ROLE USERADMIN;
-CREATE USER apaynter
-    PASSWORD = '',
-    LOGIN_NAME = 'apaynter',
-    EMAIL = 'alex.paynter@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'genie_admin',
-    DEFAULT_NAMESPACE = 'genie.public_13_1';
+CREATE USER IF NOT EXISTS "diep.thach@sagebase.org";
+CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
+CREATE USER IF NOT EXISTS "thomas.yu@sagebase.org";
+CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
+CREATE USER IF NOT EXISTS "luca.foschini@sagebase.org";
+CREATE USER IF NOT EXISTS "xindi.guo@sagebase.org";
+CREATE USER IF NOT EXISTS "abby.vanderlinden@sagebase.org";
+CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
+CREATE USER IF NOT EXISTS "chelsea.nayan@sagebase.org";
+CREATE USER IF NOT EXISTS "alex.paynter@sagebase.org";
+CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
 
 use role securityadmin;
 GRANT ROLE genie_admin
-
 TO USER apaynter;
 
 // ROLE MANAGEMENT
 CREATE ROLE recover_admin;
 USE ROLE securityadmin;
-GRANT CREATE SCHEMA, USAGE on DATABASE RECOVER to ROLE recover_admin;
-GRANT CREATE TABLE, USAGE on SCHEMA recover.pilot to ROLE recover_admin;
+GRANT CREATE SCHEMA, USAGE on DATABASE RECOVER
+TO ROLE recover_admin;
+GRANT CREATE TABLE, USAGE on SCHEMA recover.pilot
+TO ROLE recover_admin;
 
 use role securityadmin;
-GRANT ROLE recover_admin TO USER psnyder;
-GRANT ROLE recover_admin TO USER rxu;
+grant role recover_admin
+to role useradmin;
+GRANT ROLE recover_admin
+TO USER "phil.snyder@sagebase.org";
+GRANT ROLE recover_admin
+TO USER "rixing.xu@sagebase.org";
+GRANT ROLE recover_admin
+TO USER thomasyu888;
 
+GRANT USAGE ON WAREHOUSE recover_xsmall
+TO ROLE recover_admin;
 
-USE ROLE securityadmin;
-GRANT USAGE ON WAREHOUSE recover_xsmall TO ROLE recover_admin;
-GRANT ROLE recover_admin TO USER thomasyu888;

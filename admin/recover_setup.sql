@@ -1,6 +1,7 @@
 USE ROLE sysadmin;
 CREATE DATABASE IF NOT EXISTS recover;
-CREATE SCHEMA IF NOT EXISTS pilot WITH MANAGED ACCESS;
+CREATE SCHEMA IF NOT EXISTS pilot
+  WITH MANAGED ACCESS;
 USE SCHEMA recover.pilot;
 
 USE ROLE securityadmin;
@@ -18,11 +19,12 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS recover_dev_s3
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::914833433684:role/snowflake_access'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-processed-data');
+  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-processed-data', 's3://recover-dev-intermediate-data');
   //[ STORAGE_BLOCKED_LOCATIONS = ('s3://<bucket>/<path>/', 's3://<bucket>/<path>/') ]
 
 DESC INTEGRATION recover_dev_s3;
-GRANT USAGE ON INTEGRATION recover_dev_s3 TO ROLE SYSADMIN;
+GRANT USAGE ON INTEGRATION recover_dev_s3
+TO ROLE SYSADMIN;
 
 use role sysadmin;
 
@@ -30,6 +32,11 @@ CREATE STAGE IF NOT EXISTS recover_dev
   STORAGE_INTEGRATION = recover_dev_s3
   URL = 's3://recover-dev-processed-data'
   FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO);
+
+CREATE STAGE IF NOT EXISTS recover_dev_intermediate
+  STORAGE_INTEGRATION = recover_dev_s3
+  URL = 's3://recover-dev-intermediate-data'
+  FILE_FORMAT = (TYPE = JSON COMPRESSION = AUTO);
 
 LIST @recover_dev/main/parquet
 PATTERN = '^((?!archive|owner).)*$';

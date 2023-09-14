@@ -7,9 +7,9 @@ use role securityadmin;
 grant role genie_admin
 to role useradmin;
 grant role genie_admin
-to user xguo;
+to user "xindi.guo@sagebase.org";
 grant role genie_admin
-to user cnayan;
+to user "chelsea.nayan@sagebase.org";
 grant USAGE on database genie
 to role genie_admin;
 GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
