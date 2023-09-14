@@ -27,10 +27,17 @@ CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "chelsea.nayan@sagebase.org";
 CREATE USER IF NOT EXISTS "alex.paynter@sagebase.org";
 CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
+CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
+CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
+
+
 
 use role securityadmin;
 GRANT ROLE genie_admin
-TO USER apaynter;
+TO USER "alex.paynter@sagebase.org";
+
+GRANT ROLE SYSADMIN
+TO USER "kevin.boske@sagebase.org";
 
 // ROLE MANAGEMENT
 CREATE ROLE recover_admin;
