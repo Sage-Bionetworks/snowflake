@@ -1,15 +1,7 @@
 use role sysadmin;
 CREATE DATABASE IF NOT EXISTS genie;
-use role useradmin;
-create role IF NOT EXISTS genie_admin;
 
 use role securityadmin;
-grant role genie_admin
-to role useradmin;
-grant role genie_admin
-to user "xindi.guo@sagebase.org";
-grant role genie_admin
-to user "chelsea.nayan@sagebase.org";
 grant USAGE on database genie
 to role genie_admin;
 GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE

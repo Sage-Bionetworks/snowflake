@@ -1,5 +1,7 @@
 // SAML integration
 use role accountadmin;
+// Used these instructions to create google SAML integration
+// https://community.snowflake.com/s/article/configuring-g-suite-as-an-identity-provider
 create security integration IF NOT EXISTS GOOGLE_SSO
     type = saml2
     enabled = true
@@ -14,7 +16,6 @@ create security integration IF NOT EXISTS GOOGLE_SSO
 
 DESC security integration GOOGLE_SSO;
 ALTER security integration GOOGLE_SSO set SAML2_SIGN_REQUEST = true;
-
 USE ROLE USERADMIN;
 CREATE USER IF NOT EXISTS "diep.thach@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
@@ -30,30 +31,7 @@ CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 
-use role securityadmin;
-GRANT ROLE genie_admin
-TO USER "alex.paynter@sagebase.org";
-
+// Grant system roles to users
+USE ROLE SECURITYADMIN;
 GRANT ROLE SYSADMIN
 TO USER "kevin.boske@sagebase.org";
-
-// ROLE MANAGEMENT
-CREATE ROLE recover_admin;
-USE ROLE securityadmin;
-GRANT CREATE SCHEMA, USAGE on DATABASE RECOVER
-TO ROLE recover_admin;
-GRANT CREATE TABLE, USAGE on SCHEMA recover.pilot
-TO ROLE recover_admin;
-
-use role securityadmin;
-grant role recover_admin
-to role useradmin;
-GRANT ROLE recover_admin
-TO USER "phil.snyder@sagebase.org";
-GRANT ROLE recover_admin
-TO USER "rixing.xu@sagebase.org";
-GRANT ROLE recover_admin
-TO USER thomasyu888;
-GRANT USAGE ON WAREHOUSE recover_xsmall
-TO ROLE recover_admin;
-
