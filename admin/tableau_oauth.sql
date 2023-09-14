@@ -1,3 +1,4 @@
+// https://docs.snowflake.com/en/user-guide/oauth-partner
 USE ROLE ACCOUNTADMIN;
 CREATE SECURITY INTEGRATION ts_oauth_int2
   TYPE = OAUTH

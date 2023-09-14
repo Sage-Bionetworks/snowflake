@@ -24,16 +24,10 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview.
 
 ### User/Role Management
-Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, we want to use the first initial and last name.
+Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, simple add their Sage Bionetworks email, the setup for google saml is included in the SQL command.
 
 ```
-CREATE USER flastname
-    PASSWORD = 'generate_one',
-    LOGIN_NAME = 'flastname',
-    EMAIL = '...@sagebase.org',
-    MUST_CHANGE_PASSWORD = TRUE,
-    DEFAULT_WAREHOUSE = 'COMPUTE_ORG',
-    DEFAULT_ROLE = 'PUBLIC';
+CREATE USER "...@sagebase.org"
 ```
 
 ### Warehouses/databases
