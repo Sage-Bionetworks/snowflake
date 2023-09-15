@@ -7,8 +7,9 @@ from information_schema.tables
 where table_schema = 'PILOT_RAW';
 
 DESC TABLE FITBITDAILYDATA;
-
-WITH table_counts AS (
+CREATE SCHEMA pilot WITH MANAGED ACCESS;
+CREATE VIEW IF NOT EXISTS pilot.table_summary AS (
+    WITH table_counts AS (
     SELECT
         'ENROLLEDPARTICIPANTS' AS TABLE_NAME,
         COUNT(DISTINCT "ParticipantIdentifier") AS COUNT
@@ -130,4 +131,6 @@ SELECT
     info.row_count AS number_of_records
 FROM table_counts
 LEFT JOIN information_schema.tables as info
-ON table_counts.TABLE_NAME = info.table_name;
+ON table_counts.TABLE_NAME = info.table_name);
+
+select * from pilot.table_summary;
