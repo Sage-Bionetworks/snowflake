@@ -53,32 +53,26 @@ group by name;
 
 
 USE DATABASE GENIE;
+USE WAREHOUSE COMPUTE_ORG;
 
 SELECT
     clin13_1.SAMPLE_ID as SAMPLE_ID,
-    (CASE WHEN clin1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_1_0_1,
-    (CASE WHEN clin2.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_2_0_1,
-    (CASE WHEN clin3.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_3_0_0,
-    (CASE WHEN clin4.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_4_0,
-    (CASE WHEN clin4.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_4_0,
-    (CASE WHEN clin4_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_4_1,
-    (CASE WHEN clin5.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_5_0,
-    (CASE WHEN clin6.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_6,
-    (CASE WHEN clin6_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_6_1,
-    (CASE WHEN clin6_2.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_6_2,
-    (CASE WHEN clin7.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_7,
-    (CASE WHEN clin8.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_8,
-    (CASE WHEN clin8_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_8_1,
-    (CASE WHEN clin9.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_9,
-    (CASE WHEN clin9_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_9_1,
-    (CASE WHEN clin10.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_10,
-    (CASE WHEN clin10_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_10_1,
-    (CASE WHEN clin11.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_11,
-    (CASE WHEN clin11_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_11_1,
-    (CASE WHEN clin12.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_12,
-    (CASE WHEN clin12_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_12_1,
-    (CASE WHEN clin13.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_13,
-    (CASE WHEN clin13_1.SAMPLE_ID IS NULL THEN false ELSE true END) AS public_13_1
+    COALESCE(clin1.SAMPLE_ID IS NOT NULL, false) AS public_1_0_1,
+    COALESCE(clin2.SAMPLE_ID IS NOT NULL, false) AS public_2_0_1,
+    COALESCE(clin3.SAMPLE_ID IS NOT NULL, false) AS public_3_0_0,
+    COALESCE(clin4.SAMPLE_ID IS NOT NULL, false) AS public_4_0,
+    COALESCE(clin4_1.SAMPLE_ID IS NOT NULL, false) AS public_4_1,
+    COALESCE(clin5.SAMPLE_ID IS NOT NULL, false) AS public_5_0,
+    COALESCE(clin6.SAMPLE_ID IS NOT NULL, false) AS public_6,
+    COALESCE(clin6_1.SAMPLE_ID IS NOT NULL, false) AS public_6_1,
+    COALESCE(clin6_2.SAMPLE_ID IS NOT NULL, false) AS public_6_2,
+    COALESCE(clin7.SAMPLE_ID IS NOT NULL, false) AS public_7,
+    COALESCE(clin8.SAMPLE_ID IS NOT NULL OR clin8_1.SAMPLE_ID IS NOT NULL, false) AS public_8,
+    COALESCE(clin9.SAMPLE_ID IS NOT NULL OR clin9_1.SAMPLE_ID IS NOT NULL, false) AS public_9,
+    COALESCE(clin10.SAMPLE_ID IS NOT NULL OR clin10_1.SAMPLE_ID IS NOT NULL, false) AS public_10,
+    COALESCE(clin11.SAMPLE_ID IS NOT NULL OR clin11_1.SAMPLE_ID IS NOT NULL, false) AS public_11,
+    COALESCE(clin12.SAMPLE_ID IS NOT NULL OR clin12_1.SAMPLE_ID IS NOT NULL, false) AS public_12,
+    COALESCE(clin13.SAMPLE_ID IS NOT NULL, false) AS public_13
 FROM GENIE.PUBLIC_01_0_1.CLINICAL AS clin1
     FULL OUTER JOIN GENIE.PUBLIC_02_0_1.CLINICAL_SAMPLE AS clin2
         USING (SAMPLE_ID)
