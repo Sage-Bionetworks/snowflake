@@ -3,12 +3,6 @@ use database synapse_data_warehouse;
 use schema synapse_raw;
 -- supported types: https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
 
-use role securityadmin;
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
-
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
 
 // User profile snapshot
 CREATE STAGE IF NOT EXISTS userprofilesnapshot

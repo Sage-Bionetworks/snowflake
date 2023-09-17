@@ -1,6 +1,6 @@
 use role securityadmin;
 
-// Custom role setup
+// GENIE
 CREATE ROLE IF NOT EXISTS genie_admin;
 grant role genie_admin
 to role useradmin;
@@ -11,6 +11,7 @@ to user "xindi.guo@sagebase.org";
 grant role genie_admin
 to user "chelsea.nayan@sagebase.org";
 
+// RECOVER
 CREATE ROLE IF NOT EXISTS recover_data_engineer;
 grant role recover_data_engineer
 to role useradmin;
@@ -27,3 +28,9 @@ GRANT ROLE recover_data_engineer
 TO USER "thomas.yu@sagebase.org";
 GRANT USAGE ON WAREHOUSE recover_xsmall
 TO ROLE recover_data_engineer;
+
+// Synapse data warehouse
+// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;

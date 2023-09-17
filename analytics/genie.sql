@@ -1,4 +1,6 @@
 USE ROLE SYSADMIN;
+USE DATABASE GENIE;
+USE WAREHOUSE COMPUTE_ORG;
 
 // GENIE user management
 // List out all GENIE teams
@@ -31,7 +33,6 @@ select name, count(*) as number_of_members
 from genie.public.genie_members
 group by name;
 
-
 -- In athena
 -- with test as (
 --     with genie_mem AS (
@@ -50,10 +51,6 @@ group by name;
 --     on genie_mem.team_id = team_latest.id
 -- )
 -- select name, count(*) from test group by name;
-
-
-USE DATABASE GENIE;
-USE WAREHOUSE COMPUTE_ORG;
 
 SELECT
     clin13_1.SAMPLE_ID as SAMPLE_ID,
