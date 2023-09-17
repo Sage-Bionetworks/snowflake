@@ -36,3 +36,7 @@ SELECT CHANGE_TYPE, count(*) as number_of_events
 FROM synapse_data_warehouse.synapse.file_latest
 GROUP BY CHANGE_TYPE
 ;
+
+SELECT count(*)
+FROM synapse_data_warehouse.synapse.file_latest
+where not IS_PREVIEW;

@@ -72,13 +72,16 @@ where n = 1;
 // filesnapshots
 USE ROLE SYSADMIN;
 
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.file_latest as WITH
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.file_latest as WITH
   RANKED_NODES AS (
    SELECT
      s.*,
      "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM synapse_data_warehouse.synapse_raw.filesnapshots s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+   WHERE
+    (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS') AND
+    NOT IS_PREVIEW AND
+    CHANGE_TYPE != 'DELETE'
 )
 SELECT *
 FROM RANKED_NODES
