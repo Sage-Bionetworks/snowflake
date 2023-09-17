@@ -53,13 +53,12 @@ SHOW tasks;
 DESCRIBE task test_s3_integration;
 
 select *
-  from table(information_schema.task_history())
-  order by scheduled_time;
+from table(information_schema.task_history())
+order by scheduled_time;
 
 use role sysadmin;
 
 select * from test_automation_table;
-
 
 
 -- copy into test_automation_table from (
