@@ -1,31 +1,29 @@
+use role securityadmin;
+
 // Custom role setup
 CREATE ROLE IF NOT EXISTS genie_admin;
-
-use role securityadmin;
-GRANT ROLE genie_admin
-TO USER "alex.paynter@sagebase.org";
 grant role genie_admin
 to role useradmin;
+GRANT ROLE genie_admin
+TO USER "alex.paynter@sagebase.org";
 grant role genie_admin
 to user "xindi.guo@sagebase.org";
 grant role genie_admin
 to user "chelsea.nayan@sagebase.org";
 
-CREATE ROLE IF NOT EXISTS recover_admin;
-
-GRANT CREATE SCHEMA, USAGE on DATABASE RECOVER
-TO ROLE recover_admin;
-GRANT CREATE TABLE, USAGE on SCHEMA recover.pilot
-TO ROLE recover_admin;
-
-grant role recover_admin
+CREATE ROLE IF NOT EXISTS recover_data_engineer;
+grant role recover_data_engineer
 to role useradmin;
-GRANT ROLE recover_admin
+GRANT CREATE SCHEMA, USAGE ON DATABASE RECOVER
+TO ROLE recover_data_engineer;
+GRANT ALL PRIVILEGES ON SCHEMA recover.pilot
+TO ROLE recover_data_engineer;
+
+GRANT ROLE recover_data_engineer
 TO USER "phil.snyder@sagebase.org";
-GRANT ROLE recover_admin
+GRANT ROLE recover_data_engineer
 TO USER "rixing.xu@sagebase.org";
-GRANT ROLE recover_admin
+GRANT ROLE recover_data_engineer
 TO USER "thomas.yu@sagebase.org";
 GRANT USAGE ON WAREHOUSE recover_xsmall
-TO ROLE recover_admin;
-
+TO ROLE recover_data_engineer;
