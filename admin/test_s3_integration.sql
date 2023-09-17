@@ -14,6 +14,7 @@ GRANT USAGE ON INTEGRATION test_s3 TO ROLE SYSADMIN;
 
 use role sysadmin;
 
+// dnt dev
 CREATE STAGE IF NOT EXISTS my_test_s3_stage
   STORAGE_INTEGRATION = test_s3
   URL = 's3://tyu-test-snowflake/'

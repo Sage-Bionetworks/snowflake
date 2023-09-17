@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest A
     where INSTANCE =
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
 
-
 // Create View of user profile and cert join
 CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
   with user_cert_joined as (
@@ -44,8 +43,8 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as 
    WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
 ) 
 SELECT *
-FROM
-  RANKED_NODES where n = 1;
+FROM RANKED_NODES
+where n = 1;
 
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as WITH
   RANKED_NODES AS (
@@ -56,17 +55,32 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as W
      synapse_data_warehouse.synapse_raw.teammembersnapshots s
 )
 SELECT *
-FROM
-  RANKED_NODES where n = 1;
+FROM RANKED_NODES
+where n = 1;
 
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.team_latest as WITH
   RANKED_NODES AS (
    SELECT
      s.*
    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM
-     synapse_data_warehouse.synapse_raw.teamsnapshots s
+   FROM synapse_data_warehouse.synapse_raw.teamsnapshots s
 )
 SELECT *
-FROM
-  RANKED_NODES where n = 1;
+FROM RANKED_NODES
+where n = 1;
+
+// filesnapshots
+USE ROLE SYSADMIN;
+
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.file_latest as WITH
+  RANKED_NODES AS (
+   SELECT
+     s.*,
+     "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
+   FROM synapse_data_warehouse.synapse_raw.filesnapshots s
+   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+)
+SELECT *
+FROM RANKED_NODES
+where n = 1
+;
