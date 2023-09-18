@@ -120,7 +120,7 @@ create TABLE NODESNAPSHOTS (
 	change_timestamp TIMESTAMP,
 	change_user_id NUMBER,
 	snapshot_timestamp TIMESTAMP,
-	id TIMESTAMP,
+	id NUMBER,
 	benefactor_id NUMBER,
 	project_id NUMBER,
 	parent_id NUMBER,

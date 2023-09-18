@@ -42,3 +42,13 @@ GROUP BY CHANGE_TYPE
 SELECT STATUS, count(*)
 FROM synapse_data_warehouse.synapse.file_latest
 GROUP BY STATUS;
+
+// Can you extract which projects have these mp4's and the folder
+// names under which they are stored, as a next step?
+SELECT *
+FROM synapse_data_warehouse.synapse.file_latest
+LIMIT 10;
+
+select *
+from synapse_data_warehouse.synapse_raw.nodesnapshots
+LIMIT 10;
