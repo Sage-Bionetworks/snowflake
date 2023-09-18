@@ -21,6 +21,7 @@ FROM synapse_data_warehouse.synapse_raw.filesnapshots;
 -- group by fileext
 -- ORDER BY number_of_files DESC;
 
+// File extensions
 with file_extensions as (
     select split_part(FILE_NAME,'.',-1) as fileext
     from synapse_data_warehouse.synapse.file_latest
@@ -37,6 +38,7 @@ FROM synapse_data_warehouse.synapse.file_latest
 GROUP BY CHANGE_TYPE
 ;
 
-SELECT count(*)
+// Number of counts for different statuses
+SELECT STATUS, count(*)
 FROM synapse_data_warehouse.synapse.file_latest
-where not IS_PREVIEW;
+GROUP BY STATUS;
