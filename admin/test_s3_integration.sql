@@ -18,9 +18,16 @@ use role sysadmin;
 CREATE STAGE IF NOT EXISTS my_test_s3_stage
   STORAGE_INTEGRATION = test_s3
   URL = 's3://tyu-test-snowflake/'
-  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO);
+  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
+  DIRECTORY = (ENABLE = TRUE);
 
+// Refresh the stage
+ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
+
+USE DATABASE synapse_data_warehouse;
+USE SCHEMA synapse_raw;
 LIST @my_test_s3_stage;
+
 
 CREATE TABLE IF NOT EXISTS test_automation_table (
 	session_id STRING,
