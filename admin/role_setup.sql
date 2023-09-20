@@ -43,5 +43,14 @@ TO ROLE recover_data_engineer;
 // Synapse data warehouse
 // GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
 // GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
+TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse_raw
+TO ROLE PUBLIC;
+GRANT USAGE ON FUTURE SCHEMAS IN DATABASE sage_test
+TO ROLE PUBLIC;
+GRANT SELECT ON FUTURE TABLES IN DATABASE sage_test
+TO ROLE PUBLIC;
+
+GRANT USAGE ON DATABASE sage_test
+TO ROLE PUBLIC;

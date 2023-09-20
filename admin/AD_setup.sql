@@ -5,7 +5,7 @@ use database sage_test;
 use role useradmin;
 create role ad_team;
 grant role ad_team to role useradmin;
-grant role ad_team to user avlinden;
+grant role ad_team to user "abby.vander.linden@sagebase.org";
 
 use role sysadmin;
 create or replace schema ad_team
@@ -20,10 +20,6 @@ grant ALL PRIVILEGES on future tables in schema sage_test.ad_team to role sysadm
 use role ad_team;
 use database sage_test;
 use schema ad_team;
-create table test_me (
-    foo STRING
-    );
-drop table test_me;
 
 use role ad_team;
 COPY INTO "SAGE_TEST"."AD_TEAM"."DIVERSE_COHORTS_FILEVIEW"
