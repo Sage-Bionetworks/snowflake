@@ -31,6 +31,9 @@ CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
+CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
+
+
 
 // Grant system roles to users
 USE ROLE SECURITYADMIN;
