@@ -52,3 +52,6 @@ LIMIT 10;
 select *
 from synapse_data_warehouse.synapse_raw.nodesnapshots
 LIMIT 10;
+
+// Look into this: https://github.com/nf-osi/usagereports/blob/main/notes.md
+// https://github.com/nf-osi/usagereports/blob/patch/pkg-update/README.md#workflow

@@ -11,6 +11,17 @@ to user "xindi.guo@sagebase.org";
 grant role genie_admin
 to user "chelsea.nayan@sagebase.org";
 
+grant USAGE on database genie
+to role genie_admin;
+GRANT USAGE ON FUTURE SCHEMAS IN DATABASE GENIE
+TO ROLE genie_admin;
+GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
+TO ROLE genie_admin;
+-- GRANT USAGE ON ALL SCHEMAS IN DATABASE GENIE
+-- TO ROLE genie_admin;
+-- GRANT SELECT ON ALL TABLES IN DATABASE GENIE
+-- TO ROLE genie_admin;
+
 // RECOVER
 CREATE ROLE IF NOT EXISTS recover_data_engineer;
 grant role recover_data_engineer

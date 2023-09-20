@@ -1,12 +1,6 @@
 use role sysadmin;
 CREATE DATABASE IF NOT EXISTS genie;
 
-use role securityadmin;
-grant USAGE on database genie
-to role genie_admin;
-GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
-TO ROLE genie_admin;
-
 
 -- use database genie;
 -- use schema public_13_1;

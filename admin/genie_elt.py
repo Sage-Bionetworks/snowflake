@@ -58,7 +58,7 @@ def main():
     """GENIE ELT pipeline"""
     syn = synapseclient.login()
 
-    config = dotenv_values("admin/.env")
+    config = dotenv_values(".env")
 
     connection_parameters = {
         "account": config['snowflake_account'],
@@ -75,12 +75,14 @@ def main():
             .replace(".", "_")
             .replace("-public", "")
         )
+        # if release_name != "14_0":
+        #     continue
         release_id = release['id']
         release_files = syn.getChildren(release_id)
         release_file_map = {
             release_file['name']: syn.get(release_file['id'], followLink=True)
             for release_file in release_files
-            if release_file['name'].startswith("data_clinical") and
+            if release_file['name'].startswith(("data_clinical", "data_mutations")) and
             release_file['name'].endswith("txt")
         }
 
