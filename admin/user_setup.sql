@@ -14,7 +14,7 @@ create security integration IF NOT EXISTS GOOGLE_SSO
     SAML2_SNOWFLAKE_ACS_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com/fed/login'
     SAML2_SNOWFLAKE_ISSUER_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com';
 
-DESC security integration GOOGLE_SSO;
+-- DESC security integration GOOGLE_SSO;
 ALTER security integration GOOGLE_SSO set SAML2_SIGN_REQUEST = true;
 USE ROLE USERADMIN;
 CREATE USER IF NOT EXISTS "diep.thach@sagebase.org";
@@ -32,10 +32,3 @@ CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
 CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
-
-
-
-// Grant system roles to users
-USE ROLE SECURITYADMIN;
-GRANT ROLE SYSADMIN
-TO USER "kevin.boske@sagebase.org";
