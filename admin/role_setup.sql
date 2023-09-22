@@ -21,6 +21,8 @@ TO ROLE genie_admin;
 -- TO ROLE genie_admin;
 -- GRANT SELECT ON ALL TABLES IN DATABASE GENIE
 -- TO ROLE genie_admin;
+GRANT USAGE ON WAREHOUSE tableau
+TO ROLE genie_admin;
 
 // RECOVER
 CREATE ROLE IF NOT EXISTS recover_data_engineer;
@@ -39,6 +41,15 @@ GRANT ROLE recover_data_engineer
 TO USER "thomas.yu@sagebase.org";
 GRANT USAGE ON WAREHOUSE recover_xsmall
 TO ROLE recover_data_engineer;
+
+// AD
+CREATE ROLE IF NOT EXISTS ad_team;
+GRANT ROLE ad_team
+TO ROLE useradmin;
+GRANT ROLE ad_team
+TO USER "abby.vander.linden@sagebase.org";
+GRANT USAGE ON DATABASE sage_test
+TO ROLE ad_team;
 
 // Synapse data warehouse
 // GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
