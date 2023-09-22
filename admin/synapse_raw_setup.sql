@@ -1,14 +1,32 @@
-use role sysadmin;
-use database synapse_data_warehouse;
-use schema synapse_raw;
--- supported types: https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
+USE DATABASE synapse_data_warehouse;
+USE SCHEMA synapse_raw;
+USE WAREHOUSE COMPUTE_ORG;
+USE ROLE ACCOUNTADMIN;
 
+CREATE STORAGE INTEGRATION IF NOT EXISTS test_s3
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::631692904429:role/test_snowflake_integration'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://tyu-test-snowflake');
 
-// Use this stage: my_test_s3_stage
+DESC INTEGRATION test_s3;
+USE SCHEMA synapse_data_warehouse.synapse_raw;
+GRANT USAGE ON INTEGRATION test_s3 TO ROLE SYSADMIN;
+
+USE ROLE sysadmin;
+// Use this stage for now my_test_s3_stage
+CREATE STAGE IF NOT EXISTS my_test_s3_stage
+  STORAGE_INTEGRATION = test_s3
+  URL = 's3://tyu-test-snowflake/'
+  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
+  DIRECTORY = (ENABLE = TRUE);
+
 ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
 LIST @my_test_s3_stage;
 
-CREATE TABLE IF NOT EXISTS userprofilesnapshot (
+// First time copying into the warehouse
+CREATE OR REPLACE TABLE userprofilesnapshot (
   change_timestamp TIMESTAMP,
   snapshot_timestamp TIMESTAMP,
   id NUMBER,
@@ -22,103 +40,36 @@ CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   snapshot_date DATE
 );
 
-//https://docs.snowflake.com/en/sql-reference/sql/create-stream
--- CREATE EXTERNAL TABLE usersnapshot_external (
---   ts timestamp AS (value:time::timestamp)
--- ) LOCATION=@my_test_s3_stage/userprofilesnapshots
---   AUTO_REFRESH = false
---   FILE_FORMAT=(TYPE = PARQUET COMPRESSION = AUTO);
+USE WAREHOUSE COMPUTE_MEDIUM;
+copy into
+  userprofilesnapshot
+from (
+  select 
+    $1:change_timestamp as change_timestamp,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:user_name as user_name,
+    $1:first_name as first_name,
+    $1:last_name as last_name,
+    $1:email as email,
+    $1:location as location,
+    $1:company as company,
+    $1:position as position,
+      NULLIF(
+        regexp_replace(
+          metadata$filename,
+          '^userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
+        ), 
+        '__HIVE_DEFAULT_PARTITION__'
+      ) as snapshot_date
+  from
+    @my_test_s3_stage/userprofilesnapshots
+  )
+pattern='.*userprofilesnapshots/snapshot_date=.*/.*'
+;
 
--- CREATE STREAM usersnapshot_stream ON EXTERNAL TABLE usersnapshot_external INSERT_ONLY = TRUE;
--- SHOW STREAMS;
--- ALTER EXTERNAL TABLE usersnapshot_external REFRESH;
--- SELECT * FROM usersnapshot_stream;
--- copy into
---   userprofilesnapshot_temp
--- from (
---   select 
---      $1:change_timestamp as change_timestamp,
---      $1:snapshot_timestamp as snapshot_timestamp,
---      $1:id as id,
---      $1:user_name as user_name,
---      $1:first_name as first_name,
---      $1:last_name as last_name,
---      $1:email as email,
---      $1:location as location,
---      $1:company as company,
---      $1:position as position,
---      NULLIF(
---        regexp_replace (
---        METADATA$FILENAME,
---        '^userprofilesnapshots\/snapshot_date\=(.*)\/.*',
---        '\\1'), 
---        '__HIVE_DEFAULT_PARTITION__'
---      )                         as snapshot_date
---   from
---     @my_test_s3_stage/userprofilesnapshots
---   )
--- pattern='.*snapshot_date=.*/.*'
--- ;
-
--- MERGE INTO userprofilesnapshot USING (
---   SELECT 
---     change_timestamp,
---     snapshot_timestamp,
---     id,
---     user_name,
---     first_name,
---     last_name,
---     email,
---     location,
---     company,
---     position,
---     snapshot_date
---   FROM
---     userprofilesnapshot_temp
---   ) u_temp ON userprofilesnapshot.id = u_temp.id
--- WHEN MATCHED AND metadata$action = 'DELETE' THEN DELETE
--- WHEN MATCHED AND metadata$action = 'INSERT' THEN UPDATE SET
---   userprofilesnapshot.change_timestamp = u_temp.change_timestamp,
---   userprofilesnapshot.snapshot_timestamp = u_temp.snapshot_timestamp,
---   userprofilesnapshot.id = u_temp.id,
---   userprofilesnapshot.user_name = u_temp.user_name,
---   userprofilesnapshot.first_name = u_temp.first_name,
---   userprofilesnapshot.last_name = u_temp.last_name,
---   userprofilesnapshot.email = u_temp.email,
---   userprofilesnapshot.location = u_temp.location,
---   userprofilesnapshot.company = u_temp.company,
---   userprofilesnapshot.position = u_temp.position,
---   userprofilesnapshot.snapshot_date = u_temp.snapshot_date
--- WHEN NOT MATCHED AND metadata$action = 'INSERT' THEN
---   INSERT (
---     change_timestamp,
---     snapshot_timestamp,
---     id,
---     user_name,
---     first_name,
---     last_name,
---     email,
---     location,
---     company,
---     position,
---     snapshot_date
---   )
---   VALUES (
---     u_temp.change_timestamp,
---     u_temp.snapshot_timestamp,
---     u_temp.id,
---     u_temp.user_name,
---     u_temp.first_name,
---     u_temp.last_name,
---     u_temp.email,
---     u_temp.location,
---     u_temp.company,
---     u_temp.position,
---     u_temp.snapshot_date
---   );
-  
 // create certified quiz
-create table IF NOT EXISTS certifiedquiz (
+CREATE TABLE IF NOT EXISTS certifiedquiz (
     response_id NUMBER,
     user_id NUMBER,
     passed BOOLEAN,
@@ -128,28 +79,22 @@ create table IF NOT EXISTS certifiedquiz (
     record_date DATE
 );
 
-CREATE OR REPLACE EXTERNAL TABLE certifiedquiz_external (
-  response_id number AS (value:response_id::number),
-  user_id number AS (value:user_id::number),
-  passed boolean AS (value:passed::boolean),
-  passed_on timestamp AS (value:passed_on::timestamp),
-  stack varchar AS (value:stack::varchar),
-  instance varchar AS (value:instance::varchar),
-  record_date date as to_date(substring(metadata$filename, 34,10))
-) PARTITION BY (record_date)
-  LOCATION=@my_test_s3_stage/certifiedquizrecords
-  AUTO_REFRESH = false
-  FILE_FORMAT=(TYPE = PARQUET COMPRESSION = AUTO);
--- certifiedquizrecords/record_date=2022-07-08/
-CREATE OR REPLACE STREAM certifiedquiz_stream ON EXTERNAL TABLE certifiedquiz_external INSERT_ONLY = TRUE;
-ALTER EXTERNAL TABLE certifiedquiz_external REFRESH;
--- SELECT * FROM certifiedquiz_stream;
--- select * from certifiedquiz_external limit 10;
--- MERGE INTO certifiedquiz USING (
---   select response_id, max(passed_on) as v from certifiedquiz_external group by response_id
--- ) AS b ON certifiedquiz.response_id = b.response_id
---   WHEN MATCHED THEN UPDATE SET target.v = b.v
---   WHEN NOT MATCHED THEN INSERT (k, v) VALUES (b.k, b.v);
+-- CREATE OR REPLACE EXTERNAL TABLE certifiedquiz_external (
+--   response_id number AS (value:response_id::number),
+--   user_id number AS (value:user_id::number),
+--   passed boolean AS (value:passed::boolean),
+--   passed_on timestamp AS (value:passed_on::timestamp),
+--   stack varchar AS (value:stack::varchar),
+--   instance varchar AS (value:instance::varchar),
+--   record_date date as to_date(substring(metadata$filename, 34,10))
+-- ) PARTITION BY (record_date)
+--   LOCATION=@my_test_s3_stage/certifiedquizrecords
+--   AUTO_REFRESH = false
+--   FILE_FORMAT=(TYPE = PARQUET COMPRESSION = AUTO);
+-- -- certifiedquizrecords/record_date=2022-07-08/
+-- CREATE OR REPLACE STREAM certifiedquiz_stream ON EXTERNAL TABLE certifiedquiz_external INSERT_ONLY = TRUE;
+-- ALTER EXTERNAL TABLE certifiedquiz_external REFRESH;
+
 
 copy into
   certifiedquiz
