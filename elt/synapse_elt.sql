@@ -36,6 +36,7 @@ COPY INTO userprofilesnapshot FROM (
 PATTERN = '.*userprofilesnapshots/snapshot_date=.*/.*';
 ALTER TASK userprofilesnapshot_task RESUME;
 
+
 select count(*) from userprofilesnapshot;
 //1883590
 
@@ -44,3 +45,8 @@ SHOW tasks;
 select *
 from table(information_schema.task_history())
 order by scheduled_time;
+
+// Get results from a query id
+SELECT *
+FROM TABLE(RESULT_SCAN('01af2728-0001-5bd7-0004-7c7a0006c0d6'))
+LIMIT 10;
