@@ -1,5 +1,5 @@
 use role sysadmin;
-use database sage_test;
+use database sage;
 
 create or replace schema ad_team
     WITH MANAGED ACCESS;
