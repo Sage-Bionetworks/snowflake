@@ -21,7 +21,14 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 ## Administration
 
-For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview.
+For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. All admin specific activities will be done in the [admin](admin) folder.  Admin activities include:
+
+* Database creation
+* Governance policies for schemas
+* Role creation and granting of policies
+* Oauth creation
+* User creation
+* Warehouse creation
 
 ### User/Role Management
 Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, simple add their Sage Bionetworks email, the setup for google saml is included in the SQL command.
