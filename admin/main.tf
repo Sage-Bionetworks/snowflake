@@ -10,7 +10,7 @@ terraform {
 provider "snowflake" {
   account = "mqzfhld-vp00034"
   username = "thomasyu888"
-  password = "QNy26EJ!KMP7RScr"
+  password = ""
   role = "SYSADMIN"
 }
 
@@ -18,7 +18,7 @@ provider "snowflake" {
   alias = "useradmin"
   account = "mqzfhld-vp00034"
   username = "thomasyu888"
-  password = "QNy26EJ!KMP7RScr"
+  password = ""
   role = "USERADMIN"
 }
 
