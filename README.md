@@ -34,6 +34,14 @@ CREATE USER "...@sagebase.org"
 
 Warehouse and databases _must be_ created by the `SYSADMIN` role. Different roles can be created for different projects so that certain users have permissions to create schemas and tables under this role. That said, currently it's easiest to have the `SYSADMIN` role also create many of the schemas and tables to ensure the correct security policies are set.
 
+### Terraform exploration
+
+Be sure to export these local variables and run the terraform script in the admin folder
+```
+export TF_VAR_snowflake_user=
+export TF_VAR_snowflake_pwd=
+export TF_VAR_snowflake_account=
+```
 
 ## Synapse Data Warehouse (PoC)
 

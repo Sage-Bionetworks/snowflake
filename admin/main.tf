@@ -7,18 +7,35 @@ terraform {
   }
 }
 
+variable "snowflake_user" {
+  description = "The username for snowflake user"
+  type        = string
+  sensitive   = true
+}
+variable "snowflake_pwd" {
+  description = "The password for the snowflake user"
+  type        = string
+  sensitive   = true
+}
+
+variable "snowflake_account" {
+  description = "The snowflake account"
+  type        = string
+  sensitive   = true
+}
+
 provider "snowflake" {
-  account = "mqzfhld-vp00034"
-  username = "thomasyu888"
-  password = ""
+  account = var.snowflake_account
+  username = var.snowflake_user
+  password = var.snowflake_pwd
   role = "SYSADMIN"
 }
 
 provider "snowflake" {
   alias = "useradmin"
-  account = "mqzfhld-vp00034"
-  username = "thomasyu888"
-  password = ""
+  account = var.snowflake_account
+  username = var.snowflake_user
+  password = var.snowflake_pwd
   role = "USERADMIN"
 }
 
