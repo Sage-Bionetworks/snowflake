@@ -26,7 +26,7 @@ ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
 LIST @my_test_s3_stage;
 
 // First time copying into the warehouse
-CREATE OR REPLACE TABLE userprofilesnapshot (
+CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   change_timestamp TIMESTAMP,
   snapshot_timestamp TIMESTAMP,
   id NUMBER,
@@ -548,4 +548,3 @@ CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
   select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
   from user_cert_joined
 ;
-

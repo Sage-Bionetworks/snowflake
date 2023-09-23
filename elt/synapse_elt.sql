@@ -40,6 +40,7 @@ ALTER TASK userprofilesnapshot_task RESUME;
 select count(*) from userprofilesnapshot;
 //1883590
 
+// 7975867
 SHOW tasks;
 
 select *
@@ -48,5 +49,5 @@ order by scheduled_time;
 
 // Get results from a query id
 SELECT *
-FROM TABLE(RESULT_SCAN('01af2728-0001-5bd7-0004-7c7a0006c0d6'))
+FROM TABLE(RESULT_SCAN('01af2764-0001-5c4a-0004-7c7a0006d10a'))
 LIMIT 10;
