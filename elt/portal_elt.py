@@ -16,13 +16,13 @@ ctx = snowflake.connector.connect(
     password=config['password'],
     account=config['snowflake_account'],
     database="sage_test",
-    schema="NF",
+    schema="portal_raw",
     role="SYSADMIN"
 )
 
 cs = ctx.cursor()
 
-table = "PORTAL"
+table = "NF"
 
 write_pandas(ctx, nf_portal_df, table, auto_create_table=True)
 
