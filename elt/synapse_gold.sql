@@ -45,7 +45,11 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as 
 SELECT *
 FROM RANKED_NODES
 where n = 1;
-
+use role masking_admin;
+ALTER TABLE IF EXISTS userprofile_latest
+MODIFY COLUMN email
+SET MASKING POLICY email_mask;
+USE ROLE SYSADMIN;
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as WITH
   RANKED_NODES AS (
    SELECT

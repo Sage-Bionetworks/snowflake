@@ -39,12 +39,27 @@ jobs:
         run: |
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+
       - name: Create warehouses
         run: |
           ~/bin/snowsql -f admin/warehouse_setup.sql
+
+      - name: Create databases
+        run: |
+          ~/bin/snowsql -f admin/database.sql
+
       - name: Create tableau oauth
         run: |
           ~/bin/snowsql -f admin/tableau_oauth.sql
+
       - name: Create users
         run: |
           ~/bin/snowsql -f admin/user_setup.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
+
+      - name: Roles and granting policies
+        run: |
+          ~/bin/snowsql -f admin/role_setup.sql
+
+      - name: Governance
+        run: |
+          ~/bin/snowsql -f admin/governance.sql
