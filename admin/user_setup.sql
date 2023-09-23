@@ -1,3 +1,5 @@
+!set variable_substitution=true;
+
 // SAML integration
 use role accountadmin;
 // Used these instructions to create google SAML integration
@@ -5,17 +7,17 @@ use role accountadmin;
 create security integration IF NOT EXISTS GOOGLE_SSO
     type = saml2
     enabled = true
-    saml2_issuer = ''
-    saml2_sso_url = ''
+    saml2_issuer = 'placeholder'
+    saml2_sso_url = 'placeholder'
     saml2_provider = 'custom'
-    saml2_x509_cert=''
+    saml2_x509_cert='placeholder'
     saml2_sp_initiated_login_page_label = 'GOOGLE_SSO'
     saml2_enable_sp_initiated = true
+    SAML2_SIGN_REQUEST = true
     SAML2_SNOWFLAKE_ACS_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com/fed/login'
     SAML2_SNOWFLAKE_ISSUER_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com';
 
 -- DESC security integration GOOGLE_SSO;
-ALTER security integration GOOGLE_SSO set SAML2_SIGN_REQUEST = true;
 USE ROLE USERADMIN;
 CREATE USER IF NOT EXISTS "diep.thach@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
