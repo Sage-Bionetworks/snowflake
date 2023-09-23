@@ -7,10 +7,10 @@ use role accountadmin;
 create security integration IF NOT EXISTS GOOGLE_SSO
     type = saml2
     enabled = true
-    saml2_issuer = 'placeholder'
-    saml2_sso_url = 'placeholder'
+    saml2_issuer = '&saml2_issuer'
+    saml2_sso_url = '&saml2_sso_url'
     saml2_provider = 'custom'
-    saml2_x509_cert='placeholder'
+    saml2_x509_cert='&saml2_x509_cert'
     saml2_sp_initiated_login_page_label = 'GOOGLE_SSO'
     saml2_enable_sp_initiated = true
     SAML2_SIGN_REQUEST = true

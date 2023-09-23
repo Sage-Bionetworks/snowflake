@@ -26,6 +26,9 @@ jobs:
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       # SNOWSQL_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+      saml2_x509_cert: ${{ secrets.SAML2_X509_CERT }}
+      saml2_sso_url: ${{ secrets.SAML2_SSO_URL }}
+      saml2_issuer: ${{ secrets.SAML2_ISSUER }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -42,3 +45,6 @@ jobs:
       - name: Create tableau oauth
         run: |
           ~/bin/snowsql -f admin/tableau_oauth.sql
+      - name: Create users
+        run: |
+          ~/bin/snowsql -f admin/user_setup.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
