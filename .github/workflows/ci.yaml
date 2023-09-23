@@ -19,7 +19,7 @@ jobs:
 
     env:
       SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
-      SNOWSQL_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
       SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
       # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
