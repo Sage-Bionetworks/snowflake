@@ -10,10 +10,10 @@ grant ALL PRIVILEGES on future tables in schema sage_test.ad_team to role sysadm
 -- grant all privileges on table sage_test.ad_team.diverse_cohorts_fileview to role sysadmin;
 
 use role ad_team;
-use database sage_test;
+use database sage;
 use schema ad_team;
-COPY INTO "SAGE_TEST"."AD_TEAM"."DIVERSE_COHORTS_FILEVIEW"
-FROM '@"SAGE_TEST"."AD_TEAM"."%DIVERSE_COHORTS_FILEVIEW"/__snowflake_temp_import_files__/'
+COPY INTO "SAGE"."AD_TEAM"."DIVERSE_COHORTS_FILEVIEW"
+FROM '@"SAGE"."AD_TEAM"."%DIVERSE_COHORTS_FILEVIEW"/__snowflake_temp_import_files__/'
 FILES = ('Job-301735543709776341820576351.csv')
 FILE_FORMAT = (
     TYPE=CSV,
@@ -29,5 +29,8 @@ ON_ERROR=ABORT_STATEMENT
 PURGE=TRUE;
 
 SELECT *
-FROM sage_test.ad_team.diverse_cohorts_fileview
+FROM sage.ad_team.diverse_cohorts_fileview
 limit 10;
+
+SELECT distinct("study")
+FROM sage.portal_raw.AD;
