@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SNOWSQL_PWD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
       SNOWSQL_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-      SNOWSQL_USER: ${{ secrets.SNOWFLAKE_USERNAME }}
+      SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
       # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       # SNOWSQL_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
-      SNOWSQL_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
