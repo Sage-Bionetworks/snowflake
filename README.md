@@ -70,3 +70,12 @@ The RECOVER data is processed via AWS and is compressed to parquet datasets.  Th
 ## GENIE (PoC)
 
 The GENIE public releases are loaded into snowflake via this [script](admin/genie_elt.py).  You must have a snowflake connection section, please copy and fill out this [template](.env_template) with your username and password.
+
+
+## Portals data (PoC)
+
+snowflake, synapseclient and dotenv must be installed as dependencies.
+
+```
+pip install pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-dotenv
+```
