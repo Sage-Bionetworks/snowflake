@@ -100,3 +100,4 @@ resource "snowflake_user" "sjobe" {
   name         = "sophia.jobe@sagebase.org"
   login_name   = "sophia.jobe@sagebase.org"
 }
+
