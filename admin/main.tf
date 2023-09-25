@@ -94,3 +94,9 @@ resource "snowflake_user" "lfoschini" {
   name         = "luca.foschini@sagebase.org"
   login_name   = "luca.foschini@sagebase.org"
 }
+
+resource "snowflake_user" "sjobe" {
+  provider = snowflake.useradmin
+  name         = "sophia.jobe@sagebase.org"
+  login_name   = "sophia.jobe@sagebase.org"
+}
