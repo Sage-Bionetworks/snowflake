@@ -100,3 +100,27 @@ resource "snowflake_user" "sjobe" {
   name         = "sophia.jobe@sagebase.org"
   login_name   = "sophia.jobe@sagebase.org"
 }
+
+resource "snowflake_user" "xguo" {
+  provider = snowflake.useradmin
+  name         = "xindi.guo@sagebase.org"
+  login_name   = "xindi.guo@sagebase.org"
+}
+
+resource "snowflake_user" "avanderlinden" {
+  provider = snowflake.useradmin
+  name         = "abby.vanderlinden@sagebase.org"
+  login_name   = "abby.vanderlinden@sagebase.org"
+}
+
+resource "snowflake_user" "psnyder" {
+  provider = snowflake.useradmin
+  name         = "phil.snyder@sagebase.org"
+  login_name   = "phil.snyder@sagebase.org"
+}
+
+resource "snowflake_user" "cnayan" {
+  provider = snowflake.useradmin
+  name         = "chelsea.nayan@sagebase.org"
+  login_name   = "chelsea.nayan@sagebase.org"
+}
