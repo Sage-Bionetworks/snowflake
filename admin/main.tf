@@ -76,3 +76,21 @@ resource "snowflake_user" "rxu" {
   name         = "rixing.xu@sagebase.org"
   login_name   = "rixing.xu@sagebase.org"
 }
+
+resource "snowflake_user" "dthach" {
+  provider = snowflake.useradmin
+  name         = "diep.thach@sagebase.org"
+  login_name   = "diep.thach@sagebase.org"
+}
+
+resource "snowflake_user" "avu" {
+  provider = snowflake.useradmin
+  name         = "anh.nguyet.vu@sagebase.org"
+  login_name   = "anh.nguyet.vu@sagebase.org"
+}
+
+resource "snowflake_user" "lfoschini" {
+  provider = snowflake.useradmin
+  name         = "luca.foschini@sagebase.org"
+  login_name   = "luca.foschini@sagebase.org"
+}
