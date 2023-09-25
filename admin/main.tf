@@ -31,6 +31,24 @@ variable "snowflake_account" {
   sensitive   = true
 }
 
+variable "saml2_issuer" {
+  description = "Google SAML issuer"
+  type        = string
+  sensitive   = true
+}
+
+variable "saml2_sso_url" {
+  description = "Google SAML SSO URL"
+  type        = string
+  sensitive   = true
+}
+
+variable "saml2_x509_cert" {
+  description = "Google SAML x509 certificate"
+  type        = string
+  sensitive   = true
+}
+
 provider "snowflake" {
   account = var.snowflake_account
   username = var.snowflake_user
@@ -44,6 +62,14 @@ provider "snowflake" {
   username = var.snowflake_user
   password = var.snowflake_pwd
   role = "USERADMIN"
+}
+
+provider "snowflake" {
+  alias = "accountadmin"
+  account = var.snowflake_account
+  username = var.snowflake_user
+  password = var.snowflake_pwd
+  role = "ACCOUNTADMIN"
 }
 
 resource "snowflake_warehouse" "warehouse" {
@@ -165,4 +191,19 @@ resource "snowflake_user" "vbaham" {
   provider = snowflake.useradmin
   name         = "victor.baham@sagebase.org"
   login_name   = "victor.baham@sagebase.org"
+}
+
+resource "snowflake_saml_integration" "google_saml" {
+  provider = snowflake.accountadmin
+  name            = "GOOGLE_SSO"
+  saml2_provider  = "Custom"
+  saml2_issuer    = var.saml2_issuer
+  saml2_sso_url   = var.saml2_sso_url
+  saml2_x509_cert = var.saml2_x509_cert
+  saml2_snowflake_acs_url = "https://mqzfhld-vp00034.snowflakecomputing.com/fed/login"
+  saml2_snowflake_issuer_url = "https://mqzfhld-vp00034.snowflakecomputing.com"
+  enabled         = true
+  saml2_sp_initiated_login_page_label = "GOOGLE_SSO"
+  saml2_enable_sp_initiated = true
+  saml2_sign_request = true
 }
