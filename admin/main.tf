@@ -193,6 +193,12 @@ resource "snowflake_user" "vbaham" {
   login_name   = "victor.baham@sagebase.org"
 }
 
+resource "snowflake_user" "gjordan" {
+  provider = snowflake.useradmin
+  name         = "gianna.jordan@sagebase.org"
+  login_name   = "gianna.jordan@sagebase.org"
+}
+
 resource "snowflake_saml_integration" "google_saml" {
   provider = snowflake.accountadmin
   name            = "GOOGLE_SSO"
