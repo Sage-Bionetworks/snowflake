@@ -124,3 +124,21 @@ resource "snowflake_user" "cnayan" {
   name         = "chelsea.nayan@sagebase.org"
   login_name   = "chelsea.nayan@sagebase.org"
 }
+
+resource "snowflake_user" "apaynter" {
+  provider = snowflake.useradmin
+  name         = "alex.paynter@sagebase.org"
+  login_name   = "alex.paynter@sagebase.org"
+}
+
+resource "snowflake_user" "xschildwachter" {
+  provider = snowflake.useradmin
+  name         = "x.schildwachter@sagebase.org"
+  login_name   = "x.schildwachter@sagebase.org"
+}
+
+resource "snowflake_user" "nedmonds" {
+  provider = snowflake.useradmin
+  name         = "natosha.edmonds@sagebase.org"
+  login_name   = "natosha.edmonds@sagebase.org"
+}
