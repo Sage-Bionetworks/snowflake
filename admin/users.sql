@@ -34,8 +34,6 @@ CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
 CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
-CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
-
 CREATE USER IF NOT EXISTS "nicholas.lee@sagebase.org";
 
 CREATE USER IF NOT EXISTS "victor.baham@sagebase.org";
