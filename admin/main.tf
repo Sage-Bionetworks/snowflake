@@ -142,3 +142,27 @@ resource "snowflake_user" "nedmonds" {
   name         = "natosha.edmonds@sagebase.org"
   login_name   = "natosha.edmonds@sagebase.org"
 }
+
+resource "snowflake_user" "kboske" {
+  provider = snowflake.useradmin
+  name         = "kevin.boske@sagebase.org"
+  login_name   = "kevin.boske@sagebase.org"
+}
+
+resource "snowflake_user" "rallaway" {
+  provider = snowflake.useradmin
+  name         = "robert.allaway@sagebase.org"
+  login_name   = "robert.allaway@sagebase.org"
+}
+
+resource "snowflake_user" "nlee" {
+  provider = snowflake.useradmin
+  name         = "nicholas.lee@sagebase.org"
+  login_name   = "nicholas.lee@sagebase.org"
+}
+
+resource "snowflake_user" "vbaham" {
+  provider = snowflake.useradmin
+  name         = "victor.baham@sagebase.org"
+  login_name   = "victor.baham@sagebase.org"
+}
