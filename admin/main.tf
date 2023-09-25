@@ -5,6 +5,13 @@ terraform {
       version = "0.71"
     }
   }
+  cloud {
+    organization = "sage-bionetworks"
+
+    workspaces {
+      name = "snowflake"
+    }
+  }
 }
 
 variable "snowflake_user" {
@@ -56,4 +63,16 @@ resource "snowflake_user" "user" {
   provider = snowflake.useradmin
   name         = "thomas.yu@sagebase.org"
   login_name   = "thomas.yu@sagebase.org"
+}
+
+resource "snowflake_user" "bmacdonald" {
+  provider = snowflake.useradmin
+  name         = "brad.macdonald@sagebase.org"
+  login_name   = "brad.macdonald@sagebase.org"
+}
+
+resource "snowflake_user" "rxu" {
+  provider = snowflake.useradmin
+  name         = "rixing.xu@sagebase.org"
+  login_name   = "rixing.xu@sagebase.org"
 }
