@@ -3,6 +3,7 @@ terraform {
     snowflake = {
       source  = "Snowflake-Labs/snowflake"
       version = "0.69.0"
+      # TODO: version = "0.71.0"
     }
   }
   cloud {
