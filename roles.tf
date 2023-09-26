@@ -1,4 +1,5 @@
 resource "snowflake_role" "genie" {
+  provider = snowflake.useradmin
   name    = "GENIE_ADMIN"
   comment = "GENIE snowflake administrators"
 }
