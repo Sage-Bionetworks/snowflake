@@ -14,64 +14,6 @@ terraform {
   }
 }
 
-variable "snowflake_user" {
-  description = "The username for snowflake user"
-  type        = string
-  sensitive   = true
-}
-variable "snowflake_pwd" {
-  description = "The password for the snowflake user"
-  type        = string
-  sensitive   = true
-}
-
-variable "snowflake_account" {
-  description = "The snowflake account"
-  type        = string
-  sensitive   = true
-}
-
-variable "saml2_issuer" {
-  description = "Google SAML issuer"
-  type        = string
-  sensitive   = true
-}
-
-variable "saml2_sso_url" {
-  description = "Google SAML SSO URL"
-  type        = string
-  sensitive   = true
-}
-
-variable "saml2_x509_cert" {
-  description = "Google SAML x509 certificate"
-  type        = string
-  sensitive   = true
-}
-
-provider "snowflake" {
-  account = var.snowflake_account
-  username = var.snowflake_user
-  password = var.snowflake_pwd
-  role = "SYSADMIN"
-}
-
-provider "snowflake" {
-  alias = "useradmin"
-  account = var.snowflake_account
-  username = var.snowflake_user
-  password = var.snowflake_pwd
-  role = "USERADMIN"
-}
-
-provider "snowflake" {
-  alias = "accountadmin"
-  account = var.snowflake_account
-  username = var.snowflake_user
-  password = var.snowflake_pwd
-  role = "ACCOUNTADMIN"
-}
-
 resource "snowflake_warehouse" "warehouse" {
   name           = "COMPUTE_ORG"
   warehouse_size = "XSMALL"
