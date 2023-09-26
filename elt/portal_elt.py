@@ -23,8 +23,10 @@ portals = {
     "AD": "syn11346063",
     "PSYCHENCODE": "syn20821313.16",
     "NF": "syn16858331",
-    "GENIE": "syn23625806"
+    "GENIE": "syn23625806",
+    "ELITE": "syn51228429"
 }
+
 for portal_name, synapse_id in portals.items():
     portal = syn.tableQuery(f"select * from {synapse_id}")
     portal_df = portal.asDataFrame()
