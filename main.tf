@@ -37,3 +37,11 @@ provider "snowflake" {
   password = var.snowflake_pwd
   role = "ACCOUNTADMIN"
 }
+
+provider "snowflake" {
+  alias = "securityadmin"
+  account = var.snowflake_account
+  username = var.snowflake_user
+  password = var.snowflake_pwd
+  role = "SECURITYADMIN"
+}
