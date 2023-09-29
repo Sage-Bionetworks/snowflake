@@ -66,11 +66,12 @@ resource "snowflake_database_grant" "data_engineering_grant" {
   database_name = "SYNAPSE_DATA_WAREHOUSE"
 
   privilege = "ALL PRIVILEGES"
-  roles     = [snowflake_role_grants.data_engineering_grants]
+  roles     = [snowflake_role.data_engineering.name]
 
   with_grant_option = false
 }
 
+# TODO: Use this in the future: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_role
 # resource "snowflake_schema_grant" "data_engineering_grant" {
 #   database_name = "SYNAPSE_DATA_WAREHOUSE"
 #   schema_name   = "SYNAPSE_RAW"
