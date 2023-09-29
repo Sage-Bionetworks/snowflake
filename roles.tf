@@ -65,7 +65,7 @@ resource "snowflake_role_grants" "data_engineering_grants" {
 resource "snowflake_database_grant" "data_engineering_grant" {
   database_name = "SYNAPSE_DATA_WAREHOUSE"
 
-  privilege = "ALL_PRIVILEGES"
+  privilege = "ALL PRIVILEGES"
   roles     = [snowflake_role_grants.data_engineering_grants]
 
   with_grant_option = false
@@ -75,7 +75,7 @@ resource "snowflake_schema_grant" "data_engineering_grant" {
   database_name = "SYNAPSE_DATA_WAREHOUSE"
   schema_name   = "SYNAPSE_RAW"
 
-  privilege = "ALL_PRIVILEGES"
+  privilege = "ALL PRIVILEGES"
   roles     = [snowflake_role.data_engineering.name]
 
   on_future         = true
@@ -86,7 +86,7 @@ resource "snowflake_schema_grant" "grant" {
   database_name = "SYNAPSE_DATA_WAREHOUSE"
   schema_name   = "SYNAPSE"
 
-  privilege = "ALL_PRIVILEGES"
+  privilege = "ALL PRIVILEGES"
   roles     = [snowflake_role.data_engineering.name]
 
   on_future         = true
