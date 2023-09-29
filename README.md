@@ -23,12 +23,12 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. All admin specific activities will be done in the [admin](admin) folder. Each of the following scripts are responsible for different aspects of Snowflake administration.
 
-* [database.sql](admin/databases.sql] - Database creation.
-* [policies.sql](admin/policies.sql] - Governance policies for schemas.
-* [roles.sql](admin/roles.sql] - Role creation and granting of policies.
-* [oauth.sql](admin/oauth.sql] - Snowflake oauth client creation to connect to tableau.
-* [user.sql](admin/users.sql] - User creation
-* [warehouse.sql](admin/warehouses.sql] - Warehouse creation
+* [database.sql](admin/databases.sql) - Database creation.
+* [policies.sql](admin/policies.sql) - Governance policies for schemas.
+* [roles.sql](admin/roles.sql) - Role creation and granting of policies.
+* [oauth.sql](admin/oauth.sql) - Snowflake oauth client creation to connect to tableau.
+* [user.sql](admin/users.sql) - User creation
+* [warehouse.sql](admin/warehouses.sql) - Warehouse creation
 
 ### User/Role Management
 Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, simple add their Sage Bionetworks email, the setup for google saml is included in the SQL command.
