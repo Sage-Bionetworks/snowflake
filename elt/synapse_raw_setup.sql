@@ -26,6 +26,7 @@ ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
 LIST @my_test_s3_stage;
 
 // First time copying into the warehouse
+USE WAREHOUSE COMPUTE_ORG;
 CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   change_timestamp TIMESTAMP,
   snapshot_timestamp TIMESTAMP,
@@ -39,12 +40,11 @@ CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   position STRING,
   snapshot_date DATE
 );
-
 USE WAREHOUSE COMPUTE_MEDIUM;
 copy into
   userprofilesnapshot
 from (
-  select 
+  select
     $1:change_timestamp as change_timestamp,
     $1:snapshot_timestamp as snapshot_timestamp,
     $1:id as id,
@@ -68,6 +68,64 @@ from (
 pattern='.*userprofilesnapshots/snapshot_date=.*/.*'
 ;
 
+CREATE TABLE IF NOT EXISTS NODESNAPSHOTS (
+	change_type STRING,
+	change_timestamp TIMESTAMP,
+	change_user_id NUMBER,
+	snapshot_timestamp TIMESTAMP,
+	id NUMBER,
+	benefactor_id NUMBER,
+	project_id NUMBER,
+	parent_id NUMBER,
+	node_type STRING,
+	created_on TIMESTAMP,
+	created_by NUMBER,
+	modified_on TIMESTAMP,
+	modified_by NUMBER,
+	version_number NUMBER,
+	file_handle_id NUMBER,
+	name STRING,
+	is_public BOOLEAN,
+	is_controlled BOOLEAN,
+	is_restricted BOOLEAN,
+	snapshot_date DATE
+);
+
+copy into
+  NODESNAPSHOTS
+from (
+  select
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:benefactor_id as benefactor_id,
+    $1:project_id as project_id,
+    $1:parent_id as parent_id,
+    $1:node_type as node_type,
+    $1:created_on as created_on,
+    $1:created_by as created_by,
+    $1:modified_on as modified_on,
+    $1:modified_by as modified_by,
+    $1:version_number as version_number,
+    $1:file_handle_id as file_handle_id,
+    $1:name as name,
+    $1:is_public as is_public,
+    $1:is_controlled as is_controlled,
+    $1:is_restricted as is_restricted,
+    NULLIF(
+      regexp_replace (
+      METADATA$FILENAME,
+      '^nodesnapshots\/snapshot_date\=(.*)\/.*',
+      '\\1'),
+      '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from @my_test_s3_stage/nodesnapshots/)
+pattern='.*nodesnapshots/snapshot_date=.*/.*'
+;
+
+USE WAREHOUSE COMPUTE_ORG;
 // create certified quiz
 CREATE TABLE IF NOT EXISTS certifiedquiz (
     response_id NUMBER,
@@ -79,27 +137,10 @@ CREATE TABLE IF NOT EXISTS certifiedquiz (
     record_date DATE
 );
 
--- CREATE OR REPLACE EXTERNAL TABLE certifiedquiz_external (
---   response_id number AS (value:response_id::number),
---   user_id number AS (value:user_id::number),
---   passed boolean AS (value:passed::boolean),
---   passed_on timestamp AS (value:passed_on::timestamp),
---   stack varchar AS (value:stack::varchar),
---   instance varchar AS (value:instance::varchar),
---   record_date date as to_date(substring(metadata$filename, 34,10))
--- ) PARTITION BY (record_date)
---   LOCATION=@my_test_s3_stage/certifiedquizrecords
---   AUTO_REFRESH = false
---   FILE_FORMAT=(TYPE = PARQUET COMPRESSION = AUTO);
--- -- certifiedquizrecords/record_date=2022-07-08/
--- CREATE OR REPLACE STREAM certifiedquiz_stream ON EXTERNAL TABLE certifiedquiz_external INSERT_ONLY = TRUE;
--- ALTER EXTERNAL TABLE certifiedquiz_external REFRESH;
-
-
 copy into
   certifiedquiz
 from (
-  select 
+  select
      $1:response_id as response_id,
      $1:user_id as user_id,
      $1:passed as passed,
@@ -110,30 +151,16 @@ from (
        regexp_replace (
        METADATA$FILENAME,
        '^certifiedquizrecords\/record_date\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
   from
     @my_test_s3_stage/certifiedquizrecords
   )
-pattern='.*record_date=.*/.*'
-;
-TRUNCATE TABLE IF EXISTS certifiedquiz;
-copy into certifiedquiz from (
-  select 
-    response_id,
-    user_id,
-    passed,
-    passed_on,
-    stack,
-    instance,
-    record_date date as to_date(substring(metadata$filename, 34,10))
-   from @nodesnapshots_raw/)
-   pattern='.*snapshot_date=.*/.*'
+pattern='.*certifiedquizrecords/record_date=.*/.*'
 ;
 
-
-create table IF NOT EXISTS certifiedquizquestion (
+CREATE TABLE IF NOT EXISTS certifiedquizquestion (
     response_id NUMBER,
     question_index NUMBER,
     is_correct BOOLEAN,
@@ -141,6 +168,29 @@ create table IF NOT EXISTS certifiedquizquestion (
     instance STRING,
     record_date DATE
 );
+
+copy into
+  certifiedquizquestion
+from (
+  select
+     $1:response_id as response_id,
+     $1:question_index as question_index,
+     $1:is_correct as is_correct,
+     $1:passed_on as passed_on,
+     $1:stack as stack,
+     $1:instance as instance,
+     NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '^certifiedquizquestionrecords\/record_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+     )                         as record_date
+  from
+    @my_test_s3_stage/certifiedquizrecords
+  )
+pattern='.*certifiedquizquestionrecords/record_date=.*/.*'
+;
 
 create table filedownload (
     timestamp TIMESTAMP,
@@ -188,68 +238,6 @@ create TABLE IF NOT EXISTS usergroupsnapshots (
 	SNAPSHOT_DATE DATE
 );
 
-create TABLE NODESNAPSHOTS (
-	change_type STRING,
-	change_timestamp TIMESTAMP,
-	change_user_id NUMBER,
-	snapshot_timestamp TIMESTAMP,
-	id NUMBER,
-	benefactor_id NUMBER,
-	project_id NUMBER,
-	parent_id NUMBER,
-	node_type STRING,
-	created_on TIMESTAMP,
-	created_by NUMBER,
-	modified_on TIMESTAMP,
-	modified_by NUMBER,
-	version_number NUMBER,
-	file_handle_id NUMBER,
-	name STRING,
-	is_public BOOLEAN,
-	is_controlled BOOLEAN,
-	is_restricted BOOLEAN,
-	snapshot_date DATE
-);
-
-LIST @nodesnapshots_raw;
-
-copy into NODESNAPSHOTS from (
-  select 
-     $1:change_type as change_type,
-     $1:change_timestamp as change_timestamp,
-     $1:change_user_id as change_user_id,
-     $1:snapshot_timestamp as snapshot_timestamp,
-     $1:id as id,
-     $1:benefactor_id as benefactor_id,
-     $1:project_id as project_id,
-     $1:parent_id as parent_id,
-     $1:node_type as node_type,
-     $1:created_on as created_on,
-     $1:created_by as created_by,
-     $1:modified_on as modified_on,
-     $1:modified_by as modified_by,
-     $1:version_number as version_number,
-     $1:file_handle_id as file_handle_id,
-     $1:name as name,
-     $1:is_public as is_public,
-     $1:is_controlled as is_controlled,
-     $1:is_restricted as is_restricted,
-     NULLIF(
-       regexp_replace (
-       METADATA$FILENAME,
-       '^snapshot_date\=(.*)\/.*',
-       '\\1'), 
-       '__HIVE_DEFAULT_PARTITION__'
-     )                         as snapshot_date
-   from @nodesnapshots_raw/)
-   pattern='.*snapshot_date=.*/.*'
-;
-
-
-// This is to add a new column
-// alter table verificationsubmissionsnapshots_raw
-// add snapshot_date DATE;
-
 // Create verification submission snapshots table
 create TABLE verificationsubmissionsnapshots (
 	snapshot_timestamp TIMESTAMP,
@@ -262,30 +250,11 @@ create TABLE verificationsubmissionsnapshots (
 	snapshot_date DATE
 );
 
-CREATE STAGE verificationsubmissionsnapshots
-  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
-// This was the original way i did it, but..
-// There is a simplier way
--- copy into VERIFICATIONSUBMISSIONSNAPSHOTS_RAW
---  from (select $1:snapshot_timestamp::TIMESTAMP,
---               $1:created_on::TIMESTAMP,
---               $1:created_by::NUMBER,
---               $1:state_history::STRING,
---               $1:change_timestamp::TIMESTAMP,
---               $1:change_type::STRING,
---               $1:id::NUMBER,
---               '2023-09-01'
---       from @verificationsubmissionsnapshots_raw/snapshot_date=2023-09-01/)
--- FILE_FORMAT = (TYPE = PARQUET);
-
--- select * from verificationsubmissionsnapshots_raw;
-
-LIST @verificationsubmissionsnapshots;
 
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into verificationsubmissionsnapshots from (
-  select 
+  select
      $1:snapshot_timestamp as snapshot_timestamp,
      $1:created_on as created_on,
      $1:created_by as created_by,
@@ -297,18 +266,12 @@ copy into verificationsubmissionsnapshots from (
        regexp_replace (
        METADATA$FILENAME,
        '.*\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as snapshot_date
    from @verificationsubmissionsnapshots/)
    pattern='.*/snapshot_date=.*/.*'
 ;
-
-// Create teammember snapshot
-// These are internal stages, that need to be dropped
-// Will need to convert these to external stages for scheduled copying
-CREATE STAGE IF NOT EXISTS teammembersnapshots
-  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS teammembersnapshots (
 	snapshot_timestamp TIMESTAMP,
   change_timestamp TIMESTAMP,
@@ -320,7 +283,7 @@ CREATE TABLE IF NOT EXISTS teammembersnapshots (
 
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into teammembersnapshots from (
-  select 
+  select
      $1:snapshot_timestamp as snapshot_timestamp,
      $1:change_timestamp as change_timestamp,
      $1:team_id as team_id,
@@ -330,17 +293,13 @@ copy into teammembersnapshots from (
        regexp_replace (
        METADATA$FILENAME,
        '.*\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as snapshot_date
    from @teammembersnapshots/)
    pattern='.*snapshot_date=.*/.*'
 ;
 
-DROP STAGE teammembersnapshots;
-// file upload records
-CREATE STAGE IF NOT EXISTS fileupload
-  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS fileupload (
 	timestamp TIMESTAMP,
   user_id NUMBER,
@@ -354,7 +313,7 @@ CREATE TABLE IF NOT EXISTS fileupload (
 );
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into fileupload from (
-  select 
+  select
      $1:timestamp as timestamp,
      $1:user_id as user_id,
      $1:project_id as project_id,
@@ -367,16 +326,12 @@ copy into fileupload from (
        regexp_replace (
        METADATA$FILENAME,
        '.*\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
    from @fileupload/)
    pattern='.*record_date=.*/.*'
 ;
-DROP STAGE fileupload;
-//file snapshots
-CREATE STAGE IF NOT EXISTS filesnapshots
-  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 CREATE TABLE IF NOT EXISTS filesnapshots (
 	change_type STRING,
   change_timestamp TIMESTAMP,
@@ -401,7 +356,7 @@ CREATE TABLE IF NOT EXISTS filesnapshots (
 );
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into filesnapshots from (
-  select 
+  select
      $1:change_type as change_type,
      $1:change_timestamp as change_timestamp,
      $1:change_user_id as change_user_id,
@@ -425,16 +380,12 @@ copy into filesnapshots from (
        regexp_replace (
        METADATA$FILENAME,
        '.*\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as snapshot_date
    from @filesnapshots/)
    pattern='.*snapshot_date=.*/.*'
 ;
-
-// processed access records
-CREATE STAGE IF NOT EXISTS processedaccess
-  file_format = (TYPE = PARQUET COMPRESSION = AUTO);
 
 CREATE TABLE IF NOT EXISTS processedaccess (
 	session_id STRING,
@@ -468,7 +419,7 @@ CREATE TABLE IF NOT EXISTS processedaccess (
 
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into processedaccess from (
-  select 
+  select
      $1:session_id as session_id,
      $1:timestamp as timestamp,
      $1:user_id as user_id,
@@ -499,52 +450,9 @@ copy into processedaccess from (
        regexp_replace (
        METADATA$FILENAME,
        '.*\=(.*)\/.*',
-       '\\1'), 
+       '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
    from @processedaccess/)
    pattern='.*record_date=.*/.*'
-;
-
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
-    question_index NUMBER,
-    question_group_number NUMBER,
-    version STRING,
-    fre_q FLOAT,
-    fre_help FLOAT,
-    difference_fre FLOAT,
-    fkgl_q NUMBER,
-    fkgl_help FLOAT,
-    difference_fkgl FLOAT,
-    notes STRING,
-    type STRING,
-    question_text STRING
-);
-// Loaded the table manually...
-
-// Create certified quiz question latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
-
-// Create certified quiz latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
-
-
-// Create View of user profile and cert join
-CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
-  with user_cert_joined as (
-    select *
-    from synapse_data_warehouse.synapse.userprofile_latest user
-    LEFT JOIN (
-      select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
-    ) cert
-    ON user.ID = cert.USER_ID
-  )
-  select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
-  from user_cert_joined
 ;

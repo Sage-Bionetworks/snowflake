@@ -91,3 +91,47 @@ SELECT *
 FROM RANKED_NODES
 where n = 1
 ;
+
+
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
+    question_index NUMBER,
+    question_group_number NUMBER,
+    version STRING,
+    fre_q FLOAT,
+    fre_help FLOAT,
+    difference_fre FLOAT,
+    fkgl_q NUMBER,
+    fkgl_help FLOAT,
+    difference_fkgl FLOAT,
+    notes STRING,
+    type STRING,
+    question_text STRING
+);
+// Loaded the table manually...
+
+// Create certified quiz question latest
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
+    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
+    where INSTANCE =
+    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
+
+// Create certified quiz latest
+CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
+    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
+    where INSTANCE =
+    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
+
+
+// Create View of user profile and cert join
+CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
+  with user_cert_joined as (
+    select *
+    from synapse_data_warehouse.synapse.userprofile_latest user
+    LEFT JOIN (
+      select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
+    ) cert
+    ON user.ID = cert.USER_ID
+  )
+  select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
+  from user_cert_joined
+;
