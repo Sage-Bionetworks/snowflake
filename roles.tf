@@ -71,24 +71,24 @@ resource "snowflake_database_grant" "data_engineering_grant" {
   with_grant_option = false
 }
 
-resource "snowflake_schema_grant" "data_engineering_grant" {
-  database_name = "SYNAPSE_DATA_WAREHOUSE"
-  schema_name   = "SYNAPSE_RAW"
+# resource "snowflake_schema_grant" "data_engineering_grant" {
+#   database_name = "SYNAPSE_DATA_WAREHOUSE"
+#   schema_name   = "SYNAPSE_RAW"
 
-  privilege = "ALL PRIVILEGES"
-  roles     = [snowflake_role.data_engineering.name]
+#   privilege = "ALL PRIVILEGES"
+#   roles     = [snowflake_role.data_engineering.name]
 
-  on_future         = true
-  with_grant_option = false
-}
+#   on_future         = true
+#   with_grant_option = false
+# }
 
-resource "snowflake_schema_grant" "grant" {
-  database_name = "SYNAPSE_DATA_WAREHOUSE"
-  schema_name   = "SYNAPSE"
+# resource "snowflake_schema_grant" "grant" {
+#   database_name = "SYNAPSE_DATA_WAREHOUSE"
+#   schema_name   = "SYNAPSE"
 
-  privilege = "ALL PRIVILEGES"
-  roles     = [snowflake_role.data_engineering.name]
+#   privilege = "ALL PRIVILEGES"
+#   roles     = [snowflake_role.data_engineering.name]
 
-  on_future         = true
-  with_grant_option = false
-}
+#   on_future         = true
+#   with_grant_option = false
+# }
