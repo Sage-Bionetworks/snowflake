@@ -39,3 +39,56 @@ resource "snowflake_role_grants" "recover_data_analytics_grants" {
     snowflake_user.eneto.name,
   ]
 }
+
+resource "snowflake_role" "data_engineering" {
+  provider = snowflake.useradmin
+  name    = "DATA_ENGINEERING"
+  comment = "Synapse data engineering"
+}
+
+resource "snowflake_role_grants" "data_engineering_grants" {
+  provider = snowflake.securityadmin
+  role_name = snowflake_role.data_engineering.name
+
+  roles = [
+    "USERADMIN",
+  ]
+
+  users = [
+    snowflake_user.bmacdonald.name,
+    snowflake_user.rxu.name,
+    snowflake_user.psnyder.name,
+    snowflake_user.bfauble.name,
+  ]
+}
+
+resource "snowflake_database_grant" "data_engineering_grant" {
+  database_name = "SYNAPSE_DATA_WAREHOUSE"
+
+  privilege = "ALL_PRIVILEGES"
+  roles     = [snowflake_role_grants.data_engineering_grants]
+
+  with_grant_option = false
+}
+
+resource "snowflake_schema_grant" "data_engineering_grant" {
+  database_name = "SYNAPSE_DATA_WAREHOUSE"
+  schema_name   = "SYNAPSE_RAW"
+
+  privilege = "ALL_PRIVILEGES"
+  roles     = [snowflake_role.data_engineering.name]
+
+  on_future         = true
+  with_grant_option = false
+}
+
+resource "snowflake_schema_grant" "grant" {
+  database_name = "SYNAPSE_DATA_WAREHOUSE"
+  schema_name   = "SYNAPSE"
+
+  privilege = "ALL_PRIVILEGES"
+  roles     = [snowflake_role.data_engineering.name]
+
+  on_future         = true
+  with_grant_option = false
+}

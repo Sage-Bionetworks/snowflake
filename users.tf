@@ -146,3 +146,9 @@ resource "snowflake_user" "eneto" {
   name         = "elias.chaibub.neto@sagebase.org"
   login_name   = "elias.chaibub.neto@sagebase.org"
 }
+
+resource "snowflake_user" "bfauble" {
+  provider = snowflake.useradmin
+  name         = "bryan.fauble@sagebase.org"
+  login_name   = "bryan.fauble@sagebase.org"
+}
