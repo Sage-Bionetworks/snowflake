@@ -72,13 +72,13 @@ resource "snowflake_database_grant" "data_engineer_grant" {
 }
 
 # TODO: Use this in the future: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_role
-resource "snowflake_schema_grant" "data_engineer_grant" {
-  database_name = "SYNAPSE_DATA_WAREHOUSE"
-  schema_name   = "SYNAPSE_RAW"
+# resource "snowflake_schema_grant" "data_engineer_grant" {
+#   database_name = "SYNAPSE_DATA_WAREHOUSE"
+#   schema_name   = "SYNAPSE_RAW"
 
-  privilege = "ALL PRIVILEGES"
-  roles     = [snowflake_role.data_engineer.name]
+#   privilege = "ALL PRIVILEGES"
+#   roles     = [snowflake_role.data_engineer.name]
 
-  on_future         = true
-  with_grant_option = false
-}
+#   on_future         = true
+#   with_grant_option = false
+# }
