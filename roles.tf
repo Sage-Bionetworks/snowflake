@@ -40,9 +40,9 @@ resource "snowflake_role_grants" "recover_data_analytics_grants" {
   ]
 }
 
-resource "snowflake_role" "data_engineering" {
+resource "snowflake_role" "data_engineer" {
   provider = snowflake.useradmin
-  name    = "DATA_ENGINEERING"
+  name    = "DATA_ENGINEER"
   comment = "Synapse data engineering"
 }
 
