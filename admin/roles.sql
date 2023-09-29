@@ -96,3 +96,28 @@ TO ROLE masking_admin;
 USE ROLE accountadmin;
 GRANT APPLY MASKING POLICY on ACCOUNT
 TO ROLE masking_admin;
+
+CREATE ROLE IF NOT EXISTS data_engineer;
+USE ROLE SECURITYADMIN;
+grant role data_engineer
+to role useradmin;
+GRANT CREATE SCHEMA, USAGE ON DATABASE SYNAPSE_DATA_WAREHOUSE
+TO ROLE data_engineer;
+-- GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE SYNAPSE_DATA_WAREHOUSE
+-- TO ROLE data_engineer;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE SYNAPSE_DATA_WAREHOUSE
+-- TO ROLE data_engineer;
+GRANT ALL PRIVILEGES ON FUTURE SCHEMAS IN DATABASE SYNAPSE_DATA_WAREHOUSE
+TO ROLE data_engineer;
+GRANT ALL PRIVILEGES ON FUTURE TABLES IN DATABASE SYNAPSE_DATA_WAREHOUSE
+TO ROLE data_engineer;
+GRANT ROLE data_engineer
+TO USER "phil.snyder@sagebase.org";
+GRANT ROLE data_engineer
+TO USER "rixing.xu@sagebase.org";
+GRANT ROLE data_engineer
+TO USER "thomas.yu@sagebase.org";
+GRANT ROLE data_engineer
+TO USER "brad.macdonald@sagebase.org";
+GRANT ROLE data_engineer
+TO USER "bryan.fauble@sagebase.org";
