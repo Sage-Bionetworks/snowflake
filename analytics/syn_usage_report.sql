@@ -15,3 +15,16 @@ GROUP BY
 ORDER BY
     number_of_downloads DESC
 ;
+
+// Download counts for AD files
+select ad."id", ad."name", ad."study", count(*) as number_of_downloads
+from sage.portal_raw.ad
+LEFT JOIN
+    synapse_data_warehouse.synapse_raw.filedownload fd
+ON
+    ad."dataFileHandleId" = fd.file_handle_id
+GROUP BY
+    ad."id", ad."name", ad."study"
+ORDER BY
+    number_of_downloads DESC
+;
