@@ -55,3 +55,26 @@ LIMIT 10;
 
 // Look into this: https://github.com/nf-osi/usagereports/blob/main/notes.md
 // https://github.com/nf-osi/usagereports/blob/patch/pkg-update/README.md#workflow
+
+
+-- ## Number of calls per user
+-- with U
+-- as (
+--     SELECT user_id, count(*) as user_calls
+--     FROM processedaccessrecord
+--     WHERE
+--         DATE(record_date) > DATE('2023-09-01') and
+--         client = 'PYTHON'
+--     group by user_id
+-- ),
+-- T as (
+--     SELECT distinct id, user_name
+--     FROM userprofilesnapshots
+-- )
+-- select *
+-- FROM U
+-- LEFT JOIN T
+-- ON U.user_id = T.id
+-- ORDER BY user_calls DESC
+-- ;
+   

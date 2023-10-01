@@ -36,6 +36,9 @@ COPY INTO userprofilesnapshot FROM (
 PATTERN = '.*userprofilesnapshots/snapshot_date=.*/.*';
 ALTER TASK userprofilesnapshot_task RESUME;
 
+// zero copy clone of processed access records
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
+CLONE synapse_data_warehouse.synapse_raw.processedaccess;
 
 select count(*) from userprofilesnapshot;
 //1883590
