@@ -86,16 +86,19 @@ TO ROLE PUBLIC;
 
 USE ROLE USERADMIN;
 CREATE ROLE IF NOT EXISTS masking_admin;
+
 use role securityadmin;
-GRANT ROLE masking_admin
-TO ROLE useradmin;
-GRANT ROLE masking_admin
-TO USER "thomas.yu@sagebase.org";
 GRANT CREATE MASKING POLICY ON SCHEMA SYNAPSE_DATA_WAREHOUSE.synapse
 TO ROLE masking_admin;
-USE ROLE accountadmin;
+
+GRANT ROLE masking_admin
+TO USER "thomas.yu@sagebase.org";
+USE ROLE ACCOUNTADMIN;
+
 GRANT APPLY MASKING POLICY on ACCOUNT
-TO ROLE masking_admin;
+to ROLE masking_admin;
+
+USE ROLE USERADMIN;
 
 CREATE ROLE IF NOT EXISTS data_engineer;
 USE ROLE SECURITYADMIN;
