@@ -265,6 +265,8 @@ copy into processedaccess from (
    pattern='.*processedaccessrecord/record_date=.*/.*'
 ;
 
+-- ALTER TABLE processedaccess CLUSTER BY (record_date);
+
 create table filedownload (
     timestamp TIMESTAMP,
     user_id NUMBER,
