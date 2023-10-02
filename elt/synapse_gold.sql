@@ -46,6 +46,7 @@ SELECT *
 FROM RANKED_NODES
 where n = 1;
 use role masking_admin;
+USE SCHEMA synapse_data_warehouse.synapse;
 ALTER TABLE IF EXISTS userprofile_latest
 MODIFY COLUMN email
 SET MASKING POLICY email_mask;

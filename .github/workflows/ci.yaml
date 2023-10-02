@@ -56,9 +56,9 @@ jobs:
         run: |
           ~/bin/snowsql -f admin/users.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
 
-      - name: Governance
-        run: |
-          ~/bin/snowsql -f admin/policies.sql
+      # - name: Governance
+      #   run: |
+      #     ~/bin/snowsql -f admin/policies.sql
 
       - name: Roles and granting policies
         run: |
