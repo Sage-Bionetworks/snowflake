@@ -117,10 +117,20 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
 
 // Create certified quiz latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.certifiedquiz_latest as WITH
+  RANKED_NODES AS (
+  SELECT
+     s.*,
+     "row_number"() OVER (PARTITION BY s.USER_ID ORDER BY RESPONSE_ID DESC) n
+  FROM synapse_data_warehouse.synapse_raw.certifiedquiz s
+  WHERE
+    INSTANCE =
+    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz)
+)
+SELECT *
+FROM RANKED_NODES
+where n = 1
+;
 
 
 // Create View of user profile and cert join
