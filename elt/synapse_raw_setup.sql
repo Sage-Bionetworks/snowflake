@@ -10,20 +10,44 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS test_s3
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::631692904429:role/test_snowflake_integration'
   STORAGE_ALLOWED_LOCATIONS = ('s3://tyu-test-snowflake');
 
+CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/test-snowflake-access-SnowflakeServiceRole-1LXZYAMMKTHJY'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
+
+DESC INTEGRATION synapse_dev_warehouse_s3;
 DESC INTEGRATION test_s3;
 USE SCHEMA synapse_data_warehouse.synapse_raw;
+USE ROLE SECURITYADMIN;
 GRANT USAGE ON INTEGRATION test_s3 TO ROLE SYSADMIN;
+GRANT USAGE ON INTEGRATION synapse_dev_warehouse_s3 TO ROLE SYSADMIN;
 
 USE ROLE sysadmin;
 // Use this stage for now my_test_s3_stage
-CREATE STAGE IF NOT EXISTS my_test_s3_stage
-  STORAGE_INTEGRATION = test_s3
-  URL = 's3://tyu-test-snowflake/'
+-- CREATE STAGE IF NOT EXISTS my_test_s3_stage
+--   STORAGE_INTEGRATION = test_s3
+--   URL = 's3://tyu-test-snowflake/'
+--   FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
+--   DIRECTORY = (ENABLE = TRUE);
+
+-- ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
+
+-- LIST @my_test_s3_stage;
+
+USE DATABASE synapse_data_warehouse;
+USE SCHEMA synapse_raw;
+CREATE STAGE IF NOT EXISTS synapse_dev_warehouse_s3_stage
+  STORAGE_INTEGRATION = synapse_dev_warehouse_s3
+  URL = 's3://dev.datawarehouse.sagebase.org/datawarehouse/'
   FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
   DIRECTORY = (ENABLE = TRUE);
 
-ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
-LIST @my_test_s3_stage;
+ALTER STAGE IF EXISTS synapse_dev_warehouse_s3_stage REFRESH;
+
+LIST @synapse_dev_warehouse_s3_stage;
+
 
 // First time copying into the warehouse
 USE WAREHOUSE COMPUTE_ORG;
@@ -461,3 +485,4 @@ copy into filesnapshots from (
    from @filesnapshots/)
    pattern='.*snapshot_date=.*/.*'
 ;
+

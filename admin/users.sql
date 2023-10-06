@@ -40,3 +40,6 @@ CREATE USER IF NOT EXISTS "meghasyam@sagebase.org";
 CREATE USER IF NOT EXISTS "pranav.anbarasu@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
+CREATE USER IF NOT EXISTS "john.hill@sagebase.org";
+CREATE USER IF NOT EXISTS "bruce.hoff@sagebase.org";
+CREATE USER IF NOT EXISTS "marco.marasca@sagebase.org";

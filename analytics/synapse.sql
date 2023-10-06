@@ -1,7 +1,6 @@
 USE ROLE PUBLIC;
 USE WAREHOUSE COMPUTE_ORG;
 USE DATABASE synapse_data_warehouse;
-USE SCHEMA synapse_raw;
 
 SELECT distinct(FILE_NAME)
 FROM synapse_data_warehouse.synapse_raw.filesnapshots;
