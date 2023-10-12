@@ -16,13 +16,22 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/test-snowflake-access-SnowflakeServiceRole-1LXZYAMMKTHJY'
   STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
-
+CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = 'S3'
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-accesss-SnowflakeServiceRole-HL66JOP7K4BT'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org');
 DESC INTEGRATION synapse_dev_warehouse_s3;
+DESC INTEGRATION synapse_prod_warehouse_s3;
+
 DESC INTEGRATION test_s3;
 USE SCHEMA synapse_data_warehouse.synapse_raw;
 USE ROLE SECURITYADMIN;
 GRANT USAGE ON INTEGRATION test_s3 TO ROLE SYSADMIN;
 GRANT USAGE ON INTEGRATION synapse_dev_warehouse_s3 TO ROLE SYSADMIN;
+GRANT USAGE ON INTEGRATION synapse_prod_warehouse_s3 TO ROLE SYSADMIN;
+
 
 USE ROLE sysadmin;
 // Use this stage for now my_test_s3_stage
@@ -48,11 +57,22 @@ ALTER STAGE IF EXISTS synapse_dev_warehouse_s3_stage REFRESH;
 
 LIST @synapse_dev_warehouse_s3_stage;
 
+CREATE STAGE IF NOT EXISTS synapse_prod_warehouse_s3_stage
+  STORAGE_INTEGRATION = synapse_prod_warehouse_s3
+  URL = 's3://prod.datawarehouse.sagebase.org/warehouse/'
+  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
+  DIRECTORY = (ENABLE = TRUE);
+
+ALTER STAGE IF EXISTS synapse_prod_warehouse_s3_stage REFRESH;
+
+LIST @synapse_prod_warehouse_s3_stage;
 
 // First time copying into the warehouse
 USE WAREHOUSE COMPUTE_ORG;
 CREATE TABLE IF NOT EXISTS userprofilesnapshot (
+  change_type STRING,
   change_timestamp TIMESTAMP,
+  change_user_id NUMBER,
   snapshot_timestamp TIMESTAMP,
   id NUMBER,
   user_name STRING,
@@ -63,13 +83,17 @@ CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   company STRING,
   position STRING,
   snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
+LIST '@synapse_prod_warehouse_s3_stage/userprofilesnapshots/';
 USE WAREHOUSE COMPUTE_MEDIUM;
 copy into
   userprofilesnapshot
 from (
   select
+    $1:change_type as change_type,
     $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
     $1:snapshot_timestamp as snapshot_timestamp,
     $1:id as id,
     $1:user_name as user_name,
@@ -82,12 +106,12 @@ from (
       NULLIF(
         regexp_replace(
           metadata$filename,
-          '^userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
+          '.*userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
         ), 
         '__HIVE_DEFAULT_PARTITION__'
       ) as snapshot_date
   from
-    @my_test_s3_stage/userprofilesnapshots
+    @synapse_prod_warehouse_s3_stage/userprofilesnapshots
   )
 pattern='.*userprofilesnapshots/snapshot_date=.*/.*'
 ;
@@ -113,7 +137,8 @@ CREATE TABLE IF NOT EXISTS NODESNAPSHOTS (
 	is_controlled BOOLEAN,
 	is_restricted BOOLEAN,
 	snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
 
 copy into
   NODESNAPSHOTS
@@ -141,13 +166,14 @@ from (
     NULLIF(
       regexp_replace (
       METADATA$FILENAME,
-      '^nodesnapshots\/snapshot_date\=(.*)\/.*',
+      '.*nodesnapshots\/snapshot_date\=(.*)\/.*',
       '\\1'),
       '__HIVE_DEFAULT_PARTITION__'
     )                         as snapshot_date
-  from @my_test_s3_stage/nodesnapshots/)
+  from @synapse_prod_warehouse_s3_stage/nodesnapshots/)
 pattern='.*nodesnapshots/snapshot_date=.*/.*'
 ;
+-- TODO rest of these
 
 USE WAREHOUSE COMPUTE_ORG;
 // create certified quiz
