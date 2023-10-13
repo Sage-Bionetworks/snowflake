@@ -539,7 +539,7 @@ pattern='.*filesnapshots/snapshot_date=.*/.*'
 ;
 
 -- TODO Processed access no longer exists in warehouse?
-
+-- * SNOW-7
 CREATE TABLE IF NOT EXISTS processedaccess (
 	session_id STRING,
   timestamp TIMESTAMP,
