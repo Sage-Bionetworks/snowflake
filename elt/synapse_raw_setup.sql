@@ -1,3 +1,4 @@
+// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 USE DATABASE synapse_data_warehouse;
 USE SCHEMA synapse_raw;
 USE WAREHOUSE COMPUTE_ORG;
@@ -174,10 +175,8 @@ from (
 pattern='.*nodesnapshots/snapshot_date=.*/.*'
 ;
 -- TODO rest of these
-
-USE WAREHOUSE COMPUTE_ORG;
 // create certified quiz
-CREATE TABLE IF NOT EXISTS certifiedquiz (
+CREATE OR REPLACE TABLE certifiedquiz (
     response_id NUMBER,
     user_id NUMBER,
     passed BOOLEAN,
@@ -185,7 +184,8 @@ CREATE TABLE IF NOT EXISTS certifiedquiz (
     stack STRING,
     instance STRING,
     record_date DATE
-);
+)
+CLUSTER BY (record_date);
 
 copy into
   certifiedquiz
@@ -200,17 +200,17 @@ from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '^certifiedquizrecords\/record_date\=(.*)\/.*',
+       '.*certifiedquizrecords\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
   from
-    @my_test_s3_stage/certifiedquizrecords
+    @synapse_prod_warehouse_s3_stage/certifiedquizrecords
   )
 pattern='.*certifiedquizrecords/record_date=.*/.*'
 ;
 
-CREATE TABLE IF NOT EXISTS certifiedquizquestion (
+CREATE OR REPLACE TABLE certifiedquizquestion (
     response_id NUMBER,
     question_index NUMBER,
     is_correct BOOLEAN,
@@ -232,50 +232,47 @@ from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '^certifiedquizquestionrecords\/record_date\=(.*)\/.*',
+       '.*certifiedquizquestionrecords\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
   from
-    @my_test_s3_stage/certifiedquizrecords
+    @synapse_prod_warehouse_s3_stage/certifiedquizrecords
   )
 pattern='.*certifiedquizquestionrecords/record_date=.*/.*'
 ;
 
-
-CREATE TABLE IF NOT EXISTS processedaccess (
+CREATE OR REPLACE TABLE processedaccess (
 	session_id STRING,
-    timestamp TIMESTAMP,
-    user_id NUMBER,
-    method STRING,
-    request_url STRING,
-    user_agent STRING,
-    host STRING,
-    origin STRING,
-	  x_forwarded_for STRING,
-    via STRING,
-    thread_id NUMBER,
-    elapse_ms NUMBER,
-    success BOOLEAN,
-    stack STRING,
-    instance STRING,
-    vm_id STRING,
-    return_object_id STRING,
-    query_string STRING,
-    response_status NUMBER,
-    oauth_client_id STRING,
-    basic_auth_username STRING,
-    auth_method STRING,
-    normalized_method_signature STRING,
-    client STRING,
-    client_version STRING,
-    entity_id NUMBER,
-    record_date DATE
-);
+  timestamp TIMESTAMP,
+  user_id NUMBER,
+  method STRING,
+  request_url STRING,
+  user_agent STRING,
+  host STRING,
+  origin STRING,
+  x_forwarded_for STRING,
+  via STRING,
+  thread_id NUMBER,
+  elapse_ms NUMBER,
+  success BOOLEAN,
+  stack STRING,
+  instance STRING,
+  vm_id STRING,
+  return_object_id STRING,
+  query_string STRING,
+  response_status NUMBER,
+  oauth_client_id STRING,
+  basic_auth_username STRING,
+  auth_method STRING,
+  normalized_method_signature STRING,
+  client STRING,
+  client_version STRING,
+  entity_id NUMBER,
+  record_date DATE
+)
+CLUSTER BY (record_date);
 
-USE WAREHOUSE COMPUTE_MEDIUM;
-
-// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into processedaccess from (
   select
      $1:session_id as session_id,
@@ -307,17 +304,14 @@ copy into processedaccess from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '^processedaccessrecord\/record_date\=(.*)\/.*',
+       '.*processedaccessrecord\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
-   from @my_test_s3_stage/processedaccessrecord)
+   from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
    pattern='.*processedaccessrecord/record_date=.*/.*'
 ;
-
--- ALTER TABLE processedaccess CLUSTER BY (record_date);
-
-create table filedownload (
+CREATE OR REPLACE TABLE filedownload (
     timestamp TIMESTAMP,
     user_id NUMBER,
     project_id NUMBER,
@@ -329,6 +323,27 @@ create table filedownload (
     instance STRING,
     record_date DATE
 );
+copy into filedownload from (
+  select
+     $1:timestamp as timestamp,
+     $1:user_id as user_id,
+     $1:project_id as project_id,
+     $1:file_handle_id as file_handle_id,
+     $1:downloaded_file_handle_id as downloaded_file_handle_id,
+     $1:association_object_id as association_object_id,
+     $1:association_object_type as association_object_type,
+     $1:stack as stack,
+     $1:instance as instance,
+     NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*processedaccessrecord\/record_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+     )                         as record_date
+  from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
+  pattern='.*processedaccessrecord/record_date=.*/.*'
+;
 
 create table IF NOT EXISTS aclsnapshots (
   change_timestamp TIMESTAMP,
