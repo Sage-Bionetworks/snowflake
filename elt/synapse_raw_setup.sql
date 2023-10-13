@@ -154,6 +154,7 @@ from (
   from @synapse_prod_warehouse_s3_stage/nodesnapshots/)
 pattern='.*nodesnapshots/snapshot_date=.*/.*'
 ;
+-- * SNOW-4 create certified quiz
 CREATE TABLE IF NOT EXISTS certifiedquiz (
     response_id NUMBER,
     user_id NUMBER,
