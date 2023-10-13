@@ -198,14 +198,7 @@ pattern='.*aclsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK aclsnapshots_task RESUME;
 
-// zero copy clone of processed access records
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
-CLONE synapse_data_warehouse.synapse_raw.processedaccess;
-
-select count(*) from userprofilesnapshot;
-//1883590
-
-// 7975867
+-- ! Task tracking
 SHOW tasks;
 
 select *
