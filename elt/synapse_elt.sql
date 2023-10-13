@@ -260,6 +260,33 @@ pattern='.*usergroupsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK usergroupsnapshots_task RESUME;
 
+CREATE OR REPLACE TASK verificationsubmissionsnapshots_task
+    SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
+    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
+AS
+copy into verificationsubmissionsnapshots from (
+  select
+    $1:change_timestamp as change_timestamp,
+    $1:change_type as change_type,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:created_on as created_on,
+    $1:created_by as created_by,
+    $1:state_history as state_history,
+    NULLIF(
+      regexp_replace (
+      METADATA$FILENAME,
+      '.*verificationsubmissionsnapshots\/snapshot_date\=(.*)\/.*',
+      '\\1'),
+      '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/verificationsubmissionsnapshots
+  )
+pattern='.*verificationsubmissionsnapshots/snapshot_date=.*/.*'
+;
+ALTER TASK verificationsubmissionsnapshots_task RESUME;
+
 -- ! Task tracking
 SHOW tasks;
 
