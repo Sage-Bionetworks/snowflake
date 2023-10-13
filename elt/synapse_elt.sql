@@ -169,6 +169,35 @@ pattern='.*filedownloadrecords/record_date=.*/.*'
 ;
 ALTER TASK filedownload_task RESUME;
 
+CREATE OR REPLACE TASK aclsnapshots_task
+    SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
+    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
+AS
+copy into
+  aclsnapshots
+from (
+  select
+    $1:change_timestamp as change_timestamp,
+    $1:change_type as change_type,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:owner_id as owner_id,
+    $1:owner_type as owner_type,
+    $1:created_on as created_on,
+    $1:resource_access as resource_access,
+    NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*aclsnapshots\/snapshot_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/aclsnapshots
+  )
+pattern='.*aclsnapshots/snapshot_date=.*/.*'
+;
+ALTER TASK aclsnapshots_task RESUME;
+
 // zero copy clone of processed access records
 CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
 CLONE synapse_data_warehouse.synapse_raw.processedaccess;
