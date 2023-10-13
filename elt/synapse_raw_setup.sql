@@ -409,7 +409,7 @@ copy into verificationsubmissionsnapshots from (
   )
 pattern='.*verificationsubmissionsnapshots/snapshot_date=.*/.*'
 ;
-
+-- * SNOW-8
 CREATE TABLE IF NOT EXISTS teammembersnapshots (
   change_type STRING,
   change_timestamp TIMESTAMP,
