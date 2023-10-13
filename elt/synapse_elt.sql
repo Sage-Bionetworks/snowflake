@@ -1,40 +1,48 @@
 use role accountadmin;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
+USE SCHEMA SYNAPSE_RAW;
 
-CREATE OR REPLACE TASK refresh_synapse_stage_task
+CREATE OR REPLACE TASK refresh_synapse_prod_stage_task
     SCHEDULE = 'USING CRON 0 23 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
-ALTER STAGE IF EXISTS my_test_s3_stage REFRESH;
+ALTER STAGE IF EXISTS SYNAPSE_PROD_WAREHOUSE_S3_STAGE REFRESH;
 ALTER TASK refresh_synapse_stage_task RESUME;
 
 CREATE OR REPLACE TASK userprofilesnapshot_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
-COPY INTO userprofilesnapshot FROM (
-    SELECT 
-        $1:change_timestamp as change_timestamp,
-        $1:snapshot_timestamp as snapshot_timestamp,
-        $1:id as id,
-        $1:user_name as user_name,
-        $1:first_name as first_name,
-        $1:last_name as last_name,
-        $1:email as email,
-        $1:location as location,
-        $1:company as company,
-        $1:position as position,
-        NULLIF(
-            regexp_replace(
-            metadata$filename,
-                '^userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
-            ), 
-            '__HIVE_DEFAULT_PARTITION__'
-        ) as snapshot_date
-    FROM
-        @my_test_s3_stage/userprofilesnapshots
-)
-PATTERN = '.*userprofilesnapshots/snapshot_date=.*/.*';
+copy into
+  userprofilesnapshot
+from (
+  select
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:user_name as user_name,
+    $1:first_name as first_name,
+    $1:last_name as last_name,
+    $1:email as email,
+    $1:location as location,
+    $1:company as company,
+    $1:position as position,
+      NULLIF(
+        regexp_replace(
+          metadata$filename,
+          '.*userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
+        ),
+        '__HIVE_DEFAULT_PARTITION__'
+      ) as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/userprofilesnapshots
+  )
+pattern='.*userprofilesnapshots/snapshot_date=.*/.*';
+
 ALTER TASK userprofilesnapshot_task RESUME;
+
 
 // zero copy clone of processed access records
 CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
