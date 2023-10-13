@@ -83,6 +83,34 @@ pattern='.*nodesnapshots/snapshot_date=.*/.*'
 
 ALTER TASK nodesnapshot_task RESUME;
 
+CREATE OR REPLACE TASK certifiedquiz_task
+    SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
+    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
+AS
+copy into
+  certifiedquiz
+from (
+  select
+     $1:response_id as response_id,
+     $1:user_id as user_id,
+     $1:passed as passed,
+     $1:passed_on as passed_on,
+     $1:stack as stack,
+     $1:instance as instance,
+     NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*certifiedquizrecords\/record_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+     )                         as record_date
+  from
+    @synapse_prod_warehouse_s3_stage/certifiedquizrecords
+  )
+pattern='.*certifiedquizrecords/record_date=.*/.*'
+;
+ALTER TASK certifiedquiz_task RESUME;
+
 
 // zero copy clone of processed access records
 CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
