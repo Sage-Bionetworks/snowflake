@@ -296,7 +296,7 @@ from (
   )
 pattern='.*aclsnapshots/snapshot_date=.*/.*'
 ;
-
+-- * SNOW-9
 CREATE TABLE IF NOT EXISTS teamsnapshots (
   change_type STRING,
   change_timestamp TIMESTAMP,
