@@ -479,6 +479,7 @@ copy into fileupload from (
   )
 pattern='.*fileuploadrecords/record_date=.*/.*'
 ;
+-- * SNOW-6
 CREATE TABLE IF NOT EXISTS filesnapshots (
 	change_type STRING,
   change_timestamp TIMESTAMP,
