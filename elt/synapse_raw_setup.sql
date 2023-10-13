@@ -96,7 +96,7 @@ from (
   )
 pattern='.*userprofilesnapshots/snapshot_date=.*/.*'
 ;
-
+-- * SNOW-1
 CREATE TABLE IF NOT EXISTS NODESNAPSHOTS (
 	change_type STRING,
 	change_timestamp TIMESTAMP,
