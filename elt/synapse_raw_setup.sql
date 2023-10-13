@@ -260,7 +260,7 @@ from (
   )
 pattern='.*filedownloadrecords/record_date=.*/.*'
 ;
-
+-- * SNOW-2
 create table IF NOT EXISTS aclsnapshots (
   change_timestamp TIMESTAMP,
   change_type STRING,
