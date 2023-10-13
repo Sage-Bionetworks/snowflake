@@ -340,6 +340,7 @@ from (
   )
 pattern='.*teamsnapshots/snapshot_date=.*/.*'
 ;
+-- * SNOW-10 add user group snapshots
 create TABLE IF NOT EXISTS usergroupsnapshots (
   change_type STRING,
 	change_timestamp TIMESTAMP,
