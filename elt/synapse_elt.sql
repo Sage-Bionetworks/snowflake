@@ -343,6 +343,46 @@ pattern='.*fileuploadrecords/record_date=.*/.*'
 ;
 ALTER TASK fileupload_task RESUME;
 
+
+CREATE OR REPLACE TASK filesnapshots_task
+    SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
+    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
+AS
+copy into filesnapshots from (
+  select
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:created_by as created_by,
+    $1:created_on as created_on,
+    $1:modified_on as modified_on,
+    $1:concrete_type as concrete_type,
+    $1:content_md5 as content_md5,
+    $1:content_type as content_type,
+    $1:file_name as file_name,
+    $1:storage_location_id as storage_location_id,
+    $1:content_size as content_size,
+    $1:bucket as bucket,
+    $1:key as key,
+    $1:preview_id as preview_id,
+    $1:is_preview as is_preview,
+    $1:status as status,
+    NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*filesnapshots\/snapshot_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/filesnapshots
+  )
+pattern='.*filesnapshots/snapshot_date=.*/.*'
+;
+ALTER TASK filesnapshots_task RESUME;
+
 -- ! Task tracking
 SHOW tasks;
 
