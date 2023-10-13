@@ -540,7 +540,6 @@ copy into filesnapshots from (
 pattern='.*filesnapshots/snapshot_date=.*/.*'
 ;
 
--- TODO Processed access no longer exists in warehouse?
 -- * SNOW-7
 CREATE TABLE IF NOT EXISTS processedaccess (
 	session_id STRING,
@@ -604,13 +603,10 @@ copy into processedaccess from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '.*processaccessrecord\/record_date\=(.*)\/.*',
+       '.*processedaccessrecord\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
-   from @synapse_prod_warehouse_s3_stage/processaccessrecord)
-   pattern='.*processaccessrecord/record_date=.*/.*'
+   from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
+   pattern='.*processedaccessrecord/record_date=.*/.*'
 ;
-
-LIST '@synapse_prod_warehouse_s3_stage'
-PATTERN = '.*process.*';
