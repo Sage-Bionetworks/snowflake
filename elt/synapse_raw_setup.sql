@@ -51,6 +51,7 @@ LIST @synapse_prod_warehouse_s3_stage;
 
 -- * Ingest data for the first time
 USE WAREHOUSE COMPUTE_MEDIUM;
+-- * SNOW-11 add user profile snapshots
 CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   change_type STRING,
   change_timestamp TIMESTAMP,
