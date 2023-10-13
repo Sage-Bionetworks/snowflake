@@ -10,7 +10,7 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/test-snowflake-access-SnowflakeServiceRole-1LXZYAMMKTHJY'
   STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
--- ! Integration to prod
+-- ! Integration to prod (SNOW-14)
 CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
@@ -38,6 +38,7 @@ CREATE STAGE IF NOT EXISTS synapse_dev_warehouse_s3_stage
 ALTER STAGE IF EXISTS synapse_dev_warehouse_s3_stage REFRESH;
 LIST @synapse_dev_warehouse_s3_stage;
 
+-- SNOW-14
 CREATE STAGE IF NOT EXISTS synapse_prod_warehouse_s3_stage
   STORAGE_INTEGRATION = synapse_prod_warehouse_s3
   URL = 's3://prod.datawarehouse.sagebase.org/warehouse/'
