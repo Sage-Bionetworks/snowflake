@@ -174,9 +174,8 @@ from (
   from @synapse_prod_warehouse_s3_stage/nodesnapshots/)
 pattern='.*nodesnapshots/snapshot_date=.*/.*'
 ;
--- TODO rest of these
 // create certified quiz
-CREATE OR REPLACE TABLE certifiedquiz (
+CREATE TABLE IF NOT EXISTS certifiedquiz (
     response_id NUMBER,
     user_id NUMBER,
     passed BOOLEAN,
@@ -210,14 +209,15 @@ from (
 pattern='.*certifiedquizrecords/record_date=.*/.*'
 ;
 
-CREATE OR REPLACE TABLE certifiedquizquestion (
+CREATE TABLE IF NOT EXISTS certifiedquizquestion (
     response_id NUMBER,
     question_index NUMBER,
     is_correct BOOLEAN,
     stack STRING,
     instance STRING,
     record_date DATE
-);
+)
+CLUSTER BY (record_date);
 
 copy into
   certifiedquizquestion
@@ -226,7 +226,6 @@ from (
      $1:response_id as response_id,
      $1:question_index as question_index,
      $1:is_correct as is_correct,
-     $1:passed_on as passed_on,
      $1:stack as stack,
      $1:instance as instance,
      NULLIF(
@@ -237,12 +236,12 @@ from (
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
   from
-    @synapse_prod_warehouse_s3_stage/certifiedquizrecords
+    @synapse_prod_warehouse_s3_stage/certifiedquizquestionrecords
   )
 pattern='.*certifiedquizquestionrecords/record_date=.*/.*'
 ;
 
-CREATE OR REPLACE TABLE processedaccess (
+CREATE TABLE IF NOT EXISTS processedaccess (
 	session_id STRING,
   timestamp TIMESTAMP,
   user_id NUMBER,
@@ -273,6 +272,7 @@ CREATE OR REPLACE TABLE processedaccess (
 )
 CLUSTER BY (record_date);
 
+-- TODO Processed access doesn't work for some reason
 copy into processedaccess from (
   select
      $1:session_id as session_id,
@@ -304,14 +304,20 @@ copy into processedaccess from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '.*processedaccessrecord\/record_date\=(.*)\/.*',
+       '.*processaccessrecord\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
-   from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
-   pattern='.*processedaccessrecord/record_date=.*/.*'
+   from @synapse_prod_warehouse_s3_stage/processaccessrecord)
+   pattern='.*processaccessrecord/record_date=.*/.*'
 ;
-CREATE OR REPLACE TABLE filedownload (
+-- TODO Processed access doesn't work for some reason
+
+LIST '@synapse_prod_warehouse_s3_stage'
+PATTERN = '.*process.*';
+-- TODO processed access record
+
+CREATE TABLE IF NOT EXISTS filedownload (
     timestamp TIMESTAMP,
     user_id NUMBER,
     project_id NUMBER,
@@ -322,8 +328,12 @@ CREATE OR REPLACE TABLE filedownload (
     stack STRING,
     instance STRING,
     record_date DATE
-);
-copy into filedownload from (
+)
+CLUSTER BY (record_date);
+
+copy into
+  filedownload
+from (
   select
      $1:timestamp as timestamp,
      $1:user_id as user_id,
@@ -337,12 +347,14 @@ copy into filedownload from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '.*processedaccessrecord\/record_date\=(.*)\/.*',
+       '.*filedownloadrecords\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
-  from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
-  pattern='.*processedaccessrecord/record_date=.*/.*'
+  from
+    @synapse_prod_warehouse_s3_stage/filedownloadrecords
+  )
+pattern='.*filedownloadrecords/record_date=.*/.*'
 ;
 
 create table IF NOT EXISTS aclsnapshots (
@@ -354,10 +366,37 @@ create table IF NOT EXISTS aclsnapshots (
   created_on TIMESTAMP,
   resource_access STRING,
   snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
 
-create table IF NOT EXISTS team_snapshots (
+copy into
+  aclsnapshots
+from (
+  select
+    $1:change_timestamp as change_timestamp,
+    $1:change_type as change_type,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:owner_id as owner_id,
+    $1:owner_type as owner_type,
+    $1:created_on as created_on,
+    $1:resource_access as resource_access,
+    NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*aclsnapshots\/snapshot_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/aclsnapshots
+  )
+pattern='.*aclsnapshots/snapshot_date=.*/.*'
+;
+
+CREATE TABLE IF NOT EXISTS teamsnapshots (
+  change_type STRING,
   change_timestamp TIMESTAMP,
+  change_user_id NUMBER,
   snapshot_timestamp TIMESTAMP,
   id NUMBER,
   name STRING,
@@ -367,78 +406,140 @@ create table IF NOT EXISTS team_snapshots (
   modified_on TIMESTAMP,
   modified_by NUMBER,
   snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
 
+copy into
+  teamsnapshots
+from (
+  select
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:name as name,
+    $1:can_public_join as can_public_join,
+    $1:created_on as created_on,
+    $1:created_by as created_by,
+    $1:modified_on as modified_on,
+    $1:modified_by as modified_by,
+    NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*teamsnapshots\/snapshot_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/teamsnapshots
+  )
+pattern='.*teamsnapshots/snapshot_date=.*/.*'
+;
 create TABLE IF NOT EXISTS usergroupsnapshots (
-	CHANGE_TIMESTAMP TIMESTAMP,
-	SNAPSHOT_TIMESTAMP TIMESTAMP,
-	ID NUMBER,
-	IS_INDIVIDUAL BOOLEAN,
-	CREATED_ON TIMESTAMP,
-	SNAPSHOT_DATE DATE
-);
+  change_type STRING,
+	change_timestamp TIMESTAMP,
+  change_user_id NUMBER,
+	snapshot_timestamp TIMESTAMP,
+	id NUMBER,
+	is_individual BOOLEAN,
+	created_on TIMESTAMP,
+	snapshot_date DATE
+)
+CLUSTER BY (snapshot_date);
+copy into
+  usergroupsnapshots
+from (
+  select
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:is_individual as is_individual,
+    $1:created_on as created_on,
+    NULLIF(
+       regexp_replace (
+       METADATA$FILENAME,
+       '.*usergroupsnapshots\/snapshot_date\=(.*)\/.*',
+       '\\1'),
+       '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/usergroupsnapshots
+  )
+pattern='.*usergroupsnapshots/snapshot_date=.*/.*'
+;
 
 // Create verification submission snapshots table
-create TABLE verificationsubmissionsnapshots (
+create TABLE IF NOT EXISTS verificationsubmissionsnapshots (
+  change_timestamp TIMESTAMP,
+  change_type STRING,
 	snapshot_timestamp TIMESTAMP,
+  id NUMBER,
 	created_on TIMESTAMP,
 	created_by NUMBER,
   state_history STRING,
-  change_timestamp TIMESTAMP,
-  change_type STRING,
-  id NUMBER,
 	snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
 
-
-
-// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into verificationsubmissionsnapshots from (
   select
-     $1:snapshot_timestamp as snapshot_timestamp,
-     $1:created_on as created_on,
-     $1:created_by as created_by,
-     $1:state_history as state_history,
-     $1:change_timestamp as change_timestamp,
-     $1:change_type as change_type,
-     $1:id as id,
-     NULLIF(
-       regexp_replace (
-       METADATA$FILENAME,
-       '.*\=(.*)\/.*',
-       '\\1'),
-       '__HIVE_DEFAULT_PARTITION__'
-     )                         as snapshot_date
-   from @verificationsubmissionsnapshots/)
-   pattern='.*/snapshot_date=.*/.*'
+    $1:change_timestamp as change_timestamp,
+    $1:change_type as change_type,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:created_on as created_on,
+    $1:created_by as created_by,
+    $1:state_history as state_history,
+    NULLIF(
+      regexp_replace (
+      METADATA$FILENAME,
+      '.*verificationsubmissionsnapshots\/snapshot_date\=(.*)\/.*',
+      '\\1'),
+      '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/verificationsubmissionsnapshots
+  )
+pattern='.*verificationsubmissionsnapshots/snapshot_date=.*/.*'
 ;
+
 CREATE TABLE IF NOT EXISTS teammembersnapshots (
-	snapshot_timestamp TIMESTAMP,
+  change_type STRING,
   change_timestamp TIMESTAMP,
+  change_user_id NUMBER,
+	snapshot_timestamp TIMESTAMP,
   team_id NUMBER,
   member_id NUMBER,
   is_admin BOOLEAN,
 	snapshot_date DATE
-);
+)
+CLUSTER BY (snapshot_date);
 
-// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 copy into teammembersnapshots from (
   select
-     $1:snapshot_timestamp as snapshot_timestamp,
-     $1:change_timestamp as change_timestamp,
-     $1:team_id as team_id,
-     $1:member_id as member_id,
-     $1:is_admin as is_admin,
-     NULLIF(
-       regexp_replace (
-       METADATA$FILENAME,
-       '.*\=(.*)\/.*',
-       '\\1'),
-       '__HIVE_DEFAULT_PARTITION__'
-     )                         as snapshot_date
-   from @teammembersnapshots/)
-   pattern='.*snapshot_date=.*/.*'
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:team_id as team_id,
+    $1:member_id as member_id,
+    $1:is_admin as is_admin,
+    NULLIF(
+      regexp_replace (
+      METADATA$FILENAME,
+      '.*teammembersnapshots\/snapshot_date\=(.*)\/.*',
+      '\\1'),
+      '__HIVE_DEFAULT_PARTITION__'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/teammembersnapshots
+  )
+pattern='.*teammembersnapshots/snapshot_date=.*/.*'
 ;
+-- TODO process below
 
 CREATE TABLE IF NOT EXISTS fileupload (
 	timestamp TIMESTAMP,
@@ -450,27 +551,30 @@ CREATE TABLE IF NOT EXISTS fileupload (
   stack STRING,
   instance STRING,
 	record_date DATE
-);
-// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
+)
+CLUSTER BY (record_date);
+
 copy into fileupload from (
   select
-     $1:timestamp as timestamp,
-     $1:user_id as user_id,
-     $1:project_id as project_id,
-     $1:file_handle_id as file_handle_id,
-     $1:association_object_id as association_object_id,
-     $1:association_object_type as association_object_type,
-     $1:stack as stack,
-     $1:instance as instance,
-     NULLIF(
-       regexp_replace (
-       METADATA$FILENAME,
-       '.*\=(.*)\/.*',
-       '\\1'),
-       '__HIVE_DEFAULT_PARTITION__'
-     )                         as record_date
-   from @fileupload/)
-   pattern='.*record_date=.*/.*'
+    $1:timestamp as timestamp,
+    $1:user_id as user_id,
+    $1:project_id as project_id,
+    $1:file_handle_id as file_handle_id,
+    $1:association_object_id as association_object_id,
+    $1:association_object_type as association_object_type,
+    $1:stack as stack,
+    $1:instance as instance,
+    NULLIF(
+      regexp_replace (
+      METADATA$FILENAME,
+      '.*fileuploadrecords\/record_date\=(.*)\/.*',
+      '\\1'),
+      '__HIVE_DEFAULT_PARTITION__'
+    )                         as record_date
+  from
+    @synapse_prod_warehouse_s3_stage/fileuploadrecords
+  )
+pattern='.*fileuploadrecords/record_date=.*/.*'
 ;
 CREATE TABLE IF NOT EXISTS filesnapshots (
 	change_type STRING,
@@ -493,37 +597,39 @@ CREATE TABLE IF NOT EXISTS filesnapshots (
   is_preview BOOLEAN,
   status STRING,
   snapshot_date DATE
-);
-// Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
+)
+CLUSTER BY (snapshot_date);
+
 copy into filesnapshots from (
   select
-     $1:change_type as change_type,
-     $1:change_timestamp as change_timestamp,
-     $1:change_user_id as change_user_id,
-     $1:snapshot_timestamp as snapshot_timestamp,
-     $1:id as id,
-     $1:created_by as created_by,
-     $1:created_on as created_on,
-     $1:modified_on as modified_on,
-     $1:concrete_type as concrete_type,
-     $1:content_md5 as content_md5,
-     $1:content_type as content_type,
-     $1:file_name as file_name,
-     $1:storage_location_id as storage_location_id,
-     $1:content_size as content_size,
-     $1:bucket as bucket,
-     $1:key as key,
-     $1:preview_id as preview_id,
-     $1:is_preview as is_preview,
-     $1:status as status,
-     NULLIF(
+    $1:change_type as change_type,
+    $1:change_timestamp as change_timestamp,
+    $1:change_user_id as change_user_id,
+    $1:snapshot_timestamp as snapshot_timestamp,
+    $1:id as id,
+    $1:created_by as created_by,
+    $1:created_on as created_on,
+    $1:modified_on as modified_on,
+    $1:concrete_type as concrete_type,
+    $1:content_md5 as content_md5,
+    $1:content_type as content_type,
+    $1:file_name as file_name,
+    $1:storage_location_id as storage_location_id,
+    $1:content_size as content_size,
+    $1:bucket as bucket,
+    $1:key as key,
+    $1:preview_id as preview_id,
+    $1:is_preview as is_preview,
+    $1:status as status,
+    NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '.*\=(.*)\/.*',
+       '.*filesnapshots\/snapshot_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
-     )                         as snapshot_date
-   from @filesnapshots/)
-   pattern='.*snapshot_date=.*/.*'
+    )                         as snapshot_date
+  from
+    @synapse_prod_warehouse_s3_stage/filesnapshots
+  )
+pattern='.*filesnapshots/snapshot_date=.*/.*'
 ;
-
