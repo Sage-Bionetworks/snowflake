@@ -220,7 +220,7 @@ from (
   )
 pattern='.*certifiedquizquestionrecords/record_date=.*/.*'
 ;
-
+-- * SNOW-5
 CREATE TABLE IF NOT EXISTS filedownload (
     timestamp TIMESTAMP,
     user_id NUMBER,
