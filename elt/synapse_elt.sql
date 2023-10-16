@@ -7,7 +7,7 @@ CREATE OR REPLACE TASK refresh_synapse_prod_stage_task
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
 ALTER STAGE IF EXISTS SYNAPSE_PROD_WAREHOUSE_S3_STAGE REFRESH;
-ALTER TASK refresh_synapse_stage_task RESUME;
+ALTER TASK refresh_synapse_prod_stage_task RESUME;
 
 CREATE OR REPLACE TASK userprofilesnapshot_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
