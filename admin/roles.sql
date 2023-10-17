@@ -4,6 +4,10 @@ use role securityadmin;
 // Grant system roles to users
 GRANT ROLE SYSADMIN
 TO USER "kevin.boske@sagebase.org";
+
+GRANT ROLE SYSADMIN
+TO USER "x.schildwachter@sagebase.org";
+
 // GENIE
 USE ROLE USERADMIN;
 CREATE ROLE IF NOT EXISTS genie_admin;
