@@ -2,14 +2,14 @@ use role accountadmin;
 USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 USE SCHEMA SYNAPSE_RAW;
 
-CREATE OR REPLACE TASK refresh_synapse_prod_stage_task
+CREATE TASK IF NOT EXISTS refresh_synapse_prod_stage_task
     SCHEDULE = 'USING CRON 0 23 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
 ALTER STAGE IF EXISTS SYNAPSE_PROD_WAREHOUSE_S3_STAGE REFRESH;
 ALTER TASK refresh_synapse_prod_stage_task RESUME;
 
-CREATE OR REPLACE TASK userprofilesnapshot_task
+CREATE TASK IF NOT EXISTS userprofilesnapshot_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -43,7 +43,7 @@ pattern='.*userprofilesnapshots/snapshot_date=.*/.*';
 
 ALTER TASK userprofilesnapshot_task RESUME;
 
-CREATE OR REPLACE TASK nodesnapshot_task
+CREATE TASK IF NOT EXISTS nodesnapshot_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -83,7 +83,7 @@ pattern='.*nodesnapshots/snapshot_date=.*/.*'
 
 ALTER TASK nodesnapshot_task RESUME;
 
-CREATE OR REPLACE TASK certifiedquiz_task
+CREATE TASK IF NOT EXISTS certifiedquiz_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -111,7 +111,7 @@ pattern='.*certifiedquizrecords/record_date=.*/.*'
 ;
 ALTER TASK certifiedquiz_task RESUME;
 
-CREATE OR REPLACE TASK certifiedquizquestion_task
+CREATE TASK IF NOT EXISTS certifiedquizquestion_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -138,7 +138,7 @@ pattern='.*certifiedquizquestionrecords/record_date=.*/.*'
 ;
 ALTER TASK certifiedquizquestion_task RESUME;
 
-CREATE OR REPLACE TASK filedownload_task
+CREATE TASK IF NOT EXISTS filedownload_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -169,7 +169,7 @@ pattern='.*filedownloadrecords/record_date=.*/.*'
 ;
 ALTER TASK filedownload_task RESUME;
 
-CREATE OR REPLACE TASK aclsnapshots_task
+CREATE TASK IF NOT EXISTS aclsnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -198,7 +198,7 @@ pattern='.*aclsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK aclsnapshots_task RESUME;
 
-CREATE OR REPLACE TASK teamsnapshots_task
+CREATE TASK IF NOT EXISTS teamsnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -231,7 +231,7 @@ pattern='.*teamsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK teamsnapshots_task RESUME;
 
-CREATE OR REPLACE TASK usergroupsnapshots_task
+CREATE TASK IF NOT EXISTS usergroupsnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -260,7 +260,7 @@ pattern='.*usergroupsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK usergroupsnapshots_task RESUME;
 
-CREATE OR REPLACE TASK verificationsubmissionsnapshots_task
+CREATE TASK IF NOT EXISTS verificationsubmissionsnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -287,8 +287,7 @@ pattern='.*verificationsubmissionsnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK verificationsubmissionsnapshots_task RESUME;
 
-
-CREATE OR REPLACE TASK teammembersnapshots_task
+CREATE TASK IF NOT EXISTS teammembersnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -315,7 +314,7 @@ pattern='.*teammembersnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK teammembersnapshots_task RESUME;
 
-CREATE OR REPLACE TASK fileupload_task
+CREATE TASK IF NOT EXISTS fileupload_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -343,7 +342,7 @@ pattern='.*fileuploadrecords/record_date=.*/.*'
 ;
 ALTER TASK fileupload_task RESUME;
 
-CREATE OR REPLACE TASK filesnapshots_task
+CREATE TASK IF NOT EXISTS filesnapshots_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -382,7 +381,7 @@ pattern='.*filesnapshots/snapshot_date=.*/.*'
 ;
 ALTER TASK filesnapshots_task RESUME;
 
-CREATE OR REPLACE TASK processedaccess_task
+CREATE TASK IF NOT EXISTS processedaccess_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
 AS
@@ -417,12 +416,12 @@ copy into processedaccess from (
      NULLIF(
        regexp_replace (
        METADATA$FILENAME,
-       '.*processaccessrecord\/record_date\=(.*)\/.*',
+       '.*processedaccessrecord\/record_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
      )                         as record_date
-   from @synapse_prod_warehouse_s3_stage/processaccessrecord)
-   pattern='.*processaccessrecord/record_date=.*/.*'
+   from @synapse_prod_warehouse_s3_stage/processedaccessrecord)
+   pattern='.*processedaccessrecord/record_date=.*/.*'
 ;
 ALTER TASK processedaccess_task RESUME;
 
