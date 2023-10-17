@@ -3,6 +3,8 @@ USE DATABASE sage;
 
 CREATE SCHEMA IF NOT EXISTS portal_raw
     WITH MANAGED ACCESS;
+-- ! One time addition
+-- ALTER TABLE portal_raw.NF ADD COLUMN "tissue" STRING;
 
 USE ROLE securityadmin;
 

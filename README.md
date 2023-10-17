@@ -80,5 +80,5 @@ The GENIE public releases are loaded into snowflake via this [script](admin/geni
 snowflake, synapseclient and dotenv must be installed as dependencies.
 
 ```
-pip install pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-dotenv
+pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-dotenv
 ```
