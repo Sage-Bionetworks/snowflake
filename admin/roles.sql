@@ -19,18 +19,6 @@ grant role genie_admin
 to user "xindi.guo@sagebase.org";
 grant role genie_admin
 to user "chelsea.nayan@sagebase.org";
-grant USAGE on database genie
-to role genie_admin;
-GRANT USAGE ON FUTURE SCHEMAS IN DATABASE GENIE
-TO ROLE genie_admin;
-GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
-TO ROLE genie_admin;
--- GRANT USAGE ON ALL SCHEMAS IN DATABASE GENIE
--- TO ROLE genie_admin;
--- GRANT SELECT ON ALL TABLES IN DATABASE GENIE
--- TO ROLE genie_admin;
-GRANT USAGE ON WAREHOUSE tableau
-TO ROLE genie_admin;
 
 // RECOVER
 USE ROLE USERADMIN;
@@ -63,26 +51,21 @@ TO ROLE recover_data_analytics;
 
 // AD
 USE ROLE USERADMIN;
-CREATE ROLE IF NOT EXISTS ad_team;
+CREATE ROLE IF NOT EXISTS AD;
 USE ROLE SECURITYADMIN;
-GRANT ROLE ad_team
+GRANT ROLE AD
 TO ROLE useradmin;
-GRANT ROLE ad_team
+GRANT ROLE AD
 TO USER "abby.vanderlinden@sagebase.org";
-GRANT USAGE ON DATABASE sage
-TO ROLE ad_team;
+
 
 // Public role
 // Synapse data warehouse
 // GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
-TO ROLE PUBLIC;
-GRANT USAGE ON FUTURE SCHEMAS IN DATABASE sage
-TO ROLE PUBLIC;
-GRANT SELECT ON FUTURE TABLES IN DATABASE sage
-TO ROLE PUBLIC;
-GRANT USAGE ON DATABASE sage
-TO ROLE PUBLIC;
+-- TODO: Add these back in after governance
+-- GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
+-- TO ROLE PUBLIC;
+
 
 USE ROLE USERADMIN;
 CREATE ROLE IF NOT EXISTS masking_admin;

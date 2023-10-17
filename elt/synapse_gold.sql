@@ -1,11 +1,7 @@
 USE ROLE SYSADMIN;
 use database synapse_data_warehouse;
 use schema synapse;
-use role securityadmin;
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse_raw TO ROLE PUBLIC;
 
-GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
 // Create certified quiz question latest
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
     select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
