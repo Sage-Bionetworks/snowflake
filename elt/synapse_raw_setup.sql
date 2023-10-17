@@ -1,56 +1,10 @@
 // Follow this blog https://www.snowflake.com/blog/how-to-load-terabytes-into-snowflake-speeds-feeds-and-techniques/#:~:text=Best%20Practices%20for%20Parquet%20and%20ORC
 USE DATABASE synapse_data_warehouse;
 USE SCHEMA synapse_raw;
-USE WAREHOUSE COMPUTE_ORG;
-USE ROLE ACCOUNTADMIN;
--- * Test Integration
-CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
-  TYPE = EXTERNAL_STAGE
-  STORAGE_PROVIDER = 'S3'
-  ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/test-snowflake-access-SnowflakeServiceRole-1LXZYAMMKTHJY'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
--- * Integration to prod (SNOW-14)
-CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
-  TYPE = EXTERNAL_STAGE
-  STORAGE_PROVIDER = 'S3'
-  ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-accesss-SnowflakeServiceRole-HL66JOP7K4BT'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org');
-DESC INTEGRATION synapse_dev_warehouse_s3;
-DESC INTEGRATION synapse_prod_warehouse_s3;
-
-USE SCHEMA synapse_data_warehouse.synapse_raw;
-USE ROLE SECURITYADMIN;
-GRANT USAGE ON INTEGRATION synapse_dev_warehouse_s3 TO ROLE SYSADMIN;
-GRANT USAGE ON INTEGRATION synapse_prod_warehouse_s3 TO ROLE SYSADMIN;
-
--- * Create external stage
-USE ROLE sysadmin;
-USE DATABASE synapse_data_warehouse;
-USE SCHEMA synapse_raw;
-CREATE STAGE IF NOT EXISTS synapse_dev_warehouse_s3_stage
-  STORAGE_INTEGRATION = synapse_dev_warehouse_s3
-  URL = 's3://dev.datawarehouse.sagebase.org/datawarehouse/'
-  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
-  DIRECTORY = (ENABLE = TRUE);
-
-ALTER STAGE IF EXISTS synapse_dev_warehouse_s3_stage REFRESH;
-LIST @synapse_dev_warehouse_s3_stage;
-
--- * SNOW-14
-CREATE STAGE IF NOT EXISTS synapse_prod_warehouse_s3_stage
-  STORAGE_INTEGRATION = synapse_prod_warehouse_s3
-  URL = 's3://prod.datawarehouse.sagebase.org/warehouse/'
-  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
-  DIRECTORY = (ENABLE = TRUE);
-
-ALTER STAGE IF EXISTS synapse_prod_warehouse_s3_stage REFRESH;
-
+USE WAREHOUSE COMPUTE_MEDIUM;
 LIST @synapse_prod_warehouse_s3_stage;
 
 -- * Ingest data for the first time
-USE WAREHOUSE COMPUTE_MEDIUM;
 -- * SNOW-11 add user profile snapshots
 CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   change_type STRING,
@@ -68,7 +22,6 @@ CREATE TABLE IF NOT EXISTS userprofilesnapshot (
   snapshot_date DATE
 )
 CLUSTER BY (snapshot_date);
-LIST '@synapse_prod_warehouse_s3_stage/userprofilesnapshots/';
 copy into
   userprofilesnapshot
 from (
