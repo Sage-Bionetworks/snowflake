@@ -2,6 +2,7 @@ from dotenv import dotenv_values
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 import synapseclient
+import pandas as pd
 
 
 syn = synapseclient.login()
@@ -40,6 +41,10 @@ for portal_name, synapse_id in portals.items():
     """
     cs.execute(find_table_query)
     opt = cs.fetch_pandas_all()
+    # * Get the existing table to get colum names for future column
+    # updates
+    # cursor = cs.execute(f"SELECT * from PORTAL_RAW.{portal_name} limit 5")
+    # df = pd.DataFrame(cursor.description)
     # If the table is empty, auto create it, otherwise, truncake and overwrite
     # The rationale for this is that some tables have "grant" and "group" as
     # and those are reserved column headers.
@@ -59,6 +64,8 @@ for portal_name, synapse_id in portals.items():
             table_type="transient",
             overwrite=True
         )
+
+        # TODO account for schema changes
         # Upsert into non-temporary tables
         update_set = [f'"{portal_name}"."{col}" = "{target_table}"."{col}"' for col in portal_df.columns]
         update_set_str = ",".join(update_set)
@@ -80,3 +87,8 @@ for portal_name, synapse_id in portals.items():
     query = f"select * from {portal_name} limit 10;"
     cs.execute(query)
     opt = cs.fetch_pandas_all()
+
+# ! One time port of HTAN
+# htan_ent = syn.get("syn52677746")
+# htan_df = pd.read_csv(htan_ent.path)
+# write_pandas(ctx, htan_df, "HTAN", auto_create_table=True)

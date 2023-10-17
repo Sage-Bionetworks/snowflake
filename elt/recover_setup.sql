@@ -1,49 +1,5 @@
 USE ROLE sysadmin;
-CREATE DATABASE IF NOT EXISTS recover;
-CREATE SCHEMA IF NOT EXISTS pilot_raw
-  WITH MANAGED ACCESS;
 USE SCHEMA recover.pilot_raw;
-
-USE ROLE securityadmin;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA recover.pilot_raw
-TO ROLE RECOVER_ADMIN;
-
--- GRANT SELECT ON ALL TABLES IN SCHEMA RECOVER.pilot_raw
--- TO ROLE RECOVER_ADMIN;
-
-// Set up storage integration
-use role accountadmin;
-
-CREATE STORAGE INTEGRATION IF NOT EXISTS recover_dev_s3
-  TYPE = EXTERNAL_STAGE
-  STORAGE_PROVIDER = 'S3'
-  ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::914833433684:role/snowflake_access'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-processed-data', 's3://recover-dev-intermediate-data');
-  //[ STORAGE_BLOCKED_LOCATIONS = ('s3://<bucket>/<path>/', 's3://<bucket>/<path>/') ]
-
-DESC INTEGRATION recover_dev_s3;
-GRANT USAGE ON INTEGRATION recover_dev_s3
-TO ROLE SYSADMIN;
-
-use role sysadmin;
-
-CREATE STAGE IF NOT EXISTS recover_dev
-  STORAGE_INTEGRATION = recover_dev_s3
-  URL = 's3://recover-dev-processed-data'
-  FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO);
-
-CREATE STAGE IF NOT EXISTS recover_dev_intermediate
-  STORAGE_INTEGRATION = recover_dev_s3
-  URL = 's3://recover-dev-intermediate-data'
-  FILE_FORMAT = (TYPE = JSON COMPRESSION = AUTO);
-
-LIST @recover_dev/main/parquet
-PATTERN = '^((?!archive|owner).)*$';
-
-CREATE FILE FORMAT IF NOT EXISTS my_parquet
-  TYPE = PARQUET
-  COMPRESSION = AUTO;
   
 SELECT *
   FROM TABLE(
@@ -53,7 +9,6 @@ SELECT *
       )
     );
 
-USE ROLE recover_admin;
 CREATE TABLE IF NOT EXISTS enrolledparticipants_customfields_symptoms
   USING TEMPLATE (
     SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
@@ -66,7 +21,8 @@ CREATE TABLE IF NOT EXISTS enrolledparticipants_customfields_symptoms
 
 COPY into enrolledparticipants_customfields_symptoms
 from '@recover_dev/main/parquet/dataset_enrolledparticipants_customfields_symptoms'
-  FILE_FORMAT = (FORMAT_NAME= 'my_parquet') MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+  FILE_FORMAT = (FORMAT_NAME= 'my_parquet')
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE;
 
 select * from enrolledparticipants_customfields_symptoms;
 

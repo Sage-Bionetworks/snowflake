@@ -7,3 +7,9 @@ CREATE MASKING POLICY IF NOT EXISTS email_mask AS (val string) returns string ->
     WHEN current_role() IN ('SYSADMIN') THEN VAL
     ELSE regexp_replace(val,'.+\@','*****@') -- leave email domain unmasked
   END;
+
+ALTER MASKING POLICY email_mask SET BODY ->
+  CASE
+    WHEN current_role() IN ('SYSADMIN') THEN VAL
+    ELSE '*****'
+  END;

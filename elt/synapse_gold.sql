@@ -3,10 +3,20 @@ use database synapse_data_warehouse;
 use schema synapse;
 
 // Create certified quiz question latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
+  WITH cqq_ranked AS (
+    SELECT *,
+      ROW_NUMBER() OVER (
+        PARTITION BY RESPONSE_ID, QUESTION_INDEX
+        ORDER BY IS_CORRECT DESC, INSTANCE DESC
+      ) AS row_num
+    FROM synapse_data_warehouse.synapse_raw.certifiedquizquestion
+  )
+  SELECT * EXCLUDE row_num
+  FROM cqq_ranked
+  WHERE row_num = 1
+  ORDER BY RESPONSE_ID DESC, QUESTION_INDEX ASC;
+
 
 // Create certified quiz latest
 CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
@@ -14,31 +24,32 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest A
     where INSTANCE =
     (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
 
-// Create View of user profile and cert join
-CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
-  with user_cert_joined as (
-    select *
-    from synapse_data_warehouse.synapse.userprofile_latest user
-    LEFT JOIN (
-      select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
-    ) cert
-    ON user.ID = cert.USER_ID
-  )
-  select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
-  from user_cert_joined
-;
+-- // Create View of user profile and cert join
+-- CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
+--   with user_cert_joined as (
+--     select *
+--     from synapse_data_warehouse.synapse.userprofile_latest user
+--     LEFT JOIN (
+--       select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
+--     ) cert
+--     ON user.ID = cert.USER_ID
+--   )
+--   select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
+--   from user_cert_joined
+-- ;
 
 // Use a window function to get the latest user profile snapshot and create a table
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as WITH
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
    SELECT
-     s.*
-   , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
+    s.*
+    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM
-     synapse_data_warehouse.synapse_raw.userprofilesnapshot s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+    synapse_data_warehouse.synapse_raw.userprofilesnapshot s
+   WHERE
+    (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
 ) 
-SELECT *
+SELECT * EXCLUDE n
 FROM RANKED_NODES
 where n = 1;
 use role masking_admin;
