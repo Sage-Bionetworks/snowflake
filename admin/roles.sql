@@ -28,26 +28,12 @@ CREATE ROLE IF NOT EXISTS recover_data_analytics;
 USE ROLE SECURITYADMIN;
 grant role recover_data_engineer
 to role useradmin;
-GRANT CREATE SCHEMA, USAGE ON DATABASE RECOVER
-TO ROLE recover_data_engineer;
-GRANT ALL PRIVILEGES ON FUTURE SCHEMAS IN DATABASE recover
-TO ROLE recover_data_engineer;
-GRANT ALL PRIVILEGES ON FUTURE TABLES IN DATABASE recover
-TO ROLE recover_data_engineer;
 GRANT ROLE recover_data_engineer
 TO USER "phil.snyder@sagebase.org";
 GRANT ROLE recover_data_engineer
 TO USER "rixing.xu@sagebase.org";
 GRANT ROLE recover_data_engineer
 TO USER "thomas.yu@sagebase.org";
-GRANT USAGE ON WAREHOUSE recover_xsmall
-TO ROLE recover_data_engineer;
-GRANT USAGE ON DATABASE RECOVER
-TO ROLE recover_data_analytics;
-GRANT USAGE ON FUTURE SCHEMAS IN DATABASE recover
-TO ROLE recover_data_analytics;
-GRANT SELECT ON FUTURE TABLES IN DATABASE recover
-TO ROLE recover_data_analytics;
 
 // AD
 USE ROLE USERADMIN;
