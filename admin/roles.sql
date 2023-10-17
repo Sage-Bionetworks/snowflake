@@ -43,12 +43,6 @@ TO ROLE useradmin;
 GRANT ROLE AD
 TO USER "abby.vanderlinden@sagebase.org";
 
-// Public role
-// Synapse data warehouse
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
--- TODO: Add these back in after governance
--- GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
--- TO ROLE PUBLIC;
 USE ROLE USERADMIN;
 CREATE ROLE IF NOT EXISTS masking_admin;
 GRANT ROLE masking_admin

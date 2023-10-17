@@ -29,16 +29,18 @@ CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
 ;
 
 // Use a window function to get the latest user profile snapshot and create a table
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.userprofile_latest as WITH
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.userprofile_latest as WITH
   RANKED_NODES AS (
    SELECT
-     s.*
-   , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
+    s.*
+    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
    FROM
-     synapse_data_warehouse.synapse_raw.userprofilesnapshot s
-   WHERE (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
+    synapse_data_warehouse.synapse_raw.userprofilesnapshot s
+   WHERE
+    (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS') and
+    CHANGE_TYPE != 'DELETE'
 ) 
-SELECT *
+SELECT * EXCLUDE n
 FROM RANKED_NODES
 where n = 1;
 use role masking_admin;

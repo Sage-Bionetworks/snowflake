@@ -50,7 +50,6 @@ CREATE STAGE IF NOT EXISTS synapse_prod_warehouse_s3_stage
 ALTER STAGE IF EXISTS synapse_prod_warehouse_s3_stage REFRESH;
 
 USE ROLE SECURITYADMIN;
-
 GRANT CREATE MASKING POLICY ON SCHEMA SYNAPSE_DATA_WAREHOUSE.synapse
 TO ROLE masking_admin;
 GRANT CREATE SCHEMA, USAGE ON DATABASE SYNAPSE_DATA_WAREHOUSE
@@ -63,3 +62,15 @@ GRANT ALL PRIVILEGES ON FUTURE SCHEMAS IN DATABASE SYNAPSE_DATA_WAREHOUSE
 TO ROLE data_engineer;
 GRANT ALL PRIVILEGES ON FUTURE TABLES IN DATABASE SYNAPSE_DATA_WAREHOUSE
 TO ROLE data_engineer;
+
+// Public role
+// Synapse data warehouse
+GRANT USAGE ON SCHEMA synapse_data_warehouse.synapse
+TO ROLE PUBLIC;
+GRANT SELECT ON TABLE synapse_data_warehouse.synapse.userprofile_latest
+TO ROLE PUBLIC;
+
+// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+-- TODO: Add these back in after governance
+-- GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
+-- TO ROLE PUBLIC;
