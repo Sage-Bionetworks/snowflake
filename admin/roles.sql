@@ -19,18 +19,6 @@ grant role genie_admin
 to user "xindi.guo@sagebase.org";
 grant role genie_admin
 to user "chelsea.nayan@sagebase.org";
-grant USAGE on database genie
-to role genie_admin;
-GRANT USAGE ON FUTURE SCHEMAS IN DATABASE GENIE
-TO ROLE genie_admin;
-GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
-TO ROLE genie_admin;
--- GRANT USAGE ON ALL SCHEMAS IN DATABASE GENIE
--- TO ROLE genie_admin;
--- GRANT SELECT ON ALL TABLES IN DATABASE GENIE
--- TO ROLE genie_admin;
-GRANT USAGE ON WAREHOUSE tableau
-TO ROLE genie_admin;
 
 // RECOVER
 USE ROLE USERADMIN;

@@ -1,0 +1,14 @@
+USE ROLE sysadmin;
+CREATE DATABASE IF NOT EXISTS genie;
+
+-- ! Grant roles
+USE ROLE SECURITYADMIN;
+grant USAGE on database genie
+to role genie_admin;
+GRANT USAGE ON FUTURE SCHEMAS IN DATABASE GENIE
+TO ROLE genie_admin;
+GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
+TO ROLE genie_admin;
+
+GRANT USAGE ON WAREHOUSE tableau
+TO ROLE genie_admin;
