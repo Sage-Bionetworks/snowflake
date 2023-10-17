@@ -28,6 +28,8 @@ CREATE ROLE IF NOT EXISTS recover_data_analytics;
 USE ROLE SECURITYADMIN;
 grant role recover_data_engineer
 to role useradmin;
+grant role recover_data_analytics
+to role useradmin;
 GRANT ROLE recover_data_engineer
 TO USER "phil.snyder@sagebase.org";
 GRANT ROLE recover_data_engineer
