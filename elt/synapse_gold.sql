@@ -153,3 +153,7 @@ CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
   select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
   from user_cert_joined
 ;
+
+// zero copy clone of processed access records
+CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
+CLONE synapse_data_warehouse.synapse_raw.processedaccess;

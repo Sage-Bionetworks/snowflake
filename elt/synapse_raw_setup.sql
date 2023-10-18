@@ -94,7 +94,10 @@ from (
     $1:modified_by as modified_by,
     $1:version_number as version_number,
     $1:file_handle_id as file_handle_id,
-    $1:name as name,
+    CASE
+        WHEN POSITION('.' IN $1:name) > 0 THEN CONCAT(MD5($1:name), '.', REGEXP_REPLACE($1:name , '^(.*)[.](.*)', '\\2'))
+        ELSE MD5($1:name)
+    END as name,
     $1:is_public as is_public,
     $1:is_controlled as is_controlled,
     $1:is_restricted as is_restricted,
@@ -472,21 +475,21 @@ copy into filesnapshots from (
     $1:concrete_type as concrete_type,
     $1:content_md5 as content_md5,
     $1:content_type as content_type,
-    $1:file_name as file_name,
+    MD5($1:file_name) as file_name,
     $1:storage_location_id as storage_location_id,
     $1:content_size as content_size,
     $1:bucket as bucket,
-    $1:key as key,
+    REGEXP_REPLACE($1:key, '^(.*)/(.*)/.*', '\\1/\\2') as key,
     $1:preview_id as preview_id,
     $1:is_preview as is_preview,
     $1:status as status,
     NULLIF(
        regexp_replace (
-       METADATA$FILENAME,
+       metadata$filename,
        '.*filesnapshots\/snapshot_date\=(.*)\/.*',
        '\\1'),
        '__HIVE_DEFAULT_PARTITION__'
-    )                         as snapshot_date
+    ) as snapshot_date
   from
     @synapse_prod_warehouse_s3_stage/filesnapshots
   )
