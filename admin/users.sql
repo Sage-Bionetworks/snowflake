@@ -52,3 +52,6 @@ CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.taylor@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
+CREATE USER IF NOT EXISTS "jake.albrecht@sagebase.org";
+CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org ";
+CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
