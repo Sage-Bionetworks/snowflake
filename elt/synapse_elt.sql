@@ -114,8 +114,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/certifiedquizrecords
     )
-    pattern = '.*certifiedquizrecords/record_date=.*/.*'
-;
+    pattern = '.*certifiedquizrecords/record_date=.*/.*';
 alter task certifiedquiz_task resume;
 
 create task if not exists certifiedquizquestion_task
@@ -142,8 +141,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/certifiedquizquestionrecords
     )
-    pattern = '.*certifiedquizquestionrecords/record_date=.*/.*'
-;
+    pattern = '.*certifiedquizquestionrecords/record_date=.*/.*';
 alter task certifiedquizquestion_task resume;
 
 create task if not exists filedownload_task
@@ -174,8 +172,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/filedownloadrecords
     )
-    pattern = '.*filedownloadrecords/record_date=.*/.*'
-;
+    pattern = '.*filedownloadrecords/record_date=.*/.*';
 alter task filedownload_task resume;
 
 create task if not exists aclsnapshots_task
@@ -204,8 +201,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/aclsnapshots
     )
-    pattern = '.*aclsnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*aclsnapshots/snapshot_date=.*/.*';
 alter task aclsnapshots_task resume;
 
 create task if not exists teamsnapshots_task
@@ -238,8 +234,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/teamsnapshots
     )
-    pattern = '.*teamsnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*teamsnapshots/snapshot_date=.*/.*';
 alter task teamsnapshots_task resume;
 
 create task if not exists usergroupsnapshots_task
@@ -268,8 +263,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/usergroupsnapshots
     )
-    pattern = '.*usergroupsnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*usergroupsnapshots/snapshot_date=.*/.*';
 alter task usergroupsnapshots_task resume;
 
 create task if not exists verificationsubmissionsnapshots_task
@@ -296,8 +290,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/verificationsubmissionsnapshots
     )
-    pattern = '.*verificationsubmissionsnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*verificationsubmissionsnapshots/snapshot_date=.*/.*';
 alter task verificationsubmissionsnapshots_task resume;
 
 create task if not exists teammembersnapshots_task
@@ -324,8 +317,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/teammembersnapshots
     )
-    pattern = '.*teammembersnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*teammembersnapshots/snapshot_date=.*/.*';
 alter task teammembersnapshots_task resume;
 
 create task if not exists fileupload_task
@@ -353,8 +345,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/fileuploadrecords
     )
-    pattern = '.*fileuploadrecords/record_date=.*/.*'
-;
+    pattern = '.*fileuploadrecords/record_date=.*/.*';
 alter task fileupload_task resume;
 
 create task if not exists filesnapshots_task
@@ -393,8 +384,7 @@ as
         from
             @synapse_prod_warehouse_s3_stage/filesnapshots
     )
-    pattern = '.*filesnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*filesnapshots/snapshot_date=.*/.*';
 alter task filesnapshots_task resume;
 
 create task if not exists processedaccess_task
@@ -439,8 +429,7 @@ as
             ) as record_date
         from @synapse_prod_warehouse_s3_stage/processedaccessrecord
     )
-    pattern = '.*processedaccessrecord/record_date=.*/.*'
-;
+    pattern = '.*processedaccessrecord/record_date=.*/.*';
 alter task processedaccess_task resume;
 
 -- ! Task tracking
