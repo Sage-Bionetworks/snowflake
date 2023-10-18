@@ -94,7 +94,10 @@ from (
     $1:modified_by as modified_by,
     $1:version_number as version_number,
     $1:file_handle_id as file_handle_id,
-    $1:name as name,
+    CASE
+        WHEN POSITION('.' IN $1:name) > 0 THEN CONCAT(MD5($1:name), '.', REGEXP_REPLACE($1:name , '^(.*)[.](.*)', '\\2'))
+        ELSE MD5($1:name)
+    END as name,
     $1:is_public as is_public,
     $1:is_controlled as is_controlled,
     $1:is_restricted as is_restricted,

@@ -66,22 +66,26 @@ as
             $1:modified_by as modified_by,
             $1:version_number as version_number,
             $1:file_handle_id as file_handle_id,
-            $1:name as name,
+            case
+                when POSITION('.' in $1:name) > 0
+                    then
+                        CONCAT(MD5($1:name), '.', REGEXP_REPLACE($1:name , '^(.*)[.](.*)', '\\2'))
+                    else
+                        MD5($1:name)
+            end as name,
             $1:is_public as is_public,
             $1:is_controlled as is_controlled,
             $1:is_restricted as is_restricted,
             NULLIF(
                 REGEXP_REPLACE(
                     metadata$filename,
-                    '.*nodesnapshots\/snapshot_date\=(.*)\/.*',
-                    '\\1'
+                    '.*nodesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
                 ),
                 '__HIVE_DEFAULT_PARTITION__'
             ) as snapshot_date
         from @synapse_prod_warehouse_s3_stage/nodesnapshots/
     )
-    pattern = '.*nodesnapshots/snapshot_date=.*/.*'
-;
+    pattern = '.*nodesnapshots/snapshot_date=.*/.*';
 
 alter task nodesnapshot_task resume;
 
