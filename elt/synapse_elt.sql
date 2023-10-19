@@ -25,7 +25,7 @@ as
             $1:user_name as user_name,
             $1:first_name as first_name,
             $1:last_name as last_name,
-            $1:email as email,
+            REGEXP_REPLACE($1:email, '.+\@', '*****@') as email,
             $1:location as location,
             $1:company as company,
             $1:position as position,
