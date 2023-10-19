@@ -70,7 +70,7 @@ TO ROLE PUBLIC;
 GRANT SELECT ON TABLE synapse_data_warehouse.synapse.userprofile_latest
 TO ROLE PUBLIC;
 
-// GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
+GRANT SELECT ON ALL TABLES IN SCHEMA synapse_data_warehouse.synapse TO ROLE PUBLIC;
 -- TODO: Add these back in after governance
 -- GRANT SELECT ON FUTURE TABLES IN SCHEMA synapse_data_warehouse.synapse
 -- TO ROLE PUBLIC;
