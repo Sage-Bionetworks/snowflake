@@ -1,28 +1,65 @@
 USE ROLE SYSADMIN;
-use database synapse_data_warehouse;
-use schema synapse;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
+USE SCHEMA SYNAPSE;
 
-// Create certified quiz question latest
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
-  WITH cqq_ranked AS (
-    SELECT *,
-      ROW_NUMBER() OVER (
-        PARTITION BY RESPONSE_ID, QUESTION_INDEX
-        ORDER BY IS_CORRECT DESC, INSTANCE DESC
-      ) AS row_num
-    FROM synapse_data_warehouse.synapse_raw.certifiedquizquestion
-  )
-  SELECT * EXCLUDE row_num
-  FROM cqq_ranked
-  WHERE row_num = 1
-  ORDER BY RESPONSE_ID DESC, QUESTION_INDEX ASC;
+-- Create certified quiz question latest
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.CERTIFIEDQUIZQUESTION_LATEST AS
+WITH CQQ_RANKED AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY RESPONSE_ID, QUESTION_INDEX
+            ORDER BY IS_CORRECT DESC, INSTANCE DESC
+        ) AS ROW_NUM
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.CERTIFIEDQUIZQUESTION
+)
 
+SELECT * EXCLUDE ROW_NUM
+FROM CQQ_RANKED
+WHERE ROW_NUM = 1
+ORDER BY RESPONSE_ID DESC, QUESTION_INDEX ASC;
 
-// Create certified quiz latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquiz
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz);
+-- Create certified quiz latest
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.CERTIFIEDQUIZ_LATEST AS
+WITH CQQ_RANKED AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY USER_ID
+            ORDER BY INSTANCE DESC, RESPONSE_ID DESC
+        ) AS ROW_NUM
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.CERTIFIEDQUIZ
+)
+
+SELECT * EXCLUDE ROW_NUM
+FROM CQQ_RANKED
+WHERE ROW_NUM = 1;
+-- verify that the de-duplication occured
+SELECT
+    COUNT(*),
+    COUNT(DISTINCT USER_ID)
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.CERTIFIEDQUIZ_LATEST;
+
+// Use a window function to get the latest user profile snapshot and create a table
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST AS WITH
+RANKED_NODES AS (
+    SELECT
+        S.*,
+        "row_number"()
+            OVER (
+                PARTITION BY S.ID
+                ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
+            )
+            N
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.USERPROFILESNAPSHOT S
+    WHERE
+        (S.SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '60 DAYS')
+)
+
+SELECT * EXCLUDE N
+FROM RANKED_NODES
+WHERE N = 1;
 
 -- // Create View of user profile and cert join
 -- CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
@@ -38,122 +75,137 @@ CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquiz_latest A
 --   from user_cert_joined
 -- ;
 
-// Use a window function to get the latest user profile snapshot and create a table
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.userprofile_latest as WITH
-  RANKED_NODES AS (
-   SELECT
-    s.*
-    , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM
-    synapse_data_warehouse.synapse_raw.userprofilesnapshot s
-   WHERE
-    (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS')
-) 
-SELECT * EXCLUDE n
-FROM RANKED_NODES
-where n = 1;
-use role masking_admin;
-USE SCHEMA synapse_data_warehouse.synapse;
-ALTER TABLE IF EXISTS userprofile_latest
-MODIFY COLUMN email
-SET MASKING POLICY email_mask;
+-- use role masking_admin;
+-- USE SCHEMA synapse_data_warehouse.synapse;
+-- ALTER TABLE IF EXISTS userprofile_latest
+-- MODIFY COLUMN email
+-- SET MASKING POLICY email_mask;
 USE ROLE SYSADMIN;
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.teammember_latest as WITH
-  RANKED_NODES AS (
-   SELECT
-     s.*
-   , "row_number"() OVER (PARTITION BY s.member_id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM
-     synapse_data_warehouse.synapse_raw.teammembersnapshots s
+-- CREATE TABLE IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE.SYNAPSE.TEAMMEMBER_LATEST AS WITH
+-- RANKED_NODES AS (
+--     SELECT
+--         S.*,
+--         "row_number"()
+--             OVER (
+--                 PARTITION BY S.MEMBER_ID
+--                 ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
+--             )
+--             N
+--     FROM
+--         SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.TEAMMEMBERSNAPSHOTS S
+-- )
+
+-- SELECT *
+-- FROM RANKED_NODES
+-- WHERE N = 1;
+
+-- CREATE TABLE IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE.SYNAPSE.TEAM_LATEST AS WITH
+-- RANKED_NODES AS (
+--     SELECT
+--         S.*,
+--         "row_number"()
+--             OVER (
+--                 PARTITION BY S.ID
+--                 ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
+--             )
+--             N
+--     FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.TEAMSNAPSHOTS S
+-- )
+
+-- SELECT *
+-- FROM RANKED_NODES
+-- WHERE N = 1;
+
+-- filesnapshots
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST AS WITH
+RANKED_NODES AS (
+    SELECT
+        S.*,
+        "row_number"()
+            OVER (
+                PARTITION BY S.ID
+                ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
+            )
+            N
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.FILESNAPSHOTS S
+    WHERE
+        (S.SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '60 DAYS')
+        AND NOT IS_PREVIEW
+        AND CHANGE_TYPE != 'DELETE'
 )
-SELECT *
-FROM RANKED_NODES
-where n = 1;
 
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.team_latest as WITH
-  RANKED_NODES AS (
-   SELECT
-     s.*
-   , "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM synapse_data_warehouse.synapse_raw.teamsnapshots s
+SELECT * EXCLUDE N
+FROM RANKED_NODES
+WHERE N = 1;
+
+-- node snapshot latest
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS WITH
+RANKED_NODES AS (
+    SELECT
+        S.*,
+        "row_number"()
+            OVER (
+                PARTITION BY S.ID
+                ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
+            )
+            N
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.NODESNAPSHOTS S
+    WHERE
+        (S.SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '60 DAYS')
+        AND CHANGE_TYPE != 'DELETE'
 )
-SELECT *
+
+SELECT * EXCLUDE N
 FROM RANKED_NODES
-where n = 1;
+WHERE N = 1;
 
-// filesnapshots
-USE ROLE SYSADMIN;
-
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.file_latest as WITH
-  RANKED_NODES AS (
-   SELECT
-     s.*,
-     "row_number"() OVER (PARTITION BY s.id ORDER BY change_timestamp DESC, snapshot_timestamp DESC) n
-   FROM synapse_data_warehouse.synapse_raw.filesnapshots s
-   WHERE
-    (s.snapshot_date >= current_timestamp - INTERVAL '60 DAYS') AND
-    NOT IS_PREVIEW AND
-    CHANGE_TYPE != 'DELETE'
-)
-SELECT *
-FROM RANKED_NODES
-where n = 1
-;
-
-
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certified_question_information (
-    question_index NUMBER,
-    question_group_number NUMBER,
-    version STRING,
-    fre_q FLOAT,
-    fre_help FLOAT,
-    difference_fre FLOAT,
-    fkgl_q NUMBER,
-    fkgl_help FLOAT,
-    difference_fkgl FLOAT,
-    notes STRING,
-    type STRING,
-    question_text STRING
+-- Created certified question information and loaded the table manually
+CREATE TABLE IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE.SYNAPSE.CERTIFIED_QUESTION_INFORMATION (
+    QUESTION_INDEX NUMBER,
+    QUESTION_GROUP_NUMBER NUMBER,
+    VERSION STRING,
+    FRE_Q FLOAT,
+    FRE_HELP FLOAT,
+    DIFFERENCE_FRE FLOAT,
+    FKGL_Q NUMBER,
+    FKGL_HELP FLOAT,
+    DIFFERENCE_FKGL FLOAT,
+    NOTES STRING,
+    TYPE STRING,
+    QUESTION_TEXT STRING
 );
-// Loaded the table manually...
 
-// Create certified quiz question latest
-CREATE TABLE IF NOT EXISTS synapse_data_warehouse.synapse.certifiedquizquestion_latest AS
-    select distinct * from synapse_data_warehouse.synapse_raw.certifiedquizquestion
-    where INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquizquestion);
-
-// Create certified quiz latest
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.certifiedquiz_latest as WITH
-  RANKED_NODES AS (
-  SELECT
-     s.*,
-     "row_number"() OVER (PARTITION BY s.USER_ID ORDER BY RESPONSE_ID DESC) n
-  FROM synapse_data_warehouse.synapse_raw.certifiedquiz s
-  WHERE
-    INSTANCE =
-    (select max(INSTANCE) from synapse_data_warehouse.synapse_raw.certifiedquiz)
-)
-SELECT *
-FROM RANKED_NODES
-where n = 1
-;
-
-
-// Create View of user profile and cert join
-CREATE VIEW IF NOT EXISTS synapse_data_warehouse.synapse.user_certified AS
-  with user_cert_joined as (
-    select *
-    from synapse_data_warehouse.synapse.userprofile_latest user
+-- Create View of user profile and cert join
+CREATE VIEW IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USER_CERTIFIED AS
+WITH USER_CERT_JOINED AS (
+    SELECT *
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST USER
     LEFT JOIN (
-      select USER_ID, PASSED from synapse_data_warehouse.synapse.certifiedquiz_latest
-    ) cert
-    ON user.ID = cert.USER_ID
-  )
-  select ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, PASSED
-  from user_cert_joined
+        SELECT
+            USER_ID,
+            PASSED
+        FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.CERTIFIEDQUIZ_LATEST
+    ) CERT
+        ON USER.ID = CERT.USER_ID
+)
+
+SELECT
+    ID,
+    USER_NAME,
+    FIRST_NAME,
+    LAST_NAME,
+    EMAIL,
+    LOCATION,
+    COMPANY,
+    POSITION,
+    PASSED
+FROM USER_CERT_JOINED
 ;
 
-// zero copy clone of processed access records
-CREATE OR REPLACE TABLE synapse_data_warehouse.synapse.processedaccess
-CLONE synapse_data_warehouse.synapse_raw.processedaccess;
+-- zero copy clone of processed access records
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
+CLONE SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.PROCESSEDACCESS;
+
+-- zero copy clone of file download records
+CREATE OR REPLACE TABLE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+CLONE SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.FILEDOWNLOAD;
