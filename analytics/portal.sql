@@ -3,6 +3,32 @@ USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 USE SCHEMA SYNAPSE;
 -- Data up to October 18th for now
 
+-- Total number of downloads in synapse
+WITH dedup_filehandle AS (
+    select
+        distinct user_id, file_handle_id as fd_file_handle_id, record_date
+    from
+        synapse_data_warehouse.synapse.filedownload
+)
+select
+    count(*)
+from
+    dedup_filehandle;
+WITH dedup_filehandle AS (
+    select
+        distinct user_id, file_handle_id as fd_file_handle_id, record_date
+    from
+        synapse_data_warehouse.synapse.filedownload
+)
+select
+    DATE_TRUNC('MONTH', record_date) as month,
+    count(*) as number_of_downloads
+from
+    dedup_filehandle
+group by
+    month
+order by
+    month DESC;
 -- * Number of files within each portal in snowflake
 USE SCHEMA sage.portal_raw;
 SELECT
