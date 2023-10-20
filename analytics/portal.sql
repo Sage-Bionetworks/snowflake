@@ -77,6 +77,32 @@ SELECT count(DISTINCT USER_ID)
 FROM
     AD_DOWNLOADS;
 
+
+WITH FILE_SUBSET AS (
+    SELECT
+        ID,
+        CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+),
+
+AD_TRANSFORM AS (
+    SELECT "dataFileHandleId"
+    FROM
+        SAGE.PORTAL_RAW.AD
+)
+
+SELECT
+    sum(CONTENT_SIZE / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    AD_TRANSFORM
+LEFT JOIN
+    FILE_SUBSET
+    ON
+        AD_TRANSFORM."dataFileHandleId" = FILE_SUBSET.ID
+;
+
 -- * GENIE
 -- All download counts over time
 SELECT count(*)
@@ -98,6 +124,14 @@ ORDER BY
 SELECT count(DISTINCT USER_ID)
 FROM
     GENIE_DOWNLOADS;
+
+-- storage cost
+SELECT
+    sum("dataFileSizeBytes" / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum("dataFileSizeBytes" / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    SAGE.PORTAL_RAW.GENIE;
+
 -- * ELITE
 SELECT count(*)
 FROM
@@ -115,6 +149,46 @@ ORDER BY
 SELECT count(DISTINCT USER_ID)
 FROM
     ELITE_DOWNLOADS;
+
+-- upper bound cost estimate, and total amount of files in GB
+WITH FILE_SUBSET AS (
+    SELECT
+        ID,
+        CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+),
+
+NODE_SUBSET AS (
+    SELECT
+        ID AS NODE_ID,
+        FILE_HANDLE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+),
+
+ELITE_TRANSFORM AS (
+    SELECT
+        *,
+        cast(replace("id", 'syn', '') AS INTEGER) AS SYN_ID
+    FROM
+        SAGE.PORTAL_RAW.ELITE
+)
+
+SELECT
+    sum(CONTENT_SIZE / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    ELITE_TRANSFORM
+LEFT JOIN
+    NODE_SUBSET
+    ON
+        NODE_SUBSET.NODE_ID = ELITE_TRANSFORM.SYN_ID
+LEFT JOIN
+    FILE_SUBSET
+    ON
+        NODE_SUBSET.FILE_HANDLE_ID = FILE_SUBSET.ID
+;
 
 -- * NF
 -- Total download
@@ -134,6 +208,12 @@ SELECT count(DISTINCT USER_ID)
 FROM
     NF_DOWNLOADS;
 
+SELECT
+    sum("dataFileSizeBytes" / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum("dataFileSizeBytes" / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    SAGE.PORTAL_RAW.NF;
+
 -- psychencode
 SELECT count(*)
 FROM
@@ -151,6 +231,32 @@ ORDER BY
 SELECT count(DISTINCT USER_ID)
 FROM
     PSYCHENCODE_DOWNLOADS;
+
+WITH FILE_SUBSET AS (
+    SELECT
+        ID,
+        CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+),
+
+PSYCHENCODE_TRANSFORM AS (
+    SELECT "dataFileHandleId"
+    FROM
+        SAGE.PORTAL_RAW.PSYCHENCODE
+)
+
+SELECT
+    sum(CONTENT_SIZE / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    PSYCHENCODE_TRANSFORM
+LEFT JOIN
+    FILE_SUBSET
+    ON
+        PSYCHENCODE_TRANSFORM."dataFileHandleId" = FILE_SUBSET.ID
+;
+
 -- HTAN
 SELECT count(*)
 FROM
@@ -171,36 +277,41 @@ FROM
     HTAN_DOWNLOADS;
 
 -- upper bound cost estimate, and total amount of files in GB
-with file_subset AS (
-    select
-        id, content_size
-    from
-        synapse_data_warehouse.synapse.file_latest
+WITH FILE_SUBSET AS (
+    SELECT
+        ID,
+        CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 ),
-node_subset AS (
-    select
-        id as node_id, file_handle_id
-    from
-        synapse_data_warehouse.synapse.node_latest
+
+NODE_SUBSET AS (
+    SELECT
+        ID AS NODE_ID,
+        FILE_HANDLE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
 ),
-htan_transform AS (
-    select
+
+HTAN_TRANSFORM AS (
+    SELECT
         *,
         cast(replace("entityId", 'syn', '') AS INTEGER) AS SYN_ID
-    from
-        sage.portal_raw.htan
+    FROM
+        SAGE.PORTAL_RAW.HTAN
 )
-select
-    sum(content_size / 1000000000) as total_size_in_gb,
-    sum(content_size / 1000000000) * 0.023 * 12 as price_per_year
-from
-    htan_transform
+
+SELECT
+    sum(CONTENT_SIZE / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    HTAN_TRANSFORM
 LEFT JOIN
-    node_subset
-ON
-    node_subset.node_id = htan_transform.SYN_ID
+    NODE_SUBSET
+    ON
+        NODE_SUBSET.NODE_ID = HTAN_TRANSFORM.SYN_ID
 LEFT JOIN
-    file_subset
-ON
-    node_subset.file_handle_id = file_subset.id
+    FILE_SUBSET
+    ON
+        NODE_SUBSET.FILE_HANDLE_ID = FILE_SUBSET.ID
 ;
