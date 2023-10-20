@@ -60,6 +60,12 @@ SHOW TABLES IN sage.portal_raw;
 -- GENIE - data mesh with public portal data
 -- Data up to October 18th
 --
+with test AS (
+    select
+        distinct user_id, file_handle_id
+    from
+        synapse_data_warehouse.synapse.filedownload
+)
 select genie."id", genie."name", genie."version", count(*) as number_of_downloads
 from sage.portal_raw.genie genie
 LEFT JOIN
