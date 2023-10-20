@@ -3,6 +3,9 @@ USE DATABASE sage;
 
 CREATE SCHEMA IF NOT EXISTS portal_raw
     WITH MANAGED ACCESS;
+
+CREATE SCHEMA IF NOT EXISTS portal_downloads
+    WITH MANAGED ACCESS;
 -- ! One time addition
 -- ALTER TABLE portal_raw.NF ADD COLUMN "tissue" STRING;
 
