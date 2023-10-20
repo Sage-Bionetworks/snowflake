@@ -169,3 +169,38 @@ ORDER BY
 SELECT count(DISTINCT USER_ID)
 FROM
     HTAN_DOWNLOADS;
+
+-- upper bound cost estimate, and total amount of files in GB
+with file_subset AS (
+    select
+        id, content_size
+    from
+        synapse_data_warehouse.synapse.file_latest
+),
+node_subset AS (
+    select
+        id as node_id, file_handle_id
+    from
+        synapse_data_warehouse.synapse.node_latest
+),
+htan_transform AS (
+    select
+        *,
+        cast(replace("entityId", 'syn', '') AS INTEGER) AS SYN_ID
+    from
+        sage.portal_raw.htan
+)
+select
+    sum(content_size / 1000000000) as total_size_in_gb,
+    sum(content_size / 1000000000) * 0.023 * 12 as price_per_year
+from
+    htan_transform
+LEFT JOIN
+    node_subset
+ON
+    node_subset.node_id = htan_transform.SYN_ID
+LEFT JOIN
+    file_subset
+ON
+    node_subset.file_handle_id = file_subset.id
+;
