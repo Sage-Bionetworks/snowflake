@@ -315,3 +315,40 @@ LEFT JOIN
     ON
         NODE_SUBSET.FILE_HANDLE_ID = FILE_SUBSET.ID
 ;
+
+-- All HTAN data
+WITH HTAN_PROJECTS AS (
+    SELECT
+        ID,
+        FILE_HANDLE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+    WHERE
+        PROJECT_ID IN (
+            20834712,
+            23511984,
+            22124336,
+            22776798,
+            23511954,
+            23511961,
+            22123910,
+            23448901,
+            22093319,
+            23511964,
+            21050481,
+            22255320,
+            24984270,
+            22041595,
+            25555889
+        )
+)
+
+SELECT
+    sum(CONTENT_SIZE / 1000000000) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE / 1000000000) * 0.023 * 12 AS PRICE_PER_YEAR
+FROM
+    HTAN_PROJECTS
+LEFT JOIN
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+    ON
+        FILE_LATEST.ID = HTAN_PROJECTS.FILE_HANDLE_ID;
