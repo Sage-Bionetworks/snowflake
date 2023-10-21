@@ -92,7 +92,6 @@ for portal_name, synapse_id in portals.items():
 # htan_ent = syn.get("syn52677746")
 # htan_df = pd.read_csv(htan_ent.path)
 # write_pandas(ctx, htan_df, "HTAN", auto_create_table=True)
-
 # htan_ent = syn.get("syn52748752")
 # htan_df = pd.read_csv(htan_ent.path)
 # write_pandas(ctx, htan_df, "HTAN", auto_create_table=True, overwrite=True)
