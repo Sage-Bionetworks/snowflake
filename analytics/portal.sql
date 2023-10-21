@@ -103,6 +103,23 @@ LEFT JOIN
         AD_TRANSFORM."dataFileHandleId" = FILE_SUBSET.ID
 ;
 
+-- Only get user profiles that aren't linked to sage emails
+-- And get download count
+WITH USER AS (
+    SELECT ID AS PROFILE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
+    WHERE
+        EMAIL NOT LIKE '%@sagebase.org'
+)
+
+SELECT count(*)
+FROM
+    SAGE.PORTAL_DOWNLOADS.AD_DOWNLOADS
+WHERE
+    USER_ID IN (SELECT PROFILE_ID FROM USER);
+
+
 -- * GENIE
 -- All download counts over time
 SELECT count(*)
