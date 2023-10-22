@@ -187,3 +187,70 @@ group by
     client
 order by
     number_of_calls DESC;
+
+-- users that downloaded the most
+WITH DEDUP_FILEHANDLE AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE,
+        PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+),
+users as (
+    select
+        id,
+        user_name,
+        location,
+        company
+    from
+        synapse_data_warehouse.synapse.userprofile_latest
+)
+SELECT
+    user_id, user_name, location, company, count(*) as number_of_downloads
+from
+    DEDUP_FILEHANDLE
+left join
+    users
+on
+    DEDUP_FILEHANDLE.user_id = users.id
+group by
+    user_id, user_name, location, company
+order by
+    number_of_calls DESC;
+
+-- locations based on what users put on their most current user profiles
+-- NOTE: this does not mean the downloads have to happen
+-- from that location, what users have in their user profile could
+-- be wrong.
+WITH DEDUP_FILEHANDLE AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE,
+        PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+),
+users as (
+    select
+        id,
+        user_name,
+        location,
+        company
+    from
+        synapse_data_warehouse.synapse.userprofile_latest
+)
+SELECT
+    location, count(*) as number_of_downloads
+from
+    DEDUP_FILEHANDLE
+left join
+    users
+on
+    DEDUP_FILEHANDLE.user_id = users.id
+group by
+    location
+order by
+    number_of_calls DESC;
