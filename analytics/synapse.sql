@@ -153,7 +153,8 @@ select
     is_controlled,
     is_restricted,
     count(*) as number_of_files,
-    sum(content_size) / 1000000000000 as total_size_in_terabytes
+    -- A terabyte is 2^40 bytes
+    sum(content_size) / POWER(2, 40) as total_size_in_terabytes
 from
     synapse_data_warehouse.synapse.node_latest node
 left join
