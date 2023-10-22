@@ -1,5 +1,5 @@
 USE WAREHOUSE COMPUTE_ORG;
-use role securityadmin;
+USE ROLE SECURITYADMIN;
 
 // Grant system roles to users
 GRANT ROLE SYSADMIN
@@ -10,32 +10,32 @@ TO USER "x.schildwachter@sagebase.org";
 
 // GENIE
 USE ROLE USERADMIN;
-CREATE ROLE IF NOT EXISTS genie_admin;
+CREATE ROLE IF NOT EXISTS GENIE_ADMIN;
 USE ROLE SECURITYADMIN;
-grant role genie_admin
-to role useradmin;
-GRANT ROLE genie_admin
+GRANT ROLE GENIE_ADMIN
+TO ROLE USERADMIN;
+GRANT ROLE GENIE_ADMIN
 TO USER "alex.paynter@sagebase.org";
-grant role genie_admin
-to user "xindi.guo@sagebase.org";
-grant role genie_admin
-to user "chelsea.nayan@sagebase.org";
+GRANT ROLE GENIE_ADMIN
+TO USER "xindi.guo@sagebase.org";
+GRANT ROLE GENIE_ADMIN
+TO USER "chelsea.nayan@sagebase.org";
 
 // RECOVER
 USE ROLE USERADMIN;
-CREATE ROLE IF NOT EXISTS recover_data_engineer;
-CREATE ROLE IF NOT EXISTS recover_data_analytics;
+CREATE ROLE IF NOT EXISTS RECOVER_DATA_ENGINEER;
+CREATE ROLE IF NOT EXISTS RECOVER_DATA_ANALYTICS;
 
 USE ROLE SECURITYADMIN;
-grant role recover_data_engineer
-to role useradmin;
-grant role recover_data_analytics
-to role useradmin;
-GRANT ROLE recover_data_engineer
+GRANT ROLE RECOVER_DATA_ENGINEER
+TO ROLE USERADMIN;
+GRANT ROLE RECOVER_DATA_ANALYTICS
+TO ROLE USERADMIN;
+GRANT ROLE RECOVER_DATA_ENGINEER
 TO USER "phil.snyder@sagebase.org";
-GRANT ROLE recover_data_engineer
+GRANT ROLE RECOVER_DATA_ENGINEER
 TO USER "rixing.xu@sagebase.org";
-GRANT ROLE recover_data_engineer
+GRANT ROLE RECOVER_DATA_ENGINEER
 TO USER "thomas.yu@sagebase.org";
 
 // AD
@@ -43,31 +43,31 @@ USE ROLE USERADMIN;
 CREATE ROLE IF NOT EXISTS AD;
 USE ROLE SECURITYADMIN;
 GRANT ROLE AD
-TO ROLE useradmin;
+TO ROLE USERADMIN;
 GRANT ROLE AD
 TO USER "abby.vanderlinden@sagebase.org";
 
 USE ROLE USERADMIN;
-CREATE ROLE IF NOT EXISTS masking_admin;
-GRANT ROLE masking_admin
+CREATE ROLE IF NOT EXISTS MASKING_ADMIN;
+GRANT ROLE MASKING_ADMIN
 TO USER "thomas.yu@sagebase.org";
 USE ROLE ACCOUNTADMIN;
-GRANT APPLY MASKING POLICY on ACCOUNT
-to ROLE masking_admin;
+GRANT APPLY MASKING POLICY ON ACCOUNT
+TO ROLE MASKING_ADMIN;
 
 USE ROLE USERADMIN;
-CREATE ROLE IF NOT EXISTS data_engineer;
+CREATE ROLE IF NOT EXISTS DATA_ENGINEER;
 USE ROLE SECURITYADMIN;
-grant role data_engineer
-to role useradmin;
+GRANT ROLE DATA_ENGINEER
+TO ROLE USERADMIN;
 
-GRANT ROLE data_engineer
+GRANT ROLE DATA_ENGINEER
 TO USER "phil.snyder@sagebase.org";
-GRANT ROLE data_engineer
+GRANT ROLE DATA_ENGINEER
 TO USER "rixing.xu@sagebase.org";
-GRANT ROLE data_engineer
+GRANT ROLE DATA_ENGINEER
 TO USER "thomas.yu@sagebase.org";
-GRANT ROLE data_engineer
+GRANT ROLE DATA_ENGINEER
 TO USER "brad.macdonald@sagebase.org";
-GRANT ROLE data_engineer
+GRANT ROLE DATA_ENGINEER
 TO USER "bryan.fauble@sagebase.org";

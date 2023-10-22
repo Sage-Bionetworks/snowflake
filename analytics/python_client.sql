@@ -1,117 +1,130 @@
 USE ROLE PUBLIC;
 USE WAREHOUSE COMPUTE_ORG;
-USE DATABASE synapse_data_warehouse;
-USE SCHEMA synapse;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
+USE SCHEMA SYNAPSE;
 
 // Distinct client calls this month
-SELECT distinct(client)
-FROM processedaccess
-WHERE DATE(record_date) > DATE('2023-09-01');
+SELECT DISTINCT CLIENT
+FROM PROCESSEDACCESS
+WHERE DATE(RECORD_DATE) > DATE('2023-09-01');
 
 // distribution of different client calls
 
 
-SELECT client, count(*) as num_api_calls
-FROM processedaccess
+SELECT
+    CLIENT,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) >= DATE('2023-08-01') and
-    DATE(record_date) < DATE('2023-09-01')
-GROUP BY client
-ORDER BY num_api_calls DESC
-;
+    DATE(RECORD_DATE) >= DATE('2023-08-01')
+    AND DATE(RECORD_DATE) < DATE('2023-09-01')
+GROUP BY CLIENT
+ORDER BY NUM_API_CALLS DESC;
 
-SELECT USER_AGENT, count(*) as num_api_calls
-FROM processedaccess
+SELECT
+    USER_AGENT,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) >= DATE('2023-08-01') and
-    DATE(record_date) < DATE('2023-09-01') and
-    client = 'UNKNOWN'
+    DATE(RECORD_DATE) >= DATE('2023-08-01')
+    AND DATE(RECORD_DATE) < DATE('2023-09-01')
+    AND CLIENT = 'UNKNOWN'
 GROUP BY USER_AGENT
-ORDER BY num_api_calls DESC
-
-;
+ORDER BY NUM_API_CALLS DESC;
 // Distribution of normalized API calls this month
-SELECT normalized_method_signature, count(*) as num_api_calls
-FROM processedaccess
+SELECT
+    NORMALIZED_METHOD_SIGNATURE,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) >= DATE('2023-08-01') and
-    DATE(record_date) < DATE('2023-09-01') and
-    client = 'PYTHON'
-GROUP BY normalized_method_signature
-ORDER BY num_api_calls DESC
-;
+    DATE(RECORD_DATE) >= DATE('2023-08-01')
+    AND DATE(RECORD_DATE) < DATE('2023-09-01')
+    AND CLIENT = 'PYTHON'
+GROUP BY NORMALIZED_METHOD_SIGNATURE
+ORDER BY NUM_API_CALLS DESC;
 
 // Distribution of Python API calls this month
-SELECT normalized_method_signature, count(*) as num_api_calls
-FROM processedaccessrecord
+SELECT
+    NORMALIZED_METHOD_SIGNATURE,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESSRECORD
 WHERE
-    DATE(record_date) > DATE('2023-09-01') and
-    client = 'PYTHON'
-GROUP BY normalized_method_signature
-ORDER BY num_api_calls DESC;
+    DATE(RECORD_DATE) > DATE('2023-09-01')
+    AND CLIENT = 'PYTHON'
+GROUP BY NORMALIZED_METHOD_SIGNATURE
+ORDER BY NUM_API_CALLS DESC;
 
 
-SELECT normalized_method_signature, count(*) as num_api_calls
-FROM processedaccess
+SELECT
+    NORMALIZED_METHOD_SIGNATURE,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) >= DATE('2023-08-01') and
-    DATE(record_date) < DATE('2023-09-01') and
-    client = 'SYNAPSER'
-GROUP BY normalized_method_signature
-ORDER BY num_api_calls DESC
-;
+    DATE(RECORD_DATE) >= DATE('2023-08-01')
+    AND DATE(RECORD_DATE) < DATE('2023-09-01')
+    AND CLIENT = 'SYNAPSER'
+GROUP BY NORMALIZED_METHOD_SIGNATURE
+ORDER BY NUM_API_CALLS DESC;
 
 // Number of Python calls per user
-with U
-as (
-    SELECT user_id, count(*) as user_calls
-    FROM processedaccess
+WITH U AS (
+    SELECT
+        USER_ID,
+        COUNT(*) AS USER_CALLS
+    FROM PROCESSEDACCESS
     WHERE
-        DATE(record_date) > DATE('2023-09-01') and
-        client = 'PYTHON'
-    group by user_id
+        DATE(RECORD_DATE) > DATE('2023-09-01')
+        AND CLIENT = 'PYTHON'
+    GROUP BY USER_ID
 ),
-T as (
-    SELECT distinct id, user_name, email
-    FROM userprofile_latest
+
+T AS (
+    SELECT DISTINCT
+        ID,
+        USER_NAME,
+        EMAIL
+    FROM USERPROFILE_LATEST
 )
-select *
+
+SELECT
+    U.*,
+    T.*
 FROM U
 LEFT JOIN T
-ON U.user_id = T.id
-ORDER BY user_calls DESC
-;
-   
+    ON U.USER_ID = T.ID
+ORDER BY U.USER_CALLS DESC;
+
 // Number of client calls per month
-SELECT client, month(record_date) as month_called , count(*) as num_api_calls
-FROM processedaccess
+SELECT
+    CLIENT,
+    MONTH(RECORD_DATE) AS MONTH_CALLED,
+    COUNT(*) AS NUM_API_CALLS
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) >= DATE('2023-01-01')
-GROUP BY client, month(record_date)
-ORDER BY month_called ASC, num_api_calls DESC
-;
+    DATE(RECORD_DATE) >= DATE('2023-01-01')
+GROUP BY CLIENT, MONTH(RECORD_DATE)
+ORDER BY MONTH_CALLED ASC, NUM_API_CALLS DESC;
 
 // User agents of user agents for clients that are unknown.
-SELECT user_agent, count(*) as user_agent_count
-FROM processedaccess
+SELECT
+    USER_AGENT,
+    COUNT(*) AS USER_AGENT_COUNT
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) > DATE('2023-09-01') and client = 'UNKNOWN'
-GROUP BY user_agent
-ORDER BY user_agent_count DESC
-;
+    DATE(RECORD_DATE) > DATE('2023-09-01') AND CLIENT = 'UNKNOWN'
+GROUP BY USER_AGENT
+ORDER BY USER_AGENT_COUNT DESC;
 
 // User agents that are using the Python aiohttp package 
 SELECT *
-FROM processedaccess
+FROM PROCESSEDACCESS
 WHERE
-    user_agent = 'Python/3.7 aiohttp/3.7.4.post0' and
-    DATE(record_date) > DATE('2023-09-01')
-;
+    USER_AGENT = 'Python/3.7 aiohttp/3.7.4.post0'
+    AND DATE(RECORD_DATE) > DATE('2023-09-01');
 
 // Different client versions for synapse R
-SELECT distinct(user_agent)
-FROM processedaccess
+SELECT DISTINCT USER_AGENT
+FROM PROCESSEDACCESS
 WHERE
-    DATE(record_date) > DATE('2023-09-01') and
-    client = 'SYNAPSER'
-;
+    DATE(RECORD_DATE) > DATE('2023-09-01')
+    AND CLIENT = 'SYNAPSER';

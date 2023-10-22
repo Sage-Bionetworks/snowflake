@@ -1,74 +1,86 @@
 USE ROLE PUBLIC;
-USE WAREHOUSE compute_org;
-use database synapse_data_warehouse;
-use schema synapse_raw;
+USE WAREHOUSE COMPUTE_ORG;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
+USE SCHEMA SYNAPSE_RAW;
 
 // Explore certified quiz / certified quiz questions
-select *
-from certifiedquiz
-limit 10;
+SELECT *
+FROM CERTIFIEDQUIZ
+LIMIT 10;
 
-select sum(num_times_quiz)
-from 
-    (select user_id, count(*) as num_times_quiz from certifiedquiz group by user_id) s
-where num_times_quiz > 1;
+SELECT sum(NUM_TIMES_QUIZ)
+FROM
+    (
+        SELECT
+            USER_ID,
+            count(*) AS NUM_TIMES_QUIZ
+        FROM CERTIFIEDQUIZ GROUP BY USER_ID
+    ) AS S
+WHERE NUM_TIMES_QUIZ > 1;
 
-select *
-from
-certifiedquizquestion
-limit 10;
+SELECT *
+FROM
+    CERTIFIEDQUIZQUESTION
+LIMIT 10;
 
-select distinct INSTANCE
-from certifiedquiz;
-select count(*)
-from certifiedquiz;
+SELECT DISTINCT INSTANCE
+FROM CERTIFIEDQUIZ;
+SELECT count(*) AS ROW_COUNT
+FROM CERTIFIEDQUIZ;
 
-select *
-from certifiedquizquestionrecords
-limit 10;
+SELECT *
+FROM CERTIFIEDQUIZQUESTIONRECORDS
+LIMIT 10;
 
-select RESPONSE_ID, INSTANCE, count(*)
-from certifiedquizquestion
-group by RESPONSE_ID, INSTANCE
-order by RESPONSE_ID ASC;
+SELECT
+    RESPONSE_ID,
+    INSTANCE,
+    count(*) AS RESPONSE_COUNT
+FROM CERTIFIEDQUIZQUESTION
+GROUP BY RESPONSE_ID, INSTANCE
+ORDER BY RESPONSE_ID ASC;
 
-select *
-from certifiedquizquestion
-where RESPONSE_ID = 1
-order by QUESTION_INDEX ASC;
+SELECT *
+FROM CERTIFIEDQUIZQUESTION
+WHERE RESPONSE_ID = 1
+ORDER BY QUESTION_INDEX ASC;
 
-with no_dups as (
-    select distinct * from certifiedquizquestion
+WITH NO_DUPS AS (
+    SELECT DISTINCT * FROM CERTIFIEDQUIZQUESTION
 )
-select count(*)
-from no_dups;
+
+SELECT count(*) AS DUP_COUNTS
+FROM NO_DUPS;
 
 // Look for whether or not certain API calls are still used
-select distinct USER_AGENT
-from processedaccess
-where request_url like '%/table/sql/transform' ;
+SELECT DISTINCT USER_AGENT
+FROM PROCESSEDACCESS
+WHERE REQUEST_URL LIKE '%/table/sql/transform';
 
 //110486
-select count(*)
-from synapse_data_warehouse.synapse.user_certified
-where PASSED is null;
+SELECT count(*) AS ROW_COUNT
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USER_CERTIFIED
+WHERE PASSED IS null;
 
-select PASSED, count(*)
-from synapse_data_warehouse.synapse.user_certified
-group by PASSED;
+SELECT
+    PASSED,
+    count(*) AS PASSED_COUNT
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USER_CERTIFIED
+GROUP BY PASSED;
 
 // This doesn't have me...
-select *
-from synapse_data_warehouse.synapse_raw.certifiedquiz
-where USER_ID = 3324230;
+SELECT *
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.CERTIFIEDQUIZ
+WHERE USER_ID = 3324230;
 
 SELECT *
-FROM TABLE(SHOW TABLES IN SCHEMA sage.portal_raw);
+FROM table(SHOW TABLES IN SCHEMA SAGE.PORTAL_RAW);
 
-SHOW TABLES IN SCHEMA sage.portal_raw;
-select * from table(result_scan(last_query_id()));
+SHOW TABLES IN SCHEMA SAGE.PORTAL_RAW;
+SELECT * FROM table(result_scan(last_query_id()));
 
 SELECT *
-FROM sage.information_schema.tables
-WHERE TABLE_SCHEMA = 'PORTAL_RAW' AND
-TABLE_NAME = 'NF';
+FROM SAGE.INFORMATION_SCHEMA.TABLES
+WHERE
+    TABLE_SCHEMA = 'PORTAL_RAW'
+    AND TABLE_NAME = 'NF';
