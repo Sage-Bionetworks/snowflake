@@ -70,3 +70,72 @@ where
     record_date > '2023-01-01'
 group by origin
 order by number_of_requests DESC;
+
+-- Top downloaded public projects since 2022-01-01
+WITH DEDUP_FILEHANDLE AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE,
+        PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+),
+public_projects AS (
+    select
+        distinct project_id
+    from
+        synapse_data_warehouse.synapse.node_latest
+    where
+        is_public and
+        node_type = 'project'
+)
+SELECT
+    project_id,
+    count(*) as downloads_per_project,
+    count(distinct user_id) as number_of_unique_users_downloaded,
+    count(distinct fd_file_handle_id) as number_of_unique_files_downloaded
+FROM
+    DEDUP_FILEHANDLE
+where
+    project_id in (select project_id from public_projects)
+group by
+    project_id
+order by
+    downloads_per_project DESC;
+
+-- Top downloaded public projects for September 2023
+
+WITH DEDUP_FILEHANDLE AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE,
+        PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+    WHERE
+        record_date >= '2023-09-01' and record_date < '2023-10-01'
+),
+public_projects AS (
+    select
+        distinct project_id
+    from
+        synapse_data_warehouse.synapse.node_latest
+    where
+        is_public and
+        node_type = 'project'
+)
+SELECT
+    project_id,
+    count(*) as downloads_per_project,
+    count(distinct user_id) as number_of_unique_users_downloaded,
+    count(distinct fd_file_handle_id) as number_of_unique_files_downloaded
+FROM
+    DEDUP_FILEHANDLE
+where
+    project_id in (select project_id from public_projects)
+group by
+    project_id
+order by
+    downloads_per_project DESC;
