@@ -139,3 +139,29 @@ group by
     project_id
 order by
     downloads_per_project DESC;
+
+-- number of different governance types in synapse
+with file_fd as (
+    select
+        id as file_id, content_size
+    from
+        synapse_data_warehouse.synapse.file_latest
+)
+select
+    is_public,
+    is_controlled,
+    is_restricted,
+    count(*) as number_of_files,
+    sum(content_size) / 1000000000000 as total_size_in_terabytes
+from
+    synapse_data_warehouse.synapse.node_latest node
+left join
+    file_fd
+on
+    node.file_handle_id = file_fd.file_id
+where
+    node_type = 'file'
+group by
+    is_public, is_controlled, is_restricted
+order by
+    number_of_files DESC;
