@@ -1,76 +1,84 @@
 USE ROLE PUBLIC;
 USE WAREHOUSE COMPUTE_ORG;
-USE DATABASE synapse_data_warehouse;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 
 // File extensions
-select * from synapse_data_warehouse.synapse.node_latest limit 10;
-with file_extensions as (
-    select split_part(name,'.',-1) as fileext
-    from synapse_data_warehouse.synapse.node_latest
+SELECT * FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST LIMIT 10;
+WITH FILE_EXTENSIONS AS (
+    SELECT split_part(NAME, '.', -1) AS FILEEXT
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
 )
-select fileext, count(*) AS number_of_files
-from file_extensions
-group by fileext
-ORDER BY number_of_files DESC;
+
+SELECT
+    FILEEXT,
+    count(*) AS NUMBER_OF_FILES
+FROM FILE_EXTENSIONS
+GROUP BY FILEEXT
+ORDER BY NUMBER_OF_FILES DESC;
 
 -- * Can you extract which projects have these mp4's and the folder
 -- names under which they are stored, as a next step?
-with file_extensions as (
-    select
-        project_id,
-        parent_id,
-        split_part(name,'.',-1) as fileext
-    from
-        synapse_data_warehouse.synapse.node_latest
+WITH FILE_EXTENSIONS AS (
+    SELECT
+        PROJECT_ID,
+        PARENT_ID,
+        split_part(NAME, '.', -1) AS FILEEXT
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
 )
-select
-    distinct project_id
-from
-    file_extensions
-where
-    fileext ilike 'MP4';
 
-with file_extensions as (
-    select
-        project_id,
-        parent_id,
-        split_part(name,'.',-1) as fileext
-    from
-        synapse_data_warehouse.synapse.node_latest
+SELECT DISTINCT PROJECT_ID
+FROM
+    FILE_EXTENSIONS
+WHERE
+    FILEEXT ILIKE 'MP4';
+
+WITH FILE_EXTENSIONS AS (
+    SELECT
+        PROJECT_ID,
+        PARENT_ID,
+        split_part(NAME, '.', -1) AS FILEEXT
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
 )
-select
-    project_id, count(*) as number_of_mp4s
-from
-    file_extensions
-where
-    fileext ilike 'MP4'
-group by project_id
-order by number_of_mp4s DESC;
+
+SELECT
+    PROJECT_ID,
+    count(*) AS NUMBER_OF_MP4S
+FROM
+    FILE_EXTENSIONS
+WHERE
+    FILEEXT ILIKE 'MP4'
+GROUP BY PROJECT_ID
+ORDER BY NUMBER_OF_MP4S DESC;
 
 // Number of change events
-SELECT CHANGE_TYPE, count(*) as number_of_events
-FROM synapse_data_warehouse.synapse.file_latest
-GROUP BY CHANGE_TYPE
-;
+SELECT
+    CHANGE_TYPE,
+    count(*) AS NUMBER_OF_EVENTS
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+GROUP BY CHANGE_TYPE;
 
 // Number of counts for different statuses
-SELECT STATUS, count(*)
-FROM synapse_data_warehouse.synapse.file_latest
+SELECT
+    STATUS,
+    count(*) AS STATUS_COUNT
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 GROUP BY STATUS;
 
 -- traffic via portals via "ORIGIN"> The host name of the portal making the request, e.g., https://staging.synapse.org, https://adknowledgeportal.synapse.org, https://dhealth.synapse.org.
-select
-    origin,
-    count(*) as number_of_requests,
-    count(distinct user_id) as number_of_unique_users
-from
-    synapse_data_warehouse.synapse.processedaccess
-where
-    origin like '%synapse.org' and
-    origin not like '%staging%' and
-    record_date > '2023-01-01'
-group by origin
-order by number_of_requests DESC;
+SELECT
+    ORIGIN,
+    count(*) AS NUMBER_OF_REQUESTS,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS
+FROM
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
+WHERE
+    ORIGIN LIKE '%synapse.org'
+    AND ORIGIN NOT LIKE '%staging%'
+    AND RECORD_DATE > '2023-01-01'
+GROUP BY ORIGIN
+ORDER BY NUMBER_OF_REQUESTS DESC;
 
 -- Top downloaded public projects since 2022-01-01
 WITH DEDUP_FILEHANDLE AS (
@@ -82,28 +90,29 @@ WITH DEDUP_FILEHANDLE AS (
     FROM
         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
 ),
-public_projects AS (
-    select
-        distinct project_id
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        is_public and
-        node_type = 'project'
+
+PUBLIC_PROJECTS AS (
+    SELECT DISTINCT PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+    WHERE
+        IS_PUBLIC
+        AND NODE_TYPE = 'project'
 )
+
 SELECT
-    project_id,
-    count(*) as downloads_per_project,
-    count(distinct user_id) as number_of_unique_users_downloaded,
-    count(distinct fd_file_handle_id) as number_of_unique_files_downloaded
+    PROJECT_ID,
+    count(*) AS DOWNLOADS_PER_PROJECT,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS_DOWNLOADED,
+    count(DISTINCT FD_FILE_HANDLE_ID) AS NUMBER_OF_UNIQUE_FILES_DOWNLOADED
 FROM
     DEDUP_FILEHANDLE
-where
-    project_id in (select project_id from public_projects)
-group by
-    project_id
-order by
-    downloads_per_project DESC;
+WHERE
+    PROJECT_ID IN (SELECT PROJECT_ID FROM PUBLIC_PROJECTS)
+GROUP BY
+    PROJECT_ID
+ORDER BY
+    DOWNLOADS_PER_PROJECT DESC;
 
 -- Top downloaded public projects for September 2023
 
@@ -116,77 +125,80 @@ WITH DEDUP_FILEHANDLE AS (
     FROM
         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
     WHERE
-        record_date >= '2023-09-01' and record_date < '2023-10-01'
+        RECORD_DATE >= '2023-09-01' AND RECORD_DATE < '2023-10-01'
 ),
-public_projects AS (
-    select
-        distinct project_id
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        is_public and
-        node_type = 'project'
+
+PUBLIC_PROJECTS AS (
+    SELECT DISTINCT PROJECT_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+    WHERE
+        IS_PUBLIC
+        AND NODE_TYPE = 'project'
 )
+
 SELECT
-    project_id,
-    count(*) as downloads_per_project,
-    count(distinct user_id) as number_of_unique_users_downloaded,
-    count(distinct fd_file_handle_id) as number_of_unique_files_downloaded
+    PROJECT_ID,
+    count(*) AS DOWNLOADS_PER_PROJECT,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS_DOWNLOADED,
+    count(DISTINCT FD_FILE_HANDLE_ID) AS NUMBER_OF_UNIQUE_FILES_DOWNLOADED
 FROM
     DEDUP_FILEHANDLE
-where
-    project_id in (select project_id from public_projects)
-group by
-    project_id
-order by
-    downloads_per_project DESC;
+WHERE
+    PROJECT_ID IN (SELECT PROJECT_ID FROM PUBLIC_PROJECTS)
+GROUP BY
+    PROJECT_ID
+ORDER BY
+    DOWNLOADS_PER_PROJECT DESC;
 
 -- number of different governance types in synapse
-with file_fd as (
-    select
-        id as file_id, content_size
-    from
-        synapse_data_warehouse.synapse.file_latest
+WITH FILE_FD AS (
+    SELECT
+        ID AS FILE_ID,
+        CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 )
-select
-    is_public,
-    is_controlled,
-    is_restricted,
-    count(*) as number_of_files,
+
+SELECT
+    NODE.IS_PUBLIC,
+    NODE.IS_CONTROLLED,
+    NODE.IS_RESTRICTED,
+    count(*) AS NUMBER_OF_FILES,
     -- A terabyte is 2^40 bytes
-    sum(content_size) / POWER(2, 40) as total_size_in_terabytes
-from
-    synapse_data_warehouse.synapse.node_latest node
-left join
-    file_fd
-on
-    node.file_handle_id = file_fd.file_id
-where
-    node_type = 'file'
-group by
-    is_public, is_controlled, is_restricted
-order by
-    number_of_files DESC;
+    sum(NODE.CONTENT_SIZE) / power(2, 40) AS TOTAL_SIZE_IN_TERABYTES
+FROM
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS NODE
+LEFT JOIN
+    FILE_FD
+    ON
+        NODE.FILE_HANDLE_ID = FILE_FD.FILE_ID
+WHERE
+    NODE.NODE_TYPE = 'file'
+GROUP BY
+    NODE.IS_PUBLIC, NODE.IS_CONTROLLED, NODE.IS_RESTRICTED
+ORDER BY
+    NUMBER_OF_FILES DESC;
 
 -- get number of DOI calls
-select
-    count(distinct request_url)
-from
-    synapse_data_warehouse.synapse.processedaccess
-where
-    normalized_method_signature = 'GET /doi/async/get/#' and
-    success;
+SELECT count(DISTINCT REQUEST_URL)
+FROM
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
+WHERE
+    NORMALIZED_METHOD_SIGNATURE = 'GET /doi/async/get/#'
+    AND SUCCESS;
 
 
 -- client
 SELECT
-    client, count(*) as number_of_calls
+    CLIENT,
+    count(*) AS NUMBER_OF_CALLS
 FROM
-    synapse_data_warehouse.synapse.processedaccess
-group by
-    client
-order by
-    number_of_calls DESC;
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
+GROUP BY
+    CLIENT
+ORDER BY
+    NUMBER_OF_CALLS DESC;
 
 -- users that downloaded the most
 WITH DEDUP_FILEHANDLE AS (
@@ -198,27 +210,33 @@ WITH DEDUP_FILEHANDLE AS (
     FROM
         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
 ),
-users as (
-    select
-        id,
-        user_name,
-        location,
-        company
-    from
-        synapse_data_warehouse.synapse.userprofile_latest
+
+USERS AS (
+    SELECT
+        ID,
+        USER_NAME,
+        LOCATION,
+        COMPANY
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
 )
+
 SELECT
-    user_id, user_name, location, company, count(*) as number_of_downloads
-from
+    USERS.ID,
+    USERS.USER_NAME,
+    USERS.LOCATION,
+    USERS.COMPANY,
+    count(*) AS NUMBER_OF_DOWNLOADS
+FROM
     DEDUP_FILEHANDLE
-left join
-    users
-on
-    DEDUP_FILEHANDLE.user_id = users.id
-group by
-    user_id, user_name, location, company
-order by
-    number_of_calls DESC;
+LEFT JOIN
+    USERS
+    ON
+        DEDUP_FILEHANDLE.USER_ID = USERS.ID
+GROUP BY
+    USERS.ID, USERS.USER_NAME, USERS.LOCATION, USERS.COMPANY
+ORDER BY
+    NUMBER_OF_DOWNLOADS DESC;
 
 -- locations based on what users put on their most current user profiles
 -- NOTE: this does not mean the downloads have to happen
@@ -233,24 +251,27 @@ WITH DEDUP_FILEHANDLE AS (
     FROM
         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
 ),
-users as (
-    select
-        id,
-        user_name,
-        location,
-        company
-    from
-        synapse_data_warehouse.synapse.userprofile_latest
+
+USERS AS (
+    SELECT
+        ID,
+        USER_NAME,
+        LOCATION,
+        COMPANY
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
 )
+
 SELECT
-    location, count(*) as number_of_downloads
-from
+    USERS.LOCATION,
+    count(*) AS NUMBER_OF_DOWNLOADS
+FROM
     DEDUP_FILEHANDLE
-left join
-    users
-on
-    DEDUP_FILEHANDLE.user_id = users.id
-group by
-    location
-order by
-    number_of_calls DESC;
+LEFT JOIN
+    USERS
+    ON
+        DEDUP_FILEHANDLE.USER_ID = USERS.ID
+GROUP BY
+    USERS.LOCATION
+ORDER BY
+    NUMBER_OF_DOWNLOADS DESC;

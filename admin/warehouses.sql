@@ -1,31 +1,30 @@
 use role sysadmin;
-CREATE WAREHOUSE IF NOT EXISTS compute_org
-    WAREHOUSE_TYPE = STANDARD
-    WAREHOUSE_SIZE = XSMALL
-    AUTO_SUSPEND = 90
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE;
+create warehouse if not exists compute_org
+warehouse_type = STANDARD
+warehouse_size = XSMALL
+auto_suspend = 90
+auto_resume = TRUE
+initially_suspended = TRUE;
 
-CREATE WAREHOUSE IF NOT EXISTS compute_medium
-    WAREHOUSE_TYPE = STANDARD
-    WAREHOUSE_SIZE = MEDIUM
-    AUTO_SUSPEND = 70
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE;
+create warehouse if not exists compute_medium
+warehouse_type = STANDARD
+warehouse_size = MEDIUM
+auto_suspend = 70
+auto_resume = TRUE
+initially_suspended = TRUE;
 
-CREATE WAREHOUSE IF NOT EXISTS recover_xsmall
-    WAREHOUSE_TYPE = STANDARD
-    WAREHOUSE_SIZE = XSMALL
-    AUTO_SUSPEND = 90
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE;
+create warehouse if not exists recover_xsmall
+warehouse_type = STANDARD
+warehouse_size = XSMALL
+auto_suspend = 90
+auto_resume = TRUE
+initially_suspended = TRUE;
 
 // Increase time on auto suspend for tableau
 // TODO: Should create a tableau specific role for tableau
-CREATE WAREHOUSE IF NOT EXISTS tableau
-    WAREHOUSE_TYPE = STANDARD
-    WAREHOUSE_SIZE = XSMALL
-    AUTO_SUSPEND = 300
-    AUTO_RESUME = TRUE
-    INITIALLY_SUSPENDED = TRUE;
-
+create warehouse if not exists tableau
+warehouse_type = STANDARD
+warehouse_size = XSMALL
+auto_suspend = 300
+auto_resume = TRUE
+initially_suspended = TRUE;
