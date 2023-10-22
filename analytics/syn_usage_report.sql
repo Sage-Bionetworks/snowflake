@@ -1,30 +1,35 @@
-
 USE ROLE SYSADMIN;
 USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 USE SCHEMA SYNAPSE;
 
 // GENIE
-select genie."id", genie."name", genie."version", count(*) as number_of_downloads
-from sage.portal_raw.genie genie
+SELECT
+    GENIE."id",
+    GENIE."name",
+    GENIE."version",
+    count(*) AS NUMBER_OF_DOWNLOADS
+FROM SAGE.PORTAL_RAW.GENIE AS GENIE
 LEFT JOIN
-    synapse_data_warehouse.synapse_raw.filedownload fd
-ON
-    genie."dataFileHandleId" = fd.file_handle_id
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.FILEDOWNLOAD AS FD
+    ON
+        GENIE."dataFileHandleId" = FD.FILE_HANDLE_ID
 GROUP BY
-    genie."id", genie."name", genie."version"
+    GENIE."id", GENIE."name", GENIE."version"
 ORDER BY
-    number_of_downloads DESC
-;
+    NUMBER_OF_DOWNLOADS DESC;
 
 // Download counts for AD files
-select ad."id", ad."name", ad."study", count(*) as number_of_downloads
-from sage.portal_raw.ad
+SELECT
+    AD."id",
+    AD."name",
+    AD."study",
+    count(*) AS NUMBER_OF_DOWNLOADS
+FROM SAGE.PORTAL_RAW.AD
 LEFT JOIN
-    synapse_data_warehouse.synapse_raw.filedownload fd
-ON
-    ad."dataFileHandleId" = fd.file_handle_id
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.FILEDOWNLOAD AS FD
+    ON
+        AD."dataFileHandleId" = FD.FILE_HANDLE_ID
 GROUP BY
-    ad."id", ad."name", ad."study"
+    AD."id", AD."name", AD."study"
 ORDER BY
-    number_of_downloads DESC
-;
+    NUMBER_OF_DOWNLOADS DESC;

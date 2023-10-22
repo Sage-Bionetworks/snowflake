@@ -1,30 +1,36 @@
 USE ROLE PUBLIC;
 USE WAREHOUSE COMPUTE_ORG;
-USE DATABASE synapse_data_warehouse;
+USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 
-SELECT distinct(FILE_NAME)
-FROM synapse_data_warehouse.synapse_raw.filesnapshots;
+SELECT DISTINCT FILE_NAME
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE_RAW.FILESNAPSHOTS;
 
 // File extensions
-with file_extensions as (
-    select split_part(FILE_NAME,'.',-1) as fileext
-    from synapse_data_warehouse.synapse.file_latest
+WITH FILE_EXTENSIONS AS (
+    SELECT split_part(FILE_NAME, '.', -1) AS FILEEXT
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 )
-select fileext, count(*) AS number_of_files
-from file_extensions
-group by fileext
-ORDER BY number_of_files DESC;
+
+SELECT
+    FILEEXT,
+    count(*) AS NUMBER_OF_FILES
+FROM FILE_EXTENSIONS
+GROUP BY FILEEXT
+ORDER BY NUMBER_OF_FILES DESC;
 
 
 // Number of change events
-SELECT CHANGE_TYPE, count(*) as number_of_events
-FROM synapse_data_warehouse.synapse.file_latest
-GROUP BY CHANGE_TYPE
-;
+SELECT
+    CHANGE_TYPE,
+    count(*) AS NUMBER_OF_EVENTS
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+GROUP BY CHANGE_TYPE;
 
 // Number of counts for different statuses
-SELECT STATUS, count(*)
-FROM synapse_data_warehouse.synapse.file_latest
+SELECT
+    STATUS,
+    count(*) AS STATUS_COUNT
+FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 GROUP BY STATUS;
 
 -- TODO: Can you extract which projects have these mp4's and the folder
