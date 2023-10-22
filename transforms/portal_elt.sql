@@ -82,7 +82,28 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
         NULL AS "genePerturbationType",
         NULL AS "genePerturbationMethod",
         NULL AS "genePerturbed",
-        NULL AS "contentType"
+        NULL AS "contentType",
+        -- psych only
+        NULL AS "referenceSet",
+        NULL AS "processing",
+        NULL AS "Contributor",
+        NULL AS "PI",
+        NULL AS "BrodmannArea",
+        NULL AS "PMI",
+        NULL AS "pH",
+        NULL AS "RIN",
+        NULL AS "reprogrammedCellType",
+        NULL AS "terminalDifferentiationPoint",
+        NULL AS "passage",
+        NULL AS "runType",
+        NULL AS "readEnd",
+        NULL AS "rnaBatch",
+        NULL AS "transposaseBatch",
+        NULL AS "libraryBatch",
+        NULL AS "alignmentMethod",
+        NULL AS "meanCoverage",
+        NULL AS "meanGCContent",
+        NULL AS "failedQC"
     FROM
         AD
     UNION ALL
@@ -164,7 +185,28 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
         NULL AS "genePerturbationType",
         NULL AS "genePerturbationMethod",
         NULL AS "genePerturbed",
-        NULL AS "contentType"
+        NULL AS "contentType",
+        -- psych only
+        NULL AS "referenceSet",
+        NULL AS "processing",
+        NULL AS "Contributor",
+        NULL AS "PI",
+        NULL AS "BrodmannArea",
+        NULL AS "PMI",
+        NULL AS "pH",
+        NULL AS "RIN",
+        NULL AS "reprogrammedCellType",
+        NULL AS "terminalDifferentiationPoint",
+        NULL AS "passage",
+        NULL AS "runType",
+        NULL AS "readEnd",
+        NULL AS "rnaBatch",
+        NULL AS "transposaseBatch",
+        NULL AS "libraryBatch",
+        NULL AS "alignmentMethod",
+        NULL AS "meanCoverage",
+        NULL AS "meanGCContent",
+        NULL AS "failedQC"
     FROM
         ELITE
     UNION ALL
@@ -246,9 +288,146 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
         "genePerturbationType", -- ad new VARCHAR(16777216),
         "genePerturbationMethod", -- add new NUMBER(38,0),
         "genePerturbed", --add new VARCHAR(16777216),
-        "contentType" -- add new VARCHAR(16777216),
+        "contentType", -- add new VARCHAR(16777216),
+        -- psych only
+        NULL AS "referenceSet",
+        NULL AS "processing",
+        NULL AS "Contributor",
+        NULL AS "PI",
+        NULL AS "BrodmannArea",
+        NULL AS "PMI",
+        NULL AS "pH",
+        NULL AS "RIN",
+        NULL AS "reprogrammedCellType",
+        NULL AS "terminalDifferentiationPoint",
+        NULL AS "passage",
+        NULL AS "runType",
+        NULL AS "readEnd",
+        NULL AS "rnaBatch",
+        NULL AS "transposaseBatch",
+        NULL AS "libraryBatch",
+        NULL AS "alignmentMethod",
+        NULL AS "meanCoverage",
+        NULL AS "meanGCContent",
+        NULL AS "failedQC"
     FROM
         NF
+    UNION ALL
+    SELECT
+        "id",
+        'psychencode' AS PORTAL,
+        "name",
+        "study", --VARIANT
+        "dataType", --VARIANT
+        TO_VARIANT(ARRAY_CONSTRUCT("assay")) AS "assay",
+        "organ",
+        TO_VARIANT(ARRAY_CONSTRUCT("tissue")) AS "tissue",
+        TO_VARIANT(ARRAY_CONSTRUCT("species")) AS "species",
+        NULL AS "sex",
+        NULL AS "consortium",
+        NULL AS "grant",
+        NULL AS "modelSystemName",
+        NULL AS "treatmentType",
+        "specimenID", --VARIANT
+        "individualID",
+        "individualIDSource" AS "individualIdSource",
+        "specimenIDSource" AS "specimenIdSource",
+        "resourceType",
+        "dataSubtype",
+        "metadataType",
+        "assayTarget",
+        NULL AS "analysisType",
+        "cellType", --VARIANT
+        "nucleicAcidSource",
+        "fileFormat",
+        NULL AS "group",
+        NULL AS "isModelSystem",
+        NULL AS "isConsortiumAnalysis",
+        "isMultiSpecimen",
+        TO_TIMESTAMP_NTZ("createdOn" / 1000) AS "createdOn",
+        "createdBy",
+        "parentId",
+        "currentVersion",
+        "benefactorId",
+        NULL AS "projectId",
+        "modifiedOn",
+        "modifiedBy",
+        "dataFileHandleId",
+        NULL AS "metaboliteType",
+        NULL AS "chromosome",
+        NULL AS "modelSystemType",
+        "libraryPrep",
+        "dataFileSizeBytes",
+        -- ELITE
+        NULL AS "type",
+        NULL AS "consent",
+        NULL AS "libraryType",
+        "platform",
+        NULL AS "project",
+        "etag",
+        -- NF
+        NULL AS "isMultiIndividual",
+        NULL AS "diagnosis",
+        NULL AS "tumorType",
+        NULL AS "fundingAgency",
+        NULL AS "nf1Genotype",
+        NULL AS "nf2Genotype",
+        NULL AS "isCellLine",
+        NULL AS "studyId",
+        NULL AS "age",
+        NULL AS "readPair",
+        NULL AS "accessType",
+        NULL AS "accessTeam",
+        NULL AS "modelOf",
+        NULL AS "compoundName",
+        NULL AS "experimentalCondition",
+        NULL AS "isXenograft",
+        NULL AS "transplantationType",
+        NULL AS "isPairedEnd",
+        "isStranded",
+        "libraryPreparationMethod",
+        NULL AS "initiative",
+        NULL AS "progressReportNumber",
+        NULL AS "Resource_id",
+        NULL AS "genePerturbationType",
+        NULL AS "genePerturbationMethod",
+        NULL AS "genePerturbed",
+        NULL AS "contentType",
+        -- psyehencode only
+        "referenceSet",
+        "processing",
+        "Contributor",
+        "PI",
+        "BrodmannArea",
+        "PMI",
+        "pH",
+        "RIN",
+        "reprogrammedCellType",
+        "terminalDifferentiationPoint",
+        "passage",
+        "runType",
+        "readEnd",
+        "rnaBatch",
+        "transposaseBatch",
+        "libraryBatch",
+        "alignmentMethod",
+        "meanCoverage",
+        "meanGCContent",
+        "failedQC"
+    FROM
+        PSYCHENCODE
+
 );
 
-SELECT * FROM PORTAL_MERGE WHERE PORTAL = 'NF';
+DESCRIBE TABLE PORTAL_MERGE;
+
+
+SELECT
+    "dataType",
+    COUNT(*) AS NUMBER_OF_FILES
+FROM
+    SAGE.PORTAL_RAW.PORTAL_MERGE
+GROUP BY
+    "dataType"
+ORDER BY
+    NUMBER_OF_FILES DESC;
