@@ -175,3 +175,14 @@ from
 where
     normalized_method_signature = 'GET /doi/async/get/#' and
     success;
+
+
+-- client
+SELECT
+    client, count(*) as number_of_calls
+FROM
+    synapse_data_warehouse.synapse.processedaccess
+group by
+    client
+order by
+    number_of_calls DESC;

@@ -3,11 +3,6 @@ USE WAREHOUSE COMPUTE_ORG;
 USE DATABASE synapse_data_warehouse;
 USE SCHEMA synapse;
 
-// Distinct client calls this month
-SELECT distinct(client)
-FROM processedaccess
-WHERE DATE(record_date) > DATE('2023-09-01');
-
 // distribution of different client calls
 
 
