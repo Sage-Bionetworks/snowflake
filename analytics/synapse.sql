@@ -61,7 +61,8 @@ GROUP BY STATUS;
 -- traffic via portals via "ORIGIN"> The host name of the portal making the request, e.g., https://staging.synapse.org, https://adknowledgeportal.synapse.org, https://dhealth.synapse.org.
 select
     origin,
-    count(*) as number_of_requests
+    count(*) as number_of_requests,
+    count(distinct user_id) as number_of_unique_users
 from
     synapse_data_warehouse.synapse.processedaccess
 where
@@ -165,3 +166,12 @@ group by
     is_public, is_controlled, is_restricted
 order by
     number_of_files DESC;
+
+-- get number of DOI calls
+select
+    count(distinct request_url)
+from
+    synapse_data_warehouse.synapse.processedaccess
+where
+    normalized_method_signature = 'GET /doi/async/get/#' and
+    success;
