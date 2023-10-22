@@ -13,7 +13,7 @@ from file_extensions
 group by fileext
 ORDER BY number_of_files DESC;
 
--- TODO: Can you extract which projects have these mp4's and the folder
+-- * Can you extract which projects have these mp4's and the folder
 -- names under which they are stored, as a next step?
 with file_extensions as (
     select
@@ -58,3 +58,15 @@ SELECT STATUS, count(*)
 FROM synapse_data_warehouse.synapse.file_latest
 GROUP BY STATUS;
 
+-- traffic via portals via "ORIGIN"> The host name of the portal making the request, e.g., https://staging.synapse.org, https://adknowledgeportal.synapse.org, https://dhealth.synapse.org.
+select
+    origin,
+    count(*) as number_of_requests
+from
+    synapse_data_warehouse.synapse.processedaccess
+where
+    origin like '%synapse.org' and
+    origin not like '%staging%' and
+    record_date > '2023-01-01'
+group by origin
+order by number_of_requests DESC;
