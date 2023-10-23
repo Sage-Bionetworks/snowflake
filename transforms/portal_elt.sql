@@ -330,7 +330,7 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
         NULL AS "treatmentType",
         "specimenID", --VARIANT
         "individualID",
-        "individualIDSource" AS "individualIdSource",
+        CAST("individualIDSource" AS VARCHAR) AS "individualIdSource",
         "specimenIDSource" AS "specimenIdSource",
         "resourceType",
         "dataSubtype",
@@ -420,7 +420,9 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
 );
 
 DESCRIBE TABLE PORTAL_MERGE;
-
+SELECT *
+FROM
+    SAGE.PORTAL_RAW.PORTAL_MERGE;
 
 SELECT
     "dataType",
@@ -431,3 +433,19 @@ GROUP BY
     "dataType"
 ORDER BY
     NUMBER_OF_FILES DESC;
+
+-- Of the files with missing data types, how many also have missing assays
+WITH FLATTEN_DATATYPE AS (
+    SELECT
+        PORTAL_MERGE.*,
+        FLATTENED.VALUE AS SINGLE_DATATYPE
+    FROM
+        SAGE.PORTAL_RAW.PORTAL_MERGE,
+        LATERAL FLATTEN("dataType", OUTER => TRUE) AS FLATTENED
+)
+
+SELECT COUNT_IF("assay" = []) AS NUMBER_OF_MISSING_ASSAYS
+FROM
+    FLATTEN_DATATYPE
+WHERE
+    SINGLE_DATATYPE IS NULL;
