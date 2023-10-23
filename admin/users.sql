@@ -58,3 +58,4 @@ CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 CREATE USER IF NOT EXISTS "christina.conrad@sagebase.org";
+CREATE USER IF NOT EXISTS "drew.duglan@sagebase.org";
