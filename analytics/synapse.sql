@@ -78,14 +78,14 @@ GROUP BY
 ORDER BY
     NUMBER_OF_MP4S DESC;
 
-// Number of change events
+-- Number of change events
 SELECT
     CHANGE_TYPE,
     count(*) AS NUMBER_OF_EVENTS
 FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
 GROUP BY CHANGE_TYPE;
 
-// Number of counts for different statuses
+-- Number of counts for different statuses
 SELECT
     STATUS,
     count(*) AS STATUS_COUNT
@@ -141,7 +141,6 @@ ORDER BY
     DOWNLOADS_PER_PROJECT DESC;
 
 -- Top downloaded public projects for September 2023
-
 WITH DEDUP_FILEHANDLE AS (
     SELECT DISTINCT
         USER_ID,
@@ -301,3 +300,36 @@ GROUP BY
     USERS.LOCATION
 ORDER BY
     NUMBER_OF_DOWNLOADS DESC;
+
+-- Number of downloads
+-- Number of unique files downloaded
+-- Number of unique users downloaded
+-- In the month of September 2023
+WITH USER AS (
+    SELECT ID AS PROFILE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
+    WHERE
+        EMAIL NOT LIKE '%@sagebase.org'
+),
+
+DEDUP_FILEHANDLE AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+    WHERE
+        RECORD_DATE >= '2023-09-01'
+        AND RECORD_DATE < '2023-10-01'
+)
+
+SELECT
+    count(*) AS NUMBER_OF_DOWNLOADS,
+    count(DISTINCT FD_FILE_HANDLE_ID) AS NUMBER_OF_UNIQUE_FILES_DOWNLOADED,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS_DOWNLOADED
+FROM
+    DEDUP_FILEHANDLE
+WHERE
+    USER_ID IN (SELECT PROFILE_ID FROM USER);
