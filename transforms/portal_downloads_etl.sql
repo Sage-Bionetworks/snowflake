@@ -4,6 +4,10 @@ USE SCHEMA PORTAL_DOWNLOADS;
 -- Data up to October 18th for now
 
 -- * Metrics for AD portal
+-- Based on a writeup by platform linked from PLFM-7934
+-- downloads can be estimated by taking the unique of the following:
+-- user_id, file_handle_id, record_date
+-- Join the AD fileview with the file download table on file_handle_id
 CREATE TABLE IF NOT EXISTS AD_DOWNLOADS AS (
     WITH DEDUP_FILEDOWNLOAD AS (
         SELECT DISTINCT
@@ -26,6 +30,7 @@ CREATE TABLE IF NOT EXISTS AD_DOWNLOADS AS (
 );
 
 -- * GENIE
+-- Join the GENIE fileview with the file download table on file_handle_id
 CREATE TABLE IF NOT EXISTS GENIE_DOWNLOADS AS (
     WITH DEDUP_FILEDOWNLOAD AS (
         SELECT DISTINCT
@@ -46,8 +51,21 @@ CREATE TABLE IF NOT EXISTS GENIE_DOWNLOADS AS (
         ON
             GENIE."dataFileHandleId" = FD.FD_FILE_HANDLE_ID
 );
+WITH DEDUP_FILEDOWNLOAD AS (
+    SELECT DISTINCT
+        USER_ID,
+        FILE_HANDLE_ID AS FD_FILE_HANDLE_ID,
+        RECORD_DATE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEDOWNLOAD
+)
+
+SELECT count(*) FROM DEDUP_FILEDOWNLOAD;
 
 -- * ELITE
+-- The elite fileview doesn't have a file handle id
+-- so we need to update the synapse id column to be an integer withou the syn prefix
+-- and join on the latest version of the node table then on the file handle
 CREATE TABLE IF NOT EXISTS ELITE_DOWNLOADS AS (
     WITH ELITE_TRANSFORM AS (
         SELECT
@@ -88,6 +106,9 @@ CREATE TABLE IF NOT EXISTS ELITE_DOWNLOADS AS (
 );
 
 -- * NF
+-- The NF fileview doesn't have a file handle id
+-- so we need to update the synapse id column to be an integer withou the syn prefix
+-- and join on the latest version of the node table then on the file handle
 CREATE TABLE IF NOT EXISTS NF_DOWNLOADS AS (
     WITH NF_TRANSFORM AS (
         SELECT
@@ -129,6 +150,9 @@ CREATE TABLE IF NOT EXISTS NF_DOWNLOADS AS (
 );
 
 -- * psychencode
+-- The psychencode fileview doesn't have a file handle id
+-- so we need to update the synapse id column to be an integer withou the syn prefix
+-- and join on the latest version of the node table then on the file handle
 CREATE TABLE IF NOT EXISTS PSYCHENCODE_DOWNLOADS AS (
     WITH PSYCHENCODE_TRANSFORM AS (
         SELECT
@@ -169,7 +193,10 @@ CREATE TABLE IF NOT EXISTS PSYCHENCODE_DOWNLOADS AS (
         DOWNLOAD_COUNT
 );
 
--- * HTAN
+-- * HTAN level 3/4 data
+-- The htan fileview doesn't have a file handle id
+-- so we need to update the synapse id column to be an integer withou the syn prefix
+-- and join on the latest version of the node table then on the file handle
 CREATE TABLE IF NOT EXISTS HTAN_DOWNLOADS AS (
     WITH HTAN_TRANSFORM AS (
         SELECT
