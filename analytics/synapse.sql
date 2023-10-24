@@ -2,11 +2,13 @@ USE ROLE PUBLIC;
 USE WAREHOUSE COMPUTE_ORG;
 USE DATABASE SYNAPSE_DATA_WAREHOUSE;
 
-// File extensions
+-- Get distribution of file extensions
 SELECT * FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST LIMIT 10;
 WITH FILE_EXTENSIONS AS (
     SELECT split_part(NAME, '.', -1) AS FILEEXT
     FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+    WHERE
+        NODE_TYPE NOT IN ('project', 'folder')
 )
 
 SELECT
@@ -16,24 +18,13 @@ FROM FILE_EXTENSIONS
 GROUP BY FILEEXT
 ORDER BY NUMBER_OF_FILES DESC;
 
--- * Can you extract which projects have these mp4's and the folder
--- names under which they are stored, as a next step?
-WITH FILE_EXTENSIONS AS (
-    SELECT
-        PROJECT_ID,
-        PARENT_ID,
-        split_part(NAME, '.', -1) AS FILEEXT
-    FROM
-        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
-)
-
-SELECT DISTINCT PROJECT_ID
-FROM
-    FILE_EXTENSIONS
-WHERE
-    FILEEXT ILIKE 'MP4';
-
--- Get the summary statistic for files with mp4 extensions
+-- Summary statistic for files with mp4 extensions
+-- Project Id
+-- Is it public?
+-- Is it controlled?
+-- Is it restricted?
+-- Number of mp4s
+-- Total size in terabytes
 WITH NODE_FILE_EXTENSIONS AS (
     SELECT
         ID,
@@ -47,6 +38,7 @@ WITH NODE_FILE_EXTENSIONS AS (
         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
     WHERE
         FILEEXT ILIKE 'MP4'
+        AND NODE_TYPE NOT IN ('project', 'folder')
 ),
 
 FILE_SIZES AS (
@@ -78,21 +70,31 @@ GROUP BY
 ORDER BY
     NUMBER_OF_MP4S DESC;
 
--- Number of change events
-SELECT
-    CHANGE_TYPE,
-    count(*) AS NUMBER_OF_EVENTS
-FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
-GROUP BY CHANGE_TYPE;
+-- Synapse file into
+-- Number of nodes with file handle ids
+-- and count of data size in terabytes
+WITH FILE_STATS AS (
+    SELECT
+        NODE_LATEST.ID AS NODE_ID,
+        NODE_LATEST.FILE_HANDLE_ID,
+        FILE_LATEST.CONTENT_SIZE
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+    INNER JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+        ON
+            NODE_LATEST.FILE_HANDLE_ID = FILE_LATEST.ID
+)
 
--- Number of counts for different statuses
 SELECT
-    STATUS,
-    count(*) AS STATUS_COUNT
-FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
-GROUP BY STATUS;
+    count(*) AS NUMBER_OF_NODES,
+    sum(CONTENT_SIZE) / power(2, 40) AS NUMBER_OF_TERABYTES
+FROM
+    FILE_STATS;
 
--- traffic via portals via "ORIGIN"> The host name of the portal making the request, e.g., https://staging.synapse.org, https://adknowledgeportal.synapse.org, https://dhealth.synapse.org.
+-- traffic via portals via "ORIGIN"> The host name of the portal making the request,
+-- e.g., https://staging.synapse.org, https://adknowledgeportal.synapse.org,
+-- https://dhealth.synapse.org.
 SELECT
     ORIGIN,
     count(*) AS NUMBER_OF_REQUESTS,
@@ -177,6 +179,7 @@ ORDER BY
     DOWNLOADS_PER_PROJECT DESC;
 
 -- number of different governance types in synapse
+-- and the size of those files
 WITH FILE_FD AS (
     SELECT
         ID AS FILE_ID,
@@ -205,7 +208,7 @@ GROUP BY
 ORDER BY
     NUMBER_OF_FILES DESC;
 
--- get number of DOI calls
+-- number of async calls to get DOIs
 SELECT count(DISTINCT REQUEST_URL)
 FROM
     SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
@@ -213,8 +216,7 @@ WHERE
     NORMALIZED_METHOD_SIGNATURE = 'GET /doi/async/get/#'
     AND SUCCESS;
 
-
--- client
+-- Distribution of API calls made by different clients
 SELECT
     CLIENT,
     count(*) AS NUMBER_OF_CALLS
@@ -225,7 +227,7 @@ GROUP BY
 ORDER BY
     NUMBER_OF_CALLS DESC;
 
--- users that downloaded the most
+-- The number of downloads ranked by users that downloaded the most to least
 WITH DEDUP_FILEHANDLE AS (
     SELECT DISTINCT
         USER_ID,
@@ -333,3 +335,20 @@ FROM
     DEDUP_FILEHANDLE
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
+
+-- Number of users that downloaded data in September 2023
+WITH USER AS (
+    SELECT ID AS PROFILE_ID
+    FROM
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
+    WHERE
+        EMAIL NOT LIKE '%@sagebase.org'
+)
+
+SELECT count(DISTINCT USER_ID)
+FROM
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.PROCESSEDACCESS
+WHERE
+    USER_ID IN (SELECT PROFILE_ID FROM USER)
+    AND RECORD_DATE >= '2023-09-01'
+    AND RECORD_DATE < '2023-10-01';
