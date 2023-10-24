@@ -118,6 +118,22 @@ FROM
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 
+-- This is the download metrics for AD portal
+WITH AD_FLAT AS (
+    SELECT * --noqa: RF02
+    FROM
+        SAGE.PORTAL_DOWNLOADS.AD_DOWNLOADS,
+        LATERAL flatten("study", OUTER => TRUE)
+)
+
+SELECT
+    VALUE AS DATATYPE,
+    count(*) AS NUMBER_OF_DOWNLOADS,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS_DOWNLOADED,
+    min(RECORD_DATE) AS FIRST_DOWNLOAD_DATE,
+    count(DISTINCT "id") AS COUNT_OF_FILES_IN_STUDY_DOWNLOADED
+FROM AD_FLAT
+GROUP BY VALUE;
 
 -- * GENIE
 -- All download counts over time
