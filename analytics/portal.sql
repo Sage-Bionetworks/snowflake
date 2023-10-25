@@ -59,13 +59,17 @@ ORDER BY
 -- * Metrics for AD portal
 USE SCHEMA SAGE.PORTAL_DOWNLOADS;
 -- Total download count for AD portal
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     AD_DOWNLOADS;
 -- distribution of AD portal downloads per month
+-- Since the file downloads is done on a left join
+-- on the synapse ids, there is a chance that some
+-- files aren't downloaded. Those files will have a NULL
+-- record id
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     AD_DOWNLOADS
 GROUP BY
@@ -112,23 +116,41 @@ WITH USER AS (
         EMAIL NOT LIKE '%@sagebase.org'
 )
 
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     SAGE.PORTAL_DOWNLOADS.AD_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 
+-- This is the download metrics for AD portal per study
+-- Since study is a column with rows of arrays, we have to
+-- flatten the array.
+WITH AD_FLAT AS (
+    SELECT * --noqa: RF02
+    FROM
+        SAGE.PORTAL_DOWNLOADS.AD_DOWNLOADS,
+        LATERAL flatten("study", OUTER => TRUE)
+)
+
+SELECT
+    VALUE AS DATATYPE,
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
+    count(DISTINCT USER_ID) AS NUMBER_OF_UNIQUE_USERS_DOWNLOADED,
+    min(RECORD_DATE) AS FIRST_DOWNLOAD_DATE,
+    count(DISTINCT "id") AS COUNT_OF_FILES_IN_STUDY_DOWNLOADED
+FROM AD_FLAT
+GROUP BY VALUE;
 
 -- * GENIE
 -- All download counts over time
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     GENIE_DOWNLOADS;
 
 -- Distribution of downloads over months
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     GENIE_DOWNLOADS
 GROUP BY
@@ -156,19 +178,19 @@ WITH USER AS (
         EMAIL NOT LIKE '%@sagebase.org'
 )
 
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     SAGE.PORTAL_DOWNLOADS.GENIE_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 
 -- * ELITE
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     ELITE_DOWNLOADS;
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     ELITE_DOWNLOADS
 GROUP BY
@@ -227,19 +249,19 @@ WITH USER AS (
         EMAIL NOT LIKE '%@sagebase.org'
 )
 
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     SAGE.PORTAL_DOWNLOADS.ELITE_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 -- * NF
 -- Total download
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     NF_DOWNLOADS;
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     NF_DOWNLOADS
 GROUP BY
@@ -264,19 +286,19 @@ WITH USER AS (
         EMAIL NOT LIKE '%@sagebase.org'
 )
 
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     SAGE.PORTAL_DOWNLOADS.NF_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 -- psychencode
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     PSYCHENCODE_DOWNLOADS;
 
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     PSYCHENCODE_DOWNLOADS
 GROUP BY
@@ -319,20 +341,20 @@ WITH USER AS (
         EMAIL NOT LIKE '%@sagebase.org'
 )
 
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     SAGE.PORTAL_DOWNLOADS.PSYCHENCODE_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
 
 -- HTAN
-SELECT count(*)
+SELECT count(RECORD_DATE)
 FROM
     HTAN_DOWNLOADS;
 
 SELECT
     date_trunc('MONTH', RECORD_DATE) AS MONTH,
-    count(*) AS NUMBER_OF_DOWNLOADS
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
 FROM
     HTAN_DOWNLOADS
 GROUP BY
