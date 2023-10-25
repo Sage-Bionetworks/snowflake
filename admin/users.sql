@@ -66,3 +66,4 @@ CREATE USER IF NOT EXISTS "ljubomir.bradic@sagebase.org";
 CREATE USER IF NOT EXISTS "brian.oconnor@sagebase.org";
 CREATE USER IF NOT EXISTS "james.eddy@sagebase.org";
 CREATE USER IF NOT EXISTS "milen.nikolov@sagebase.org";
+CREATE USER IF NOT EXISTS "milan.vu@sagebase.org";
