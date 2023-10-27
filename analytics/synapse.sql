@@ -560,3 +560,68 @@ GROUP BY
 ORDER BY
     NUMBER_OF_TERABYTES DESC
     NULLS LAST;
+
+-- Data uploads per user per day
+WITH DATA_UPLOADS AS (
+    SELECT
+        UPL.ID,
+        UPL.USER_NAME,
+        FU.RECORD_DATE,
+        FL.CONTENT_SIZE
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEUPLOAD AS FU
+    LEFT JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST AS UPL
+        ON FU.USER_ID = UPL.ID
+    INNER JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST AS FL
+        ON FU.FILE_HANDLE_ID = FL.ID
+)
+
+SELECT
+    ID,
+    USER_NAME,
+    RECORD_DATE,
+    sum(CONTENT_SIZE) AS UPLOAD_SIZE_IN_BYTES
+FROM DATA_UPLOADS
+GROUP BY ID, USER_NAME, RECORD_DATE;
+
+-- The query first defines a CTE called data_uploads that joins the userprofile_latest,
+-- FILEUPLOAD, and FILE_LATEST tables to get the content size of each file
+-- uploaded by each user.
+-- Then, the query defines another CTE called average_per_user that calculates
+-- the total upload size and average upload size per user.
+-- Finally, the query calculates the overall average upload size per user in bytes
+-- and gigabytes by taking the sum of the average upload size per user and
+-- dividing it by the count of users.
+WITH DATA_UPLOADS AS (
+    SELECT
+        UPL.ID,
+        UPL.USER_NAME,
+        FU.RECORD_DATE,
+        FL.CONTENT_SIZE
+    FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEUPLOAD AS FU
+    LEFT JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST AS UPL
+        ON FU.USER_ID = UPL.ID
+    INNER JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST AS FL
+        ON FU.FILE_HANDLE_ID = FL.ID
+),
+
+AVERAGE_PER_USER AS (
+    SELECT
+        ID,
+        USER_NAME,
+        sum(CONTENT_SIZE) AS UPLOAD_SIZE_IN_BYTES,
+        UPLOAD_SIZE_IN_BYTES / count(*) AS AVERAGE_UPLOAD_SIZE_IN_BYTES
+    FROM
+        DATA_UPLOADS
+    GROUP BY
+        ID, USER_NAME
+)
+
+SELECT
+    sum(AVERAGE_UPLOAD_SIZE_IN_BYTES) / count(*) AS AVERAGE_UPLOAD_PER_USER_IN_BYTES,
+    AVERAGE_UPLOAD_PER_USER_IN_BYTES / power(2, 30) AS AVERAGE_UPLOAD_PER_USER_IN_GIGABYTES
+FROM
+    AVERAGE_PER_USER;
