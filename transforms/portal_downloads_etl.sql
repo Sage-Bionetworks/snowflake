@@ -3,6 +3,7 @@ USE DATABASE SAGE;
 USE SCHEMA PORTAL_DOWNLOADS;
 -- Data up to October 18th for now
 
+-- TODO: join file_latest to get the content size!
 -- * Metrics for AD portal
 -- Based on a writeup by platform linked from PLFM-7934
 -- downloads can be estimated by taking the unique of the following:
