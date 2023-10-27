@@ -1,6 +1,5 @@
--- This is a scheduled task to create backup databases only for sysadmins
+-- This is a scheduled task to create zero copy clones only for accountadmins
 use role accountadmin;
-
 use schema synapse_data_warehouse.synapse;
 create task if not exists backup_synapse_data_warehouse_task
     schedule = 'USING CRON 0 3 * * 0 America/Los_Angeles'
