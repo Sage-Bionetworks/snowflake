@@ -42,17 +42,18 @@ For snowflake administrators, please make sure you read this carefully: https://
 
 NOTE: This file does not grant roles access to different resources.  That is done is specific *_setup.sql scripts that aim to set up the schemas and permissions.
 
+## Oauth
+
+> [oauth.sql](oauth.sql)
+
+Snowflake oauth client to allow seamless creation to tableau.
+
 ## Governance
 
 > [policies.sql](policies.sql)
 
 Governance policies for schemas. As we ingest data, we will need to be mindful of each person's access.  Instead of removing the column all together for downstream users, we can set up masking policies so that the data is obfuscated for certain users.  This is done by creating a policy and then applying it to a column.
 
-## Oauth
-
-> [oauth.sql](oauth.sql)
-
-Snowflake oauth client creation to connect to tableau.
 
 ## Backup and recovery
 
