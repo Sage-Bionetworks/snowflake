@@ -69,3 +69,4 @@ CREATE USER IF NOT EXISTS "milen.nikolov@sagebase.org";
 CREATE USER IF NOT EXISTS "milan.vu@sagebase.org";
 CREATE USER IF NOT EXISTS "richard.yaxley@sagebase.org";
 CREATE USER IF NOT EXISTS "ashley.clayton@sagebase.org";
+CREATE USER IF NOT EXISTS "verena.chung@sagebase.org"
