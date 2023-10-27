@@ -59,3 +59,14 @@ CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 CREATE USER IF NOT EXISTS "christina.conrad@sagebase.org";
 CREATE USER IF NOT EXISTS "drew.duglan@sagebase.org";
+CREATE USER IF NOT EXISTS "zoe.leanza@sagebase.org";
+CREATE USER IF NOT EXISTS "anna.greenwood@sagebase.org";
+CREATE USER IF NOT EXISTS "jay.hodgson@sagebase.org";
+CREATE USER IF NOT EXISTS "ljubomir.bradic@sagebase.org";
+CREATE USER IF NOT EXISTS "brian.oconnor@sagebase.org";
+CREATE USER IF NOT EXISTS "james.eddy@sagebase.org";
+CREATE USER IF NOT EXISTS "milen.nikolov@sagebase.org";
+CREATE USER IF NOT EXISTS "milan.vu@sagebase.org";
+CREATE USER IF NOT EXISTS "richard.yaxley@sagebase.org";
+CREATE USER IF NOT EXISTS "ashley.clayton@sagebase.org";
+CREATE USER IF NOT EXISTS "verena.chung@sagebase.org"
