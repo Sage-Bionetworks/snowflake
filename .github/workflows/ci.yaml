@@ -48,13 +48,13 @@ jobs:
         run: |
           ~/bin/snowsql -f admin/databases.sql
 
-      - name: Create tableau oauth
-        run: |
-          ~/bin/snowsql -f admin/oauth.sql
-
       - name: Create users
         run: |
-          ~/bin/snowsql -f admin/users.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
+          ~/bin/snowsql -f admin/users.sql
+
+      - name: Create integration
+        run: |
+          ~/bin/snowsql -f admin/integrations.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
 
       # - name: Governance
       #   run: |

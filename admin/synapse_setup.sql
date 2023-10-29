@@ -2,29 +2,17 @@
 -- This script has the storage integration, external stages, and grants the resources
 -- to the appropriate roles
 USE DATABASE synapse_data_warehouse;
-USE ROLE SYSADMIN;
+USE ROLE sysadmin;
 CREATE SCHEMA IF NOT EXISTS synapse_raw
-    WITH MANAGED ACCESS;
+WITH MANAGED ACCESS;
 CREATE SCHEMA IF NOT EXISTS synapse
-    WITH MANAGED ACCESS;
+WITH MANAGED ACCESS;
 USE SCHEMA synapse_raw;
 USE WAREHOUSE compute_org;
-USE ROLE account_admin;
-
--- * Integration to prod (SNOW-14)
-CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
-    TYPE = EXTERNAL_STAGE
-    STORAGE_PROVIDER = 'S3'
-    ENABLED = TRUE
-    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-accesss-SnowflakeServiceRole-HL66JOP7K4BT'
-    STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org');
-
-DESC INTEGRATION synapse_prod_warehouse_s3;
-
 
 -- * SNOW-14
 CREATE STAGE IF NOT EXISTS synapse_prod_warehouse_s3_stage
-    STORAGE_INTEGRATION = synapse_prod_warehouse_s3
+    STORAGE_INTEGRATION = synapse_prod_warehouse_s3 --noqa: LT02,PRS
     URL = 's3://prod.datawarehouse.sagebase.org/warehouse/'
     FILE_FORMAT = (TYPE = PARQUET COMPRESSION = AUTO)
     DIRECTORY = (ENABLE = TRUE);
@@ -65,14 +53,7 @@ CREATE SCHEMA IF NOT EXISTS synapse
     WITH MANAGED ACCESS;
 USE SCHEMA synapse_raw;
 USE WAREHOUSE compute_org;
-USE ROLE account_admin;
-CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
-    TYPE = EXTERNAL_STAGE
-    STORAGE_PROVIDER = 'S3'
-    ENABLED = TRUE
-    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/test-snowflake-access-SnowflakeServiceRole-1LXZYAMMKTHJY'
-    STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
-DESC INTEGRATION synapse_dev_warehouse_s3;
+
 CREATE STAGE IF NOT EXISTS synapse_dev_warehouse_s3_stage
     STORAGE_INTEGRATION = synapse_dev_warehouse_s3
     URL = 's3://dev.datawarehouse.sagebase.org/datawarehouse/'
