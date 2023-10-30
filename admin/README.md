@@ -24,12 +24,18 @@ CREATE USER "...@sagebase.org"
 
 ## Roles
 
-> [roles.sql](roles.sql) - Role creation and granting of policies.
+> [roles.sql](roles.sql) - Role creation
 
 For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. Roles are to be created by the `USERADMIN`. The roles.sql file contains a series of SQL statements that create and grant roles to users in a Snowflake database allowing for fine-grained control over access to different schemas and functions within the database.
 
 > [!NOTE]
-> This file does not grant roles access to different resources.  That is done in the privileges folder. Future direction would be to support jumpcloud SCIM integration with snowflake to automate role creation and assignment.
+> This file does not grant roles access to different resources.  That is done in [grants](grants.sql). Future direction would be to support jumpcloud SCIM integration with snowflake to automate role creation and assignment.
+
+## Privileges
+
+> [grants.sql](grants.sql) - Granting of roles to users and resources
+
+All snowflake privileges are granted in `grants.sql`.  This is where users are added to specific roles.  The recommended roles are `{project}_data_engineer` and `{project}_data_analytics` where data engineers have the permission to create tables and data analytics have the permission to query tables. All schemas should be created with `managed access` enabled and snowflake follows the [DAC and RBAC framework](https://docs.snowflake.com/en/user-guide/security-access-control-overview)
 
 ## Databases
 
