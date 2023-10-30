@@ -54,10 +54,6 @@ jobs:
         run: |
           ~/bin/snowsql -f users_and_roles/roles.sql
 
-      - name: Create warehouses
-        run: |
-          ~/bin/snowsql -f admin/warehouses.sql
-
       - name: Create databases
         run: |
           ~/bin/snowsql -f admin/databases.sql
