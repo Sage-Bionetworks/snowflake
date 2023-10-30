@@ -40,6 +40,14 @@ jobs:
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
+      - name: Create users
+        run: |
+          ~/bin/snowsql -f users_and_roles/users.sql
+
+      - name: Create roles
+        run: |
+          ~/bin/snowsql -f users_and_roles/roles.sql
+
       - name: Create warehouses
         run: |
           ~/bin/snowsql -f admin/warehouses.sql
@@ -47,10 +55,6 @@ jobs:
       - name: Create databases
         run: |
           ~/bin/snowsql -f admin/databases.sql
-
-      - name: Create users
-        run: |
-          ~/bin/snowsql -f admin/users.sql
 
       - name: Create integration
         run: |
@@ -60,6 +64,6 @@ jobs:
       #   run: |
       #     ~/bin/snowsql -f admin/policies.sql
 
-      - name: Roles and granting policies
+      - name: Grant privileges
         run: |
-          ~/bin/snowsql -f admin/roles.sql
+          ~/bin/snowsql -f privileges/grants.sql
