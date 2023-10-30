@@ -7,7 +7,7 @@ on:
   # Triggers the workflow on any branch or tag commit
   push:
     paths:
-      - 'github/workflows/*'
+      - '.github/workflows/*'
       - 'admin/*'
       - 'privileges/*'
       - 'users_and_roles/*'
