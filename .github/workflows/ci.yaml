@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: |
           schemachange \
-            -f databases \
+            -f admin/warehouses \
             -a $SNOWFLAKE_ACCOUNT \
             -u $SNOWFLAKE_USER \
             -r SYSADMIN \
