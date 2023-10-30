@@ -168,7 +168,7 @@ jobs:
         shell: bash
         run: |
           schemachange \
-            -f synapse_data_warehouse
+            -f synapse_data_warehouse \
             -a $SNOWFLAKE_ACCOUNT \
             -u $SNOWFLAKE_USER \
             -r SYSADMIN \
