@@ -70,6 +70,10 @@ Governance policies for schemas. As we ingest data, we will need to be mindful o
 
 As stated in the article in the first paragraph: "Although hugely simplified, it’s important to be able to quickly recover from system or human error, and quickly restore corrupted data."  We leverage snowflake's zero copy cloning feature which creates a clone of the existing database without taking extra storage.
 
+## Resource monitors
+
+This is a WIP. There are resource monitors created manually, but it should be created via code.
+
 ## Terraform exploration (PoC)
 
 > [!NOTE]
