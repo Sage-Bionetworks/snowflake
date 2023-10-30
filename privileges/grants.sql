@@ -14,7 +14,7 @@ TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE GENIE_ADMIN
 TO ROLE USERADMIN;
 GRANT ROLE GENIE_ADMIN
-TO USER "alex.paynter@sagebase.org";
+TO USER "alexander.paynter@sagebase.org";
 GRANT ROLE GENIE_ADMIN
 TO USER "xindi.guo@sagebase.org";
 GRANT ROLE GENIE_ADMIN
