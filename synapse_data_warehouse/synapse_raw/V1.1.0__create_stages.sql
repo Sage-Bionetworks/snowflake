@@ -1,4 +1,4 @@
-USE DATABASE {{database_name}};
+USE SCHEMA {{database_name}}.synapse_raw;
 CREATE STAGE IF NOT EXISTS {{stage_storage_integration}}_STAGE
     STORAGE_INTEGRATION = {{stage_storage_integration}}
     URL = '{{stage_url}}'
