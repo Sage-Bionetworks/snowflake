@@ -76,14 +76,12 @@ jobs:
 
   schemachange_admin:
     runs-on: ubuntu-latest
-    environment: ${GITHUB_REF##*/}
     env:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
       SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
       # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
-      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
     steps:
@@ -154,7 +152,6 @@ jobs:
       # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
       SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
     steps:
       - uses: actions/checkout@v4
