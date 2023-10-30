@@ -75,7 +75,7 @@ jobs:
 
   schemachange:
     runs-on: ubuntu-latest
-
+    environment: ${GITHUB_REF##*/}
     env:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
