@@ -7,12 +7,18 @@ on:
   # Triggers the workflow on any branch or tag commit
   push:
     paths:
+      - '.github/workflows/*'
       - 'admin/*'
+      - 'privileges/*'
+      - 'users_and_roles/*'
+      - 'databases/*'
     branches:
       - "main"
+      - "dev"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
 jobs:
   # This workflow contains a single job called "deploy"
   deploy:
@@ -40,26 +46,127 @@ jobs:
           curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
           SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-      - name: Create warehouses
+      - name: Create users
         run: |
-          ~/bin/snowsql -f admin/warehouses.sql
+          ~/bin/snowsql -f users_and_roles/users.sql
+
+      - name: Create roles
+        run: |
+          ~/bin/snowsql -f users_and_roles/roles.sql
 
       - name: Create databases
         run: |
           ~/bin/snowsql -f admin/databases.sql
 
-      - name: Create tableau oauth
+      - name: Create integration
         run: |
-          ~/bin/snowsql -f admin/oauth.sql
-
-      - name: Create users
-        run: |
-          ~/bin/snowsql -f admin/users.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
+          ~/bin/snowsql -f admin/integrations.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
 
       # - name: Governance
       #   run: |
       #     ~/bin/snowsql -f admin/policies.sql
 
-      - name: Roles and granting policies
+      - name: Grant privileges
         run: |
-          ~/bin/snowsql -f admin/roles.sql
+          ~/bin/snowsql -f privileges/grants.sql
+
+  schemachange_admin:
+    runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+      # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: install-py-dependencies
+        shell: bash
+        run: |
+          pip install schemachange
+
+      - name: deploy warehouses
+        shell: bash
+        run: |
+          schemachange \
+            -f databases \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SYSADMIN \
+            -w compute_xsmall \
+            -d METADATA
+
+  schemachange_synapse_data_warehouse_dev:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    environment: dev
+    env:
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+      # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: install-py-dependencies
+        shell: bash
+        run: |
+          pip install schemachange
+
+      - name: deploy synapse_data_warehouse
+        shell: bash
+        run: |
+          schemachange \
+            -f synapse_data_warehouse \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SYSADMIN \
+            -w compute_xsmall \
+            --config-folder synapse_data_warehouse
+
+  schemachange_synapse_data_warehouse_prod:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: prod
+    env:
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+      # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: install-py-dependencies
+        shell: bash
+        run: |
+          pip install schemachange
+
+      - name: deploy synapse_data_warehouse
+        shell: bash
+        run: |
+          schemachange \
+            -f synapse_data_warehouse \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SYSADMIN \
+            -w compute_xsmall \
+            --config-folder synapse_data_warehouse

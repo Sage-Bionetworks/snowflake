@@ -20,8 +20,7 @@ auto_suspend = 90
 auto_resume = TRUE
 initially_suspended = TRUE;
 
-// Increase time on auto suspend for tableau
-// TODO: Should create a tableau specific role for tableau
+// Tableau warehouse should have longer suspect time to leverage caching
 create warehouse if not exists tableau
 warehouse_type = STANDARD
 warehouse_size = XSMALL

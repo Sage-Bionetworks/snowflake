@@ -1,4 +1,2 @@
-oauth.sql
 policies.sql
-users.sql
-synapse_setup.sql
+V1.1.0__create_stages.sql

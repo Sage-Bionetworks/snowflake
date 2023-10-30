@@ -1,0 +1,18 @@
+config-version: 1
+
+root-folder: synapse_raw
+# modules-folder: modules
+# The name of the default database to use. Can be overridden in the change scripts.
+snowflake-database: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE', 'SYNAPSE_DATA_WAREHOUSE_DEV')}}
+# Create the change history schema and table, if they do not exist (the default is False)
+create-change-history-table: True
+# Used to override the default name of the change history table (the default is METADATA.SCHEMACHANGE.CHANGE_HISTORY)
+change-history-table: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE', 'SYNAPSE_DATA_WAREHOUSE_DEV')}}.SCHEMACHANGE.CHANGE_HISTORY
+vars:
+  database_name: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE', 'SYNAPSE_DATA_WAREHOUSE_DEV')}}
+  stage_storage_integration: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION', 'synapse_dev_warehouse_s3')}}
+  stage_url: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_URL', 's3://dev.datawarehouse.sagebase.org/datawarehouse/')}}
+  # secrets:
+  #   # not a good example of secrets, just here to demo the secret filtering
+  #   trips_s3_bucket: s3://snowflake-workshop-lab/citibike-trips
+  #   weather_s3_bucket: s3://snowflake-workshop-lab/weather-nyc
