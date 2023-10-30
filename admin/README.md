@@ -2,7 +2,10 @@
 
 Snowflake is a SaaS service that provides a data warehouse / distributed datawarehouse layer.  Here is an article on [snowflake database management](https://community.snowflake.com/s/article/Database-Administration-on-Snowflake). All admin specific scripts are located in this folder. Each of the following scripts are responsible for different aspects of Snowflake administration.
 
-A GitHub Action is will execute most of the scripts below upon a push into the `main` branch.
+A GitHub Action is will execute most of the scripts below upon a push into the `main` and/or `dev` branch.
+
+> [!NOTE]
+> The follow scripts should all eventually leverage [schemachange](https://github.com/Snowflake-Labs/schemachange) which is a simple python based tool to manage snowflake objects.  It follows an Imperative-style approach to Database Change Management (DCM) and was inspired by the [Flyway database migration tool](https://flywaydb.org/).  [Database change management](https://community.snowflake.com/s/article/A-New-Approach-to-Database-Change-Management-with-Snowflake)
 
 ## Users
 
@@ -38,20 +41,21 @@ Databases _must be_ created by the `SYSADMIN` role. Different roles can be creat
 
 > [warehouse.sql](warehouses.sql)
 
-Warehouse _must be_ created by the `SYSADMIN` role.  It's important that you include the following parameters in the warehouse creation script.
+Warehouse _must be_ created by the `SYSADMIN` role.  It's important that you include the following parameters in the warehouse creation script.  To track changes to warehouses, we leverage[schemachange](https://github.com/Snowflake-Labs/schemachange).
+
 * `warehouse_type = STANDARD` will ensure that the warehouse is not a multi-cluster warehouse.  Multi-cluster warehouses are not recommended for Sage Bionetworks use cases.
 * `warehouse_size = XSMALL` will ensure that the warehouse is the smallest size.  This is recommended for most use cases.
 - `auto_suspend = 60` will ensure that the warehouse is suspended after 60 seconds not in use. Auto-suspension for ingestion and transformation is typically recommended to be 1-2 min as they are often processed in scheduled batches, as long as each time query runs for longer than 1 min (per second billing after first min). For the warehouse dedicated to Tableau/Analytics, typically, snowflake recommend longer auto-suspension to allow queries to leverage [cache](https://docs.snowflake.com/en/user-guide/warehouses-considerations#how-does-warehouse-caching-impact-queries) for improved performance hence lower cost. Here is the doc on general [warehouse considerations](https://docs.snowflake.com/en/user-guide/warehouses-considerations).
 * `auto_resume = TRUE` will automatically resume when a query is executed
 * `initially_suspended = TRUE` will ensure that the warehouse is suspended when it is created.
 
+## Integrations
 
+These are account level integrations
 
-## Oauth
-
-> [oauth.sql](oauth.sql)
-
-Snowflake oauth client to allow seamless creation to tableau.
+* storage integrations: Integrations from snowflake to S3 buckets.
+* OAUTH security integrations: Allow seamless creation to tableau desktop and cloud.
+* SAML2 security integration: Allow for integration with google accounts.
 
 ## Governance
 
@@ -62,7 +66,7 @@ Governance policies for schemas. As we ingest data, we will need to be mindful o
 
 ## Backup and recovery
 
-> [oauth.sql](backup.sql)
+> [backup](backup.sql)
 
 As stated in the article in the first paragraph: "Although hugely simplified, it’s important to be able to quickly recover from system or human error, and quickly restore corrupted data."  We leverage snowflake's zero copy cloning feature which creates a clone of the existing database without taking extra storage.
 

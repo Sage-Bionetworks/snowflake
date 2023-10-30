@@ -23,23 +23,11 @@ If there is a query you expect to run frequently, lets contribute it to the anal
 
 Please refer to the [admin README](admin/README.md) for detailed information.
 
-### Terraform exploration (PoC)
-
-> [!NOTE]
-> Unfortunately the terraform snowflake plugin is not very mature, so we are going to continue updating the SQL until it is more stable.
-
-Be sure to export these local variables and run the terraform script in the admin folder
-```
-export TF_VAR_snowflake_user=
-export TF_VAR_snowflake_pwd=
-export TF_VAR_snowflake_account=
-```
-
-## Synapse Data Warehouse (PoC)
+## Synapse Data Warehouse
 
 ### Data Architecture
 
-This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
+This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue provides an in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
 
 ```mermaid
 graph TD;
