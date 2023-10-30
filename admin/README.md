@@ -1,6 +1,6 @@
 # Database administration
 
-Snowflake is a SaaS service that provides a data warehouse / distributed datawarehouse layer.  Here is a small article on [snowflake database management](https://community.snowflake.com/s/article/Database-Administration-on-Snowflake). All admin specific scripts are located in this folder. Each of the following scripts are responsible for different aspects of Snowflake administration.
+Snowflake is a SaaS service that provides a data warehouse / distributed datawarehouse layer.  Here is an article on [snowflake database management](https://community.snowflake.com/s/article/Database-Administration-on-Snowflake). All admin specific scripts are located in this folder. Each of the following scripts are responsible for different aspects of Snowflake administration.
 
 A GitHub Action is will execute most of the scripts below upon a push into the `main` branch.
 
