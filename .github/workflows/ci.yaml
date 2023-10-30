@@ -12,6 +12,7 @@ on:
       - 'privileges/*'
       - 'users_and_roles/*'
       - 'databases/*'
+      - 'synapse_data_warehouse/*'
     branches:
       - "main"
       - "dev"
