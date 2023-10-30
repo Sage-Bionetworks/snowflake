@@ -16,6 +16,18 @@ Users are to be created by the `USERADMIN`.  To add a user, created a pull reque
 CREATE USER "...@sagebase.org"
 ```
 
+> [!NOTE]
+> Unfortunately, google workspaces does not support SCIM which means that user management happens within this repository AND google workspaces.  Future direction would be to support jumpcloud SCIM integration with snowflake and/or continue this workflow.
+
+## Roles
+
+> [roles.sql](roles.sql) - Role creation and granting of policies.
+
+For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. Roles are to be created by the `USERADMIN`. The roles.sql file contains a series of SQL statements that create and grant roles to users in a Snowflake database allowing for fine-grained control over access to different schemas and functions within the database.
+
+> [!NOTE]
+> This file does not grant roles access to different resources.  That is done in the privileges folder. Future direction would be to support jumpcloud SCIM integration with snowflake to automate role creation and assignment.
+
 ## Databases
 
 > [database.sql](databases.sql)
@@ -34,13 +46,6 @@ Warehouse _must be_ created by the `SYSADMIN` role.  It's important that you inc
 * `initially_suspended = TRUE` will ensure that the warehouse is suspended when it is created.
 
 
-## Roles
-
-> [roles.sql](roles.sql) - Role creation and granting of policies.
-
-For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. Roles are to be created by the `USERADMIN`. The roles.sql file contains a series of SQL statements that create and grant roles to users in a Snowflake database allowing for fine-grained control over access to different schemas and functions within the database.
-
-NOTE: This file does not grant roles access to different resources.  That is done is specific *_setup.sql scripts that aim to set up the schemas and permissions.
 
 ## Oauth
 
