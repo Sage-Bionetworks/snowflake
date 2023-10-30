@@ -1,6 +1,6 @@
 # snowflake
 
-This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations. The managed access of snowflake will be governed by [RBAC](https://medium.com/snowflake/managed-access-schema-framework-in-rbac-1b63341be418)
+This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations.
 
 ## Connecting to Snowflake
 
@@ -17,7 +17,6 @@ Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowf
 ## Contributing
 
 If there is a query you expect to run frequently, lets contribute it to the analytics folder!
-
 
 ## Administration
 
@@ -52,3 +51,7 @@ snowflake, synapseclient and dotenv must be installed as dependencies.
 ```
 pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-dotenv
 ```
+
+## Contributing
+
+WIP
