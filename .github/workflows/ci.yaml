@@ -75,7 +75,7 @@ jobs:
 
   schemachange:
     runs-on: ubuntu-latest
-    environment: ${GITHUB_REF##*/}
+    # environment: ${GITHUB_REF##*/}
     env:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
@@ -94,7 +94,7 @@ jobs:
       - name: install-py-dependencies
         shell: bash
         run: |
-          schemachange
+          pip install schemachange
 
       - name: deploy warehouses
         shell: bash
