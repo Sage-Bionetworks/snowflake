@@ -13,6 +13,7 @@ on:
       - 'databases/*'
     branches:
       - "main"
+      - "dev"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -81,7 +82,7 @@ jobs:
       SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
       # SNOWSQL_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
       # SNOWSQL_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
-      # SNOWSQL_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ env.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
     steps:
@@ -95,12 +96,24 @@ jobs:
         run: |
           schemachange
 
-      - name: deploy schemachange
+      - name: deploy warehouses
         shell: bash
         run: |
           schemachange \
+            -f databases
             -a $SNOWFLAKE_ACCOUNT \
             -u $SNOWFLAKE_USER \
             -r SYSADMIN \
             -w compute_xsmall \
             -d METADATA
+
+      - name: deploy synapse_data_warehouse
+        shell: bash
+        run: |
+          schemachange \
+            -f synapse_data_warehouse
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SYSADMIN \
+            -w compute_xsmall \
+            --config-folder synapse_data_warehouse
