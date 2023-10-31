@@ -45,9 +45,9 @@ Databases _must be_ created by the `SYSADMIN` role. Different roles can be creat
 
 ## Warehouses
 
-> [warehouse.sql](warehouses.sql)
+> [warehouse](warehouses)
 
-Warehouse _must be_ created by the `SYSADMIN` role.  It's important that you include the following parameters in the warehouse creation script.  To track changes to warehouses, we leverage[schemachange](https://github.com/Snowflake-Labs/schemachange).
+Warehouse _must be_ created by the `SYSADMIN` role.  It's important that you include the following parameters in the warehouse creation script.  To track changes to warehouses, we leverage [schemachange](https://github.com/Snowflake-Labs/schemachange).
 
 * `warehouse_type = STANDARD` will ensure that the warehouse is not a multi-cluster warehouse.  Multi-cluster warehouses are not recommended for Sage Bionetworks use cases.
 * `warehouse_size = XSMALL` will ensure that the warehouse is the smallest size.  This is recommended for most use cases.
