@@ -11,6 +11,8 @@ on:
       - 'transforms/*'
       - 'analytics/*'
       - 'README.md'
+      - 'recover/*'
+      - 'sage/*'
     branches:
       - "main"
       - "dev"
