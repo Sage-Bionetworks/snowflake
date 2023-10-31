@@ -68,7 +68,7 @@ jobs:
 
       - name: Grant privileges
         run: |
-          ~/bin/snowsql -f privileges/grants.sql
+          ~/bin/snowsql -f admin/grants.sql
 
   schemachange_admin:
     runs-on: ubuntu-latest
