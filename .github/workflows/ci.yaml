@@ -10,7 +10,6 @@ on:
       - '.github/workflows/*'
       - 'admin/*'
       - 'privileges/*'
-      - 'users_and_roles/*'
       - 'databases/*'
       - 'synapse_data_warehouse/*'
     branches:
@@ -49,11 +48,11 @@ jobs:
 
       - name: Create users
         run: |
-          ~/bin/snowsql -f users_and_roles/users.sql
+          ~/bin/snowsql -f admin/users.sql
 
       - name: Create roles
         run: |
-          ~/bin/snowsql -f users_and_roles/roles.sql
+          ~/bin/snowsql -f admin/roles.sql
 
       - name: Create databases
         run: |
@@ -96,7 +95,7 @@ jobs:
         shell: bash
         run: |
           schemachange \
-            -f databases \
+            -f admin/warehouses \
             -a $SNOWFLAKE_ACCOUNT \
             -u $SNOWFLAKE_USER \
             -r SYSADMIN \

@@ -1,6 +1,6 @@
 # snowflake
 
-This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations. The managed access of snowflake will be governed by [RBAC](https://medium.com/snowflake/managed-access-schema-framework-in-rbac-1b63341be418)
+This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations.
 
 ## Connecting to Snowflake
 
@@ -18,46 +18,15 @@ Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowf
 
 If there is a query you expect to run frequently, lets contribute it to the analytics folder!
 
-
 ## Administration
 
-For snowflake administrators, please make sure you read this carefully: https://docs.snowflake.com/en/user-guide/security-access-control-overview. All admin specific activities will be done in the [admin](admin) folder. Each of the following scripts are responsible for different aspects of Snowflake administration.
+Please refer to the [admin README](admin/README.md) for detailed information.
 
-* [database.sql](admin/databases.sql) - Database creation.
-* [policies.sql](admin/policies.sql) - Governance policies for schemas.
-* [roles.sql](admin/roles.sql) - Role creation and granting of policies.
-* [oauth.sql](admin/oauth.sql) - Snowflake oauth client creation to connect to tableau.
-* [user.sql](admin/users.sql) - User creation
-* [warehouse.sql](admin/warehouses.sql) - Warehouse creation
-
-### User/Role Management
-Users and roles are to be created by the `USERADMIN`, and the code is contained in [here](admin/user_setup.sql).  To add a user, simple add their Sage Bionetworks email, the setup for google saml is included in the SQL command.
-
-```
-CREATE USER "...@sagebase.org"
-```
-
-### Warehouses/databases
-
-Warehouse and databases _must be_ created by the `SYSADMIN` role. Different roles can be created for different projects so that certain users have permissions to create schemas and tables under this role. That said, currently it's easiest to have the `SYSADMIN` role also create many of the schemas and tables to ensure the correct security policies are set.
-
-### Terraform exploration (PoC)
-
-> [!NOTE]
-> Unfortunately the terraform snowflake plugin is not very mature, so we are going to continue updating the SQL until it is more stable.
-
-Be sure to export these local variables and run the terraform script in the admin folder
-```
-export TF_VAR_snowflake_user=
-export TF_VAR_snowflake_pwd=
-export TF_VAR_snowflake_account=
-```
-
-## Synapse Data Warehouse (PoC)
+## Synapse Data Warehouse
 
 ### Data Architecture
 
-This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue does is an awkward in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
+This is just prototype, but I am going to attempt to follow the [medallion data architecture](https://www.databricks.com/glossary/medallion-architecture). That said, AWS glue provides an in-between state of bronze and silver layer. The data warehouse data exposed as "raw" tables in snowflake does not correspond to the source system table structures, but is already transformed.
 
 ```mermaid
 graph TD;
@@ -82,3 +51,7 @@ snowflake, synapseclient and dotenv must be installed as dependencies.
 ```
 pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-dotenv
 ```
+
+## Contributing
+
+WIP
