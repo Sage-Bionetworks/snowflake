@@ -1,4 +1,3 @@
-USE WAREHOUSE COMPUTE_ORG;
 USE ROLE USERADMIN;
 
 -- TODO: Create role for tableau warehouse
