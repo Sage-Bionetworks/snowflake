@@ -404,6 +404,8 @@ LEFT JOIN
     FILE_SUBSET
     ON
         NODE_SUBSET.FILE_HANDLE_ID = FILE_SUBSET.ID;
+
+-- Number of downloads discounting users with sage emails
 WITH USER AS (
     SELECT ID AS PROFILE_ID
     FROM
@@ -417,7 +419,19 @@ FROM
     SAGE.PORTAL_DOWNLOADS.HTAN_DOWNLOADS
 WHERE
     USER_ID IN (SELECT PROFILE_ID FROM USER);
--- All HTAN data
+
+-- distribution of downloads per user
+SELECT
+    USER_ID,
+    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
+FROM
+    SAGE.PORTAL_DOWNLOADS.HTAN_DOWNLOADS
+GROUP BY
+    USER_ID
+ORDER BY
+    NUMBER_OF_DOWNLOADS DESC;
+
+-- HTAN data costs with AWS and GCP split
 WITH HTAN_PROJECTS AS (
     SELECT
         ID,
@@ -442,15 +456,58 @@ WITH HTAN_PROJECTS AS (
             22041595,
             25555889
         )
+        AND NODE_TYPE != 'folder'
+),
+
+PRICE_PER_YEAR AS (
+    SELECT
+        FILE_LATEST.CONTENT_SIZE,
+        CASE
+            WHEN FILE_LATEST.CONCRETE_TYPE = 'org.sagebionetworks.repo.model.file.GoogleCloudFileHandle'
+                THEN FILE_LATEST.CONTENT_SIZE / power(2, 30) * 0.026 * 12
+            ELSE FILE_LATEST.CONTENT_SIZE / power(2, 30) * 0.023 * 12
+        END AS PRICE_PER_FILE_ANNUALLY
+        -- sum(FILE_LATEST.CONTENT_SIZE) / power(2, 30) * 0.023 * 12 AS PRICE_PER_YEAR
+    FROM
+        HTAN_PROJECTS
+    LEFT JOIN
+        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
+        ON
+            HTAN_PROJECTS.FILE_HANDLE_ID = FILE_LATEST.ID
 )
 
 SELECT
-    sum(FILE_LATEST.CONTENT_SIZE) / power(2, 30) AS TOTAL_SIZE_IN_GB,
-    sum(FILE_LATEST.CONTENT_SIZE) / power(2, 40) AS TOTAL_SIZE_IN_TB,
-    sum(FILE_LATEST.CONTENT_SIZE) / power(2, 30) * 0.023 * 12 AS PRICE_PER_YEAR
+    sum(CONTENT_SIZE) / power(2, 30) AS TOTAL_SIZE_IN_GB,
+    sum(CONTENT_SIZE) / power(2, 40) AS TOTAL_SIZE_IN_TB,
+    sum(PRICE_PER_FILE_ANNUALLY) AS ANNUAL_COST
 FROM
-    HTAN_PROJECTS
-LEFT JOIN
-    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILE_LATEST
-    ON
-        HTAN_PROJECTS.FILE_HANDLE_ID = FILE_LATEST.ID;
+    PRICE_PER_YEAR;
+
+-- distribution of entity types
+SELECT
+    NODE_TYPE,
+    count(*) AS NUMBER_OF_FILES
+FROM
+    SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
+WHERE
+    PROJECT_ID IN (
+        20834712,
+        23511984,
+        22124336,
+        22776798,
+        23511954,
+        23511961,
+        22123910,
+        23448901,
+        22093319,
+        23511964,
+        21050481,
+        22255320,
+        24984270,
+        22041595,
+        25555889
+    )
+GROUP BY
+    NODE_TYPE
+ORDER BY
+    NUMBER_OF_FILES DESC;
