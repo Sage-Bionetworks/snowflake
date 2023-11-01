@@ -9,6 +9,10 @@ TO USER "kevin.boske@sagebase.org";
 GRANT ROLE SYSADMIN
 TO USER "x.schildwachter@sagebase.org";
 
+-- warehouse usage privileges
+GRANT USAGE ON WAREHOUSE COMPUTE_XSMALL
+TO ROLE DATA_ANALYTICS;
+
 -- GENIE privileges
 GRANT ROLE GENIE_ADMIN
 TO ROLE USERADMIN;
