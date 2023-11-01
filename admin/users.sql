@@ -23,7 +23,7 @@ CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
 CREATE USER IF NOT EXISTS "john.hill@sagebase.org";
 CREATE USER IF NOT EXISTS "bruce.hoff@sagebase.org";
 CREATE USER IF NOT EXISTS "marco.marasca@sagebase.org";
-CREATE USER IF NOT EXISTS "sandhra.sokhal@sagebase.org ";
+CREATE USER IF NOT EXISTS "sandhra.sokhal@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.hindman@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.malenfant@sagebase.org";
 CREATE USER IF NOT EXISTS "pierrette.lo@sagebase.org";
