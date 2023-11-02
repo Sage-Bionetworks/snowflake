@@ -116,6 +116,9 @@ GRANT ROLE DATA_ANALYTICS TO USER "richard.yaxley@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ashley.clayton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "verena.chung@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jineta.banerjee@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "sarah.chan@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "julie.bletz@sagebase.org";
+
 -- Create governance privileges
 GRANT ROLE MASKING_ADMIN
 TO USER "thomas.yu@sagebase.org";
