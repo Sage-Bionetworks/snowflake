@@ -2,8 +2,8 @@ use role accountadmin;
 use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 
 create task if not exists upsert_to_certifiedquiz_latest_task
-    AFTER certifiedquiz_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER certifiedquiz_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.CERTIFIEDQUIZ_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
@@ -71,8 +71,8 @@ as
 alter task upsert_to_certifiedquizquestion_latest_task resume;
 
 create task if not exists upsert_to_node_latest_task
-    AFTER nodesnapshot_task
     user_task_managed_initial_warehouse_size = 'SMALL'
+    AFTER nodesnapshot_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.NODE_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
@@ -119,8 +119,8 @@ as
         VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.ID, SOURCE_TABLE.BENEFACTOR_ID, SOURCE_TABLE.PROJECT_ID, SOURCE_TABLE.PARENT_ID, SOURCE_TABLE.NODE_TYPE, SOURCE_TABLE.CREATED_ON, SOURCE_TABLE.CREATED_BY, SOURCE_TABLE.MODIFIED_ON, SOURCE_TABLE.MODIFIED_BY, SOURCE_TABLE.VERSION_NUMBER, SOURCE_TABLE.FILE_HANDLE_ID, SOURCE_TABLE.NAME, SOURCE_TABLE.IS_PUBLIC, SOURCE_TABLE.IS_CONTROLLED, SOURCE_TABLE.IS_RESTRICTED, SOURCE_TABLE.SNAPSHOT_DATE);
 alter task upsert_to_node_latest_task resume;
 create task if not exists remove_delete_nodes_task
-    AFTER upsert_to_node_latest_task
     user_task_managed_initial_warehouse_size = 'SMALL'
+    AFTER upsert_to_node_latest_task
 as
     DELETE FROM {{database_name}}.SYNAPSE.NODE_LATEST --noqa: TMP
     WHERE CHANGE_TYPE = 'DELETE';
@@ -128,8 +128,8 @@ alter task remove_delete_nodes_task resume;
 
 
 create task if not exists upsert_to_file_latest_task
-    AFTER filesnapshots_task
     user_task_managed_initial_warehouse_size = 'SMALL'
+    AFTER filesnapshots_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.FILE_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
@@ -180,16 +180,16 @@ as
 
 alter task upsert_to_file_latest_task resume;
 create task if not exists remove_delete_files_task
-    AFTER upsert_to_file_latest_task
     user_task_managed_initial_warehouse_size = 'SMALL'
+    AFTER upsert_to_file_latest_task
 as
     DELETE FROM {{database_name}}.SYNAPSE.FILE_LATEST --noqa: TMP
     WHERE CHANGE_TYPE = 'DELETE';
 alter task remove_delete_files_task resume;
 
 create task if not exists upsert_to_userprofile_latest_task
-    AFTER userprofilesnapshot_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER userprofilesnapshot_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.USERPROFILE_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
@@ -232,8 +232,8 @@ as
 alter task upsert_to_userprofile_latest_task resume;
 
 create task if not exists upsert_to_teammember_latest_task
-    AFTER teammembersnapshots_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER teammembersnapshots_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.TEAMMEMBER_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
@@ -270,10 +270,9 @@ as
 
 alter task upsert_to_teammember_latest_task resume;
 
-
 create task if not exists clone_process_access_task
-    AFTER processedaccess_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER processedaccess_task
 as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.PROCESSEDACCESS --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.PROCESSEDACCESS; --noqa: TMP
@@ -281,16 +280,16 @@ as
 alter task clone_process_access_task resume;
 
 create task if not exists clone_filedownload_task
-    AFTER filedownload_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER filedownload_task
 as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.FILEDOWNLOAD --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD; --noqa: TMP
 alter task clone_filedownload_task resume;
 
 create task if not exists clone_fileupload_task
-    AFTER fileupload_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER fileupload_task
 as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.FILEUPLOAD --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.FILEUPLOAD; --noqa: TMP
