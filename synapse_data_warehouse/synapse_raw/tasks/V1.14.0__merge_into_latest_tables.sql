@@ -43,8 +43,8 @@ as
         VALUES (SOURCE_TABLE.RESPONSE_ID, SOURCE_TABLE.USER_ID, SOURCE_TABLE.PASSED, SOURCE_TABLE.PASSED_ON, SOURCE_TABLE.STACK, SOURCE_TABLE.INSTANCE, SOURCE_TABLE.RECORD_DATE);
 
 create task if not exists upsert_to_certifiedquizquestion_latest_task
-    AFTER certifiedquizquestion_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
+    AFTER certifiedquizquestion_task
 as
     MERGE INTO {{database_name}}.SYNAPSE.CERTIFIEDQUIZQUESTION_LATEST AS TARGET_TABLE --noqa: TMP
     USING (
