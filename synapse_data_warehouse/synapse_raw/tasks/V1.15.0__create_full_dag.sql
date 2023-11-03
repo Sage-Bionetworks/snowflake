@@ -9,28 +9,28 @@ alter task certifiedquiz_task UNSET schedule;
 alter task certifiedquiz_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task certifiedquizquestion_task UNSET schedule;
-alter task certifiedquizquestion_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task certifiedquizquestion_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task nodesnapshot_task UNSET schedule;
-alter task nodesnapshot_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task nodesnapshot_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task filesnapshots_task UNSET schedule;
-alter task filesnapshots_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task filesnapshots_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task userprofilesnapshot_task UNSET schedule;
-alter task userprofilesnapshot_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task userprofilesnapshot_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task teammembersnapshots_task UNSET schedule;
-alter task teammembersnapshots_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task teammembersnapshots_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task processedaccess_task UNSET schedule;
-alter task processedaccess_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task processedaccess_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task filedownload_task UNSET schedule;
-alter task filedownload_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task filedownload_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 alter task fileupload_task UNSET schedule;
-alter task fileupload_task AFTER refresh_synapse_warehouse_s3_stage_task;
+alter task fileupload_task ADD AFTER refresh_synapse_warehouse_s3_stage_task;
 
 -- resume all tasks, from most downstream child to upstream parents
 ALTER TASK remove_delete_nodes_task RESUME;
