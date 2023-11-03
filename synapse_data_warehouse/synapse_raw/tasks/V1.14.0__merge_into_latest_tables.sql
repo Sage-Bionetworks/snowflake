@@ -1,6 +1,15 @@
 use role accountadmin;
 use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
-
+-- suspend all parent tasks first
+alter task certifiedquiz_task suspend;
+alter task certifiedquizquestion_task suspend;
+alter task nodesnapshot_task suspend;
+alter task filesnapshots_task suspend;
+alter task userprofilesnapshot_task suspend;
+alter task teammembersnapshots_task suspend;
+alter task processedaccess_task suspend;
+alter task filedownload_task suspend;
+alter task fileupload_task suspend;
 create task if not exists upsert_to_certifiedquiz_latest_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
     AFTER certifiedquiz_task
@@ -32,8 +41,6 @@ as
     WHEN NOT MATCHED THEN
         INSERT (RESPONSE_ID, USER_ID, PASSED, PASSED_ON, STACK, INSTANCE, RECORD_DATE)
         VALUES (SOURCE_TABLE.RESPONSE_ID, SOURCE_TABLE.USER_ID, SOURCE_TABLE.PASSED, SOURCE_TABLE.PASSED_ON, SOURCE_TABLE.STACK, SOURCE_TABLE.INSTANCE, SOURCE_TABLE.RECORD_DATE);
-
-alter task upsert_to_certifiedquiz_latest_task resume;
 
 create task if not exists upsert_to_certifiedquizquestion_latest_task
     AFTER certifiedquizquestion_task
@@ -67,8 +74,6 @@ as
     WHEN NOT MATCHED THEN
         INSERT (RESPONSE_ID, QUESTION_INDEX, IS_CORRECT, STACK, INSTANCE, RECORD_DATE)
         VALUES (SOURCE_TABLE.RESPONSE_ID, SOURCE_TABLE.QUESTION_INDEX, SOURCE_TABLE.IS_CORRECT, SOURCE_TABLE.STACK, SOURCE_TABLE.INSTANCE, SOURCE_TABLE.RECORD_DATE);
-
-alter task upsert_to_certifiedquizquestion_latest_task resume;
 
 create task if not exists upsert_to_node_latest_task
     user_task_managed_initial_warehouse_size = 'SMALL'
@@ -117,15 +122,13 @@ as
     WHEN NOT MATCHED THEN
         INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, ID, BENEFACTOR_ID, PROJECT_ID, PARENT_ID, NODE_TYPE, CREATED_ON, CREATED_BY, MODIFIED_ON, MODIFIED_BY, VERSION_NUMBER, FILE_HANDLE_ID, NAME, IS_PUBLIC, IS_CONTROLLED, IS_RESTRICTED, SNAPSHOT_DATE)
         VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.ID, SOURCE_TABLE.BENEFACTOR_ID, SOURCE_TABLE.PROJECT_ID, SOURCE_TABLE.PARENT_ID, SOURCE_TABLE.NODE_TYPE, SOURCE_TABLE.CREATED_ON, SOURCE_TABLE.CREATED_BY, SOURCE_TABLE.MODIFIED_ON, SOURCE_TABLE.MODIFIED_BY, SOURCE_TABLE.VERSION_NUMBER, SOURCE_TABLE.FILE_HANDLE_ID, SOURCE_TABLE.NAME, SOURCE_TABLE.IS_PUBLIC, SOURCE_TABLE.IS_CONTROLLED, SOURCE_TABLE.IS_RESTRICTED, SOURCE_TABLE.SNAPSHOT_DATE);
-alter task upsert_to_node_latest_task resume;
+
 create task if not exists remove_delete_nodes_task
     user_task_managed_initial_warehouse_size = 'SMALL'
     AFTER upsert_to_node_latest_task
 as
     DELETE FROM {{database_name}}.SYNAPSE.NODE_LATEST --noqa: TMP
     WHERE CHANGE_TYPE = 'DELETE';
-alter task remove_delete_nodes_task resume;
-
 
 create task if not exists upsert_to_file_latest_task
     user_task_managed_initial_warehouse_size = 'SMALL'
@@ -177,15 +180,12 @@ as
     WHEN NOT MATCHED THEN
         INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, ID, CREATED_BY, CREATED_ON, MODIFIED_ON, CONCRETE_TYPE, CONTENT_MD5, CONTENT_TYPE, FILE_NAME, STORAGE_LOCATION_ID, CONTENT_SIZE, BUCKET, KEY, PREVIEW_ID, IS_PREVIEW, STATUS, SNAPSHOT_DATE)
         VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.ID, SOURCE_TABLE.CREATED_BY, SOURCE_TABLE.CREATED_ON, SOURCE_TABLE.MODIFIED_ON, SOURCE_TABLE.CONCRETE_TYPE, SOURCE_TABLE.CONTENT_MD5, SOURCE_TABLE.CONTENT_TYPE, SOURCE_TABLE.FILE_NAME, SOURCE_TABLE.STORAGE_LOCATION_ID, SOURCE_TABLE.CONTENT_SIZE, SOURCE_TABLE.BUCKET, SOURCE_TABLE.KEY, SOURCE_TABLE.PREVIEW_ID, SOURCE_TABLE.IS_PREVIEW, SOURCE_TABLE.STATUS, SOURCE_TABLE.SNAPSHOT_DATE);
-
-alter task upsert_to_file_latest_task resume;
 create task if not exists remove_delete_files_task
     user_task_managed_initial_warehouse_size = 'SMALL'
     AFTER upsert_to_file_latest_task
 as
     DELETE FROM {{database_name}}.SYNAPSE.FILE_LATEST --noqa: TMP
     WHERE CHANGE_TYPE = 'DELETE';
-alter task remove_delete_files_task resume;
 
 create task if not exists upsert_to_userprofile_latest_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
@@ -229,8 +229,6 @@ as
         INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, SNAPSHOT_DATE)
         VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.ID, SOURCE_TABLE.USER_NAME, SOURCE_TABLE.FIRST_NAME, SOURCE_TABLE.LAST_NAME, SOURCE_TABLE.EMAIL, SOURCE_TABLE.LOCATION, SOURCE_TABLE.COMPANY, SOURCE_TABLE.POSITION, SOURCE_TABLE.SNAPSHOT_DATE);
 
-alter task upsert_to_userprofile_latest_task resume;
-
 create task if not exists upsert_to_teammember_latest_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
     AFTER teammembersnapshots_task
@@ -268,8 +266,6 @@ as
         INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, TEAM_ID, MEMBER_ID, IS_ADMIN, SNAPSHOT_DATE)
         VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.TEAM_ID, SOURCE_TABLE.MEMBER_ID, SOURCE_TABLE.IS_ADMIN, SOURCE_TABLE.SNAPSHOT_DATE);
 
-alter task upsert_to_teammember_latest_task resume;
-
 create task if not exists clone_process_access_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
     AFTER processedaccess_task
@@ -277,15 +273,12 @@ as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.PROCESSEDACCESS --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.PROCESSEDACCESS; --noqa: TMP
 
-alter task clone_process_access_task resume;
-
 create task if not exists clone_filedownload_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
     AFTER filedownload_task
 as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.FILEDOWNLOAD --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD; --noqa: TMP
-alter task clone_filedownload_task resume;
 
 create task if not exists clone_fileupload_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
@@ -293,4 +286,3 @@ create task if not exists clone_fileupload_task
 as
     CREATE OR REPLACE TABLE {{database_name}}.SYNAPSE.FILEUPLOAD --noqa: TMP
     CLONE {{database_name}}.SYNAPSE_RAW.FILEUPLOAD; --noqa: TMP
-alter task clone_fileupload_task resume;
