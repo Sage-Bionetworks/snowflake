@@ -28,7 +28,7 @@ as
         from
             @{{stage_storage_integration}}_stage/certifiedquizsnapshots --noqa: TMP
         )
-    pattern='.*certifiedquizsnapshots/snapshot_date=.*/.*'
+    pattern='.*certifiedquizsnapshots/snapshot_date=.*/.*';
 
 create task if not exists append_to_certifiedquizquestionsnapshots_task
     user_task_managed_initial_warehouse_size = 'SMALL'
@@ -57,8 +57,7 @@ as
         from
             @{{stage_storage_integration}}_stage/certifiedquizquestionsnapshots --noqa: TMP
         )
-        pattern='.*certifiedquizquestionsnapshots/snapshot_date=.*/.*'
-    ;
+        pattern='.*certifiedquizquestionsnapshots/snapshot_date=.*/.*';
 
 alter task append_to_certifiedquizsnapshot_task resume;
 alter task append_to_certifiedquizquestionsnapshots_task resume;
