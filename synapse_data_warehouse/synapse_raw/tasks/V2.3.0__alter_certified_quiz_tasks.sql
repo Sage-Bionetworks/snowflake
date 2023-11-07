@@ -1,16 +1,18 @@
 use role accountadmin;
 use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 alter task refresh_synapse_warehouse_s3_stage_task suspend;
+-- Alter certified quiz task
 alter task append_to_certifiedquizsnapshot_task suspend;
-alter task append_to_certifiedquizquestionsnapshots_task suspend;
 alter task upsert_to_certifiedquiz_latest_task suspend;
-alter task upsert_to_certifiedquizquestion_latest_task suspend;
 alter task upsert_to_certifiedquiz_latest_task REMOVE AFTER certifiedquiz_task;
 alter task upsert_to_certifiedquiz_latest_task ADD AFTER append_to_certifiedquizsnapshot_task;
+alter task upsert_to_certifiedquiz_latest_task resume;
+alter task append_to_certifiedquizsnapshot_task resume;
+-- Alter certified quiz question task
+alter task append_to_certifiedquizquestionsnapshots_task suspend;
+alter task upsert_to_certifiedquizquestion_latest_task suspend;
 alter task upsert_to_certifiedquizquestion_latest_task REMOVE AFTER certifiedquizquestion_task;
 alter task upsert_to_certifiedquizquestion_latest_task ADD AFTER append_to_certifiedquizquestionsnapshots_task;
-alter task upsert_to_certifiedquiz_latest_task resume;
 alter task upsert_to_certifiedquizquestion_latest_task resume;
-alter task append_to_certifiedquizsnapshot_task resume;
 alter task append_to_certifiedquizquestionsnapshots_task resume;
 alter task refresh_synapse_warehouse_s3_stage_task resume;
