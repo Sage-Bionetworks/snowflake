@@ -26,7 +26,7 @@ alter task userprofilesnapshot_task MODIFY AS
                     '.*userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
                 ),
                 '__HIVE_DEFAULT_PARTITION__'
-            ) as snapshot_date
+            ) as snapshot_date,
             $1:created_on as created_on
         from
             @{{stage_storage_integration}}_stage/userprofilesnapshots --noqa: TMP
@@ -67,7 +67,7 @@ alter task upsert_to_userprofile_latest_task modify as
             TARGET_TABLE.LOCATION = SOURCE_TABLE.LOCATION,
             TARGET_TABLE.COMPANY = SOURCE_TABLE.COMPANY,
             TARGET_TABLE.POSITION = SOURCE_TABLE.POSITION,
-            TARGET_TABLE.SNAPSHOT_DATE = SOURCE_TABLE.SNAPSHOT_DATE
+            TARGET_TABLE.SNAPSHOT_DATE = SOURCE_TABLE.SNAPSHOT_DATE,
             TARGET_TABLE.CREATED_ON = SOURCE_TABLE.CREATED_ON
     WHEN NOT MATCHED THEN
         INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, ID, USER_NAME, FIRST_NAME, LAST_NAME, EMAIL, LOCATION, COMPANY, POSITION, SNAPSHOT_DATE, CREATED_ON)
