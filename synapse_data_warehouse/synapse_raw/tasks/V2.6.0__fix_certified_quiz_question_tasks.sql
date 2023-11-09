@@ -1,0 +1,44 @@
+use role accountadmin;
+use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
+alter task refresh_synapse_warehouse_s3_stage_task suspend;
+-- Alter certified quiz task
+alter task append_to_certifiedquizquestionsnapshots_task suspend;
+alter task upsert_to_certifiedquizquestion_latest_task suspend;
+
+alter task upsert_to_certifiedquizquestion_latest_task MODIFY AS
+    MERGE INTO {{database_name}}.SYNAPSE.CERTIFIEDQUIZQUESTION_LATEST AS TARGET_TABLE --noqa: TMP
+    USING (
+        WITH CQQ_RANKED AS (
+            SELECT
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY RESPONSE_ID, QUESTION_INDEX
+                    ORDER BY IS_CORRECT DESC, INSTANCE DESC
+                ) AS ROW_NUM
+            FROM CERTIFIEDQUIZQUESTION_STREAM
+        )
+
+        SELECT * EXCLUDE ROW_NUM
+        FROM CQQ_RANKED
+        WHERE ROW_NUM = 1
+        ORDER BY RESPONSE_ID DESC, QUESTION_INDEX ASC
+    ) AS SOURCE_TABLE ON TARGET_TABLE.RESPONSE_ID = SOURCE_TABLE.RESPONSE_ID AND TARGET_TABLE.QUESTION_INDEX = SOURCE_TABLE.QUESTION_INDEX
+    WHEN MATCHED THEN
+        UPDATE SET
+            TARGET_TABLE.CHANGE_TYPE = SOURCE_TABLE.CHANGE_TYPE,
+            TARGET_TABLE.CHANGE_TIMESTAMP = SOURCE_TABLE.CHANGE_TIMESTAMP,
+            TARGET_TABLE.CHANGE_USER_ID = SOURCE_TABLE.CHANGE_USER_ID,
+            TARGET_TABLE.SNAPSHOT_TIMESTAMP = SOURCE_TABLE.SNAPSHOT_TIMESTAMP,
+            TARGET_TABLE.RESPONSE_ID = SOURCE_TABLE.RESPONSE_ID,
+            TARGET_TABLE.QUESTION_INDEX = SOURCE_TABLE.QUESTION_INDEX,
+            TARGET_TABLE.IS_CORRECT = SOURCE_TABLE.IS_CORRECT,
+            TARGET_TABLE.STACK = SOURCE_TABLE.STACK,
+            TARGET_TABLE.INSTANCE = SOURCE_TABLE.INSTANCE,
+            TARGET_TABLE.SNAPSHOT_DATE = SOURCE_TABLE.SNAPSHOT_DATE
+    WHEN NOT MATCHED THEN
+        INSERT (CHANGE_TYPE, CHANGE_TIMESTAMP, CHANGE_USER_ID, SNAPSHOT_TIMESTAMP, RESPONSE_ID, QUESTION_INDEX, IS_CORRECT, STACK, INSTANCE, SNAPSHOT_DATE)
+        VALUES (SOURCE_TABLE.CHANGE_TYPE, SOURCE_TABLE.CHANGE_TIMESTAMP, SOURCE_TABLE.CHANGE_USER_ID, SOURCE_TABLE.SNAPSHOT_TIMESTAMP, SOURCE_TABLE.RESPONSE_ID, SOURCE_TABLE.QUESTION_INDEX, SOURCE_TABLE.IS_CORRECT, SOURCE_TABLE.STACK, SOURCE_TABLE.INSTANCE, SOURCE_TABLE.SNAPSHOT_DATE);
+
+alter task upsert_to_certifiedquizquestion_latest_task resume;
+alter task append_to_certifiedquizquestionsnapshots_task resume;
+alter task refresh_synapse_warehouse_s3_stage_task resume;
