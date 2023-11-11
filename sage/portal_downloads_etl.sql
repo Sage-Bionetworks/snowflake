@@ -1,15 +1,15 @@
 USE ROLE SYSADMIN;
 USE DATABASE SAGE;
 USE SCHEMA PORTAL_DOWNLOADS;
--- Data up to October 18th for now
-
+USE WAREHOUSE COMPUTE_XSMALL;
+-- Nov 10 updated
 -- TODO: join file_latest to get the content size!
 -- * Metrics for AD portal
 -- Based on a writeup by platform linked from PLFM-7934
 -- downloads can be estimated by taking the unique of the following:
 -- user_id, file_handle_id, record_date
 -- Join the AD fileview with the file download table on file_handle_id
-CREATE OR REPLACE TABLE AD_DOWNLOADS AS (
+CREATE OR REPLACE TABLE AD AS (
     WITH DEDUP_FILEDOWNLOAD AS (
         SELECT DISTINCT
             USER_ID,
@@ -32,7 +32,7 @@ CREATE OR REPLACE TABLE AD_DOWNLOADS AS (
 
 -- * GENIE
 -- Join the GENIE fileview with the file download table on file_handle_id
-CREATE OR REPLACE TABLE GENIE_DOWNLOADS AS (
+CREATE OR REPLACE TABLE GENIE AS (
     WITH DEDUP_FILEDOWNLOAD AS (
         SELECT DISTINCT
             USER_ID,
@@ -46,7 +46,7 @@ CREATE OR REPLACE TABLE GENIE_DOWNLOADS AS (
         GENIE.*,
         FD.*
     FROM
-        SAGE.PORTAL_RAW.GENIE AS GENIE
+        SAGE.PORTAL_RAW.GENIE
     LEFT JOIN
         DEDUP_FILEDOWNLOAD AS FD
         ON
@@ -57,7 +57,7 @@ CREATE OR REPLACE TABLE GENIE_DOWNLOADS AS (
 -- The elite fileview doesn't have a file handle id
 -- so we need to update the synapse id column to be an integer withou the syn prefix
 -- and join on the latest version of the node table then on the file handle
-CREATE OR REPLACE TABLE ELITE_DOWNLOADS AS (
+CREATE OR REPLACE TABLE ELITE AS (
     WITH ELITE_TRANSFORM AS (
         SELECT
             *,
@@ -81,7 +81,7 @@ CREATE OR REPLACE TABLE ELITE_DOWNLOADS AS (
             FD.*
         FROM ELITE_TRANSFORM
         LEFT JOIN
-            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS NODE_LATEST
+            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
             ON
                 ELITE_TRANSFORM.SYN_ID = NODE_LATEST.ID
         INNER JOIN
@@ -99,7 +99,7 @@ CREATE OR REPLACE TABLE ELITE_DOWNLOADS AS (
 -- The NF fileview doesn't have a file handle id
 -- so we need to update the synapse id column to be an integer withou the syn prefix
 -- and join on the latest version of the node table then on the file handle
-CREATE OR REPLACE TABLE NF_DOWNLOADS AS (
+CREATE OR REPLACE TABLE NF AS (
     WITH NF_TRANSFORM AS (
         SELECT
             *,
@@ -124,7 +124,7 @@ CREATE OR REPLACE TABLE NF_DOWNLOADS AS (
         FROM
             NF_TRANSFORM
         LEFT JOIN
-            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS NODE_LATEST
+            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
             ON
                 NF_TRANSFORM.SYN_ID = NODE_LATEST.ID
         INNER JOIN
@@ -142,7 +142,7 @@ CREATE OR REPLACE TABLE NF_DOWNLOADS AS (
 -- The psychencode fileview doesn't have a file handle id
 -- so we need to update the synapse id column to be an integer withou the syn prefix
 -- and join on the latest version of the node table then on the file handle
-CREATE OR REPLACE TABLE PSYCHENCODE_DOWNLOADS AS (
+CREATE OR REPLACE TABLE PSYCHENCODE AS (
     WITH PSYCHENCODE_TRANSFORM AS (
         SELECT
             *,
@@ -167,7 +167,7 @@ CREATE OR REPLACE TABLE PSYCHENCODE_DOWNLOADS AS (
         FROM
             PSYCHENCODE_TRANSFORM
         LEFT JOIN
-            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS NODE_LATEST
+            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
             ON
                 PSYCHENCODE_TRANSFORM.SYN_ID = NODE_LATEST.ID
         INNER JOIN
@@ -185,7 +185,7 @@ CREATE OR REPLACE TABLE PSYCHENCODE_DOWNLOADS AS (
 -- The htan fileview doesn't have a file handle id
 -- so we need to update the synapse id column to be an integer withou the syn prefix
 -- and join on the latest version of the node table then on the file handle
-CREATE OR REPLACE TABLE HTAN_DOWNLOADS AS (
+CREATE OR REPLACE TABLE HTAN AS (
     WITH HTAN_TRANSFORM AS (
         SELECT
             *,
@@ -210,7 +210,7 @@ CREATE OR REPLACE TABLE HTAN_DOWNLOADS AS (
         FROM
             HTAN_TRANSFORM
         LEFT JOIN
-            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST AS NODE_LATEST
+            SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST
             ON
                 HTAN_TRANSFORM.SYN_ID = NODE_LATEST.ID
         INNER JOIN
@@ -223,14 +223,3 @@ CREATE OR REPLACE TABLE HTAN_DOWNLOADS AS (
     FROM
         DOWNLOAD_COUNT
 );
-
--- number of downloads per user
-SELECT
-    USER_ID,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS
-FROM
-    SAGE.PORTAL_DOWNLOADS.HTAN_DOWNLOADS
-GROUP BY
-    USER_ID
-ORDER BY
-    NUMBER_OF_DOWNLOADS DESC;
