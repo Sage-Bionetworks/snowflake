@@ -27,7 +27,7 @@ CREATE OR REPLACE TABLE AD_DOWNLOADS AS (
     LEFT JOIN
         DEDUP_FILEDOWNLOAD AS FD
         ON
-            AD."dataFileHandleId" = FD.FD_FILE_HANDLE_ID
+            AD.DATAFILEHANDLEID = FD.FD_FILE_HANDLE_ID
 );
 
 -- * GENIE
@@ -50,7 +50,7 @@ CREATE OR REPLACE TABLE GENIE_DOWNLOADS AS (
     LEFT JOIN
         DEDUP_FILEDOWNLOAD AS FD
         ON
-            GENIE."dataFileHandleId" = FD.FD_FILE_HANDLE_ID
+            GENIE.DATAFILEHANDLEID = FD.FD_FILE_HANDLE_ID
 );
 
 -- * ELITE
@@ -61,7 +61,7 @@ CREATE OR REPLACE TABLE ELITE_DOWNLOADS AS (
     WITH ELITE_TRANSFORM AS (
         SELECT
             *,
-            cast(replace("id", 'syn', '') AS INTEGER) AS SYN_ID
+            cast(replace(ID, 'syn', '') AS INTEGER) AS SYN_ID
         FROM
             SAGE.PORTAL_RAW.ELITE
     ),
@@ -103,7 +103,7 @@ CREATE OR REPLACE TABLE NF_DOWNLOADS AS (
     WITH NF_TRANSFORM AS (
         SELECT
             *,
-            cast(replace("id", 'syn', '') AS INTEGER) AS SYN_ID
+            cast(replace(ID, 'syn', '') AS INTEGER) AS SYN_ID
         FROM
             SAGE.PORTAL_RAW.NF
     ),
@@ -146,7 +146,7 @@ CREATE OR REPLACE TABLE PSYCHENCODE_DOWNLOADS AS (
     WITH PSYCHENCODE_TRANSFORM AS (
         SELECT
             *,
-            cast(replace("id", 'syn', '') AS INTEGER) AS SYN_ID
+            cast(replace(ID, 'syn', '') AS INTEGER) AS SYN_ID
         FROM
             SAGE.PORTAL_RAW.PSYCHENCODE
     ),
@@ -189,7 +189,7 @@ CREATE OR REPLACE TABLE HTAN_DOWNLOADS AS (
     WITH HTAN_TRANSFORM AS (
         SELECT
             *,
-            cast(replace("entityId", 'syn', '') AS INTEGER) AS SYN_ID
+            cast(replace(ENTITYID, 'syn', '') AS INTEGER) AS SYN_ID
         FROM
             SAGE.PORTAL_RAW.HTAN
     ),
