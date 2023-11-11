@@ -262,7 +262,9 @@ CREATE OR REPLACE VIEW SAGE.PORTAL_RAW.PORTAL_MERGE AS (
         NULL AS project,
         etag,
         -- NF only
-        TO_BOOLEAN(isMultiIndividual) AS isMultiIndividual, -- converting VARCHAR(16777216),
+        -- TODO: is multi individual is not a boolean col
+        -- TO_BOOLEAN(isMultiIndividual) AS isMultiIndividual, -- converting VARCHAR(16777216),
+        isMultiIndividual AS isMultiIndividual, -- converting VARCHAR(16777216),
         diagnosis, --Add new VARIANT
         tumorType, -- add new  VARIANT,
         fundingAgency, -- add new varchar,
