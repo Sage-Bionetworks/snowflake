@@ -25,10 +25,10 @@ portals = {
     "AD": "syn11346063",
     "PSYCHENCODE": "syn20821313.16",
     "NF": "syn16858331",
-    "GENIE": "syn23625806",
     "ELITE": "syn51228429",
     # syn52677746 is the old HTAN table
-    "HTAN": "syn52748752"
+    "HTAN": "syn52748752",
+    "GENIE": "syn52794526",
 }
 
 for portal_name, synapse_id in portals.items():
