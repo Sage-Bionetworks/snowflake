@@ -2,6 +2,8 @@ USE ROLE SECURITYADMIN;
 -- ACCOUNTADMIN privileges
 GRANT ROLE ACCOUNTADMIN
 TO USER "x.schildwachter@sagebase.org";
+GRANT ROLE ACCOUNTADMIN
+TO USER "khai.do@sagebase.org";
 
 -- SYSADMIN privileges
 GRANT ROLE SYSADMIN
@@ -64,6 +66,8 @@ GRANT ROLE DATA_ENGINEER
 TO USER "brad.macdonald@sagebase.org";
 GRANT ROLE DATA_ENGINEER
 TO USER "bryan.fauble@sagebase.org";
+GRANT ROLE DATA_ENGINEER
+TO USER "nick.grosenbacher@sagebase.org";
 
 -- data analytics privileges
 GRANT ROLE DATA_ANALYTICS TO USER "diep.thach@sagebase.org";
