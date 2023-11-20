@@ -55,6 +55,7 @@ CREATE USER IF NOT EXISTS "sarah.chan@sagebase.org";
 CREATE USER IF NOT EXISTS "julie.bletz@sagebase.org";
 CREATE USER IF NOT EXISTS "amy.heiser@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
+CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 
 CREATE USER IF NOT EXISTS DBT_SERVICE
     PASSWORD = 'placeholder'

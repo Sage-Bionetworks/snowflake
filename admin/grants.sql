@@ -2,6 +2,8 @@ USE ROLE SECURITYADMIN;
 -- ACCOUNTADMIN privileges
 GRANT ROLE ACCOUNTADMIN
 TO USER "x.schildwachter@sagebase.org";
+GRANT ROLE ACCOUNTADMIN
+TO USER "khai.do@sagebase.org";
 
 -- SYSADMIN privileges
 GRANT ROLE SYSADMIN
