@@ -64,6 +64,8 @@ GRANT ROLE DATA_ENGINEER
 TO USER "brad.macdonald@sagebase.org";
 GRANT ROLE DATA_ENGINEER
 TO USER "bryan.fauble@sagebase.org";
+GRANT ROLE DATA_ENGINEER
+TO USER "nick.grosenbacher@sagebase.org";
 
 -- data analytics privileges
 GRANT ROLE DATA_ANALYTICS TO USER "diep.thach@sagebase.org";
