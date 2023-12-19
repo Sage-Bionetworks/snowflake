@@ -14,7 +14,7 @@ ctx = snowflake.connector.connect(
     password=config['password'],
     account=config['snowflake_account'],
     database="sage",
-    schema="portal_raw",
+    schema="audit",
     role="SYSADMIN",
     warehouse="compute_xsmall"
 )
