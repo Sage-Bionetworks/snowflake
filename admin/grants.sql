@@ -129,6 +129,8 @@ GRANT ROLE DATA_ANALYTICS TO USER "jineta.banerjee@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "sarah.chan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "julie.bletz@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "amy.heiser@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jenny.medina@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "lakaija.johnson@sagebase.org";
 
 -- Create governance privileges
 GRANT ROLE MASKING_ADMIN
