@@ -57,11 +57,10 @@ CREATE USER IF NOT EXISTS "amy.heiser@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 CREATE USER IF NOT EXISTS "jenny.medina@sagebase.org";
-
+CREATE USER IF NOT EXISTS "lakaija.johnson@sagebase.org";
 CREATE USER IF NOT EXISTS DBT_SERVICE
     PASSWORD = 'placeholder'
     MUST_CHANGE_PASSWORD = TRUE;
-
 CREATE USER IF NOT EXISTS DPE_SERVICE
     PASSWORD = 'placeholder'
     MUST_CHANGE_PASSWORD = TRUE;
