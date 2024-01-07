@@ -24,11 +24,16 @@ def main():
     )
 
     cs = ctx.cursor()
-
+    structured_data = (
+        "data_clinical", "data_mutations", "data_CNA",
+        "assay_information", "data_cna_hg19", "data_gene_matrix",
+        "data_sv", "genomic_information"
+    )
     releases = syn.getChildren("syn7844529")
     for release in releases:
-        if release['name'] != "Release 14.1-public":
+        if release['name'] != "Release 15.0-public":
             continue
+        print(release['name'])
         release_name = (release['name']
             .replace("Release ", "")
             .replace(".", "_")
@@ -39,7 +44,7 @@ def main():
         release_file_map = {
             release_file['name']: syn.get(release_file['id'], followLink=True)
             for release_file in release_files
-            if release_file['name'].startswith(("data_clinical", "data_mutations")) and
+            if release_file['name'].startswith(structured_data) and
             release_file['name'].endswith("txt")
         }
 
@@ -48,7 +53,12 @@ def main():
         )
         for release_file_key, release_file_ent in release_file_map.items():
             cs.execute(f"USE SCHEMA public_{release_name}")
-            tbl_name = release_file_key.replace("data_", "").replace(".txt", "")
+            print(release_name)
+            tbl_name = (release_file_key
+                .replace("data_", "")
+                .replace(".txt", "")
+                .replace(".seg", "")
+            )
             table_df = pd.read_csv(
                 release_file_ent.path,
                 sep="\t",
