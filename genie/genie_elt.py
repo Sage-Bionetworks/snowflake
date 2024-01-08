@@ -24,8 +24,9 @@ def main():
     )
 
     cs = ctx.cursor()
+    # data_CNA
     structured_data = (
-        "data_clinical", "data_mutations", "data_CNA",
+        "data_clinical", "data_mutations",
         "assay_information", "data_cna_hg19", "data_gene_matrix",
         "data_sv", "genomic_information"
     )
@@ -53,12 +54,12 @@ def main():
         )
         for release_file_key, release_file_ent in release_file_map.items():
             cs.execute(f"USE SCHEMA public_{release_name}")
-            print(release_name)
             tbl_name = (release_file_key
                 .replace("data_", "")
                 .replace(".txt", "")
                 .replace(".seg", "")
             )
+            print(tbl_name)
             table_df = pd.read_csv(
                 release_file_ent.path,
                 sep="\t",
