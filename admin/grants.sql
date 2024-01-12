@@ -10,7 +10,8 @@ GRANT ROLE SYSADMIN
 TO USER "kevin.boske@sagebase.org";
 GRANT ROLE SYSADMIN
 TO USER "x.schildwachter@sagebase.org";
-
+GRANT ROLE SYSADMIN
+TO USER DPE_SERVICE;
 -- warehouse usage privileges
 GRANT USAGE ON WAREHOUSE COMPUTE_XSMALL
 TO ROLE DATA_ANALYTICS;
