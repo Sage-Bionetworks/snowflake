@@ -75,6 +75,40 @@ def main():
                 overwrite=True
             )
 
+    release_files = syn.getChildren("syn53294438")
+    release_name = "16_1"
+    release_file_map = {
+        release_file['name']: syn.get(release_file['id'], followLink=True)
+        for release_file in release_files
+        if release_file['name'].startswith(structured_data) and
+        release_file['name'].endswith("txt")
+    }
+
+    cs.execute(
+        f"CREATE SCHEMA IF NOT EXISTS consortium_{release_name} WITH MANAGED ACCESS;"
+    )
+    cs.execute(f"USE SCHEMA consortium_{release_name}")
+    for release_file_key, release_file_ent in release_file_map.items():
+        tbl_name = (release_file_key
+            .replace("data_", "")
+            .replace(".txt", "")
+            .replace(".seg", "")
+        )
+        print(tbl_name)
+        table_df = pd.read_csv(
+            release_file_ent.path,
+            sep="\t",
+            comment="#",
+            low_memory=False
+        )
+        write_pandas(
+            ctx,
+            table_df,
+            tbl_name,
+            auto_create_table=True,
+            quote_identifiers=False,
+            overwrite=True
+        )
 
 if __name__ == "__main__":
     main()
