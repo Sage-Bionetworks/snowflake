@@ -26,7 +26,7 @@ alter task userprofilesnapshot_task MODIFY AS
                     '.*userprofilesnapshots\/snapshot_date\=(.*)\/.*', '\\1'
                 ),
                 '__HIVE_DEFAULT_PARTITION__'
-            ) as snapshot_date
+            ) as snapshot_date,
             $1:created_on as created_on
         from
             @{{stage_storage_integration}}_stage/userprofilesnapshots --noqa: TMP
