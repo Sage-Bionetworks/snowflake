@@ -3,6 +3,7 @@ use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 alter task refresh_synapse_warehouse_s3_stage_task suspend;
 alter task NODESNAPSHOT_TASK suspend;
 alter task UPSERT_TO_NODE_LATEST_TASK suspend;
+alter task REMOVE_DELETE_NODES_TASK suspend;
 alter task NODESNAPSHOT_TASK MODIFY AS
     copy into
         nodesnapshots
@@ -39,6 +40,7 @@ alter task NODESNAPSHOT_TASK MODIFY AS
     )
     pattern = '.*nodesnapshots/snapshot_date=.*/.*';
 
+alter task REMOVE_DELETE_NODES_TASK resume;
 alter task UPSERT_TO_NODE_LATEST_TASK resume;
 alter task NODESNAPSHOT_TASK resume;
 alter task refresh_synapse_warehouse_s3_stage_task resume;
