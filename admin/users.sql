@@ -45,6 +45,7 @@ CREATE USER IF NOT EXISTS "sarah.chan@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 CREATE USER IF NOT EXISTS "lakaija.johnson@sagebase.org";
+CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 
 // FAIR
 CREATE USER IF NOT EXISTS "anthony.williams@sagebase.org";
