@@ -118,20 +118,33 @@ GRANT ROLE DATA_ANALYTICS TO USER "drew.duglan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "zoe.leanza@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "anna.greenwood@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jay.hodgson@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "ljubomir.bradic@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "brian.oconnor@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "james.eddy@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "milen.nikolov@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "milan.vu@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "richard.yaxley@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ashley.clayton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "verena.chung@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jineta.banerjee@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "sarah.chan@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "julie.bletz@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "amy.heiser@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jenny.medina@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "lakaija.johnson@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "anthony.williams@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "loren.wolfe@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "lingling.peng@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "mialy.defelice@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "gianna.jordan@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "mieko.hashimoto@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "andrew.lamb@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "milen.nikolov@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "amy.heiser@sagebase.org";
+GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
+GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
+GRANT ROLE FAIR TO USER "lingling.peng@sagebase.org";
+GRANT ROLE FAIR TO USER "mialy.defelice@sagebase.org";
+GRANT ROLE FAIR TO USER "gianna.jordan@sagebase.org";
+GRANT ROLE FAIR TO USER "mieko.hashimoto@sagebase.org";
+GRANT ROLE FAIR TO USER "andrew.lamb@sagebase.org";
+GRANT ROLE FAIR TO USER "milen.nikolov@sagebase.org";
+GRANT ROLE FAIR TO USER "amy.heiser@sagebase.org";
 
 -- Create governance privileges
 GRANT ROLE MASKING_ADMIN
