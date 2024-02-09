@@ -57,7 +57,7 @@ CREATE USER IF NOT EXISTS "andrew.lamb@sagebase.org";
 CREATE USER IF NOT EXISTS "milen.nikolov@sagebase.org";
 CREATE USER IF NOT EXISTS "amy.heiser@sagebase.org";
 
-//DPE
+// DPE
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.yu@sagebase.org";
