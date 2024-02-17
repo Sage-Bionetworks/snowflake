@@ -1,5 +1,5 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
-ALTER TABLE fileinventory ADD COLUMN snapshot_date DATE;
+ALTER TABLE fileinventory ADD COLUMN IF NOT EXISTS snapshot_date DATE;
 ALTER TABLE fileinventory CLUSTER BY (snapshot_date);
 USE WAREHOUSE COMPUTE_MEDIUM;
 TRUNCATE TABLE fileinventory;
