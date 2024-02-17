@@ -3,7 +3,6 @@ ALTER TABLE fileinventory ADD COLUMN snapshot_date DATE;
 ALTER TABLE fileinventory CLUSTER BY (snapshot_date)
 
 USE WAREHOUSE COMPUTE_MEDIUM;
--- Create new tables
 TRUNCATE TABLE fileinventory;
 -- initial load of data
 copy into
