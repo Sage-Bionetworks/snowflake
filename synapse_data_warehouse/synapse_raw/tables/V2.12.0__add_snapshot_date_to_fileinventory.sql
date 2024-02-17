@@ -1,7 +1,6 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 ALTER TABLE fileinventory ADD COLUMN snapshot_date DATE;
-ALTER TABLE fileinventory CLUSTER BY (snapshot_date)
-
+ALTER TABLE fileinventory CLUSTER BY (snapshot_date);
 USE WAREHOUSE COMPUTE_MEDIUM;
 TRUNCATE TABLE fileinventory;
 -- initial load of data
@@ -26,4 +25,5 @@ from (
     @{{stage_storage_integration}}_stage/inventory --noqa: TMP
   )
 pattern='.*defaultInventory/data/.*'
+FORCE=TRUE
 ;
