@@ -19,8 +19,8 @@ declare
     select fd.user_id, fd.timestamp, fd.association_object_id as entity_id
     from filedownload fd
     join filetree ft on ft.id = fd.association_object_id
-    where fd.association_object_type = \'FileEntity\'
-        and ft.node_type = \'file\'
+    where fd.association_object_type = ''FileEntity''
+        and ft.node_type = ''file''
         and fd.record_date >= ''' ||:start_record_date|| '''
     ),';
     query_str3 varchar default
