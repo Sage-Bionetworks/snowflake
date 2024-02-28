@@ -1,7 +1,5 @@
-USE SCHEMA {{database_name}}.synapse;
-
 CREATE OR REPLACE PROCEDURE list_downloaders(start_record_date string, entity_list string)
-RETURNS TABLE (user_id integer, c integer, min_t timestamp, max_t timestamp)
+RETURNS TABLE (user_id integer, user_name varchar, email varchar, synapse_profile varchar, num_downloads integer, earliest_download_time timestamp, latest_download_time timestamp)
 LANGUAGE SQL
 AS
 declare
@@ -23,7 +21,7 @@ declare
     join filetree ft on ft.id = fd.association_object_id
     where fd.association_object_type = \'FileEntity\'
         and ft.node_type = \'file\'
-        and fd.record_date >= \'||:start_record_date||\'
+        and fd.record_date >= ''' ||:start_record_date|| '''
     ),';
     query_str3 varchar default
     'download_summary (user_id, c, min_t, max_t) as (
@@ -32,9 +30,10 @@ declare
     group by user_id
     )';
     query_str4 varchar default
-    'select *
-    from download_summary
-    order by min_t, user_id';
+    'select fds.user_id, up.user_name, up.email, concat(\'https://www.synapse.org/#!Profile:\', fds.user_id) as synapse_profile, fds.c as num_downloads, fds.min_t as earliest_download_time, fds.max_t as latest_download_time
+    from download_summary fds
+    join userprofile_latest up on up.id=fds.user_id
+    order by fds.min_t, fds.user_id';
     query_str varchar default (:query_str1 || :query_str2 || :query_str3 || :query_str4);
 begin
     rs := (EXECUTE IMMEDIATE :query_str);
