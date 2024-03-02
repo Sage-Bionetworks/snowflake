@@ -25,8 +25,7 @@ CREATE USER IF NOT EXISTS "pierrette.lo@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.taylor@sagebase.org";
-CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
-CREATE USER IF NOT EXISTS "jake.albrecht@sagebase.org";
+
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
 CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
@@ -39,13 +38,20 @@ CREATE USER IF NOT EXISTS "james.eddy@sagebase.org";
 CREATE USER IF NOT EXISTS "milan.vu@sagebase.org";
 CREATE USER IF NOT EXISTS "richard.yaxley@sagebase.org";
 CREATE USER IF NOT EXISTS "ashley.clayton@sagebase.org";
-CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
 CREATE USER IF NOT EXISTS "jineta.banerjee@sagebase.org";
 CREATE USER IF NOT EXISTS "sarah.chan@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 CREATE USER IF NOT EXISTS "lakaija.johnson@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
+
+// CNB
+CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
+CREATE USER IF NOT EXISTS "jake.albrecht@sagebase.org";
+CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
+CREATE USER IF NOT EXISTS "rchai@sagebase.org";
+CREATE USER IF NOT EXISTS "maria.diaz@sagebase.org";
+CREATE USER IF NOT EXISTS "gaia.andreoletti@sagebase.org";
 
 // FAIR
 CREATE USER IF NOT EXISTS "anthony.williams@sagebase.org";
