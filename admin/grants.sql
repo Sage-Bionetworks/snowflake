@@ -140,7 +140,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "amy.heiser@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "rchai@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "maria.diaz@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "gaia.andreoletti@sagebase.org";
-
+GRANT ROLE DATA_ANALYTICS TO USER "susheel.varma@sagebase.org";
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
 GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
 GRANT ROLE FAIR TO USER "lingling.peng@sagebase.org";
