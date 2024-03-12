@@ -1,0 +1,3 @@
+USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
+ALTER TABLE NODESNAPSHOTS ADD COLUMN annotations STRING;
+ALTER TABLE NODESNAPSHOTS ADD COLUMN derived_annotations STRING;
