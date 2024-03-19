@@ -37,8 +37,8 @@ alter task NODESNAPSHOT_TASK MODIFY AS
                 '__HIVE_DEFAULT_PARTITION__'
             ) as snapshot_date,
             $1:effective_ars as effective_ars,
-            parse_json(replace($1:annotations, '\n', '\\n')) as annotations,
-            parse_json(replace($1:derived_annotations, '\n', '\\n')) as derived_annotations
+            parse_json(replace(replace($1:annotations, '\n', '\\n'), '\r', '\\r')) as annotations,
+            parse_json(replace(replace($1:derived_annotations, '\n', '\\n'), '\r', '\\r')) as derived_annotations
         from @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
     )
     pattern = '.*nodesnapshots/snapshot_date=.*/.*';
