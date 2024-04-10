@@ -48,6 +48,7 @@ CREATE USER IF NOT EXISTS "susheel.varma@sagebase.org";
 CREATE USER IF NOT EXISTS "amber.nelson@sagebase.org";
 CREATE USER IF NOT EXISTS "tiara.adams@sagebase.org";
 CREATE USER IF NOT EXISTS "william.poehlman@sagebase.org";
+CREATE USER IF NOT EXISTS "alberto.pepe@sagebase.org";
 
 // CNB
 CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
