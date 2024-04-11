@@ -7,7 +7,7 @@ USE SCHEMA SYNAPSE;
 Columns are based on AD Portal fileview
 file entities only */
 
-CREATE VIEW SAGE.AD.FILE_ANNOTATIONS AS
+CREATE OR REPLACE VIEW SAGE.AD.FILE_ANNOTATIONS AS
 SELECT
     ID,
     NAME,
