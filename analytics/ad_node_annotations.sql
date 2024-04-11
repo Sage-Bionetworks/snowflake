@@ -20,7 +20,7 @@ SELECT
     ANNOTATIONS:annotations:species:value[0] AS SPECIES,
     ANNOTATIONS:annotations:sex:value[0] AS SEX,
     ANNOTATIONS:annotations:consortium:value[0] AS CONSORTIUM,
-    ANNOTATIONS:annotations:"grant":value[0] AS "GRANT",
+    ANNOTATIONS:annotations:"grant":value[0] AS GRANTNUMBER,
     ANNOTATIONS:annotations:modelSystemName:value[0] AS MODELSYSTEMNAME,
     ANNOTATIONS:annotations:treatmentType:value[0] AS TREATMENTTYPE,
     ANNOTATIONS:annotations:specimenID:value[0] AS SPECIMENID,
@@ -34,7 +34,7 @@ SELECT
     ANNOTATIONS:annotations:cellType:value[0] AS CELLTYPE,
     ANNOTATIONS:annotations:nucleicAcidSource:value[0] AS NUCLEICACIDSOURCE,
     ANNOTATIONS:annotations:fileFormat:value[0] AS FILEFORMAT,
-    ANNOTATIONS:annotations:"group":value[0] AS "GROUP",
+    ANNOTATIONS:annotations:"group":value[0] AS GROUPS,
     ANNOTATIONS:annotations:isModelSystem:value[0] AS ISMODELSYSTEM,
     ANNOTATIONS:annotations:isConsortiumAnalysis:value[0] AS ISCONSORTIUMANALYSIS, -- noqa: LT05
     ANNOTATIONS:annotations:isMultiSpecimen:value[0] AS ISMULTISPECIMEN,
