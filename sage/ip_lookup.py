@@ -65,8 +65,6 @@ result = []
 
 for batch_number, batch_df in unique_ips.groupby(np.arange(len(unique_ips)) // batch_size):
     print(batch_number)
-    if batch_number <= 72:
-        continue
     ip_list = get_ip_info(batch_df['UNIQUE_IPS'].to_list())
     time.sleep(2)
     result.extend(ip_list)
