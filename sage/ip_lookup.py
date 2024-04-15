@@ -101,6 +101,7 @@ def main():
         overwrite=True,
         quote_identifiers=False
     )
+    ctx.close()
 
 if __name__ == "__main__":
     main()
