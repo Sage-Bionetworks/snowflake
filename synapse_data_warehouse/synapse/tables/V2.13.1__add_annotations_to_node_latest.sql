@@ -1,0 +1,3 @@
+USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
+ALTER TABLE NODE_LATEST ADD COLUMN annotations VARIANT;
+ALTER TABLE NODE_LATEST ADD COLUMN derived_annotations VARIANT;
