@@ -22,7 +22,7 @@ ctx = snowflake.connector.connect(
 cs = ctx.cursor()
 
 files = syn.getChildren("syn53180811")
-
+# files = [{"id": "syn55198186", "name": "IT-3518-sage-org-buckets.csv"}]
 for file_info in files:
     synapse_id = file_info['id']
     table_name = file_info['name'].replace("-", "_").replace(".csv", "")
@@ -42,3 +42,4 @@ for file_info in files:
         overwrite=True,
         quote_identifiers=False
     )
+cs.close()
