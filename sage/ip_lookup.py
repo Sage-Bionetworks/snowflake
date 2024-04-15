@@ -40,6 +40,7 @@ def get_ip_info(ip_list: list) -> dict:
         # return ip_info
 
 def main():
+    """Main function"""
     config = dotenv_values("../.env")
     ctx = snowflake.connector.connect(
         user=config['user'],
