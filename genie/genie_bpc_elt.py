@@ -86,36 +86,36 @@ def main():
         warehouse="compute_xsmall"
     )
     cohorts = [
-        # {
-        #     "cohort": "nsclc",
-        #     "version": "public_02_2",
-        #     "clinical_synid": "syn30358089",
-        #     "cbioportal_synid": "syn30358098"
-        # },
-        # {
-        #     "cohort": "crc",
-        #     "version": "public_02_2",
-        #     "clinical_synid": "syn39802567",
-        #     "cbioportal_synid": "syn39802595"
-        # },
-        # {
-        #     "cohort": "bladder",
-        #     "version": "consortium_01_1",
-        #     "clinical_synid": "syn28495599",
-        #     "cbioportal_synid": "syn26958249"
-        # },
-        # {
-        #     "cohort": "bladder",
-        #     "version": "consortium_01_2",
-        #     "clinical_synid": "syn53018574",
-        #     "cbioportal_synid": "syn53018728"
-        # },
-        # {
-        #     "cohort": "brca",
-        #     "version": "consortium_01_1",
-        #     "clinical_synid": "syn26253353",
-        #     "cbioportal_synid": "syn24981909"
-        # },
+        {
+            "cohort": "nsclc",
+            "version": "public_02_2",
+            "clinical_synid": "syn30358089",
+            "cbioportal_synid": "syn30358098"
+        },
+        {
+            "cohort": "crc",
+            "version": "public_02_2",
+            "clinical_synid": "syn39802567",
+            "cbioportal_synid": "syn39802595"
+        },
+        {
+            "cohort": "bladder",
+            "version": "consortium_01_1",
+            "clinical_synid": "syn28495599",
+            "cbioportal_synid": "syn26958249"
+        },
+        {
+            "cohort": "bladder",
+            "version": "consortium_01_2",
+            "clinical_synid": "syn53018574",
+            "cbioportal_synid": "syn53018728"
+        },
+        {
+            "cohort": "brca",
+            "version": "consortium_01_1",
+            "clinical_synid": "syn26253353",
+            "cbioportal_synid": "syn24981909"
+        },
         {
             "cohort": "brca",
             "version": "consortium_01_2",
@@ -198,6 +198,7 @@ def main():
             clinical_synid=clinical_synid,
             cbioportal_synid=cbioportal_synid
         )
+    ctx.close()
 
 if __name__ == "__main__":
     main()
