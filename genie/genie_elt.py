@@ -28,10 +28,10 @@ def push_cbio_files_to_snowflake(syn: synapseclient.Synapse, ctx: snowflake.conn
         release_file['name'].endswith(("txt", "bed"))
     }
 
-    # ctx.execute(
-    #     f"CREATE SCHEMA IF NOT EXISTS consortium_{release_name} WITH MANAGED ACCESS;"
-    # )
-    # ctx.execute(f"USE SCHEMA consortium_{release_name}")
+    ctx.execute(
+        f"CREATE SCHEMA IF NOT EXISTS consortium_{release_name} WITH MANAGED ACCESS;"
+    )
+    ctx.execute(f"USE SCHEMA consortium_{release_name}")
     for release_file_key, release_file_ent in release_file_map.items():
         tbl_name = (release_file_key
             .replace("data_", "")
