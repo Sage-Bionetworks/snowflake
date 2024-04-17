@@ -55,17 +55,15 @@ def main():
 
     query = """
     select
-        distinct processedaccess.x_forwarded_for as unique_ips
+        distinct x_forwarded_for as unique_ips
     from
-        synapse_data_warehouse.synapse.filedownload
-    inner join
         synapse_data_warehouse.synapse.processedaccess
-        on filedownload.session_id = processedaccess.session_id
     where
-        filedownload.record_date between DATE('2024-01-01') and DATE('2024-03-31') and
-        processedaccess.record_date between DATE('2024-01-01') and DATE('2024-03-31');
+        x_forwarded_for is not null and
+        x_forwarded_for not in (select ip from sage.audit.extracted_ip_info) and
+        record_date > DATE('2024-01-01');
+        // record_date BETWEEN DATE('2023-01-01') and DATE('2023-06-30');
     """
-
     cs.execute(query)
     unique_ips = cs.fetch_pandas_all()
     # API only takes a batch size of 100
@@ -77,7 +75,7 @@ def main():
         ip_list = get_ip_info(batch_df['UNIQUE_IPS'].to_list())
         # API rate limit of 15 per minute
         # Add in sleep to not get throttled
-        time.sleep(2)
+        time.sleep(2.5)
         result.extend(ip_list)
 
     ip_info_df = pd.DataFrame(result)
@@ -98,7 +96,7 @@ def main():
         database="SAGE",
         schema="AUDIT",
         auto_create_table=True,
-        overwrite=True,
+        # overwrite=True,
         quote_identifiers=False
     )
     ctx.close()
