@@ -24,8 +24,8 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS recover_dev_s3
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::914833433684:role/snowflake_access'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-processed-data', 's3://recover-dev-intermediate-data');
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::914833433684:role/snowflake-s3-role-SnowflakeRole-D2P94aXg5oR4'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-input-data', 's3://recover-dev-processed-data', 's3://recover-dev-intermediate-data');
 -- DESC INTEGRATION synapse_dev_warehouse_s3;
 -- https://docs.snowflake.com/en/user-guide/oauth-partner
 -- Integration with tableau
