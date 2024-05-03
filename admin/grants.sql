@@ -156,6 +156,8 @@ GRANT ROLE FAIR TO USER "mieko.hashimoto@sagebase.org";
 GRANT ROLE FAIR TO USER "andrew.lamb@sagebase.org";
 GRANT ROLE FAIR TO USER "milen.nikolov@sagebase.org";
 GRANT ROLE FAIR TO USER "amy.heiser@sagebase.org";
+GRANT ROLE DPE_OPS TO USER "thomas.yu@sagebase.org";
+GRANT ROLE DPE_OPS TO USER "sophia.jobe@sagebase.org";
 
 -- Create governance privileges
 GRANT ROLE MASKING_ADMIN
