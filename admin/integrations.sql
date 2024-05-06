@@ -8,7 +8,7 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
     STORAGE_PROVIDER = 'S3'
     ENABLED = TRUE
     STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-accesss-SnowflakeServiceRole-HL66JOP7K4BT'
-    STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org');
+    STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org', 's3://prod.filehandles.sagebase.org');
 
 -- DESC INTEGRATION synapse_prod_warehouse_s3;
 CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
@@ -16,7 +16,7 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
     STORAGE_PROVIDER = 'S3'
     ENABLED = TRUE
     STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/snowflake-access-SnowflakeServiceRole-BKQMHdbc4uU4'
-    STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org');
+    STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org', 's3://dev.filehandles.sagebase.org');
 -- DESC INTEGRATION synapse_dev_warehouse_s3;
 
 -- RECOVER dev integration
