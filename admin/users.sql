@@ -78,6 +78,8 @@ CREATE USER IF NOT EXISTS "jenny.medina@sagebase.org";
 CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
 CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
+// governance
+CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 
 // SERVICE users
 CREATE USER IF NOT EXISTS DBT_SERVICE
