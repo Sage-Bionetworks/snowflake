@@ -146,6 +146,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "tiara.adams@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "william.poehlman@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "alberto.pepe@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jessica.vera@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "kimberly.corrigan@sagebase.org";
 
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
 GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
