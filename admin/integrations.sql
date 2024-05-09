@@ -7,7 +7,7 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
     TYPE = EXTERNAL_STAGE
     STORAGE_PROVIDER = 'S3'
     ENABLED = TRUE
-    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-accesss-SnowflakeServiceRole-HL66JOP7K4BT'
+    STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::325565585839:role/snowflake-access-SnowflakeServiceRole-2JSCDRkX8TcW'
     STORAGE_ALLOWED_LOCATIONS = ('s3://prod.datawarehouse.sagebase.org', 's3://prod.filehandles.sagebase.org');
 
 -- DESC INTEGRATION synapse_prod_warehouse_s3;

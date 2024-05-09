@@ -1,22 +1,30 @@
-from dotenv import dotenv_values
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 import synapseclient
 import pandas as pd
+import configparser
+import os
 
+config = configparser.ConfigParser()
+config.read(os.path.expanduser('~/.snowsql/config'))
+
+snowflake_config = config['connections']
 
 syn = synapseclient.login()
 
-config = dotenv_values("../.env")
-
+# config = dotenv_values("../.env")
+print(snowflake_config['username'])
 ctx = snowflake.connector.connect(
-    user=config['user'],
-    password=config['password'],
-    account=config['snowflake_account'],
+    user=snowflake_config['username'],
+    account=snowflake_config['accountname'],
+    authenticator=snowflake_config['authenticator'],
     database="sage",
     schema="portal_raw",
     role="SYSADMIN",
-    warehouse="compute_xsmall"
+    warehouse="compute_xsmall",
+    login_timeout=60,
+    network_timeout=30,
+    socket_timeout=10
 )
 
 cs = ctx.cursor()
