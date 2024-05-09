@@ -1,6 +1,6 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 USE WAREHOUSE COMPUTE_MEDIUM;
-CREATE TABLE IF NOT EXISTS filehandle_association (
+CREATE TABLE IF NOT EXISTS filehandleassociationsnapshots (
     associateid INT COMMENT 'The unique identifier of the Synapse object that wraps the file.',
     associatetype STRING COMMENT 'The type of the Synapse object that wraps the file.',
     filehandleid INT COMMENT 'The unique identifier of the file handle.',
@@ -12,7 +12,7 @@ COMMENT='The table contains file handle association records that are weekly scan
 CLUSTER BY (instance);
 
 copy into
-    filehandle_association
+    filehandleassociationsnapshots
 from (
     select
         $1:associateid as associateid,
