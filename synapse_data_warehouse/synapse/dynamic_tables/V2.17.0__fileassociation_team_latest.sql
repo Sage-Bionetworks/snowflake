@@ -45,5 +45,3 @@ AS
     inner JOIN
         latest_instance
         ON filehandleassociationsnapshots.instance = latest_instance.max_instance;
-            where
-            timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
