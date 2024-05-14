@@ -1,4 +1,4 @@
-use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP01
+use schema {{database_name}}.synapse; --noqa: JJ01,PRS,TMP,CP01
 
 DROP TABLE IF EXISTS TEAM_LATEST;
 
@@ -15,7 +15,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS TEAM_LATEST
                         ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
                     )
                     AS N
-            FROM synapse_data_warehouse_dev.SYNAPSE_RAW.TEAMSNAPSHOTS --noqa: TMP
+            FROM {{database_name}}.SYNAPSE_RAW.TEAMSNAPSHOTS --noqa: TMP
             WHERE
                 (SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS')
             QUALIFY
@@ -34,14 +34,14 @@ AS
         SELECT
             max(instance) as max_instance
         FROM
-            synapse_data_warehouse.synapse_raw.filehandleassociationsnapshots
+            {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
         where
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
     )
     SELECT
         filehandleassociationsnapshots.*
     FROM
-        synapse_data_warehouse.synapse_raw.filehandleassociationsnapshots
+        {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
     inner JOIN
         latest_instance
         ON filehandleassociationsnapshots.instance = latest_instance.max_instance;
