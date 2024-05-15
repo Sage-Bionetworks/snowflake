@@ -49,9 +49,6 @@ alter task NODESNAPSHOT_TASK MODIFY AS
             parse_json($1:reference) as reference,
             $1:is_search_enabled as is_search_enabled,
             $1:defining_sql as defining_sql,
-            $1:is_public as is_public,
-            $1:is_controlled as is_controlled,
-            $1:is_restricted as is_restricted,
             parse_json(replace(replace($1:internal_annotations, '\n', '\\n'), '\r', '\\r')) as internal_annotations
         from @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
     )
