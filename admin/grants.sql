@@ -163,6 +163,8 @@ GRANT ROLE DPE_OPS TO USER "sophia.jobe@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "christine.suver@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "kimberly.corrigan@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "ann.novakowski@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "thomas.yu@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "x.schildwachter@sagebase.org";
 
 -- Create governance privileges
 GRANT ROLE MASKING_ADMIN
