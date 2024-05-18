@@ -40,6 +40,13 @@ data_docs_sites:
       base_directory: uncommitted/data_docs/local_site
     site_index_builder:
       class_name: DefaultSiteIndexBuilder
+  S3_site:
+    class_name: SiteBuilder
+    store_backend:
+      class_name: TupleS3StoreBackend
+      bucket: dpe-gx
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder
 anonymous_usage_statistics:
   data_context_id: 2825edcb-f1e8-4be9-99f9-5ab203a7a2a8
   enabled: true

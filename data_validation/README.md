@@ -2,7 +2,7 @@
 
 Follow instructions here: https://docs.greatexpectations.io/docs/oss/tutorials/quickstart/ to get started.
 
-pip install sqlalchemy python-dotenv snowflake-sqlalchemy
+pip install sqlalchemy python-dotenv snowflake-sqlalchemy boto3 botocore
 
 1. Be sure to export and create the GX data source environmental variable. Follow these [steps](https://docs.greatexpectations.io/docs/oss/guides/connecting_to_your_data/fluent/database/connect_sql_source_data?sql-database-type=snowflake) to set it up: 
 
