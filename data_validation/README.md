@@ -9,3 +9,5 @@ pip install sqlalchemy python-dotenv snowflake-sqlalchemy boto3 botocore
 ```
 export GX_SNOWFLAKE_CONNECTION="snowflake://<USER_NAME>:<PASSWORD>@<ACCOUNT_NAME_OR_LOCATOR>/<DATABASE_NAME>/<SCHEMA_NAME>?warehouse=<WAREHOUSE_NAME>&role=<ROLE_NAME>"
 ```
+
+2. Run validation `python validation.py`.  Be sure to log into jumpcloud (dpe aws account) and export your credentials in the terminal.
