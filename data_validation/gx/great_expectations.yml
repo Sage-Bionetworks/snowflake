@@ -58,4 +58,10 @@ fluent_datasources:
         batch_metadata: {}
         table_name: node_latest
         schema_name:
+      file:
+        type: table
+        order_by: []
+        batch_metadata: {}
+        table_name: file_latest
+        schema_name:
     connection_string: ${GX_SNOWFLAKE_CONNECTION}

@@ -36,7 +36,7 @@ except Exception as e:
 batch_request = table_asset.build_batch_request()
 
 ##
-expectation_suite_name = "synapse_data_warehouse_expectations"
+expectation_suite_name = "node_latest_expectations"
 
 context.add_or_update_expectation_suite(expectation_suite_name=expectation_suite_name)
 validator = context.get_validator(
