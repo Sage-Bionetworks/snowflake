@@ -2,6 +2,8 @@ from dotenv import dotenv_values
 import great_expectations as gx
 
 context = gx.get_context()
+from expectations.expect_column_values_to_have_list_members import ExpectColumnValuesToHaveListMembers
+
 # Define the datasource name
 # datasource_name = "synapse_data_warehouse_raw"
 datasource_name = "synapse_data_warehouse"

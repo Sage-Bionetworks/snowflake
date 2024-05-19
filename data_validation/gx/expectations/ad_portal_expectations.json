@@ -8,6 +8,32 @@
         "column": "ID"
       },
       "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "datatype",
+        "list_members": [
+          "clinical",
+          "immunoassay",
+          "chromatinActivity",
+          "electrophysiology",
+          "proteomics",
+          "mRNA",
+          "analysis",
+          "Pharmacokinetic Study",
+          "metabolomics",
+          "genomicVariants",
+          "demographic",
+          "image",
+          "behavior process",
+          "gene expression",
+          "epigenetics",
+          "geneExpression",
+          "metagenomics"
+        ]
+      },
+      "meta": {}
     }
   ],
   "ge_cloud_id": null,

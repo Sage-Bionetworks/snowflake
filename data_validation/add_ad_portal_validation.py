@@ -1,8 +1,8 @@
 from dotenv import dotenv_values
 import great_expectations as gx
-# from gx.plugins.expectations.expect_column_values_to_have_list_members import ExpectColumnValuesToHaveListMembers
 
 context = gx.get_context()
+from expectations.expect_column_values_to_have_list_members import ExpectColumnValuesToHaveListMembers
 
 # Define the datasource name
 datasource_name = "synapse_data_warehouse"
@@ -134,28 +134,28 @@ for column in columns_to_validate:
 #     column="datatype",
 #     value_set=allowed_values,
 # # )
-# validator.expect_column_values_to_have_list_members(
-#     column="datatype",
-#     list_members={
-#         "Pharmacokinetic Study",
-#         "analysis",
-#         "behavior process",
-#         "chromatinActivity",
-#         "clinical",
-#         "demographic",
-#         "electrophysiology",
-#         "epigenetics",
-#         "gene expression",
-#         "geneExpression",
-#         "genomicVariants",
-#         "image",
-#         "immunoassay",
-#         "mRNA",
-#         "metabolomics",
-#         "metagenomics",
-#         "proteomics"
-#     }
-# )
+validator.expect_column_values_to_have_list_members(
+    column="datatype",
+    list_members={
+        "Pharmacokinetic Study",
+        "analysis",
+        "behavior process",
+        "chromatinActivity",
+        "clinical",
+        "demographic",
+        "electrophysiology",
+        "epigenetics",
+        "gene expression",
+        "geneExpression",
+        "genomicVariants",
+        "image",
+        "immunoassay",
+        "mRNA",
+        "metabolomics",
+        "metagenomics",
+        "proteomics"
+    }
+)
 # Usage of the custom expectation remains the same as in the initial code
 
 validator.save_expectation_suite(discard_failed_expectations=False)
