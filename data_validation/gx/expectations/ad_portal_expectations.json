@@ -14,23 +14,23 @@
       "kwargs": {
         "column": "datatype",
         "list_members": [
-          "clinical",
-          "immunoassay",
-          "chromatinActivity",
-          "electrophysiology",
-          "proteomics",
-          "mRNA",
           "analysis",
-          "Pharmacokinetic Study",
-          "metabolomics",
-          "genomicVariants",
-          "demographic",
-          "image",
-          "behavior process",
-          "gene expression",
-          "epigenetics",
+          "clinical",
+          "mRNA",
+          "chromatinActivity",
           "geneExpression",
-          "metagenomics"
+          "genomicVariants",
+          "proteomics",
+          "gene expression",
+          "Pharmacokinetic Study",
+          "immunoassay",
+          "behavior process",
+          "electrophysiology",
+          "epigenetics",
+          "demographic",
+          "metabolomics",
+          "metagenomics",
+          "image"
         ]
       },
       "meta": {}
