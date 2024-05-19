@@ -43,11 +43,49 @@ validator = context.get_validator(
     batch_request=batch_request,
     expectation_suite_name=expectation_suite_name,
 )
-validator.expect_column_values_to_not_be_null("ID")
-validator.expect_column_values_to_not_be_null("PARENT_ID")
-validator.expect_column_values_to_not_be_null("PROJECT_ID")
 
-# validator.expect_column_values_to_be_between(
-#     "passenger_count", min_value=1, max_value=6
+columns_to_validate = [
+    "ID", "PARENT_ID", "PROJECT_ID", "ACTIVITY_ID", "ALIAS",
+    "ANNOTATIONS", "BENEFACTOR_ID", "CHANGE_TIMESTAMP", "CHANGE_TYPE",
+    "CHANGE_USER_ID", "COLUMN_MODEL_IDS", "CREATED_BY", "CREATED_ON",
+    "DEFINING_SQL", "DERIVED_ANNOTATIONS", "EFFECTIVE_ARS", "FILE_HANDLE_ID",
+    "INTERNAL_ANNOTATIONS", "IS_CONTROLLED", "IS_PUBLIC", "IS_RESTRICTED",
+    "IS_SEARCH_ENABLED", "ITEMS", "MODIFIED_BY", "MODIFIED_ON", "NAME",
+    "NODE_TYPE", "REFERENCE", "SCOPE_IDS", "SNAPSHOT_DATE",
+    "SNAPSHOT_TIMESTAMP", "VERSION_COMMENT", "VERSION_LABEL", "VERSION_NUMBER"
+]
+
+for column in columns_to_validate:
+    validator.expect_column_values_to_not_be_null(column)
+
+valid_node_types = [
+    "materializedview",
+    "folder",
+    "entityview",
+    "submissionview",
+    "project",
+    "table",
+    "dataset",
+    "datasetcollection",
+    "dockerrepo",
+    "virtualtable",
+    "file",
+    "link"
+]
+
+# Add an expectation for the NODE_TYPE column
+validator.expect_column_values_to_be_in_set(
+    column="NODE_TYPE",
+    value_set=valid_node_types,
+)
+validator.expect_column_values_to_be_unique(
+    column="ID"
+)
+
+# validator.expect_column_pair_values_a_to_be_greater_than_b(
+#     column_A="CHANGE_TIMESTAMP",
+#     column_B="MODIFIED_ON",
+#     or_equal=True
 # )
+
 validator.save_expectation_suite(discard_failed_expectations=False)

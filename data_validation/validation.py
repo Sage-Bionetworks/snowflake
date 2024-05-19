@@ -31,4 +31,5 @@ for asset_name, expectation_suite_name in assets.items():
     )
     checkpoint_result = checkpoint.run()
 
+
 context.view_validation_result(checkpoint_result)
