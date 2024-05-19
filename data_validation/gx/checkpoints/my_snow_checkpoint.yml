@@ -20,11 +20,11 @@ evaluation_parameters: {}
 runtime_configuration: {}
 validations:
   - batch_request:
-      datasource_name: synapse_data_warehouse_raw
-      data_asset_name: file
+      datasource_name: synapse_data_warehouse
+      data_asset_name: ad_portal
       options: {}
       batch_slice:
-    expectation_suite_name: file_latest_expectations
+    expectation_suite_name: ad_portal_expectations
 profilers: []
 ge_cloud_id:
 expectation_suite_ge_cloud_id:

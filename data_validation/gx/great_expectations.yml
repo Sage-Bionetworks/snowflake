@@ -72,3 +72,43 @@ fluent_datasources:
         table_name: file_latest
         schema_name:
     connection_string: ${GX_SNOWFLAKE_CONNECTION}
+  synapse_data_warehouse:
+    type: snowflake
+    assets:
+      ad_portal:
+        type: query
+        order_by: []
+        batch_metadata: {}
+        query: "\nSELECT\n    ID,\n    NAME,\n    -- annotations from the current\
+          \ portal fileview at syn11346063.2\n    ANNOTATIONS:annotations:study:value\
+          \ AS STUDY,\n    ANNOTATIONS:annotations:dataType:value AS DATATYPE,\n \
+          \   ANNOTATIONS:annotations:assay:value AS ASSAY,\n    ANNOTATIONS:annotations:organ:value[0]\
+          \ AS ORGAN,\n    ANNOTATIONS:annotations:tissue:value AS TISSUE,\n    ANNOTATIONS:annotations:species:value\
+          \ AS SPECIES,\n    ANNOTATIONS:annotations:sex:value AS SEX,\n    ANNOTATIONS:annotations:consortium:value[0]\
+          \ AS CONSORTIUM,\n    ANNOTATIONS:annotations:grant:value AS GRANTNUMBER,\n\
+          \    ANNOTATIONS:annotations:modelSystemName:value AS MODELSYSTEMNAME,\n\
+          \    ANNOTATIONS:annotations:treatmentType:value[0] AS TREATMENTTYPE,\n\
+          \    ANNOTATIONS:annotations:specimenID:value[0] AS SPECIMENID,\n    ANNOTATIONS:annotations:individualIdSource:value[0]\
+          \ AS INDIVIDUALIDSOURCE,\n    ANNOTATIONS:annotations:specimenIdSource:value[0]\
+          \ AS SPECIMENIDSOURCE,\n    ANNOTATIONS:annotations:resourceType:value[0]\
+          \ AS RESOURCETYPE,\n    ANNOTATIONS:annotations:dataSubtype:value[0] AS\
+          \ DATASUBTYPE,\n    ANNOTATIONS:annotations:metadataType:value[0] AS METADATATYPE,\n\
+          \    ANNOTATIONS:annotations:assayTarget:value[0] AS ASSAYTARGET,\n    ANNOTATIONS:annotations:analysisType:value[0]\
+          \ AS ANALYSISTYPE,\n    ANNOTATIONS:annotations:cellType:value AS CELLTYPE,\n\
+          \    ANNOTATIONS:annotations:nucleicAcidSource:value[0] AS NUCLEICACIDSOURCE,\n\
+          \    ANNOTATIONS:annotations:fileFormat:value[0] AS FILEFORMAT,\n    ANNOTATIONS:annotations:group:value\
+          \ AS GROUPS,\n    ANNOTATIONS:annotations:isModelSystem:value[0] AS ISMODELSYSTEM,\n\
+          \    ANNOTATIONS:annotations:isConsortiumAnalysis:value[0] AS ISCONSORTIUMANALYSIS,\
+          \ -- noqa: LT05\n    ANNOTATIONS:annotations:isMultiSpecimen:value[0] AS\
+          \ ISMULTISPECIMEN,\n    ANNOTATIONS:annotations:metaboliteType:value AS\
+          \ METABOLITETYPE,\n    ANNOTATIONS:annotations:chromosome:value[0] AS CHROMOSOME,\n\
+          \    ANNOTATIONS:annotations:modelSystemType:value[0] AS MODELSYSTEMTYPE,\n\
+          \    ANNOTATIONS:annotations:libraryPrep:value[0] AS LIBRARYPREP,\n    --\
+          \ add some annotations that are not in the current fileview\n    ANNOTATIONS:annotations:cohort:value\
+          \ AS COHORT,\n    ANNOTATIONS:annotations:dataContributionGroup:value AS\
+          \ DATACONTRIBUTIONGROUP, -- noqa: LT05\n    ANNOTATIONS:annotations:dataGenerationSite:value[0]\
+          \ AS DATAGENERATIONSITE,\n    ANNOTATIONS:annotations:isSampleExchange:value[0]\
+          \ AS ISSAMPLEEXCHANGE,\n    ANNOTATIONS:annotations:batch:value[0] AS BATCH\n\
+          FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.NODE_LATEST\nWHERE PROJECT_ID = '2580853'\
+          \ AND NODE_TYPE = 'file';\n"
+    connection_string: ${GX_SNOWFLAKE_CONNECTION}

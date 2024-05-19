@@ -3,15 +3,17 @@ import great_expectations as gx
 
 context = gx.get_context()
 # Define the datasource name
-datasource_name = "synapse_data_warehouse_raw"
+# datasource_name = "synapse_data_warehouse_raw"
+datasource_name = "synapse_data_warehouse"
 
 # Retrieve the existing datasource
 datasource = context.get_datasource(datasource_name)
 print(f"Datasource '{datasource_name}' retrieved successfully.")
 
 assets = {
-    "node": "node_latest_expectations",
-    "file": "file_latest_expectations"
+    # "node": "node_latest_expectations",
+    # "file": "file_latest_expectations",
+    "ad_portal": "ad_portal_expectations"
 }
 
 for asset_name, expectation_suite_name in assets.items():
@@ -29,7 +31,7 @@ for asset_name, expectation_suite_name in assets.items():
         name=my_checkpoint_name,
         validator=validator,
     )
-    checkpoint_result = checkpoint.run()
+    checkpoint_result = checkpoint.run(run_name=asset_name)
 
 
 context.view_validation_result(checkpoint_result)
