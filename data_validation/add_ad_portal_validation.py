@@ -91,42 +91,42 @@ validator = context.get_validator(
 
 columns_to_validate = [
     "ID",
-    # "NAME",
-    # "STUDY",
-    # "DATATYPE",
-    # "ASSAY",
-    # "ORGAN",
-    # "TISSUE",
-    # "SPECIES",
-    # "SEX",
-    # "CONSORTIUM",
-    # "GRANTNUMBER",
-    # "MODELSYSTEMNAME",
-    # "TREATMENTTYPE",
-    # "SPECIMENID",
-    # "INDIVIDUALIDSOURCE",
-    # "SPECIMENIDSOURCE",
-    # "RESOURCETYPE",
-    # "DATASUBTYPE",
-    # "METADATATYPE",
-    # "ASSAYTARGET",
-    # "ANALYSISTYPE",
-    # "CELLTYPE",
-    # "NUCLEICACIDSOURCE",
-    # "FILEFORMAT",
-    # "GROUPS",
-    # "ISMODELSYSTEM",
-    # "ISCONSORTIUMANALYSIS",
-    # "ISMULTISPECIMEN",
-    # "METABOLITETYPE",
-    # "CHROMOSOME",
-    # "MODELSYSTEMTYPE",
-    # "LIBRARYPREP",
-    # "COHORT",
-    # "DATACONTRIBUTIONGROUP",
-    # "DATAGENERATIONSITE",
-    # "ISSAMPLEEXCHANGE",
-    # "BATCH"
+    "NAME",
+    "STUDY",
+    "DATATYPE",
+    "ASSAY",
+    "ORGAN",
+    "TISSUE",
+    "SPECIES",
+    "SEX",
+    "CONSORTIUM",
+    "GRANTNUMBER",
+    "MODELSYSTEMNAME",
+    "TREATMENTTYPE",
+    "SPECIMENID",
+    "INDIVIDUALIDSOURCE",
+    "SPECIMENIDSOURCE",
+    "RESOURCETYPE",
+    "DATASUBTYPE",
+    "METADATATYPE",
+    "ASSAYTARGET",
+    "ANALYSISTYPE",
+    "CELLTYPE",
+    "NUCLEICACIDSOURCE",
+    "FILEFORMAT",
+    "GROUPS",
+    "ISMODELSYSTEM",
+    "ISCONSORTIUMANALYSIS",
+    "ISMULTISPECIMEN",
+    "METABOLITETYPE",
+    "CHROMOSOME",
+    "MODELSYSTEMTYPE",
+    "LIBRARYPREP",
+    "COHORT",
+    "DATACONTRIBUTIONGROUP",
+    "DATAGENERATIONSITE",
+    "ISSAMPLEEXCHANGE",
+    "BATCH",
 ]
 
 for column in columns_to_validate:
@@ -137,7 +137,7 @@ for column in columns_to_validate:
 #     value_set=allowed_values,
 # # )
 validator.expect_column_values_to_have_list_members(
-    column="datatype",
+    column="DATATYPE",
     list_members={
         "Pharmacokinetic Study",
         "analysis",
@@ -294,7 +294,7 @@ allowed_study_values = [
     "snRNAseqPFC_BA10",
 ]
 validator.expect_column_values_to_have_list_members(
-    column="study", list_members=allowed_study_values
+    column="STUDY", list_members=allowed_study_values
 )
 
 allowed_assay_values = [
@@ -369,8 +369,8 @@ allowed_assay_values = [
     "TASTPM",
     "TauD35",
     "TMT quantification",
-    #"TMT quantitation",
-    #"TMTquantitation",
+    # "TMT quantitation",
+    # "TMTquantitation",
     "UPLC-ESI-QTOF-MS",
     "UPLC-MSMS",
     "UPP",
@@ -381,8 +381,131 @@ allowed_assay_values = [
     "wholeGenomeSeq",
 ]
 validator.expect_column_values_to_have_list_members(
-    column="assay", list_members=allowed_assay_values
+    column="ASSAY", list_members=allowed_assay_values
 )
 # Usage of the custom expectation remains the same as in the initial code
+allowed_organ_values = [
+    # "Blood",
+    # "Brain",
+    "blood",
+    # "blood, brain",
+    "brain",
+    "large intestine",
+    "liver",
+    # "rbain",
+    "skin",
+    "spinal cord",
+    "temporal cortex",
+]
+validator.expect_column_values_to_be_in_set(
+    column="ORGAN",
+    value_set=allowed_organ_values,
+)
 
+allowed_consortium_values = [
+    "AMP-AD",
+    # "AMP-AD, M2OVE-AD",
+    # "AMP-AD, Resilience-AD",
+    # "AMP-AD, Resilience-AD, M2OVE-AD",
+    "CDCP",
+    # "cross-consortium",
+    "ELP",
+    "M2OVE-AD",
+    "MODEL-AD",
+    "Psych-AD",
+    "Resilience-AD",
+    "ROSMAP",
+]
+validator.expect_column_values_to_be_in_set(
+    column="CONSORTIUM",
+    value_set=allowed_consortium_values,
+)
+allowed_fileformat_values = [
+    # "R",
+    "R script",
+    "RData",
+    "RCC",
+    "RLF",
+    "Rdata",
+    # "Rscript",
+    "Sentrix descriptor file",
+    "XML",
+    "abf",
+    "avi",
+    "bam",
+    "bash script",
+    "bed",
+    "bigwig",
+    "bim",
+    "bai",
+    "bmp",
+    "bsc",
+    "cfg",
+    "cel",
+    "config",
+    "cov",
+    "cram",
+    "crai",
+    "csv",
+    "czi",
+    "dat",
+    "db",
+    "doc",
+    "docx",
+    # "excel",
+    "fam",
+    "fasta",
+    "fastq",
+    "gct",
+    # "gz",
+    "gzip",
+    "hdf",
+    "html",
+    "hyperlink",
+    "idat",
+    "idx",
+    "jpg",
+    "locs",
+    "mp4",
+    "msf",
+    "mtx",
+    "pdresult",
+    "pdstudy",
+    "pdview",
+    "pepXML",
+    "pdf",
+    "plink",
+    "png",
+    "powerpoint",
+    "Python script",
+    "pzfx",
+    "raw",
+    "saf",
+    "tbi",
+    "talon",
+    "tar",
+    "tsv",
+    "txt",
+    "vcf",
+    "xlsx",
+    "xml",
+    "yaml",
+    "zip",
+]
+validator.expect_column_values_to_be_in_set(
+    column="FILEFORMAT",
+    value_set=allowed_fileformat_values,
+)
+
+allowed_species = [
+    "Drosophila melanogaster",
+    "Human",
+    "Mouse",
+    "Rat",
+    # "human"
+]
+
+validator.expect_column_values_to_have_list_members(
+    column="SPECIES", list_members=allowed_species
+)
 validator.save_expectation_suite(discard_failed_expectations=False)

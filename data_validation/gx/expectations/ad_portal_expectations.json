@@ -10,27 +10,279 @@
       "meta": {}
     },
     {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "NAME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "STUDY"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATATYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ASSAY"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ORGAN"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "TISSUE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIES"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SEX"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CONSORTIUM"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "GRANTNUMBER"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "MODELSYSTEMNAME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "TREATMENTTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIMENID"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "INDIVIDUALIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIMENIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "RESOURCETYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATASUBTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "METADATATYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ASSAYTARGET"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ANALYSISTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CELLTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "NUCLEICACIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "FILEFORMAT"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "GROUPS"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISMODELSYSTEM"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISCONSORTIUMANALYSIS"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISMULTISPECIMEN"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "METABOLITETYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CHROMOSOME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "MODELSYSTEMTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "LIBRARYPREP"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "COHORT"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATACONTRIBUTIONGROUP"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATAGENERATIONSITE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISSAMPLEEXCHANGE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "BATCH"
+      },
+      "meta": {}
+    },
+    {
       "expectation_type": "expect_column_values_to_have_list_members",
       "kwargs": {
-        "column": "datatype",
+        "column": "DATATYPE",
         "list_members": [
+          "chromatinActivity",
+          "electrophysiology",
+          "metabolomics",
+          "mRNA",
+          "proteomics",
+          "genomicVariants",
+          "clinical",
+          "immunoassay",
+          "image",
+          "Pharmacokinetic Study",
+          "demographic",
           "analysis",
           "geneExpression",
           "epigenetics",
-          "genomicVariants",
-          "chromatinActivity",
-          "metabolomics",
-          "metagenomics",
-          "mRNA",
-          "electrophysiology",
-          "immunoassay",
-          "clinical",
-          "gene expression",
-          "image",
-          "demographic",
-          "Pharmacokinetic Study",
           "behavior process",
-          "proteomics"
+          "gene expression",
+          "metagenomics"
         ]
       },
       "meta": {}
@@ -38,7 +290,7 @@
     {
       "expectation_type": "expect_column_values_to_have_list_members",
       "kwargs": {
-        "column": "study",
+        "column": "STUDY",
         "list_members": [
           "Abeta_microglia",
           "ACOM",
@@ -179,7 +431,7 @@
     {
       "expectation_type": "expect_column_values_to_have_list_members",
       "kwargs": {
-        "column": "assay",
+        "column": "ASSAY",
         "list_members": [
           "10x multiome",
           "16SrRNAseq",
@@ -256,6 +508,127 @@
           "westernBlot",
           "wheel running",
           "wholeGenomeSeq"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "ORGAN",
+        "value_set": [
+          "blood",
+          "brain",
+          "large intestine",
+          "liver",
+          "skin",
+          "spinal cord",
+          "temporal cortex"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "CONSORTIUM",
+        "value_set": [
+          "AMP-AD",
+          "CDCP",
+          "ELP",
+          "M2OVE-AD",
+          "MODEL-AD",
+          "Psych-AD",
+          "Resilience-AD",
+          "ROSMAP"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "FILEFORMAT",
+        "value_set": [
+          "R script",
+          "RData",
+          "RCC",
+          "RLF",
+          "Rdata",
+          "Sentrix descriptor file",
+          "XML",
+          "abf",
+          "avi",
+          "bam",
+          "bash script",
+          "bed",
+          "bigwig",
+          "bim",
+          "bai",
+          "bmp",
+          "bsc",
+          "cfg",
+          "cel",
+          "config",
+          "cov",
+          "cram",
+          "crai",
+          "csv",
+          "czi",
+          "dat",
+          "db",
+          "doc",
+          "docx",
+          "fam",
+          "fasta",
+          "fastq",
+          "gct",
+          "gzip",
+          "hdf",
+          "html",
+          "hyperlink",
+          "idat",
+          "idx",
+          "jpg",
+          "locs",
+          "mp4",
+          "msf",
+          "mtx",
+          "pdresult",
+          "pdstudy",
+          "pdview",
+          "pepXML",
+          "pdf",
+          "plink",
+          "png",
+          "powerpoint",
+          "Python script",
+          "pzfx",
+          "raw",
+          "saf",
+          "tbi",
+          "talon",
+          "tar",
+          "tsv",
+          "txt",
+          "vcf",
+          "xlsx",
+          "xml",
+          "yaml",
+          "zip"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "SPECIES",
+        "list_members": [
+          "Drosophila melanogaster",
+          "Human",
+          "Mouse",
+          "Rat"
         ]
       },
       "meta": {}
