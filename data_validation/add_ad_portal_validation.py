@@ -2,7 +2,9 @@ from dotenv import dotenv_values
 import great_expectations as gx
 
 context = gx.get_context()
-from expectations.expect_column_values_to_have_list_members import ExpectColumnValuesToHaveListMembers
+from expectations.expect_column_values_to_have_list_members import (
+    ExpectColumnValuesToHaveListMembers,
+)
 
 # Define the datasource name
 datasource_name = "synapse_data_warehouse"
@@ -59,15 +61,15 @@ try:
 except Exception as e:
     print(f"Failed to retrieve datasource '{datasource_name}': {str(e)}")
     config = dotenv_values("../.env")
-    user=config['user']
-    password=config['password']
-    snow_account = config['snowflake_account']
+    user = config["user"]
+    password = config["password"]
+    snow_account = config["snowflake_account"]
     database = "synapse_data_warehouse"
     my_connection_string = f"snowflake://{user}:{password}@{snow_account}/{database}/synapse?warehouse=compute_xsmall&role=SYSADMIN"
 
     datasource = context.sources.add_snowflake(
-        name=datasource_name, 
-        connection_string=my_connection_string, # Or alternatively, individual connection args
+        name=datasource_name,
+        connection_string=my_connection_string,  # Or alternatively, individual connection args
     )
 
 asset_name = "ad_portal"
@@ -88,7 +90,7 @@ validator = context.get_validator(
 )
 
 columns_to_validate = [
-    "ID", 
+    "ID",
     # "NAME",
     # "STUDY",
     # "DATATYPE",
@@ -153,8 +155,147 @@ validator.expect_column_values_to_have_list_members(
         "mRNA",
         "metabolomics",
         "metagenomics",
-        "proteomics"
-    }
+        "proteomics",
+    },
+)
+
+allowed_study_values = [
+    "Abeta_microglia",
+    "ACOM",
+    "ACT",
+    "AD-BXD",
+    "AD_CrossSpecies",
+    "ADMC_ADNI1",
+    "ADMC_ADNI1_NightingaleNMR",
+    "ADMC_ADNI2-GO",
+    "ADMC_ADNI_BakerLipidomics",
+    "ADMC_ADNI_NightingaleNMR",
+    "ADMC_ADNI_UHawaiiGutMetabolites",
+    "ADMC_UPenn",
+    "AD_CrossSpecies",
+    "AMP-AD_DiverseCohorts",
+    "APOEPSC",
+    "APOE-TR",
+    "Banner",
+    "BCM-DMAS",
+    "BLSA",
+    "BroadAstrom109",
+    "BroadMDMi",
+    "BroadiPSC",
+    "CHDWB",
+    "DiCAD",
+    "DiseasePseudotime",
+    "DroNc-Seq",
+    "DukeAD_PTSD",
+    "Emory_ADRC",
+    "EmoryDrosophilaTau",
+    "Emory_Vascular",
+    "eQTLmetaAnalysis",
+    "FreshMicro",
+    "GJA1_deficiency",
+    "HBI_scRNAseq",
+    "HBTRC",
+    "HDAC1-cKOBrain",
+    "IL10_APPmouse",
+    "IntegratedProteomics",
+    "iPSCAstrocytes",
+    "iPSCMicroglia",
+    "Jax.IU.Pitt.Proteomics_Metabolomics_Pilot",
+    "Jax.IU.Pitt_APP.PS1",
+    "Jax.IU.Pitt_APOE4.Trem2.R47H",
+    "Jax.IU.Pitt_5XFAD",
+    "Jax.IU.Pitt_LOAD1.PrimaryScreen",
+    "Jax.IU.Pitt_Levetiracetam_5XFAD",
+    "Jax.IU.Pitt_MicrobiomePilot",
+    "Jax.IU.Pitt_PrimaryScreen",
+    "Jax.IU.Pitt_Rat_TgF344-AD",
+    "Jax.IU.Pitt_StrainValidation",
+    "Jax.IU.Pitt_Verubecestat_5XFAD",
+    "Jax.IU.Pitt_hTau_Trem2",
+    "LBP",
+    "LillyMicroglia",
+    "MC-BrAD",
+    "MC-CAA",
+    "MC_snRNA",
+    "MCMPS",
+    "MCSA",
+    "MCPB",
+    "MIT_ROSMAP_Multiomics",
+    "MOA-PAD",
+    "MSBB",
+    "MSBB_ArrayTissuePanel",
+    "MSDM",
+    "MSMM",
+    "MSSMiPSC",
+    "MayoPilotRNAseq",
+    "MayoHippocampus",
+    "MayoLOADGWAS",
+    "MayoRNAseq",
+    "MayoeGWAS",
+    "MindPhenomeKB",
+    "MODEL-AD_JAX_GWAS_Gene_Survey",
+    "NPS-AD",
+    "omicsADDS",
+    "Plxnb1_KO",
+    "RNAseq_Harmonization",
+    "ROSMAP",
+    "ROSMAP-IA",
+    "ROSMAP-IN",
+    "ROSMAP_CellTypeSpecificHA",
+    "ROSMAP_CognitiveResilience",
+    "ROSMAP_CognitiveReslience",
+    "ROSMAP_Lipidomics_Emory",
+    "ROSMAP_MammillaryBody",
+    "ROSMAP_bsSeq",
+    "ROSMAP_nucleus_hashing",
+    "RR_APOE4",
+    "SEA-AD",
+    "SMIB-AD",
+    "SV_xQTL",
+    "SY5Y_Emory",
+    "SY5Y_REST",
+    "SUNYStrokeModel",
+    "SuperAgerEpiMap",
+    "StJude_BannerSun",
+    "TAUAPPms",
+    "TASTPM",
+    "TWAS",
+    "TyrobpKO",
+    "TyrobpKO_AppPs1",
+    "U1-70_PrimaryCellCulture",
+    "UCI_3xTg-AD",
+    "UCI_5XFAD",
+    "UCI_ABCA7",
+    "UCI_ABI3",
+    "UCI_Bin1K358R",
+    "UCI_CollaborativeCrossLines",
+    "UCI_PrimaryScreen",
+    "UCI_Trem2_Cuprizone",
+    "UCI_Trem2-R47H_NSS",
+    "UCI_hAbeta_KI",
+    "UCSF_MAC",
+    "UFL_Cxcl10",
+    "UFLOR_ABI3_GNGT2",
+    "UPP",
+    "UPennPilot",
+    "VMC",
+    "VirusResilience_LCL",
+    "VirusResilience_Mayo.MSBB.ROSMAP",
+    "WallOfTargets",
+    "WGS_Harmonization",
+    "iPSCAstrocytes",
+    "iPSCMicroglia",
+    "miR155",
+    "mtDNA_AD",
+    "rnaSeqReprocessing",
+    "rnaSeqSampleSwap",
+    "scRNAseq_microglia_wild_ADmice",
+    "snRNAseqAD_TREM2",
+    "snRNAseqPFC_BA10",
+]
+validator.expect_column_values_to_have_list_members(
+    column="study",
+    list_members=allowed_study_values
 )
 # Usage of the custom expectation remains the same as in the initial code
 
