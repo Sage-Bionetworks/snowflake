@@ -13,15 +13,15 @@ try:
 except Exception as e:
     print(f"Failed to retrieve datasource '{datasource_name}': {str(e)}")
     config = dotenv_values("../.env")
-    user=config['user']
-    password=config['password']
-    snow_account = config['snowflake_account']
+    user = config["user"]
+    password = config["password"]
+    snow_account = config["snowflake_account"]
     database = "synapse_data_warehouse_dev"
     my_connection_string = f"snowflake://{user}:{password}@{snow_account}/{database}/synapse?warehouse=compute_xsmall&role=SYSADMIN"
 
     datasource = context.sources.add_snowflake(
-        name=datasource_name, 
-        connection_string=my_connection_string, # Or alternatively, individual connection args
+        name=datasource_name,
+        connection_string=my_connection_string,  # Or alternatively, individual connection args
     )
 
 asset_name = "node"
@@ -31,7 +31,9 @@ try:
     # datasource = context.get_datasource(datasource_name)
     # print(f"Datasource '{datasource_name}' retrieved successfully.")
 except Exception as e:
-    table_asset = datasource.add_table_asset(name=asset_name, table_name=asset_table_name)
+    table_asset = datasource.add_table_asset(
+        name=asset_name, table_name=asset_table_name
+    )
 
 batch_request = table_asset.build_batch_request()
 
@@ -45,14 +47,40 @@ validator = context.get_validator(
 )
 
 columns_to_validate = [
-    "ID", "PARENT_ID", "PROJECT_ID", "ACTIVITY_ID", "ALIAS",
-    "ANNOTATIONS", "BENEFACTOR_ID", "CHANGE_TIMESTAMP", "CHANGE_TYPE",
-    "CHANGE_USER_ID", "COLUMN_MODEL_IDS", "CREATED_BY", "CREATED_ON",
-    "DEFINING_SQL", "DERIVED_ANNOTATIONS", "EFFECTIVE_ARS", "FILE_HANDLE_ID",
-    "INTERNAL_ANNOTATIONS", "IS_CONTROLLED", "IS_PUBLIC", "IS_RESTRICTED",
-    "IS_SEARCH_ENABLED", "ITEMS", "MODIFIED_BY", "MODIFIED_ON", "NAME",
-    "NODE_TYPE", "REFERENCE", "SCOPE_IDS", "SNAPSHOT_DATE",
-    "SNAPSHOT_TIMESTAMP", "VERSION_COMMENT", "VERSION_LABEL", "VERSION_NUMBER"
+    "ID",
+    "PARENT_ID",
+    "PROJECT_ID",
+    "ACTIVITY_ID",
+    "ALIAS",
+    "ANNOTATIONS",
+    "BENEFACTOR_ID",
+    "CHANGE_TIMESTAMP",
+    "CHANGE_TYPE",
+    "CHANGE_USER_ID",
+    "COLUMN_MODEL_IDS",
+    "CREATED_BY",
+    "CREATED_ON",
+    "DEFINING_SQL",
+    "DERIVED_ANNOTATIONS",
+    "EFFECTIVE_ARS",
+    "FILE_HANDLE_ID",
+    "INTERNAL_ANNOTATIONS",
+    "IS_CONTROLLED",
+    "IS_PUBLIC",
+    "IS_RESTRICTED",
+    "IS_SEARCH_ENABLED",
+    "ITEMS",
+    "MODIFIED_BY",
+    "MODIFIED_ON",
+    "NAME",
+    "NODE_TYPE",
+    "REFERENCE",
+    "SCOPE_IDS",
+    "SNAPSHOT_DATE",
+    "SNAPSHOT_TIMESTAMP",
+    "VERSION_COMMENT",
+    "VERSION_LABEL",
+    "VERSION_NUMBER",
 ]
 
 for column in columns_to_validate:
@@ -70,7 +98,7 @@ valid_node_types = [
     "dockerrepo",
     "virtualtable",
     "file",
-    "link"
+    "link",
 ]
 
 # Add an expectation for the NODE_TYPE column
@@ -78,9 +106,7 @@ validator.expect_column_values_to_be_in_set(
     column="NODE_TYPE",
     value_set=valid_node_types,
 )
-validator.expect_column_values_to_be_unique(
-    column="ID"
-)
+validator.expect_column_values_to_be_unique(column="ID")
 
 # validator.expect_column_pair_values_a_to_be_greater_than_b(
 #     column_A="CHANGE_TIMESTAMP",

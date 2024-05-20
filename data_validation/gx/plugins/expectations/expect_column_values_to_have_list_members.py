@@ -2,16 +2,21 @@ from typing import Any, Optional
 
 import pandas as pd
 from great_expectations.core.expectation_configuration import ExpectationConfiguration
-from great_expectations.execution_engine import PandasExecutionEngine, SqlAlchemyExecutionEngine
+from great_expectations.execution_engine import (
+    PandasExecutionEngine,
+    SqlAlchemyExecutionEngine,
+)
 from great_expectations.expectations.expectation import ColumnMapExpectation
 from great_expectations.expectations.metrics import (
     ColumnMapMetricProvider,
     column_condition_partial,
 )
+
 try:
     import sqlalchemy as sa  # noqa: TID251
 except ImportError:
     sa = None
+
 
 # This class defines a Metric to support your Expectation.
 # For most ColumnMapExpectations, the main business logic for calculation will live in this class.
@@ -54,6 +59,7 @@ class ColumnValuesListMembers(ColumnMapMetricProvider):
         if not all(item in list_members for item in cell):
             return False
         return True
+
     @column_condition_partial(engine=SqlAlchemyExecutionEngine)
     def _sqlalchemy(cls, column, list_members, **kwargs):
         return cls._sqlalchemy_impl(column, list_members, **kwargs)
@@ -61,8 +67,11 @@ class ColumnValuesListMembers(ColumnMapMetricProvider):
     @staticmethod
     def _sqlalchemy_impl(column, list_members, **kwargs):
         allowed_values_array = sa.func.array_construct(*list_members)
-        return sa.func.array_size(column) == sa.func.array_size(sa.func.array_intersection(column, allowed_values_array))
-    
+        return sa.func.array_size(column) == sa.func.array_size(
+            sa.func.array_intersection(column, allowed_values_array)
+        )
+
+
 # This class defines the Expectation itself
 class ExpectColumnValuesToHaveListMembers(ColumnMapExpectation):
     """Expect the list in column values to have certain members."""
