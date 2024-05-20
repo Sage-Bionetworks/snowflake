@@ -508,4 +508,23 @@ allowed_species = [
 validator.expect_column_values_to_have_list_members(
     column="SPECIES", list_members=allowed_species
 )
+allowed_group_values = [
+    "Broad-Rush",
+    "Columbia",
+    "Duke",
+    "Emory",
+    "GSK",
+    "Lilly",
+    "MSSM",
+    "Mayo",
+    "Myers-NIAGADS",
+    "Rush",
+    "Sage Bionetworks",
+    "UCI_DMP",
+    "UFL-ISB-Mayo",
+]
+validator.expect_column_values_to_have_list_members(
+    column="GROUPS", list_members=allowed_group_values
+)
+
 validator.save_expectation_suite(discard_failed_expectations=False)

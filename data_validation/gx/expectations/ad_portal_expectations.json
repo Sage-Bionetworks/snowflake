@@ -266,23 +266,23 @@
       "kwargs": {
         "column": "DATATYPE",
         "list_members": [
-          "chromatinActivity",
-          "electrophysiology",
-          "metabolomics",
-          "mRNA",
+          "behavior process",
+          "geneExpression",
           "proteomics",
-          "genomicVariants",
+          "metagenomics",
+          "Pharmacokinetic Study",
+          "gene expression",
+          "epigenetics",
+          "analysis",
+          "metabolomics",
           "clinical",
           "immunoassay",
-          "image",
-          "Pharmacokinetic Study",
           "demographic",
-          "analysis",
-          "geneExpression",
-          "epigenetics",
-          "behavior process",
-          "gene expression",
-          "metagenomics"
+          "image",
+          "chromatinActivity",
+          "genomicVariants",
+          "electrophysiology",
+          "mRNA"
         ]
       },
       "meta": {}
@@ -629,6 +629,28 @@
           "Human",
           "Mouse",
           "Rat"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "GROUPS",
+        "list_members": [
+          "Broad-Rush",
+          "Columbia",
+          "Duke",
+          "Emory",
+          "GSK",
+          "Lilly",
+          "MSSM",
+          "Mayo",
+          "Myers-NIAGADS",
+          "Rush",
+          "Sage Bionetworks",
+          "UCI_DMP",
+          "UFL-ISB-Mayo"
         ]
       },
       "meta": {}
