@@ -17,6 +17,7 @@ assay_group as (
     select
         id,
         file_handle_id,
+        created_on,
         case
             when datatype = 'metabolomics' then 'targeted metabolomics'
             when
@@ -60,7 +61,7 @@ file_size_type as (
         assay_group.file_handle_id,
         f.content_size,
         assay_group.simple_assay,
-        date_trunc('month', f.created_on) as month_created
+        date_trunc('month', assay_group.created_on) as month_created
     from assay_group
     left join synapse_data_warehouse.synapse.file_latest as f
         on assay_group.file_handle_id = f.id
@@ -120,7 +121,7 @@ select
             partition by simple_assay
             order by
                 month_created asc
-            rows unbounded preceding
+            rows between unbounded preceding and current row
         )
         as cumulative_volume
 from monthly_total
