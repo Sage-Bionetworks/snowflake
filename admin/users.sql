@@ -62,7 +62,6 @@ CREATE USER IF NOT EXISTS "gaia.andreoletti@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.williams@sagebase.org";
 CREATE USER IF NOT EXISTS "loren.wolfe@sagebase.org";
 CREATE USER IF NOT EXISTS "lingling.peng@sagebase.org";
-CREATE USER IF NOT EXISTS "mialy.defelice@sagebase.org";
 CREATE USER IF NOT EXISTS "gianna.jordan@sagebase.org";
 CREATE USER IF NOT EXISTS "mieko.hashimoto@sagebase.org";
 CREATE USER IF NOT EXISTS "andrew.lamb@sagebase.org";
