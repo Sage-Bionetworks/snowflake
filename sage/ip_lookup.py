@@ -8,6 +8,7 @@ This eventually could be an Airflow DAG, so not going spending too much time on 
 """
 import time
 
+import backoff
 from dotenv import dotenv_values
 import numpy as np
 import pandas as pd
@@ -16,6 +17,10 @@ import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
 
+@backoff.on_exception(backoff.expo,
+                      requests.exceptions.RequestException,
+                      max_tries=8,
+                      jitter=None)
 def get_ip_info(ip_list: list) -> dict:
     """Get IP information from ip-api.com: http://ip-api.com/batch
 
@@ -25,19 +30,8 @@ def get_ip_info(ip_list: list) -> dict:
     Returns:
         dict: IP information like city, country, region, lat, long, asn, etc
     """
-    # HACK this is not great...
-    while True:
-        try:
-            ip_info_response = requests.post("http://ip-api.com/batch", json=ip_list)
-        except Exception as err:
-            print(ip_info_response.status_code)
-            if ip_info_response.status_code == 429:
-                pass
-            else:
-                raise err
-        if ip_info_response.status_code == 200:
-            return ip_info_response.json()
-        # return ip_info
+    ip_info_response = requests.post("http://ip-api.com/batch", json=ip_list)
+    return ip_info_response.json()
 
 
 def main():
@@ -62,8 +56,7 @@ def main():
     where
         x_forwarded_for is not null and
         x_forwarded_for not in (select ip from sage.audit.extracted_ip_info) and
-        record_date > DATE('2024-01-01');
-        // record_date BETWEEN DATE('2023-01-01') and DATE('2023-06-30');
+        record_date BETWEEN DATE('2024-03-01') and DATE('2024-05-25');
     """
     cs.execute(query)
     unique_ips = cs.fetch_pandas_all()
