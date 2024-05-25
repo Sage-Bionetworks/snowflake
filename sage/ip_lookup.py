@@ -6,6 +6,7 @@ for analysis
 
 This eventually could be an Airflow DAG, so not going spending too much time on it
 """
+
 import time
 
 import backoff
@@ -20,10 +21,10 @@ from snowflake.connector.pandas_tools import write_pandas
 RECORD_START_DATE = "2024-03-01"
 RECORD_END_DATE = "2024-05-25"
 
-@backoff.on_exception(backoff.expo,
-                      requests.exceptions.RequestException,
-                      max_tries=8,
-                      jitter=None)
+
+@backoff.on_exception(
+    backoff.expo, requests.exceptions.RequestException, max_tries=8, jitter=None
+)
 def get_ip_info(ip_list: list) -> dict:
     """Get IP information from ip-api.com: http://ip-api.com/batch
 
@@ -37,7 +38,7 @@ def get_ip_info(ip_list: list) -> dict:
     return ip_info_response.json()
 
 
-def batch_get_ip_info(unique_ips: pd.DataFrame, batch_size: int=100) -> pd.DataFrame:
+def batch_get_ip_info(unique_ips: pd.DataFrame, batch_size: int = 100) -> pd.DataFrame:
     """
     Retrieves a batch of unique IP addresse information in batches.
     The function sleeps for 2.5 seconds between each batch to avoid exceeding the API rate limit.
