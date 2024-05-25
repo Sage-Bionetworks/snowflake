@@ -16,6 +16,9 @@ import requests
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
+# Track the start and end dates for extracting IP adresses to know when to execute the code
+RECORD_START_DATE = "2024-03-01"
+RECORD_END_DATE = "2024-05-25"
 
 @backoff.on_exception(backoff.expo,
                       requests.exceptions.RequestException,
@@ -48,7 +51,7 @@ def main():
     )
     cs = ctx.cursor()
 
-    query = """
+    query = f"""
     select
         distinct x_forwarded_for as unique_ips
     from
@@ -56,7 +59,7 @@ def main():
     where
         x_forwarded_for is not null and
         x_forwarded_for not in (select ip from sage.audit.extracted_ip_info) and
-        record_date BETWEEN DATE('2024-03-01') and DATE('2024-05-25');
+        record_date BETWEEN DATE('{RECORD_START_DATE}') and DATE('{RECORD_END_DATE}');
     """
     cs.execute(query)
     unique_ips = cs.fetch_pandas_all()
