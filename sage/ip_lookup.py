@@ -6,15 +6,14 @@ for analysis
 
 This eventually could be an Airflow DAG, so not going spending too much time on it
 """
-
-import requests
 import time
 
 from dotenv import dotenv_values
+import numpy as np
+import pandas as pd
+import requests
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
-import pandas as pd
-import numpy as np
 
 
 def get_ip_info(ip_list: list) -> dict:
