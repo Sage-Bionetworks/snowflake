@@ -37,6 +37,32 @@ def get_ip_info(ip_list: list) -> dict:
     return ip_info_response.json()
 
 
+def batch_get_ip_info(unique_ips: pd.DataFrame, batch_size: int=100) -> pd.DataFrame:
+    """
+    Retrieves a batch of unique IP addresse information in batches.
+    The function sleeps for 2.5 seconds between each batch to avoid exceeding the API rate limit.
+
+    Args:
+        unique_ips (pd.DataFrame): A DataFrame containing the unique IP addresses.
+        batch_size (int): The size of each batch. Max batch size is 100.
+
+    Returns:
+        pd.DataFrame: A dataframe of IP information
+    """
+    result: list = []
+    for batch_number, batch_df in unique_ips.groupby(
+        np.arange(len(unique_ips)) // batch_size
+    ):
+        print(batch_number)
+        ip_list: list = get_ip_info(batch_df["UNIQUE_IPS"].to_list())
+        # API rate limit of 15 per minute
+        # Add in sleep to not get throttled
+        time.sleep(2.5)
+        result.extend(ip_list)
+    ip_info_df = pd.DataFrame(result)
+    return ip_info_df
+
+
 def main():
     """Main function"""
     config = dotenv_values("../.env")
@@ -63,23 +89,9 @@ def main():
     """
     cs.execute(query)
     unique_ips = cs.fetch_pandas_all()
-    # API only takes a batch size of 100
-    batch_size = 100
-    result = []
+    ip_info_df = batch_get_ip_info(unique_ips=unique_ips)
 
-    for batch_number, batch_df in unique_ips.groupby(
-        np.arange(len(unique_ips)) // batch_size
-    ):
-        print(batch_number)
-        ip_list = get_ip_info(batch_df["UNIQUE_IPS"].to_list())
-        # API rate limit of 15 per minute
-        # Add in sleep to not get throttled
-        time.sleep(2.5)
-        result.extend(ip_list)
-
-    ip_info_df = pd.DataFrame(result)
     succeeded_ip_info = ip_info_df[ip_info_df["status"] == "success"]
-
     # These columns do not add value in a snowflake query
     del succeeded_ip_info["status"]
     del succeeded_ip_info["message"]
