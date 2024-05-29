@@ -1,5 +1,7 @@
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 
+ALTER TABLE FILE_LATEST SET COMMENT = 'The latest snapshot of the file.';  
+
 COMMENT ON COLUMN FILE_LATEST.change_type IS 'The type of change that occurred on the file, e.g., CREATE, UPDATE, DELETE.';
 COMMENT ON COLUMN FILE_LATEST.change_timestamp IS 'The time when the change (created/updated/deleted) on the file is pushed to the queue for snapshotting.';
 COMMENT ON COLUMN FILE_LATEST.change_user_id IS 'The unique identifier of the user who made the change to the file.';
