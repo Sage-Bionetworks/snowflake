@@ -21,4 +21,4 @@ COMMENT ON COLUMN FILE_LATEST.key IS 'The key name uniquely identifies the objec
 COMMENT ON COLUMN FILE_LATEST.preview_id IS 'The identifier of the file handle that contains a preview of the file referenced by this file handle.';
 COMMENT ON COLUMN FILE_LATEST.is_preview IS 'If true, the file referenced by this file handle is a preview of another file.';
 COMMENT ON COLUMN FILE_LATEST.status IS 'The availability status of the file referenced by the file handle. AVAILABLE: accessible via Synapse; UNLINKED: not referenced by Synapse and therefore available for garbage collection; ARCHIVED: the file has been garbage collected.';
-COMMENT ON COLUMN FILE_LATEST.change_user_id IS 'The unique identifier of the user who made the change to the file.';
+COMMENT ON COLUMN FILE_LATEST.snapshot_date IS 'The data is partitioned for fast and cost effective queries. The snapshot_timestamp field is converted into a date and stored in the snapshot_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.';
