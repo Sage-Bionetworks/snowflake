@@ -80,6 +80,9 @@ CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
 // governance
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 
+// ops
+CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
+
 // SERVICE users
 CREATE USER IF NOT EXISTS DBT_SERVICE
     PASSWORD = 'placeholder'
