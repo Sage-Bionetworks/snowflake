@@ -1,5 +1,4 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
-
 ALTER TABLE FILEUPLOAD SET COMMENT = 'This table contains upload records for FileEntity (e.g. a new file creation, upload or update to an existing file) and TableEntity (e.g. an appended row set to an existing table, uploaded file to an existing table). The events are recorded only after the file or change to a table is successfully uploaded.';
 
 COMMENT ON COLUMN FILEUPLOAD.timestamp IS 'The time when the upload event is pushed to the queue, after a successful upload of a file or change in the existing table.';
