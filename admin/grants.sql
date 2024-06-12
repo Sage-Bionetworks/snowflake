@@ -106,7 +106,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "marco.marasca@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "sandhra.sokhal@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "adam.hindman@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jessica.malenfant@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "pierrette.lo@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ann.novakowski@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "christine.suver@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "adam.taylor@sagebase.org";
@@ -152,6 +151,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "alberto.pepe@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jessica.vera@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "kimberly.corrigan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "mackenzie.wildman@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "aditi.gopalan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";

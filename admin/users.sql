@@ -21,7 +21,6 @@ CREATE USER IF NOT EXISTS "marco.marasca@sagebase.org";
 CREATE USER IF NOT EXISTS "sandhra.sokhal@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.hindman@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.malenfant@sagebase.org";
-CREATE USER IF NOT EXISTS "pierrette.lo@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.taylor@sagebase.org";
@@ -82,6 +81,8 @@ CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 
 // ops
 CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
+// aditi
+CREATE USER IF NOT EXISTS "aditi.gopalan@sagebase.org";
 
 // SERVICE users
 CREATE USER IF NOT EXISTS DBT_SERVICE
