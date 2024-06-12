@@ -2,18 +2,18 @@ USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 USE WAREHOUSE COMPUTE_MEDIUM;
 
 CREATE OR ALTER TABLE ACCESSREQUIREMENTSNAPSHOTS (
-    CHANGE_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the change (created/updated/deleted) on an access requirement is pushed to the queue for snapshotting.',
+    CHANGE_TIMESTAMP TIMESTAMP COMMENT 'The time when the change (created/updated/deleted) on an access requirement is pushed to the queue for snapshotting.',
     CHANGE_TYPE VARCHAR(16777216) COMMENT 'The type of change that occurred on the access requirement, e.g., CREATE, UPDATE, DELETE.',
     CHANGE_USER_ID NUMBER(38,0) COMMENT 'The id of the user that created, updated or deleted the access requirement being snapshotted',
-    SNAPSHOT_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the snapshot was taken (It is usually after the change happened).',
+    SNAPSHOT_TIMESTAMP TIMESTAMP COMMENT 'The time when the snapshot was taken (It is usually after the change happened).',
     ID NUMBER(38,0) COMMENT 'The unique identifier of the access requirement.',
     VERSION_NUMBER NUMBER(38,0) COMMENT 'The version of the access requirement. Each time an access requirement is updated a new version is issued.',
     NAME VARCHAR(16777216) COMMENT 'The name assigned to the access requirement.',
     DESCRIPTION VARCHAR(16777216) COMMENT 'The description assigned to the access requirement.',
     CREATED_BY NUMBER(38,0) COMMENT 'The id of the user that created the access requirement.',
     MODIFIED_BY NUMBER(38,0) COMMENT 'The id of the user that modified the access requirement.',
-    CREATED_ON TIMESTAMP_NTZ(9) COMMENT 'The creation time of the access requirement.',
-    MODIFIED_ON TIMESTAMP_NTZ(9) COMMENT 'The most recent change time of the access requirement.',
+    CREATED_ON TIMESTAMP COMMENT 'The creation time of the access requirement.',
+    MODIFIED_ON TIMESTAMP COMMENT 'The most recent change time of the access requirement.',
     ACCESS_TYPE VARCHAR(16777216) COMMENT 'The type of access this access requirement applies to, currently supports only DOWNLOAD (for entities) and PARTICIPATE (for teams).',
     CONCRETE_TYPE VARCHAR(16777216) COMMENT 'The type of access requirement. See https://rest-docs.synapse.org/rest/org/sagebionetworks/repo/model/AccessRequirement.html.',
     SUBJECTS_DEFINED_BY_ANNOTATIONS BOOLEAN COMMENT 'True if the subjects of the access requirement are automatically inferred by derived annotations. If true the subjectIds will be empty.',
