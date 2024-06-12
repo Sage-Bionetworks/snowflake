@@ -80,7 +80,7 @@ SELECT
       '__HIVE_DEFAULT_PARTITION__'
     ) as snapshot_date
   from
-    @SYNAPSE_DEV_WAREHOUSE_S3_STAGE/accessrequirementsnapshots --noqa: TMP
+    @{{stage_storage_integration}}_STAGE/accessrequirementsnapshots --noqa: TMP
   )
 pattern='.*accessrequirementsnapshots/snapshot_date=.*/.*'
 FORCE=TRUE
