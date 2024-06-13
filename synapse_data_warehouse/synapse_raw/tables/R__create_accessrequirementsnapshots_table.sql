@@ -1,5 +1,4 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
-USE WAREHOUSE COMPUTE_MEDIUM;
 
 CREATE OR ALTER TABLE ACCESSREQUIREMENTSNAPSHOTS (
     CHANGE_TIMESTAMP TIMESTAMP COMMENT 'The time when the change (created/updated/deleted) on an access requirement is pushed to the queue for snapshotting.',
