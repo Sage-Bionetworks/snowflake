@@ -154,6 +154,18 @@ GRANT ROLE DATA_ANALYTICS TO USER "mackenzie.wildman@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "aditi.gopalan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
+// Leaders
+GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "luca.foschini@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "alberto.pepe@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "susheel.varma@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "christine.suver@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "anna.greenwood@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "mackenzie.wildman@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO ROLE SAGE_LEADERS;
+
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
 GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
 GRANT ROLE FAIR TO USER "lingling.peng@sagebase.org";
