@@ -164,6 +164,7 @@ GRANT ROLE SAGE_LEADERS TO USER "anna.greenwood@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "mackenzie.wildman@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO ROLE SAGE_LEADERS;
 
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
