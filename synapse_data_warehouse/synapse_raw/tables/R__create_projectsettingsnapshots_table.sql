@@ -14,5 +14,5 @@ CREATE OR ALTER TABLE PROJECTSETTINGSNAPSHOTS (
     SNAPSHOT_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The snapshot_timestamp field is converted into a date and stored in the snapshot_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.'
 )
 CLUSTER BY (SNAPSHOT_DATE)
-COMMENT="This table contain snapshots of projects settings. Snapshots are taken when a project setting is created, updated or deleted. Note: Snapshots are also taken periodically and independently of the changes. The snapshot_timestamp records when the snapshot was taken."
+COMMENT="This table contains snapshots of projects settings. Snapshots are taken when a project setting is created, updated or deleted. Note: Snapshots are also taken periodically and independently of the changes. The snapshot_timestamp records when the snapshot was taken."
 ;
