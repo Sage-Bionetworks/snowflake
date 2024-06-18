@@ -19,7 +19,6 @@ as
             $1:project_id as project_id,
             $1:settings_type as settings_type,
             $1:etag as etag,
-            $1:locations as locations,
             NULLIF(
                 regexp_replace(
                     METADATA$FILENAME,
