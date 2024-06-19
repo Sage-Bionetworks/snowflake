@@ -10,6 +10,7 @@ CREATE OR ALTER TABLE PROJECTSETTINGSNAPSHOTS (
     PROJECT_ID NUMBER(38,0) COMMENT 'The ID of the project to which the settings apply.',
     SETTINGS_TYPE VARCHAR(16777216) COMMENT 'The short type of the project settings. See https://rest-docs.synapse.org/rest/org/sagebionetworks/repo/model/ProjectSettings.html.',
     ETAG VARCHAR(16777216) COMMENT 'UUID issued each time the project settings changes.',
+    LOCATIONS ARRAY COMMENT 'The storage location IDs associated with the project setting.',
     SNAPSHOT_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The snapshot_timestamp field is converted into a date and stored in the snapshot_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.'
 )
 CLUSTER BY (SNAPSHOT_DATE)
