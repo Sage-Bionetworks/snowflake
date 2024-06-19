@@ -47,6 +47,8 @@ jobs:
         shell: bash
         run: |
           pip install schemachange
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy synapse_data_warehouse
         shell: bash
@@ -130,6 +132,8 @@ jobs:
         shell: bash
         run: |
           pip install schemachange
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy warehouses
         shell: bash
@@ -167,6 +171,8 @@ jobs:
         shell: bash
         run: |
           pip install schemachange
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy synapse_data_warehouse
         shell: bash
