@@ -1,4 +1,3 @@
-use role accountadmin;
 use schema {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 
 alter task refresh_synapse_warehouse_s3_stage_task suspend;
