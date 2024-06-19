@@ -2,7 +2,7 @@ USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
 USE WAREHOUSE COMPUTE_MEDIUM;
 
 COPY INTO
-    ACCESSREQUIREMENTSNAPSHOTS
+    PROJECTSETTINGSNAPSHOTS
 FROM (
 SELECT
     $1:change_timestamp as change_timestamp,
