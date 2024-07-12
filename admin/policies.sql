@@ -20,3 +20,15 @@ PASSWORD_MAX_AGE_DAYS = 0;
 
 ALTER ACCOUNT
 SET PASSWORD POLICY password_policy;
+CREATE SESSION POLICY admin_timeout_policy
+SESSION_IDLE_TIMEOUT_MINS = 15,
+SESSION_UI_IDLE_TIMEOUT_MINS = 15;
+
+ALTER USER x.schildwachter@sagebase.org
+SET SESSION POLICY admin_timeout_policy;
+ALTER USER khai.do@sagebase.org
+SET SESSION POLICY admin_timeout_policy;
+ALTER USER THOMASYU888
+SET SESSION POLICY admin_timeout_policy;
+ALTER USER thomas.yu@sagebase.org
+SET SESSION POLICY admin_timeout_policy;
