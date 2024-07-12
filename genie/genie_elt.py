@@ -27,11 +27,11 @@ def push_cbio_files_to_snowflake(syn: synapseclient.Synapse, ctx: snowflake.conn
         if release_file['name'].startswith(structured_data) and
         release_file['name'].endswith(("txt", "bed"))
     }
-
-    ctx.execute(
+    cs = ctx.cursor()
+    cs.execute(
         f"CREATE SCHEMA IF NOT EXISTS consortium_{release_name} WITH MANAGED ACCESS;"
     )
-    ctx.execute(f"USE SCHEMA consortium_{release_name}")
+    cs.execute(f"USE SCHEMA consortium_{release_name}")
     for release_file_key, release_file_ent in release_file_map.items():
         tbl_name = (release_file_key
             .replace("data_", "")
@@ -73,7 +73,6 @@ def main():
         role="SYSADMIN",
         warehouse="compute_xsmall"
     )
-    cs = ctx.cursor()
     # Exclude data_cna for now
     structured_data = (
         "data_clinical", "data_mutations", "data_fusions"
@@ -86,10 +85,12 @@ def main():
             continue
         for dirname, dir_synid in dirnames:
             # if dirname.endswith("-public") or folder_ent.name.startswith(("1.0", "2.0", "3.0")):
-            if not dirname.endswith('-consortium'):
+            # if not dirname.endswith('-consortium'):
+            #     continue
+            if dirname not in ('16.5-consortium', '16.6-consortium', '16.0-public'):
                 continue
             print(dirname)
-            push_cbio_files_to_snowflake(syn=syn, ctx=cs, synid=dir_synid, structured_data=structured_data)
+            push_cbio_files_to_snowflake(syn=syn, ctx=ctx, synid=dir_synid, structured_data=structured_data)
     ctx.close()
 
 if __name__ == "__main__":
