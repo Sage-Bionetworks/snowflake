@@ -50,7 +50,7 @@ assay_group as (
             when datatype = 'image' then 'image'
             when datatype = 'immunoassay' then 'immunoassay'
             when datatype = 'electrophysiology' then 'electrophysiology'
-            else 'other'
+            else assay
         end as simple_assay
     from ad_files
 ),
