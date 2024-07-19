@@ -3,3 +3,4 @@
 terraform.tfstate*
 *.csv
 .DS_Store
+streamlit_template/.streamlit/secrets.toml
