@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import plotly.express as px
 
-from queries import query_entity_distribution, query_project_sizes, query_project_downloads
-
 # Custom CSS for sage green filled containers and banners
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -23,6 +21,40 @@ def get_data_from_snowflake(query=""):
     session = connect_to_snowflake()
     node_latest = session.sql(query).to_pandas()
     return node_latest
+
+@st.cache_data
+def generate_sample_data():
+    total_data_size = round(random.uniform(100, 1000), 2)  # In GB
+    average_project_size = round(random.uniform(5, 50), 2)  # In GB
+    project_names = [f"Project {i}" for i in range(1, 21)]
+    project_sizes = {project: random.uniform(1, 50) for project in project_names}  # Project sizes in GB
+    download_sizes = {project: random.randint(10, 1000) for project in project_names}  # Download sizes in GB
+    months = pd.date_range(start=datetime.now() - timedelta(days=365), periods=12, freq='M').strftime('%Y-%m').tolist()
+    unique_users_data = {project: [random.randint(50, 150) for _ in months] for project in project_names}
+    entity_types = ['File', 'Folder', 'Project', 'Table', 'EntityView', 'Link', 'MaterializedView', 'Dataset', 'DatasetCollection']
+    entity_distribution = {entity: random.randint(1, 100) for entity in entity_types}
+    locations = {
+        'North America': {'lat': 54.5260, 'lon': -105.2551, 'most_popular_project': random.choice(project_names)},
+        'South America': {'lat': -8.7832, 'lon': -55.4915, 'most_popular_project': random.choice(project_names)},
+        'Europe': {'lat': 54.5260, 'lon': 15.2551, 'most_popular_project': random.choice(project_names)},
+        'Africa': {'lat': -8.7832, 'lon': 34.5085, 'most_popular_project': random.choice(project_names)},
+        'Asia': {'lat': 34.0479, 'lon': 100.6197, 'most_popular_project': random.choice(project_names)},
+        'Australia': {'lat': -25.2744, 'lon': 133.7751, 'most_popular_project': random.choice(project_names)},
+        'Antarctica': {'lat': -82.8628, 'lon': 135.0000, 'most_popular_project': random.choice(project_names)}
+    }
+    popular_entities = {
+        'File': ('file1.txt', random.randint(100, 500), random.randint(10, 50)),
+        'Folder': ('folder1', random.randint(50, 200), random.randint(5, 30)),
+        'Project': ('project1', random.randint(10, 100), random.randint(2, 20)),
+        'Table': ('table1', random.randint(20, 150), random.randint(3, 25)),
+        'EntityView': ('view1', random.randint(5, 50), random.randint(1, 10)),
+        'Link': ('link1', random.randint(1, 20), random.randint(1, 5)),
+        'MaterializedView': ('mview1', random.randint(2, 30), random.randint(1, 8)),
+        'Dataset': ('dataset1', random.randint(3, 40), random.randint(1, 12)),
+        'DatasetCollection': ('collection1', random.randint(1, 10), random.randint(1, 3)),
+    }
+
+    return total_data_size, average_project_size, project_sizes, download_sizes, unique_users_data, entity_distribution, locations, popular_entities
 
 def plot_unique_users_trend(unique_users_data, width=2000, height=400):
     top_projects = sorted(unique_users_data, key=lambda k: sum(unique_users_data[k]), reverse=True)[:10]
@@ -61,16 +93,14 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
     return fig
 
 def plot_download_sizes(download_sizes, project_sizes, width=2000):
-    st.dataframe(download_sizes)
-    download_sizes_df = download_sizes#pd.DataFrame(list(download_sizes.items()), columns=['project_id', 'total_downloads'])
-    download_sizes_df['TOTAL_DOWNLOADS'] = download_sizes_df['PROJECT_ID'].map(project_sizes)
-    download_sizes_df = download_sizes_df.sort_values(by='TOTAL_DOWNLOADS')
-    st.dataframe(download_sizes_df)
+    download_sizes_df = pd.DataFrame(list(download_sizes.items()), columns=['Project Name', 'Download Size'])
+    download_sizes_df['Project Size'] = download_sizes_df['Project Name'].map(project_sizes)
+    download_sizes_df = download_sizes_df.sort_values(by='Download Size')
     fig = go.Figure(data=[go.Bar(
-        x=download_sizes_df['PROJECT_ID'],
-        y=download_sizes_df['TOTAL_DOWNLOADS'],
+        x=download_sizes_df['Project Name'],
+        y=download_sizes_df['Download Size'],
         marker=dict(
-            color=download_sizes_df['TOTAL_DOWNLOADS'],
+            color=download_sizes_df['Project Size'],
             colorscale='Reds',
             colorbar=dict(title='Project Size (GB)')
         ),
@@ -136,22 +166,7 @@ def plot_user_downloads_map(locations, width=10000):
 
 def main():
 
-    
-    # Retrieve and prepare the data
-
-    entity_distribution_df = get_data_from_snowflake(query_entity_distribution)
-    entity_distribution = dict(
-        entity_type=list(entity_distribution_df['NODE_TYPE']),
-        percent_of_total=list(entity_distribution_df['PERCENTAGE_OF_TOTAL'])
-    )
-
-    project_sizes_df = get_data_from_snowflake(query_project_sizes)
-    project_sizes = dict(project_id=list(project_sizes_df['PROJECT_ID']), total_content_size=list(project_sizes_df['TOTAL_CONTENT_SIZE']))
-    total_data_size = round(sum(project_sizes['total_content_size']) / (1024 * 1024 * 1024), 2)
-    average_project_size = round(np.mean(project_sizes['total_content_size']) / (1024 * 1024 * 1024), 2)
-
-    project_downloads_df = get_data_from_snowflake(query_project_downloads)
-    #project_downloads = dict(project_id=list(project_downloads_df['PROJECT_ID']), total_downloads=list(project_downloads_df['TOTAL_DOWNLOADS']))
+    total_data_size, average_project_size, project_sizes, download_sizes, unique_users_data, entity_distribution, locations, popular_entities = generate_sample_data()
 
     # Row 1 -------------------------------------------------------------------
     st.markdown('### Monthly Overview :calendar:')
@@ -160,25 +175,25 @@ def main():
     col2.metric("Avg. Project Size", f"{average_project_size} GB", "8.0 GB")
     col3.metric("Annual Cost", "102,000 USD", "10,000 USD")
 
-    # # Row 2 -------------------------------------------------------------------
+    # Row 2 -------------------------------------------------------------------
     st.markdown("### Unique Users Report :bar_chart:")
-    # st.plotly_chart(plot_unique_users_trend(unique_users_data))
+    st.plotly_chart(plot_unique_users_trend(unique_users_data))
 
     # Row 3 -------------------------------------------------------------------
-    st.plotly_chart(plot_download_sizes(project_downloads_df, project_sizes))
+    st.plotly_chart(plot_download_sizes(download_sizes, project_sizes))
 
     # Row 4 -------------------------------------------------------------------
     st.markdown("### Entity Trends :pencil:")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown('<div class="element-container">', unsafe_allow_html=True)
-        #st.dataframe(plot_popular_entities(popular_entities))
+        st.dataframe(plot_popular_entities(popular_entities))
     with col2:
-        st.dataframe(entity_distribution)
+        st.plotly_chart(plot_entity_distribution(entity_distribution))
 
-    # # Row 5 -------------------------------------------------------------------
-    # st.markdown("### Interactive Map of User Downloads :earth_africa:")
-    # st.plotly_chart(plot_user_downloads_map(locations))
+    # Row 5 -------------------------------------------------------------------
+    st.markdown("### Interactive Map of User Downloads :earth_africa:")
+    st.plotly_chart(plot_user_downloads_map(locations))
 
 if __name__ == "__main__":
     main()
