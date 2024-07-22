@@ -1,10 +1,10 @@
 import numpy as np
 import streamlit as st
 
-from queries import (QUERY_ENTITY_DISTRIBUTION, QUERY_PROJECT_DOWNLOADS,
+from toolkit.queries import (QUERY_ENTITY_DISTRIBUTION, QUERY_PROJECT_DOWNLOADS,
                      QUERY_PROJECT_SIZES, QUERY_UNIQUE_USERS)
-from utils import get_data_from_snowflake
-from widgets import (plot_download_sizes, plot_unique_users_trend)
+from toolkit.utils import get_data_from_snowflake
+from toolkit.widgets import (plot_download_sizes, plot_unique_users_trend)
 
 
 # Custom CSS for styling
