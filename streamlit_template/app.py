@@ -20,9 +20,10 @@ def main():
     unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
 
     # 2. Transform the data as needed
+    convert_to_gib = 1024 * 1024 * 1024
     project_sizes = dict(PROJECT_ID=list(project_sizes_df['PROJECT_ID']), TOTAL_CONTENT_SIZE=list(project_sizes_df['TOTAL_CONTENT_SIZE']))
-    total_data_size = round(sum(project_sizes['TOTAL_CONTENT_SIZE']) / (1024 * 1024 * 1024), 2)
-    average_project_size = round(np.mean(project_sizes['TOTAL_CONTENT_SIZE']) / (1024 * 1024 * 1024), 2)
+    total_data_size = round(sum(project_sizes['TOTAL_CONTENT_SIZE']) / convert_to_gib, 2)
+    average_project_size = round(np.mean(project_sizes['TOTAL_CONTENT_SIZE']) / convert_to_gib, 2)
 
     # 3. Format the app, and visualize the data with your widgets in widgets.py
     # -------------------------------------------------------------------------
