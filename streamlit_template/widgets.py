@@ -1,19 +1,27 @@
-import datetime
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
-from datetime import timedelta
-
 def plot_unique_users_trend(unique_users_data, width=2000, height=400):
-    top_projects = sorted(unique_users_data, key=lambda k: sum(unique_users_data[k]), reverse=True)[:10]
-    months = pd.date_range(start=datetime.now() - timedelta(days=365), periods=12, freq='M').strftime('%Y-%m').tolist()
+
+    # Group by PROJECT_ID and sum the DISTINCT_USER_COUNT
+    grouped_df = unique_users_data.groupby("PROJECT_ID")["DISTINCT_USER_COUNT"].sum().reset_index()
+
+    # Sort by DISTINCT_USER_COUNT in descending order and get the top 10
+    top_projects = grouped_df.sort_values(by="DISTINCT_USER_COUNT", ascending=False).head(10)
+
     fig = go.Figure()
-    for i, project in enumerate(top_projects):
+    for i, project in zip(top_projects.index, top_projects['PROJECT_ID']):
+        
+        # Extract the data for the current project
+        filtered_df = unique_users_data[unique_users_data['PROJECT_ID'].isin([project])]
+        months = pd.to_datetime(filtered_df['ACCESS_MONTH'])
+        counts = filtered_df['DISTINCT_USER_COUNT']
+
+        # Scatter plot for the current project
         fig.add_trace(go.Scatter(
             x=months,
-            y=unique_users_data[project],
+            y=list(counts),
             mode='lines+markers',
             name=project,
             line=dict(width=2),
@@ -23,10 +31,13 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
             showlegend=True,
             visible='legendonly'
         ))
-    median_values = np.median([unique_users_data[project] for project in top_projects], axis=0)
+    # Calculate the median DISTINCT_USER_COUNT for each month
+    median_monthly_counts = unique_users_data.groupby("ACCESS_MONTH")["DISTINCT_USER_COUNT"].median().reset_index()
+    median_monthly_counts['ACCESS_MONTH'] = pd.to_datetime(median_monthly_counts['ACCESS_MONTH'])
+
     fig.add_trace(go.Scatter(
-        x=months,
-        y=median_values,
+        x=median_monthly_counts['ACCESS_MONTH'],
+        y=median_monthly_counts['DISTINCT_USER_COUNT'],
         mode='lines+markers',
         name='Median',
         line=dict(color='black', width=4),

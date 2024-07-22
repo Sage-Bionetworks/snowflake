@@ -1,11 +1,10 @@
 import numpy as np
 import streamlit as st
 
-from queries import (query_entity_distribution, query_project_downloads,
-                     query_project_sizes)
-from utils import connect_to_snowflake, get_data_from_snowflake
-from widgets import (plot_download_sizes, plot_entity_distribution,
-                     plot_popular_entities, plot_unique_users_trend)
+from queries import (QUERY_ENTITY_DISTRIBUTION, QUERY_PROJECT_DOWNLOADS,
+                     QUERY_PROJECT_SIZES, QUERY_UNIQUE_USERS)
+from utils import get_data_from_snowflake
+from widgets import (plot_download_sizes, plot_unique_users_trend)
 
 
 # Custom CSS for styling
@@ -15,9 +14,10 @@ with open('style.css') as f:
 def main():
 
     # 1. Retrieve the data using your queries in queries.py
-    entity_distribution_df = get_data_from_snowflake(query_entity_distribution)
-    project_sizes_df = get_data_from_snowflake(query_project_sizes)
-    project_downloads_df = get_data_from_snowflake(query_project_downloads)
+    entity_distribution_df = get_data_from_snowflake(QUERY_ENTITY_DISTRIBUTION)
+    project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
+    project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
+    unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
 
     # 2. Transform the data as needed
     project_sizes = dict(PROJECT_ID=list(project_sizes_df['PROJECT_ID']), TOTAL_CONTENT_SIZE=list(project_sizes_df['TOTAL_CONTENT_SIZE']))
@@ -35,23 +35,14 @@ def main():
 
     # Row 2 -----------------------------------------------------------------
     st.markdown("### Unique Users Report :bar_chart:")
-    # st.plotly_chart(plot_unique_users_trend(unique_users_data))
+    st.plotly_chart(plot_unique_users_trend(unique_users_df))
 
     # Row 3 -------------------------------------------------------------------
     st.plotly_chart(plot_download_sizes(project_downloads_df, project_sizes_df))
 
     # Row 4 -------------------------------------------------------------------
     st.markdown("### Entity Trends :pencil:")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown('<div class="element-container">', unsafe_allow_html=True)
-        #st.dataframe(plot_popular_entities(popular_entities))
-    with col2:
-        st.dataframe(entity_distribution_df)
-
-    # # Row 5 -------------------------------------------------------------------
-    # st.markdown("### Interactive Map of User Downloads :earth_africa:")
-    # st.plotly_chart(plot_user_downloads_map(locations))
+    st.dataframe(entity_distribution_df)
 
 if __name__ == "__main__":
     main()
