@@ -2,4 +2,4 @@ numpy==1.26.3
 streamlit==1.36.0
 pandas==2.2.2
 plotly==5.22.0
-snowflake==3.9.1
+snowflake-connector-python==3.9.1
