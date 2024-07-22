@@ -1,9 +1,10 @@
-import pandas as pd
+import datetime
 import numpy as np
-import random
-from datetime import datetime, timedelta
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+
+from datetime import timedelta
 
 def plot_unique_users_trend(unique_users_data, width=2000, height=400):
     top_projects = sorted(unique_users_data, key=lambda k: sum(unique_users_data[k]), reverse=True)[:10]

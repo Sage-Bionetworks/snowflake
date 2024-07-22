@@ -1,16 +1,11 @@
-import streamlit as st
-from snowflake.snowpark import Session
-import pandas as pd
 import numpy as np
-import random
-from datetime import datetime, timedelta
-import plotly.graph_objects as go
-import plotly.express as px
+import streamlit as st
 
-from queries import query_entity_distribution, query_project_sizes, query_project_downloads
-from widgets import plot_unique_users_trend, plot_download_sizes, plot_popular_entities, plot_entity_distribution
+from queries import (query_entity_distribution, query_project_downloads,
+                     query_project_sizes)
 from utils import connect_to_snowflake, get_data_from_snowflake
-
+from widgets import (plot_download_sizes, plot_entity_distribution,
+                     plot_popular_entities, plot_unique_users_trend)
 
 
 # Custom CSS for styling
@@ -38,7 +33,7 @@ def main():
     col2.metric("Avg. Project Size", f"{average_project_size} GB", "8.0 GB")
     col3.metric("Annual Cost", "102,000 USD", "10,000 USD")
 
-    # # Row 2 -----------------------------------------------------------------
+    # Row 2 -----------------------------------------------------------------
     st.markdown("### Unique Users Report :bar_chart:")
     # st.plotly_chart(plot_unique_users_trend(unique_users_data))
 
