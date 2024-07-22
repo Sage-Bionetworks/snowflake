@@ -9,20 +9,13 @@ import plotly.express as px
 
 from queries import query_entity_distribution, query_project_sizes, query_project_downloads
 from widgets import plot_unique_users_trend, plot_download_sizes, plot_popular_entities, plot_entity_distribution
-# Custom CSS for sage green filled containers and banners
+from utils import connect_to_snowflake, get_data_from_snowflake
+
+
+
+# Custom CSS for styling
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-@st.cache_resource
-def connect_to_snowflake():
-    session = Session.builder.configs(st.secrets.snowflake).create()
-    return session
-
-@st.cache_data
-def get_data_from_snowflake(query=""):
-    session = connect_to_snowflake()
-    node_latest = session.sql(query).to_pandas()
-    return node_latest
 
 def main():
 
@@ -36,6 +29,8 @@ def main():
     total_data_size = round(sum(project_sizes['TOTAL_CONTENT_SIZE']) / (1024 * 1024 * 1024), 2)
     average_project_size = round(np.mean(project_sizes['TOTAL_CONTENT_SIZE']) / (1024 * 1024 * 1024), 2)
 
+    # 3. Format the app, and visualize the data with your widgets in widgets.py
+    # -------------------------------------------------------------------------
     # Row 1 -------------------------------------------------------------------
     st.markdown('### Monthly Overview :calendar:')
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -43,7 +38,7 @@ def main():
     col2.metric("Avg. Project Size", f"{average_project_size} GB", "8.0 GB")
     col3.metric("Annual Cost", "102,000 USD", "10,000 USD")
 
-    # # Row 2 -------------------------------------------------------------------
+    # # Row 2 -----------------------------------------------------------------
     st.markdown("### Unique Users Report :bar_chart:")
     # st.plotly_chart(plot_unique_users_trend(unique_users_data))
 
