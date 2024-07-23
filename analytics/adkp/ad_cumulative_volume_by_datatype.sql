@@ -123,6 +123,7 @@ select
                 month_created asc
             rows between unbounded preceding and current row
         )
-        as cumulative_volume
+        as cumulative_volume,
+    bytes_to_tb(cumulative_volume) as cumulative_volume_tb
 from monthly_total
 order by month_created desc, simple_assay asc;
