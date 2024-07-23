@@ -3,3 +3,4 @@ streamlit==1.36.0
 pandas==2.2.2
 plotly==5.22.0
 snowflake-connector-python==3.9.1
+snowflake-snowpark-python==1.15.0
