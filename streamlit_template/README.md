@@ -29,7 +29,7 @@ streamlit_template/
 
 ### 1. Setup and Enable Access to Snowflake 
 
-- Create a fork of this repository under your GitHub user account <br>
+- Create a fork of this repository under your GitHub user account.
 - Within the `.streamlit` folder, you will need a file called `secrets.toml` which will be read by Streamlit before making communications with Snowflake.
 Use the contents in `example_secrets.toml` as a syntax guide for how `secrets.toml` should be set up. See the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier) for how to find your
 account name.
@@ -45,7 +45,7 @@ account name.
 ### 2. Build your Queries
 
 Once you've completed the setup above, you can begin working on your SQL queries.
-- Navigate to `queries.py` under the `toolkit/` folder
+- Navigate to `queries.py` under the `toolkit/` folder.
 - Your queries will be string objects. Assign each of them an easy-to-remember variable name, as they will be imported into `app.py` later on.
 - It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
@@ -68,17 +68,19 @@ and
 
 ### 3. Build your Widgets
 
-Your widgets will be the main visual component of your Streamlit application. Open the `widgets.py` script under the `toolkit/` folder and begin developing.
+Your widgets will be the main visual component of your Streamlit application.
 
-Example:
-```
-```
+- Navigate to `widgets.py` under the `toolkit/` folder.
+- Modify the imports as necessary. By default we are using `plotly` to design our widgets.
+- Create a function for each widget. For guidance, follow one of the examples in `widgets.py`.
 
 ### 4. Build your Application
 
 Here is where all your work on `queries.py` and `widgets.py` come together.
-* Navigate to `app.py` to begin developing
-* Import the queries You will retrieve your data using your queries in using the helper functions in `utils.py` that are already imported in `app.py`. 
+- Navigate to `app.py` to begin developing.
+- Import the queries you developed in Step 2.
+- Import the widgets you developed in Step 3.
+- 
 
 ### 5. Test your Application
 
