@@ -93,5 +93,12 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 - Click the URL next to `ConnectionURI` to launch a shell session in your instance.
 - Navigate to your home directory (`cd ~`).
 - Create your `secrets.toml` file again. The Docker image of your Streamlit application will not have the `secrets.toml` for security reasons.
-- Create a `docker-compose.yml` file with your image name.
-- Run your Docker container from the image (`docker-compose up -d`)
+- Pull down your Docker image (`docker pull <image name>`)
+- Run your Docker container from the image, and make sure to have your `secrets.toml` mounted and the 8501 port specified, like so:
+  ```
+  docker run -p 8501:8501 \
+    -v $PWD/secrets.toml:.streamlit/secrets.toml \
+    <image name>
+  ```
+> [!TIP]
+> If you would like to leave the app running indefinitely, even after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
