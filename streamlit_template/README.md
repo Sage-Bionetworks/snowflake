@@ -1,6 +1,7 @@
 ## Introduction
 This area of the repository serves as a template for developing your own Streamlit application for internal use within Sage Bionetworks.
-The template is designed to source data from the databases in Snowflake and compose a dashboard using the various tools provided by Streamlit.
+The template is designed to source data from the databases in Snowflake and compose a dashboard using the various tools provided by [Streamlit](https://docs.streamlit.io/)
+and plotly.
 
 Below is the directory structure for all the components within `streamlit_template`. In the following section we will break down the purpose for
 each component within `streamlit_template`, and how to use these components to design your own application and deploy via an AWS EC2 instance.
@@ -26,28 +27,61 @@ streamlit_template/
 
 ## Create your own Streamlit application
 
-### Setup and Enabling Access to Snowflake 
+### 1. Setup and Enable Access to Snowflake 
 
-1. Create a fork of this repository under your GitHub user account
-2. Within the `.streamlit` folder, you will need a file called `secrets.toml` which will be read by Streamlit before making communications with Snowflake.
+- Create a fork of this repository under your GitHub user account <br>
+- Within the `.streamlit` folder, you will need a file called `secrets.toml` which will be read by Streamlit before making communications with Snowflake.
 Use the contents in `example_secrets.toml` as a syntax guide for how `secrets.toml` should be set up. See the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier) for how to find your
 account name.
-3. Test your connection to Snowflake by running the example Streamlit app at the base of this directory. This will launch the application on port 8501, the default port for Streamlit applications.
+- Test your connection to Snowflake by running the example Streamlit app at the base of this directory. This will launch the application on port 8501, the default port for Streamlit applications.
    
    ```
    streamlit run app.py
    ```
 
-### Build your Queries
+> [!CAUTION]
+> Do not commit your `secrets.toml` file to your forked repository. Keep your credentials secure and do not expose them to the public.
 
-4. Once you've configured your access to Snowflake, you can begin working on your queries
+### 2. Build your Queries
 
-### Build your Widgets
+Once you've completed the setup above, you can begin working on your SQL queries.
+- Navigate to `queries.py` under the `toolkit/` folder
+- Your queries will be string objects. Assign each of them an easy-to-remember variable name, as they will be imported into `app.py` later on.
+- It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
-### Build your Application
+Example:
+```
+QUERY_NUMBER_OF_FILES = """
 
-### Test your Application
+select
+    count(*) as number_of_files
+from
+    node_latest
+where 
+    project_id = '53214489'
+and
+    node_type = 'file' // we want files, not folders or any other entity
+and
+    annotations is not NULL;
+"""
+```
 
-### Dockerize your Application
+### 3. Build your Widgets
 
-### Launch your Application on AWS EC2
+Your widgets will be the main visual component of your Streamlit application. Open the `widgets.py` script under the `toolkit/` folder and begin developing.
+
+Example:
+```
+```
+
+### 4. Build your Application
+
+Here is where all your work on `queries.py` and `widgets.py` come together.
+* Navigate to `app.py` to begin developing
+* Import the queries You will retrieve your data using your queries in using the helper functions in `utils.py` that are already imported in `app.py`. 
+
+### 5. Test your Application
+
+### 6. Dockerize your Application
+
+### 7. Launch your Application on AWS EC2
