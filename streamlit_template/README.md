@@ -87,3 +87,11 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 ### 6. Dockerize your Application
 
 ### 7. Launch your Application on AWS EC2
+- Create an EC2: Linux Docker product from the Sage Service Catalog.
+- Go to _Provisioned Products_ in the menu on the left-hand-side.
+- Once your EC2 product's `status` is set to `Available`, click it and navigate to the _Events_ tab.
+- Click the URL next to `ConnectionURI` to launch a shell session in your instance.
+- Navigate to your home directory (`cd ~`).
+- Create your `secrets.toml` file again. The Docker image of your Streamlit application will not have the `secrets.toml` for security reasons.
+- Create a `docker-compose.yml` file with your image name.
+- Run your Docker container from the image (`docker-compose up -d`)
