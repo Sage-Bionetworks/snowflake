@@ -80,20 +80,43 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 - Navigate to `app.py` to begin developing.
 - Import the queries you developed in Step 2.
 - Import the widgets you developed in Step 3.
-- 
+- Begin developing! Use the pre-existing `app.py` in the template as a guide for structuring your application.
+
+> [!TIP]
+> The `utils.py` houses the functions used to connect to Snowflake and run your SQL queries. Make sure to reserve an area
+> in the script for using `get_data_from_snowflake` with your queries from Step 2.
+>
+> Example:
+>
+> ```
+> from toolkit.queries import (QUERY_ENTITY_DISTRIBUTION, QUERY_PROJECT_SIZES,
+>                              QUERY_PROJECT_DOWNLOADS, QUERY_UNIQUE_USERS)
+>  
+>  entity_distribution_df = get_data_from_snowflake(QUERY_ENTITY_DISTRIBUTION)
+>  project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
+>  project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
+>  unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
+> ```
 
 ### 5. Test your Application
 
 ### 6. Dockerize your Application
 
+- Update the `requirements.txt` file with the packages used in any of the scripts above.
+- **_(Optional)_** You can choose to push a Docker image to the GitHub Container Registry to pull it directly from the container registry when ready to deploy.
+  For instructions on how to deploy your Docker image to the GitHub Container Registry, [see here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
 ### 7. Launch your Application on AWS EC2
+
 - Create an EC2: Linux Docker product from the Sage Service Catalog.
 - Go to _Provisioned Products_ in the menu on the left-hand-side.
 - Once your EC2 product's `status` is set to `Available`, click it and navigate to the _Events_ tab.
 - Click the URL next to `ConnectionURI` to launch a shell session in your instance.
 - Navigate to your home directory (`cd ~`).
+- **_(Optional)_** If you chose to push your Docker image to the GitHub Container Registry, pull your image down (`docker pull <image name>`).
+- If you chose not to work with the Container Registry, clone your repository in your desired working directory.
 - Create your `secrets.toml` file again. The Docker image of your Streamlit application will not have the `secrets.toml` for security reasons.
-- Pull down your Docker image (`docker pull <image name>`)
+- 
 - Run your Docker container from the image, and make sure to have your `secrets.toml` mounted and the 8501 port specified, like so:
   ```
   docker run -p 8501:8501 \
