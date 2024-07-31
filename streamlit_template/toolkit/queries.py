@@ -163,5 +163,4 @@ GROUP BY
 ORDER BY
     project_id,
     access_month;
-
 """

@@ -1,9 +1,0 @@
-version: '3.8'
-
-services:
-  streamlit_app:
-    build: .
-    ports:
-      - "8501:8501"
-    volumes:
-      - ./secrets.toml:.streamlit/secrets.toml
