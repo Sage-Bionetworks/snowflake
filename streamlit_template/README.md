@@ -114,6 +114,7 @@ as you see fit.
 ### 6. Dockerize your Application
 
 - Update the `requirements.txt` file with the packages used in any of the scripts above.
+- Ensure you have pushed all your changes to your fork of the repository that you are working in.
 - **_(Optional)_** You can choose to push a Docker image to the GitHub Container Registry to pull it directly from the container registry when ready to deploy.
   For instructions on how to deploy your Docker image to the GitHub Container Registry, [see here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
@@ -124,10 +125,9 @@ as you see fit.
 - Once your EC2 product's `status` is set to `Available`, click it and navigate to the _Events_ tab.
 - Click the URL next to `ConnectionURI` to launch a shell session in your instance.
 - Navigate to your home directory (`cd ~`).
-- **_(Optional)_** If you chose to push your Docker image to the GitHub Container Registry, pull your image down (`docker pull <image name>`).
-- If you chose not to work with the Container Registry, clone your repository in your desired working directory.
+- Clone your repository in your desired working directory.
 - Create your `secrets.toml` file again. The Docker image of your Streamlit application will not have the `secrets.toml` for security reasons.
-- 
+- Build your Docker image from the Dockerfile in the repository
 - Run your Docker container from the image, and make sure to have your `secrets.toml` mounted and the 8501 port specified, like so:
   ```
   docker run -p 8501:8501 \
@@ -135,4 +135,4 @@ as you see fit.
     <image name>
   ```
 > [!TIP]
-> If you would like to leave the app running indefinitely, even after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
+> If you would like to leave the app running after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
