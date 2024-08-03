@@ -100,6 +100,17 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 
 ### 5. Test your Application
 
+We encourage implementing unit and regression tests in your application, particularly if there are components that involve interacting with the application
+to display and/or transform data (e.g. buttons, dropdown menus, sliders, so on).
+
+- Navigate to `tests/test_app.py` to modify the existing script.
+- The default tests use [Streamlit's AppTest tool](https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest#run-an-apptest-script) to launch the application and retrieve its components. Please modify these existing tests or create brand new ones
+as you see fit.
+
+> [!TIP]
+> Make sure to launch the test suite from the base directory of the `streamlit_app/` (i.e `pytest tests/test_app.py`)
+> to avoid import issues.
+
 ### 6. Dockerize your Application
 
 - Update the `requirements.txt` file with the packages used in any of the scripts above.
