@@ -1,4 +1,5 @@
-QUERY_ENTITY_DISTRIBUTION = """
+SYNID = 20446927
+QUERY_ENTITY_DISTRIBUTION = f"""
 with htan_projects as (
     // select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.HTAN
     select
@@ -7,7 +8,7 @@ with htan_projects as (
         synapse_data_warehouse.synapse.node_latest,
         lateral flatten(input => node_latest.scope_ids) scopes
     where
-        id = 20446927
+        id = {SYNID}
 )
 SELECT
     node_type,
