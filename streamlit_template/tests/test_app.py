@@ -49,13 +49,22 @@ def test_monthly_overview(app):
     assert annual_cost.label == "Annual Cost"
 
 
+def test_client_versions(app):
+    """Ensure both plotly charts are being displayed."""
+
+    my_client_interaction_chart = app.get(
+        "plotly_chart")(key="my_client_interaction_chart")
+
+    assert my_client_interaction_chart is not None
+
+
 def test_plotly_charts(app):
     """Ensure both plotly charts are being displayed."""
 
     plotly_charts = app.get("plotly_chart")
 
     assert plotly_charts is not None
-    assert len(plotly_charts) == 2
+    assert len(plotly_charts) == 3
 
 
 def test_dataframe(app):

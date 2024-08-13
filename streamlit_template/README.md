@@ -32,7 +32,7 @@ streamlit_template/
 - Create a fork of this repository under your GitHub user account.
 - Within the `.streamlit` folder, you will need a file called `secrets.toml` which will be read by Streamlit before making communications with Snowflake.
 Use the contents in `example_secrets.toml` as a syntax guide for how `secrets.toml` should be set up. See the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier) for how to find your
-account name.
+account name. **Note:** If you use the `Copy account identifier` button it will copy data in the format of `orgname.account_name`, update it to be `orgname-account_name`.
 - Test your connection to Snowflake by running the example Streamlit app at the base of this directory. This will launch the application on port 8501, the default port for Streamlit applications.
    
    ```
@@ -134,3 +134,61 @@ as you see fit.
   ```
 > [!TIP]
 > If you would like to leave the app running after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
+
+
+## Additional tips (TO POLISH UP)
+There is a `.vscode/launch.json` file included at the root of this `snowflake` repo. It
+contains 2 launch configurations, the first when run in vscode will start up a debug
+session allowing you to place debug points in your code. The second is for running the
+pytest library on the related test file.
+
+
+# Feedback:
+Should have an example of how to use input variables in the queries based on input 
+given on the streamlit page. For example support I want to do a date range, or exact 
+date query like:
+
+```
+with extract_version as (
+    select
+        user_agent, 
+        client_version AS extracted_version
+    from
+        synapse_data_warehouse.synapse.processedaccess
+    where
+        client in ('PYTHON', 'COMMAND_LINE') and
+        record_date = :daterange
+)
+select
+    extracted_version,
+    count(*) as number_of_calls
+from
+    extract_version
+group by
+    extract_version.extracted_version
+order by
+    number_of_calls DESC;
+```
+
+or
+```
+with extract_version as (
+    select
+        user_agent, 
+        client_version AS extracted_version
+    from
+        synapse_data_warehouse.synapse.processedaccess
+    where
+        client in ('PYTHON', 'COMMAND_LINE') and
+        record_date = :specific_day
+)
+select
+    extracted_version,
+    count(*) as number_of_calls
+from
+    extract_version
+group by
+    extract_version.extracted_version
+order by
+    number_of_calls DESC;
+```

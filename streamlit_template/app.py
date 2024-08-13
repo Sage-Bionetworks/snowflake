@@ -5,9 +5,10 @@ from toolkit.queries import (
     QUERY_PROJECT_DOWNLOADS,
     QUERY_PROJECT_SIZES,
     QUERY_UNIQUE_USERS,
+    QUERY_CLIENT_VERSIONS,
 )
 from toolkit.utils import get_data_from_snowflake
-from toolkit.widgets import plot_download_sizes, plot_unique_users_trend
+from toolkit.widgets import plot_download_sizes, plot_unique_users_trend, plot_client_interactions
 
 # Custom CSS for styling
 with open("style.css") as f:
@@ -21,6 +22,7 @@ def main():
     project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
     project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
     unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
+    client_interactions_df = get_data_from_snowflake(QUERY_CLIENT_VERSIONS)
 
     # 2. Transform the data as needed
     convert_to_gib = 1024 * 1024 * 1024
@@ -49,11 +51,17 @@ def main():
     st.plotly_chart(plot_unique_users_trend(unique_users_df))
 
     # Row 3 -------------------------------------------------------------------
-    st.plotly_chart(plot_download_sizes(project_downloads_df, project_sizes_df))
+    st.plotly_chart(plot_download_sizes(
+        project_downloads_df, project_sizes_df))
 
     # Row 4 -------------------------------------------------------------------
     st.markdown("### Entity Trends :pencil:")
     st.dataframe(entity_distribution_df)
+
+    # Row 6 -----------------------------------------------------------------
+    st.markdown("### Interactions by client version :bar_chart:")
+    st.plotly_chart(plot_client_interactions(
+        client_interactions_df), key="my_client_interaction_chart")
 
 
 if __name__ == "__main__":

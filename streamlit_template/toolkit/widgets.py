@@ -21,7 +21,8 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
     for i, project in zip(top_projects.index, top_projects["PROJECT_ID"]):
 
         # Extract the data for the current project
-        filtered_df = unique_users_data[unique_users_data["PROJECT_ID"].isin([project])]
+        filtered_df = unique_users_data[unique_users_data["PROJECT_ID"].isin([
+                                                                             project])]
         months = pd.to_datetime(filtered_df["ACCESS_MONTH"])
         counts = filtered_df["DISTINCT_USER_COUNT"]
 
@@ -108,6 +109,35 @@ def plot_download_sizes(download_sizes_df, project_sizes_df, width=2000):
     return fig
 
 
+def plot_client_interactions(interactions_df, width=2000):
+    print(interactions_df)
+
+    interactions_df = interactions_df.sort_values(by="EXTRACTED_VERSION")
+    x = [f"version_{str(xx)}" for xx in interactions_df["EXTRACTED_VERSION"]]
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=x,
+                y=interactions_df["NUMBER_OF_CALLS"],
+                marker=dict(
+                    color=interactions_df["NUMBER_OF_CALLS"],
+                    colorscale="Reds",
+                    colorbar=dict(title="Number of Calls"),
+                ),
+                hovertemplate="<b>Client Version:</b> %{x}<br>"
+                + "<b>Number of client calls:</b> %{y}<extra></extra>",
+            )
+        ]
+    )
+    fig.update_layout(
+        xaxis_title="Client versions",
+        yaxis_title="Number of calls",
+        title="Number of interactions with Synapse by python client versions",
+        width=width,
+    )
+    return fig
+
+
 def plot_popular_entities(popular_entities):
     popular_entities_df = pd.DataFrame(
         list(popular_entities.items()), columns=["Entity Type", "Details"]
@@ -138,7 +168,8 @@ def plot_entity_distribution(entity_distribution):
 def plot_user_downloads_map(locations, width=10000):
     locations_df = pd.DataFrame.from_dict(locations, orient="index")
     locations_df.reset_index(inplace=True)
-    locations_df.columns = ["Region", "Latitude", "Longitude", "Most Popular Project"]
+    locations_df.columns = ["Region", "Latitude",
+                            "Longitude", "Most Popular Project"]
     fig = px.scatter_geo(
         locations_df,
         lat="Latitude",
