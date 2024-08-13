@@ -19,14 +19,18 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 # Ensure that the base directory is in PYTHONPATH so ``toolkit`` and other tools can be found
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # The timeout limit to wait for the app to load before shutdown ( in seconds )
 DEFAULT_TIMEOUT = 30
 
+
 @pytest.fixture(scope="module")
 def app():
-    return AppTest.from_file('app.py', default_timeout=DEFAULT_TIMEOUT).run()  # Point to your main Streamlit app file
+    return AppTest.from_file(
+        "app.py", default_timeout=DEFAULT_TIMEOUT
+    ).run()  # Point to your main Streamlit app file
+
 
 def test_monthly_overview(app):
     """
@@ -44,6 +48,7 @@ def test_monthly_overview(app):
     assert avg_project_size.label == "Avg. Project Size"
     assert annual_cost.label == "Annual Cost"
 
+
 def test_plotly_charts(app):
     """Ensure both plotly charts are being displayed."""
 
@@ -51,6 +56,7 @@ def test_plotly_charts(app):
 
     assert plotly_charts is not None
     assert len(plotly_charts) == 2
+
 
 def test_dataframe(app):
     """Ensure that the dataframe is being displayed."""

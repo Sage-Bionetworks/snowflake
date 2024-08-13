@@ -114,7 +114,7 @@ as you see fit.
 ### 6. Dockerize your Application
 
 - Update the `requirements.txt` file with the packages used in any of the scripts above.
-- Ensure you have pushed all your changes to your fork of the repository that you are working in.
+- Ensure you have pushed all your changes to your fork of the repository that you are working in (remember not to commit your `secrets.toml` file).
 - **_(Optional)_** You can choose to push a Docker image to the GitHub Container Registry to pull it directly from the container registry when ready to deploy.
   For instructions on how to deploy your Docker image to the GitHub Container Registry, [see here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
