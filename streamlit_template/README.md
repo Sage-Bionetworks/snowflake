@@ -56,13 +56,11 @@ QUERY_NUMBER_OF_FILES = """
 select
     count(*) as number_of_files
 from
-    node_latest
+    synapse_data_warehouse.synapse.node_latest
 where 
     project_id = '53214489'
 and
-    node_type = 'file' // we want files, not folders or any other entity
-and
-    annotations is not NULL;
+    node_type = 'file';
 """
 ```
 
