@@ -165,3 +165,25 @@ ORDER BY
     project_id,
     access_month;
 """
+
+QUERY_CLIENT_VERSIONS = """
+with extract_version as (
+    select
+        user_agent, 
+        client_version AS extracted_version
+    from
+        synapse_data_warehouse.synapse.processedaccess
+    where
+        client in ('PYTHON', 'COMMAND_LINE') and
+        (record_date >= ('2024-07-16 22:35:47')::timestamp AND record_date < ('2024-08-13 22:35:47')::timestamp)
+)
+select
+    extracted_version,
+    count(*) as number_of_calls
+from
+    extract_version
+group by
+    extract_version.extracted_version
+order by
+    number_of_calls DESC;
+"""

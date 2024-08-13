@@ -55,7 +55,7 @@ def test_plotly_charts(app):
     plotly_charts = app.get("plotly_chart")
 
     assert plotly_charts is not None
-    assert len(plotly_charts) == 2
+    assert len(plotly_charts) == 3
 
 
 def test_dataframe(app):
