@@ -145,7 +145,7 @@ pytest library on the related test file.
 
 # Feedback:
 Should have an example of how to use input variables in the queries based on input 
-given on the streamlit page. For example support I want to do a date range, or exact 
+given on the streamlit page. For example suppose I want to do a date range, or exact 
 date query like:
 
 ```
