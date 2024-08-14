@@ -27,7 +27,10 @@ def main():
     project_sizes_df = get_data_from_snowflake(query_project_sizes())
     project_downloads_df = get_data_from_snowflake(query_project_downloads())
     # User input for the number of months
-    months_back = st.sidebar.slider("Lookback Range (how many months back to display trends)", min_value=1, max_value=24, value=12)
+    months_back = st.sidebar.slider("Lookback Range (how many months back to display trends)",
+                                    min_value=1,
+                                    max_value=24,
+                                    value=12)
     # Use the selected months_back in the unique users query
     unique_users_df = get_data_from_snowflake(query_unique_users(months_back))
 
