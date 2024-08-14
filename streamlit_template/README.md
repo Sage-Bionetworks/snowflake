@@ -49,7 +49,7 @@ Once you've completed the setup above, you can begin working on your SQL queries
 - Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on.
 - It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
-Example of a string object query:
+**Example of a string object query**:
 ```
 QUERY_NUMBER_OF_FILES = """
 
@@ -64,9 +64,9 @@ and
 """
 ```
 
-- We encourage the use of function queries if you plan to make your application, and therefore your queries, interactive. For example, let's say you want to give users the option to input the `project_id` they want to query the number of files for. Your query in this case would look like the following...
+We encourage the use of function queries if you plan to make your application, and therefore your queries, interactive. For example, let's say you want to give users the option to input the `project_id` they want to query the number of files for. Your query in this case would look like the following...
 
-Example of a function query:
+**Example of a function query**:
 ```
 def query_number_of_files(pid):
   """Returns the total number of files for a given project (pid)."""
