@@ -64,7 +64,7 @@ and
 """
 ```
 
-**Example of a function query**:
+**Example of a function query**:<br>
 We encourage the use of function queries if you plan to make your application, and therefore your queries, interactive. For example, let's say you want to give users the option to input the `project_id` they want to query the number of files for. Your query in this case would look like the following...
 ```
 def query_number_of_files(pid):
