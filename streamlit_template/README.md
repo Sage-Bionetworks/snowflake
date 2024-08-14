@@ -135,7 +135,7 @@ as you see fit.
 > [!TIP]
 > If you would like to leave the app running after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
 
-## Debugging on VSCode
+## Additional Tips
 There is a `.vscode/launch.json` file included at the root of this `snowflake` repo. It
 contains 2 launch configurations, the first when run in vscode will start up a debug
 session allowing you to place debug points in your code. The second is for running the
