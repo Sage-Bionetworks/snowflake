@@ -113,10 +113,10 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 >    query_unique_users,
 > )
 >  
->  entity_distribution_df = get_data_from_snowflake(query_entity_distribution)
->  project_sizes_df = get_data_from_snowflake(query_project_sizes)
->  project_downloads_df = get_data_from_snowflake(query_project_downloads)
->  unique_users_df = get_data_from_snowflake(query_unique_users)
+>  entity_distribution_df = get_data_from_snowflake(query_entity_distribution())
+>  project_sizes_df = get_data_from_snowflake(query_project_sizes())
+>  project_downloads_df = get_data_from_snowflake(query_project_downloads())
+>  unique_users_df = get_data_from_snowflake(query_unique_users(my_param))
 > ```
 
 ### 5. Test your Application
