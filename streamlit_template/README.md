@@ -134,11 +134,39 @@ as you see fit.
 > to avoid import issues.
 
 ### 6. Dockerize your Application
+  
+- **Update the requirements file** <br>
+  Ensure that the `requirements.txt` file is up to date with all the necessary Python packages that are used in your scripts.
+- **Push all relevant changes** <br>
+  Ensure you have pushed all your changes to your branch of the forked repository that you are working in (remember not to commit your `secrets.toml` file).
 
-- Update the `requirements.txt` file with the packages used in any of the scripts above.
-- Ensure you have pushed all your changes to your fork of the repository that you are working in (remember not to commit your `secrets.toml` file).
-- **_(Optional)_** You can choose to push a Docker image to the GitHub Container Registry to pull it directly from the container registry when ready to deploy.
-  For instructions on how to deploy your Docker image to the GitHub Container Registry, [see here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+You can choose to build and push a Docker image to the GitHub Container Registry and pull it directly from the registry when ready to deploy in Step 7. Keep in mind the size of your Docker image will be right around 800Mb at _least_, due to the python libraries
+required for a basic application to run, so be conscious of this when choosing to upload your image.
+
+If you do not wish to publish a Docker image to the container registry, you can skip the to the next section. Otherwise, follow the instructions below.
+
+- **Build the Docker image** <br>
+  Run the following command in your terminal from the root of your project directory where the `Dockerfile` is located:
+  ```
+  docker build -t ghcr.io/<your-username>/<your-docker-image-name>:<tag> .
+  ```
+  Replace `<your-username>` with the user that owns the forked repository, `<your-docker-image-name>` with a name for your Docker image, and `<tag>` with a version tag (e.g., v1.0.0).
+
+- **Login to GitHub Container Registry** <br>
+  Before pushing your image, you need to authenticate with the GitHub Container Registry. Use the following command:
+  ```
+  echo "<your-token>" | docker login ghcr.io -u <your-github-username> --password-stdin
+  ```
+  Replace `<your-token>` with a GitHub token that has appropriate permissions, and `<your-github-username>` with your GitHub username.
+
+- **Push the Docker Image** <br>
+  Once authenticated, push your Docker image to the GitHub Container Registry with the following command:
+  ```
+  docker push ghcr.io/<your-github-username>/<your-docker-image-name>:<tag>
+  ```
+  Replace the placeholders with your relevant details.
+
+For further instructions on how to deploy your Docker image to the GitHub Container Registry, [see here](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
 ### 7. Launch your Application on AWS EC2
 
@@ -147,13 +175,18 @@ as you see fit.
 - Once your EC2 product's `status` is set to `Available`, click it and navigate to the _Events_ tab.
 - Click the URL next to `ConnectionURI` to launch a shell session in your instance.
 - Navigate to your home directory (`cd ~`).
-- Clone your repository in your desired working directory.
-- Create your `secrets.toml` file again. The Docker image of your Streamlit application will not have the `secrets.toml` for security reasons.
-- Build your Docker image from the Dockerfile in the repository
+- Clone your repository in your desired working directory. Example:
+  ```
+  git clone https://github.com/<your-username>/snowflake.git
+  ```
+  Replace `<your-username>` with the user that the forked repository is under.
+- Create your `secrets.toml` file again, and make sure it's located under the `.streamlit/` folder. By default, the instance should already have `vi` available to use as an editor.
+- Build your Docker image, either from the `Dockerfile` in the repository, or by pulling down your image from the GitHub Container Registry.
 - Run your Docker container from the image, and make sure to have your `secrets.toml` mounted and the 8501 port specified, like so:
   ```
-  docker run -p 8501:8501 \
-    -v $PWD/secrets.toml:.streamlit/secrets.toml \
+  docker run \
+    -p 8501:8501 \
+    -v $PWD/secrets.toml:/.streamlit/secrets.toml \
     <image name>
   ```
 - Now your Streamlit application should be sharable via the private IP address of the EC2 instance. To find the private IP address, navigate back to the _Events_ tab when viewing your provisioned EC2: Linux Docker product, and scroll down to `EC2InstancePrivateIpAddress`. Let's say your EC2 instance's private IP address is 22.22.22.222. The URL you can share with users to access the Streamlit app would be http://22.22.22.222:8501/. **Remember that this is a private IP address, therefore your Streamlit app can only be viewed by those connected to Sage's internal network, either through ethernet or VPN.**
