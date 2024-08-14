@@ -1,4 +1,6 @@
 def query_entity_distribution(synapse_id=20446927):
+    """Returns the number of files for a given project (synapse_id)."""
+
     return f"""
     with htan_projects as (
         // select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.HTAN
@@ -26,6 +28,8 @@ def query_entity_distribution(synapse_id=20446927):
     """
 
 def query_project_sizes():
+    """Return the cumulative size of all projects."""
+
     return """
     WITH htan_projects AS (
     SELECT
@@ -73,6 +77,8 @@ def query_project_sizes():
     """
 
 def query_project_downloads():
+    """Return the total number of downloads for all projects."""
+
     return """
     WITH htan_projects AS (
         SELECT
@@ -120,6 +126,8 @@ def query_project_downloads():
     """
 
 def query_unique_users(months_back):
+    """Return the number of monthly unique users going back x months (months_back)."""
+
     return f"""
     WITH htan_projects AS (
         SELECT
