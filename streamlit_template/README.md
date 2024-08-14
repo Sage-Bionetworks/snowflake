@@ -136,26 +136,38 @@ as you see fit.
 > If you would like to leave the app running after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
 
 ## Additional Tips
+If you would like to leverage VSCode to debug and test your application, rather than working with `streamlit` and `pytest` on the command line, follow the instructions below:
+
 There is a `.vscode/launch.json` file located at the root of the `snowflake` repository. This file is used to define configurations for debugging and testing within VSCode. The `launch.json` file in this repository contains two key configurations: one for debugging the Streamlit app and another for running tests with the pytest library. Here’s how you can set it up and use it:
 
-* Make sure you have Visual Studio Code (VSCode) installed on your system.
-* Create a workspace for the `snowflake` repository by going to _File_ > _Open Folder..._ and navigating to the root directory of the `snowflake` repository. Select the folder and click _Open_.
-* Open the `launch.json` file in the VSCode editor.
-* The launch.json file in this project contains two configurations:
+### 1. Set Up VSCode on Your Machine
 
-    Debugging the Streamlit App:
-        This configuration is named "debug streamlit". When you run this, it will start the Streamlit app in a debug session. This allows you to place breakpoints in your code, step through the execution, and inspect variables as the app runs.
-    Running Pytest for the Streamlit App:
+Make sure you have Visual Studio Code (VSCode) installed on your machine. You can download it [here](https://code.visualstudio.com/).
+
+### 2. Create An Active Workspace on VSCode
+
+* Open up VSCode.
+* Click up _File_ > _Open Folder..._ and navigate to the root directory of the `snowflake` repository.
+* Select the folder and click _Open_.
+
+### 3. Review The `launch.json` Configurations
+
+* Open the `launch.json` file in the VSCode editor.
+* The launch.json file in this project contains two configurations: <br>
+
+    Debugging the Streamlit App:<br>
+        This configuration is named "debug streamlit". When you run this, it will start the Streamlit app in a debug session. This allows you to place breakpoints in your code, step through the execution, and inspect variables as the app runs.<br>
+    Running Pytest for the Streamlit App:<br>
         The second configuration is named "pytest for Streamlit app". This is used to run the tests in the project using the pytest framework. It’s designed to execute the test file associated with the Streamlit app and allows you to debug your tests if they fail.
 
-* Running the Configurations
+### 4. Running the Configurations
 
-    Step 1: Open the Run and Debug Sidebar
+* Open the Run and Debug Sidebar <br>
         Click on the "Run and Debug" icon in the Activity Bar on the left side of the VSCode window. It looks like a play button with a bug on it. Alternatively, you can open it by pressing Ctrl+Shift+D (Windows/Linux) or Cmd+Shift+D (Mac).
-    Step 2: Select a Configuration
+* Select a Configuration<br>
         At the top of the "Run and Debug" sidebar, you’ll see a dropdown menu where you can select one of the configurations defined in the launch.json file.
         Select "debug streamlit" to start debugging the Streamlit app, or "pytest for Streamlit app" to run and debug your tests.
-    Step 3: Start Debugging or Testing
+* Start Debugging or Testing<br>
         Once you’ve selected the desired configuration, click the green play button (Start Debugging) at the top of the sidebar, or simply press F5.
         The debugger will start, and you can place breakpoints in your code by clicking in the left margin next to the line numbers.
         If you’re running the tests, the pytest module will execute the specified test file, and you can debug any test failures using the same tools.
