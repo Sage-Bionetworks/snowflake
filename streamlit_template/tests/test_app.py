@@ -29,7 +29,7 @@ DEFAULT_TIMEOUT = 30
 def app():
     return AppTest.from_file(
         "app.py", default_timeout=DEFAULT_TIMEOUT
-    ).run()  # Point to your main Streamlit app file
+    ).run()
 
 
 def test_monthly_overview(app):
@@ -62,6 +62,5 @@ def test_dataframe(app):
     """Ensure that the dataframe is being displayed."""
 
     dataframe = app.dataframe
-
     assert dataframe is not None
     assert len(dataframe) == 1
