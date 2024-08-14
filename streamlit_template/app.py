@@ -4,7 +4,7 @@ from toolkit.queries import (
     QUERY_ENTITY_DISTRIBUTION,
     QUERY_PROJECT_DOWNLOADS,
     QUERY_PROJECT_SIZES,
-    QUERY_UNIQUE_USERS,
+    query_unique_users,
 )
 from toolkit.utils import get_data_from_snowflake
 from toolkit.widgets import plot_download_sizes, plot_unique_users_trend
@@ -20,7 +20,12 @@ def main():
     entity_distribution_df = get_data_from_snowflake(QUERY_ENTITY_DISTRIBUTION)
     project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
     project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
-    unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
+
+    # User input for the number of months
+    months_back = st.slider("Select the number of months to go back", min_value=1, max_value=24, value=12)
+    # Use the selected months_back in the unique users query
+    unique_users_query = query_unique_users(months_back)
+    unique_users_df = get_data_from_snowflake(unique_users_query)
 
     # 2. Transform the data as needed
     convert_to_gib = 1024 * 1024 * 1024

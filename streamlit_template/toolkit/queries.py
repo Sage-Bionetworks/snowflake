@@ -117,51 +117,52 @@ GROUP BY
     project_id;
 """
 
-QUERY_UNIQUE_USERS = """
-WITH htan_projects AS (
+def query_unique_users(months_back):
+    return f"""
+    WITH htan_projects AS (
+        SELECT
+            CAST(scopes.value AS INTEGER) AS project_id
+        FROM
+            synapse_data_warehouse.synapse.node_latest,
+            LATERAL FLATTEN(input => node_latest.scope_ids) scopes
+        WHERE
+            id = 20446927
+    ),
+    project_files AS (
+        SELECT
+            nl.id AS node_id,
+            hp.project_id
+        FROM
+            synapse_data_warehouse.synapse.node_latest nl
+        JOIN
+            htan_projects hp
+        ON
+            nl.project_id = hp.project_id
+    ),
+    file_access AS (
+        SELECT
+            pf.project_id,
+            filedownload.user_id,
+            DATE_TRUNC('month', filedownload.TIMESTAMP) AS access_month
+        FROM
+            project_files pf
+        JOIN
+            synapse_data_warehouse.synapse.filedownload filedownload
+        ON
+            pf.node_id = filedownload.file_handle_id
+        WHERE
+            filedownload.TIMESTAMP >= DATEADD(month, -{months_back}, CURRENT_DATE)
+    )
     SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
+        project_id,
+        access_month,
+        COUNT(DISTINCT user_id) AS distinct_user_count
     FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 20446927
-),
-project_files AS (
-    SELECT
-        nl.id AS node_id,
-        hp.project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest nl
-    JOIN
-        htan_projects hp
-    ON
-        nl.project_id = hp.project_id
- ),
- file_access AS (
-    SELECT
-        pf.project_id,
-        filedownload.user_id,
-        DATE_TRUNC('month', filedownload.TIMESTAMP) AS access_month
-    FROM
-        project_files pf
-    JOIN
-        synapse_data_warehouse.synapse.filedownload filedownload
-    ON
-        pf.node_id = filedownload.file_handle_id
-    WHERE
-        filedownload.TIMESTAMP >= DATEADD(month, -12, CURRENT_DATE)
- )
-SELECT
-    project_id,
-    access_month,
-    COUNT(DISTINCT user_id) AS distinct_user_count
-FROM
-    file_access
-GROUP BY
-    project_id,
-    access_month
-ORDER BY
-    project_id,
-    access_month;
-"""
+        file_access
+    GROUP BY
+        project_id,
+        access_month
+    ORDER BY
+        project_id,
+        access_month;
+    """
