@@ -46,7 +46,7 @@ account name. **Note:** If you use the `Copy account identifier` button it will 
 
 Once you've completed the setup above, you can begin working on your SQL queries.
 - Navigate to `queries.py` under the `toolkit/` folder.
-- Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on. See below for two examples on how you can write your queries, depending on your needs.
+- Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on. See below for two examples on how you can write your queries depending on your needs.
 - It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
 **Example of a string object query**: <br>
