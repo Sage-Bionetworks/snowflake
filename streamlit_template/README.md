@@ -186,12 +186,12 @@ Make sure you have Visual Studio Code (VSCode) installed on your machine. You ca
 
 ### 4. Running the Configurations
 
-* Open the Run and Debug Sidebar <br>
+* **Open the Run and Debug Sidebar**<br>
         Click on the "Run and Debug" icon in the Activity Bar on the left side of the VSCode window. It looks like a play button with a bug on it. Alternatively, you can open it by pressing Ctrl+Shift+D (Windows/Linux) or Cmd+Shift+D (Mac).
-* Select a Configuration<br>
+* **Select a Configuration**<br>
         At the top of the "Run and Debug" sidebar, you’ll see a dropdown menu where you can select one of the configurations defined in the launch.json file.
         Select "debug streamlit" to start debugging the Streamlit app, or "pytest for Streamlit app" to run and debug your tests.
-* Start Debugging or Testing<br>
+* **Start Debugging or Testing**<br>
         Once you’ve selected the desired configuration, click the green play button (Start Debugging) at the top of the sidebar, or simply press F5.
         The debugger will start, and you can place breakpoints in your code by clicking in the left margin next to the line numbers.
         If you’re running the tests, the pytest module will execute the specified test file, and you can debug any test failures using the same tools.
