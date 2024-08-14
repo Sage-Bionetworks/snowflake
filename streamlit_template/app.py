@@ -1,13 +1,19 @@
 import numpy as np
 import streamlit as st
 from toolkit.queries import (
-    QUERY_ENTITY_DISTRIBUTION,
-    QUERY_PROJECT_DOWNLOADS,
-    QUERY_PROJECT_SIZES,
+    query_entity_distribution,
+    query_project_downloads,
+    query_project_sizes,
     query_unique_users,
 )
 from toolkit.utils import get_data_from_snowflake
 from toolkit.widgets import plot_download_sizes, plot_unique_users_trend
+
+# Configure the layout of the Streamlit app page
+st.set_page_config(layout="wide",
+                   page_title="HTAN Analytics",
+                   page_icon=":bar_chart:",
+                   initial_sidebar_state="expanded")
 
 # Custom CSS for styling
 with open("style.css") as f:
@@ -17,15 +23,13 @@ with open("style.css") as f:
 def main():
 
     # 1. Retrieve the data using your queries in queries.py
-    entity_distribution_df = get_data_from_snowflake(QUERY_ENTITY_DISTRIBUTION)
-    project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
-    project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
-
+    entity_distribution_df = get_data_from_snowflake(query_entity_distribution())
+    project_sizes_df = get_data_from_snowflake(query_project_sizes())
+    project_downloads_df = get_data_from_snowflake(query_project_downloads())
     # User input for the number of months
-    months_back = st.slider("Select the number of months to go back", min_value=1, max_value=24, value=12)
+    months_back = st.sidebar.slider("Modify x-axis for unique users chart", min_value=1, max_value=24, value=12)
     # Use the selected months_back in the unique users query
-    unique_users_query = query_unique_users(months_back)
-    unique_users_df = get_data_from_snowflake(unique_users_query)
+    unique_users_df = get_data_from_snowflake(query_unique_users(months_back))
 
     # 2. Transform the data as needed
     convert_to_gib = 1024 * 1024 * 1024
@@ -44,7 +48,7 @@ def main():
     # -------------------------------------------------------------------------
     # Row 1 -------------------------------------------------------------------
     st.markdown("### Monthly Overview :calendar:")
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1, 1, 5])
     col1.metric("Total Storage Occupied", f"{total_data_size} GB", "7.2 GB")
     col2.metric("Avg. Project Size", f"{average_project_size} GB", "8.0 GB")
     col3.metric("Annual Cost", "102,000 USD", "10,000 USD")
