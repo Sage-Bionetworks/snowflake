@@ -180,9 +180,9 @@ For further instructions on how to deploy your Docker image to the GitHub Contai
   git clone https://github.com/<your-username>/snowflake.git
   ```
   Replace `<your-username>` with the user that the forked repository is under.
-- Create your `secrets.toml` file again, and make sure it's located under the `.streamlit/` folder. By default, the instance should already have `vi` available to use as an editor.
+- Create your `secrets.toml` file again. By default, the instance should already have `vi` available to use as an editor.
 - Build your Docker image, either from the `Dockerfile` in the repository, or by pulling down your image from the GitHub Container Registry.
-- Run your Docker container from the image, and make sure to have your `secrets.toml` mounted and the 8501 port specified, like so:
+- Run your Docker container from the image, and make sure to have your `secrets.toml` (in the current working directory) mounted and the 8501 port specified, like so:
   ```
   docker run \
     -p 8501:8501 \
