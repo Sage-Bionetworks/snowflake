@@ -156,6 +156,8 @@ as you see fit.
     -v $PWD/secrets.toml:.streamlit/secrets.toml \
     <image name>
   ```
+- Now your Streamlit application should be sharable via the private IP address of the EC2 instance. To find the private IP address, navigate back to the _Events_ tab when viewing your provisioned EC2: Linux Docker product, and scroll down to `EC2InstancePrivateIpAddress`. Let's say your EC2 instance's private IP address is 22.22.22.222. The URL you can share with users to access the Streamlit app would be http://22.22.22.222:8501/. **Remember that this is a private IP address, therefore your Streamlit app can only be viewed by those connected to Sage's internal network, either through ethernet or VPN.**
+
 > [!TIP]
 > If you would like to leave the app running after you close your shell session, be sure to run with the container detached (i.e. Have `-d` somewhere in the `docker run` command)
 
