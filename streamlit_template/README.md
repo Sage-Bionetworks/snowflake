@@ -49,7 +49,7 @@ Once you've completed the setup above, you can begin working on your SQL queries
 - Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on. See below for two examples on how you can write your queries, depending on your needs.
 - It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
-**Example of a string object query**:
+**Example of a string object query**: <br>
 You may assign your string objects to global variables if you do not intend for the queries to be modified in any way. Below is a simple example for
 a use-case where only the number of files for Project `syn53214489` is calculated.
 ```
