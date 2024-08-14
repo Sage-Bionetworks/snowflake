@@ -106,13 +106,17 @@ Here is where all your work on `queries.py` and `widgets.py` come together.
 > Example:
 >
 > ```
-> from toolkit.queries import (QUERY_ENTITY_DISTRIBUTION, QUERY_PROJECT_SIZES,
->                              QUERY_PROJECT_DOWNLOADS, QUERY_UNIQUE_USERS)
+> from toolkit.queries import (
+>    query_entity_distribution,
+>    query_project_downloads,
+>    query_project_sizes,
+>    query_unique_users,
+> )
 >  
->  entity_distribution_df = get_data_from_snowflake(QUERY_ENTITY_DISTRIBUTION)
->  project_sizes_df = get_data_from_snowflake(QUERY_PROJECT_SIZES)
->  project_downloads_df = get_data_from_snowflake(QUERY_PROJECT_DOWNLOADS)
->  unique_users_df = get_data_from_snowflake(QUERY_UNIQUE_USERS)
+>  entity_distribution_df = get_data_from_snowflake(query_entity_distribution)
+>  project_sizes_df = get_data_from_snowflake(query_project_sizes)
+>  project_downloads_df = get_data_from_snowflake(query_project_downloads)
+>  unique_users_df = get_data_from_snowflake(query_unique_users)
 > ```
 
 ### 5. Test your Application
