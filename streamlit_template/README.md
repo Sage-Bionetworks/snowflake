@@ -46,7 +46,7 @@ account name. **Note:** If you use the `Copy account identifier` button it will 
 
 Once you've completed the setup above, you can begin working on your SQL queries.
 - Navigate to `queries.py` under the `toolkit/` folder.
-- Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on.
+- Your queries can either be string objects, or functions that return string objects. Assign each of them an easy-to-remember variable/function name, as they will be imported into `app.py` later on. See below for two examples on how you can write your queries, depending on your needs.
 - It is encouraged that you test these queries in a SQL Worksheet on Snowflake's Snowsight before running them on your application.
 
 **Example of a string object query**:
@@ -64,9 +64,8 @@ and
 """
 ```
 
-We encourage the use of function queries if you plan to make your application, and therefore your queries, interactive. For example, let's say you want to give users the option to input the `project_id` they want to query the number of files for. Your query in this case would look like the following...
-
 **Example of a function query**:
+We encourage the use of function queries if you plan to make your application, and therefore your queries, interactive. For example, let's say you want to give users the option to input the `project_id` they want to query the number of files for. Your query in this case would look like the following...
 ```
 def query_number_of_files(pid):
   """Returns the total number of files for a given project (pid)."""
@@ -187,7 +186,7 @@ Make sure you have Visual Studio Code (VSCode) installed on your machine. You ca
 ### 4. Running the Configurations
 
 * **Open the Run and Debug Sidebar**<br>
-        Click on the "Run and Debug" icon in the Activity Bar on the left side of the VSCode window. It looks like a play button with a bug on it. Alternatively, you can open it by pressing Ctrl+Shift+D (Windows/Linux) or Cmd+Shift+D (Mac).
+        Click on the "Run and Debug" icon in the Activity Bar on the left side of the VSCode window. It looks like a play button with a bug on it. Alternatively, you can open it by pressing `Ctrl+Shift+D` (Windows/Linux) or `Cmd+Shift+D` (Mac).
 * **Select a Configuration**<br>
         At the top of the "Run and Debug" sidebar, you’ll see a dropdown menu where you can select one of the configurations defined in the launch.json file.
         Select "debug streamlit" to start debugging the Streamlit app, or "pytest for Streamlit app" to run and debug your tests.
