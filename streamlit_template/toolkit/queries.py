@@ -30,48 +30,53 @@ def query_entity_distribution(synapse_id=20446927):
 def query_project_sizes():
     """Return the cumulative size of all projects."""
 
-    return """
-    WITH htan_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 20446927
+    return f"""
+    WITH
+    htan_project_ids AS (
+
+        SELECT
+            DISTINCT cast(scopes.value as integer) as project_id
+        FROM
+            synapse_data_warehouse.synapse.node_latest,
+            LATERAL flatten(input => node_latest.scope_ids) scopes
+        WHERE
+            id = '20446927'
+
     ),
-    project_files AS (
-    SELECT
-    nl.id AS node_id,
-    hp.project_id
-    FROM
-    synapse_data_warehouse.synapse.node_latest nl
-    JOIN
-    htan_projects hp
-    ON
-    nl.project_id = hp.project_id
+    htan_project_files AS (
+
+        SELECT
+            node_latest.id AS node_id,
+            htan_project_ids.project_id
+        FROM
+            synapse_data_warehouse.synapse.node_latest
+        JOIN
+            htan_project_ids
+        ON
+            node_latest.project_id = htan_project_ids.project_id
+        WHERE
+            node_type = 'file'
+
     ),
-    file_content_size AS (
-    SELECT distinct
-        pf.project_id,
-        filelatest.id,
-        filelatest.content_size
-    FROM
-        synapse_data_warehouse.synapse.file_latest filelatest
-    JOIN
-        synapse_data_warehouse.synapse.filedownload filedownload
-    ON
-        filelatest.id = filedownload.file_handle_id
-    JOIN
-        project_files pf
-    ON
-        filedownload.file_handle_id = pf.node_id
+    htan_file_sizes AS (
+
+        SELECT
+            content_size,
+            htan_project_files.node_id,
+            htan_project_files.project_id
+        FROM
+            synapse_data_warehouse.synapse.file_latest file_latest
+        JOIN
+            htan_project_files
+        ON
+            file_latest.id = htan_project_files.node_id
+
     )
     SELECT
         project_id,
-        SUM(content_size) AS total_content_size
+        SUM(content_size) / POWER(1024, 3) AS project_size_in_gib
     FROM
-        file_content_size
+        htan_file_sizes
     GROUP BY
         project_id;
     """
