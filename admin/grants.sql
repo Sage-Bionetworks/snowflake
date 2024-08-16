@@ -4,12 +4,17 @@ GRANT ROLE ACCOUNTADMIN
 TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE ACCOUNTADMIN
 TO USER "khai.do@sagebase.org";
+GRANT ROLE ACCOUNTADMIN
+TO USER "phil.snyder@sagebase.org";
 
 -- SYSADMIN privileges
 GRANT ROLE SYSADMIN
 TO USER "kevin.boske@sagebase.org";
 GRANT ROLE SYSADMIN
 TO USER "x.schildwachter@sagebase.org";
+GRANT ROLE SYSADMIN
+TO USER "phil.snyder@sagebase.org";
+
 GRANT ROLE SYSADMIN
 TO USER DPE_SERVICE;
 -- warehouse usage privileges
