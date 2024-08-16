@@ -35,9 +35,9 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
                 line=dict(width=2),
                 opacity=0.6,
                 hoverinfo="x+y+name",
-                hovertemplate="<b>Date</b>: %{x}<br><b>Unique Users</b>: %{y}<extra></extra>",
+                hovertemplate="<b>Date</b>: %{x}<br><b>Users</b>: %{y}<extra></extra>",
                 showlegend=True,
-                visible=True,
+                visible="legendonly",
             )
         )
     # Calculate the median DISTINCT_USER_COUNT for each month
@@ -65,7 +65,7 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
     fig.update_layout(
         xaxis_title="Month",
         yaxis_title="Unique Users",
-        title="Click a project to hide its trend",
+        title="Monthly Unique Users Trend (Click a Project to see more trends)",
         width=width,
         height=height,
     )
@@ -75,9 +75,9 @@ def plot_unique_users_trend(unique_users_data, width=2000, height=400):
 def plot_download_sizes(download_sizes_df, project_sizes_df, width=2000):
 
     content_size_mapping = project_sizes_df.set_index("PROJECT_ID")[
-        "PROJECT_SIZE_IN_GIB"
+        "TOTAL_CONTENT_SIZE"
     ].to_dict()
-    download_sizes_df["PROJECT_SIZE_IN_GIB"] = download_sizes_df["PROJECT_ID"].map(
+    download_sizes_df["TOTAL_CONTENT_SIZE"] = download_sizes_df["PROJECT_ID"].map(
         content_size_mapping
     )
 
@@ -89,7 +89,7 @@ def plot_download_sizes(download_sizes_df, project_sizes_df, width=2000):
                 x=x,
                 y=download_sizes_df["TOTAL_DOWNLOADS"],
                 marker=dict(
-                    color=download_sizes_df["PROJECT_SIZE_IN_GIB"],
+                    color=download_sizes_df["TOTAL_CONTENT_SIZE"],
                     colorscale="Reds",
                     colorbar=dict(title="Project Size (GB)"),
                 ),
