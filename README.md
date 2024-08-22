@@ -55,3 +55,7 @@ pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-
 ## Contributing
 
 WIP
+
+## Visualizing with Streamlit
+
+Users can customize their own data visualization dashboards from the data available on Snowflake by using the [streamlit-snowflake-template](https://github.com/Sage-Bionetworks/streamlit-snowflake-template). This is a template repository that leverages [Streamlit](https://streamlit.io/) to create and deploy internal applications for Synapse-derived data insight and analysis.
