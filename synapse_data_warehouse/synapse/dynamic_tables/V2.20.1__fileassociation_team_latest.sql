@@ -33,13 +33,15 @@ AS
 latest_unique_filehandles AS (
     SELECT
         filehandleid,
+        associateid,
         max(timestamp) as latest_timestamp
     FROM
-        {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
+        synapse_data_warehouse_jmedina.synapse_raw.filehandleassociationsnapshots
     WHERE
         timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
     GROUP BY
-        filehandleid
+        filehandleid,
+        associateid
 )
 SELECT
     filehandleassociationsnapshots.*
@@ -49,5 +51,7 @@ JOIN
     latest_unique_filehandles
 ON
     filehandleassociationsnapshots.filehandleid = latest_unique_filehandles.filehandleid
+AND
+    filehandleassociationsnapshots.associateid = latest_unique_filehandles.associateid
 AND
     filehandleassociationsnapshots.timestamp = latest_unique_filehandles.latest_timestamp;
