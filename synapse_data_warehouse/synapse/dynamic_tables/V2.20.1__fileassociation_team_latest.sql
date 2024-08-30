@@ -30,7 +30,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS filehandleassociation_latest
     TARGET_LAG = '7 days'
     WAREHOUSE = compute_xsmall
 AS
-    WITH latest_unique_filehandles AS (
+    WITH latest_unique_rows AS (
         SELECT
             filehandleid,
             associateid,
@@ -48,10 +48,10 @@ AS
     FROM
         {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
     JOIN
-        latest_unique_filehandles
+        latest_unique_rows
     ON
-        filehandleassociationsnapshots.filehandleid = latest_unique_filehandles.filehandleid
+        filehandleassociationsnapshots.filehandleid = latest_unique_rows.filehandleid
     AND
-        filehandleassociationsnapshots.associateid = latest_unique_filehandles.associateid
+        filehandleassociationsnapshots.associateid = latest_unique_rows.associateid
     AND
-        filehandleassociationsnapshots.timestamp = latest_unique_filehandles.latest_timestamp;
+        filehandleassociationsnapshots.timestamp = latest_unique_rows.latest_timestamp;
