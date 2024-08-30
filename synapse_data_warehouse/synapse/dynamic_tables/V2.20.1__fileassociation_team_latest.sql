@@ -30,28 +30,28 @@ CREATE DYNAMIC TABLE IF NOT EXISTS filehandleassociation_latest
     TARGET_LAG = '7 days'
     WAREHOUSE = compute_xsmall
 AS
-latest_unique_filehandles AS (
+    WITH latest_unique_filehandles AS (
+        SELECT
+            filehandleid,
+            associateid,
+            max(timestamp) as latest_timestamp
+        FROM
+            synapse_data_warehouse_jmedina.synapse_raw.filehandleassociationsnapshots
+        WHERE
+            timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
+        GROUP BY
+            filehandleid,
+            associateid
+    )
     SELECT
-        filehandleid,
-        associateid,
-        max(timestamp) as latest_timestamp
+        filehandleassociationsnapshots.*
     FROM
-        synapse_data_warehouse_jmedina.synapse_raw.filehandleassociationsnapshots
-    WHERE
-        timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
-    GROUP BY
-        filehandleid,
-        associateid
-)
-SELECT
-    filehandleassociationsnapshots.*
-FROM
-    {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
-JOIN
-    latest_unique_filehandles
-ON
-    filehandleassociationsnapshots.filehandleid = latest_unique_filehandles.filehandleid
-AND
-    filehandleassociationsnapshots.associateid = latest_unique_filehandles.associateid
-AND
-    filehandleassociationsnapshots.timestamp = latest_unique_filehandles.latest_timestamp;
+        {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
+    JOIN
+        latest_unique_filehandles
+    ON
+        filehandleassociationsnapshots.filehandleid = latest_unique_filehandles.filehandleid
+    AND
+        filehandleassociationsnapshots.associateid = latest_unique_filehandles.associateid
+    AND
+        filehandleassociationsnapshots.timestamp = latest_unique_filehandles.latest_timestamp;
