@@ -36,7 +36,7 @@ AS
             associateid,
             max(timestamp) as latest_timestamp
         FROM
-            synapse_data_warehouse_jmedina.synapse_raw.filehandleassociationsnapshots
+            {{database_name}}.synapse_raw.filehandleassociationsnapshots --noqa: TMP
         WHERE
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
         GROUP BY
