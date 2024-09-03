@@ -21,7 +21,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACL_LATEST
                     value:"principalid#1"::number
                 ) AS principal_id
             FROM 
-                synapse_data_warehouse_jmedina.synapse_raw.aclsnapshots,
+                {{database_name}}.synapse_raw.aclsnapshots,
                 LATERAL FLATTEN(input => parse_json(resource_access), outer => TRUE)
         ),
         dedup_acl_expanded AS (
