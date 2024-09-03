@@ -10,8 +10,8 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACL_LATEST
                 change_timestamp,
                 parse_json(resource_access) as acl,
                 ROW_NUMBER() OVER (
-                    PARTITION BY OWNER_ID
-                    ORDER BY CHANGE_TIMESTAMP DESC
+                    PARTITION BY OWNER_ID, CHANGE_TIMESTAMP
+                    ORDER BY CHANGE_TIMESTAMP ASC
                 ) AS ROW_NUM
             from
                 {{database_name}}.synapse_raw.aclsnapshots  --noqa: TMP
