@@ -13,8 +13,6 @@ AS
             {{database_name}}.synapse_raw.filehandleassociationsnapshots --noqa: TMP
         WHERE
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
-        AND
-            stack = 'prod'
         GROUP BY
             filehandleid,
             associateid
