@@ -10,7 +10,7 @@ AS
             associateid,
             MAX(timestamp) AS latest_timestamp
         FROM
-            synapse_data_warehouse.synapse_raw.filehandleassociationsnapshots
+            {{database_name}}.synapse_raw.filehandleassociationsnapshots
         WHERE
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
         AND
@@ -22,7 +22,7 @@ AS
     SELECT
         filehandleassociationsnapshots.*
     FROM
-        synapse_data_warehouse.synapse_raw.filehandleassociationsnapshots
+        {{database_name}}.synapse_raw.filehandleassociationsnapshots
     JOIN
         latest_unique_filehandles
     ON
