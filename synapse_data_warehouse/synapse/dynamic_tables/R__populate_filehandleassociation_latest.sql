@@ -10,7 +10,7 @@ AS
             associateid,
             MAX(timestamp) AS latest_timestamp
         FROM
-            {{database_name}}.synapse_raw.filehandleassociationsnapshots
+            {{database_name}}.synapse_raw.filehandleassociationsnapshots --noqa: TMP
         WHERE
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
         AND
@@ -22,7 +22,7 @@ AS
     SELECT
         filehandleassociationsnapshots.*
     FROM
-        {{database_name}}.synapse_raw.filehandleassociationsnapshots
+        {{database_name}}.synapse_raw.filehandleassociationsnapshots --noqa: TMP
     JOIN
         latest_unique_filehandles
     ON
