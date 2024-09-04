@@ -1,6 +1,6 @@
 use schema {{database_name}}.synapse; --noqa: JJ01,PRS,TMP,CP01
 
-CREATE DYNAMIC TABLE IF NOT EXISTS ACL_LATEST
+CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     AS
