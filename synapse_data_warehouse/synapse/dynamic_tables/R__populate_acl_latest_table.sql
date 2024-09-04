@@ -47,9 +47,9 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
     )
     -- 5. Select the data from the CTE output in step 4.
     SELECT
-            owner_id, 
-            change_timestamp, 
-            access_type, 
-            principal_id
-        FROM
-            dedup_acl_expanded
+        owner_id,
+        change_timestamp,
+        access_type,
+        principal_id
+    FROM
+        dedup_acl_expanded;
