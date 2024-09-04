@@ -30,28 +30,18 @@ CREATE DYNAMIC TABLE IF NOT EXISTS filehandleassociation_latest
     TARGET_LAG = '7 days'
     WAREHOUSE = compute_xsmall
 AS
-    WITH latest_unique_rows AS (
+    with latest_instance as (
         SELECT
-            filehandleid,
-            associateid,
-            max(timestamp) as latest_timestamp
+            max(instance) as max_instance
         FROM
-            {{database_name}}.synapse_raw.filehandleassociationsnapshots --noqa: TMP
-        WHERE
+            {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
+        where
             timestamp >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
-        GROUP BY
-            filehandleid,
-            associateid
     )
     SELECT
         filehandleassociationsnapshots.*
     FROM
         {{database_name}}.synapse_raw.filehandleassociationsnapshots  --noqa: TMP
-    JOIN
-        latest_unique_rows
-    ON
-        filehandleassociationsnapshots.filehandleid = latest_unique_rows.filehandleid
-    AND
-        filehandleassociationsnapshots.associateid = latest_unique_rows.associateid
-    AND
-        filehandleassociationsnapshots.timestamp = latest_unique_rows.latest_timestamp;
+    inner JOIN
+        latest_instance
+        ON filehandleassociationsnapshots.instance = latest_instance.max_instance;
