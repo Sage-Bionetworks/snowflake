@@ -42,7 +42,7 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
                 ORDER BY change_timestamp DESC
             ) AS row_num
         FROM
-            acl_expanded_temp
+            acl_expanded
         QUALIFY row_num = 1
     )
     -- 5. Select the data from the CTE output in step 4.
