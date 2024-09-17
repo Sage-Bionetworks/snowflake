@@ -119,7 +119,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "christine.suver@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "adam.taylor@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "sophia.jobe@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "thomas.schaffter@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "jake.albrecht@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "solly.sieberts@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "arti.singh@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "dan.lu@sagebase.org";
@@ -134,7 +133,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "richard.yaxley@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ashley.clayton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "verena.chung@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jineta.banerjee@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "sarah.chan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jenny.medina@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "lakaija.johnson@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "sonia.carlson@sagebase.org";
@@ -159,6 +157,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "kimberly.corrigan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "mackenzie.wildman@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "aditi.gopalan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "angie.bowen@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "aditya.nath@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
