@@ -27,6 +27,10 @@ CREATE USER IF NOT EXISTS "amber.nelson@sagebase.org";
 CREATE USER IF NOT EXISTS "tiara.adams@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.vera@sagebase.org";
 CREATE USER IF NOT EXISTS "aditya.nath@sagebase.org";
+CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
+CREATE USER IF NOT EXISTS "james.moon@sagebase.org";
+CREATE USER IF NOT EXISTS "orion.banks@sagebase.org";
+
 
 // ADTR
 CREATE USER IF NOT EXISTS "abby.vanderlinden@sagebase.org";

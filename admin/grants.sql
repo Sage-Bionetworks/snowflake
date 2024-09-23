@@ -158,6 +158,8 @@ GRANT ROLE DATA_ANALYTICS TO USER "mackenzie.wildman@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "aditi.gopalan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "angie.bowen@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "aditya.nath@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "james.moon@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "orion.banks@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
