@@ -63,6 +63,7 @@ CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
+CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";

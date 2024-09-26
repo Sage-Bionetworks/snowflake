@@ -19,7 +19,7 @@ from snowflake.connector.pandas_tools import write_pandas
 
 # Track the start and end dates for extracting IP adresses to know when to execute the code
 RECORD_START_DATE = "2024-05-25"
-RECORD_END_DATE = "2024-09-16"
+RECORD_END_DATE = "2024-06-25"
 
 
 @backoff.on_exception(
