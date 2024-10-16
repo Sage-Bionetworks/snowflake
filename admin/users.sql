@@ -13,7 +13,7 @@ CREATE USER IF NOT EXISTS "jay.hodgson@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
-
+CREATE USER IF NOT EXISTS "joni.harker@sagebase.org";
 
 // Cancer Bio
 CREATE USER IF NOT EXISTS "adam.taylor@sagebase.org";
