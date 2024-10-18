@@ -193,6 +193,7 @@ GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "milen.nikolov@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO ROLE SYSADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE SAGE_LEADERS;
 GRANT ROLE DATA_ANALYTICS TO ROLE SCIDATA_ADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE NF_ADMIN;
@@ -207,8 +208,11 @@ GRANT ROLE FAIR TO USER "mieko.hashimoto@sagebase.org";
 GRANT ROLE FAIR TO USER "andrew.lamb@sagebase.org";
 GRANT ROLE FAIR TO USER "milen.nikolov@sagebase.org";
 GRANT ROLE FAIR TO USER "amy.heiser@sagebase.org";
+GRANT ROLE FAIR TO ROLE SYSADMIN;
+
 GRANT ROLE DPE_OPS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE DPE_OPS TO USER "sophia.jobe@sagebase.org";
+GRANT ROLE DPE_OPS TO ROLE SYSADMIN;
 
 GRANT ROLE GOVERNANCE TO USER "christine.suver@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "kimberly.corrigan@sagebase.org";
