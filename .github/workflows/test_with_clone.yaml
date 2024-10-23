@@ -42,4 +42,4 @@ jobs:
             - name: zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql --variable CLONED_DB_NAME="SYNAPSE_DATA_WAREHOUSE_${GITHUB_SHA:0:8}" -f admin/clone_db.sql
+                ~/bin/snowsql -f admin/clone_db.sql --variable CLONED_DB_NAME="SYNAPSE_DATA_WAREHOUSE_${GITHUB_SHA:0:8}"
