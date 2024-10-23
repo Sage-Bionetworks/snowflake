@@ -1,4 +1,4 @@
-!set variable_substitution=true; --noqa: PRS
+!set variable_substitution=true;
 
 USE ROLE DATA_ENGINEER;
 
