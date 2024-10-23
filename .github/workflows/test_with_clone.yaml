@@ -15,18 +15,10 @@ jobs:
         runs-on: ubuntu-latest
         if: contains(github.event.pull_request.labels.*.name, 'test_with_clone')
         env:
-            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
-            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
-            # TODO: Not the right role?
-            SNOWFLAKE_ROLE: DATA_ENGINEER
-            # TODO: This needs to be the dev db, since that is the bleeding edge
-            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-            SNOWFLAKE_CLONED_DATABASE_NAME: "synapse_data_warehouse_${{ github.sha }}"
-            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-            SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
-            SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-            STACK: ${{ vars.STACK }}
+            SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
+            SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
         steps:
 
@@ -50,9 +42,9 @@ jobs:
             - name: debug
               shell: bash
               run: |
-                  echo "SNOWFLAKE_ACCOUNT: $SNOWFLAKE_ACCOUNT"
-                  echo "SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}"
-                  echo "SNOWFLAKE_ROLE: $SNOWFLAKE_ROLE"
+                  echo "SNOWFLAKE_ACCOUNT: $SNOWSQL_ACCOUNT"
+                  echo "SNOWFLAKE_USER: $SNOWSQL_USER"
+                  echo "SNOWFLAKE_WH: $SNOWSQL_WAREHOUSE"
 
             - name: zero-copy clone the database
               shell: bash
