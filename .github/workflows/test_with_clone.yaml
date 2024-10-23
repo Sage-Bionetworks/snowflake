@@ -51,7 +51,7 @@ jobs:
               shell: bash
               run: |
                   echo "SNOWFLAKE_ACCOUNT: $SNOWFLAKE_ACCOUNT"
-                  echo "SNOWFLAKE_USER: $SNOWFLAKE_USER"
+                  echo "SNOWFLAKE_USER: secrets.SNOWSQL_USER"
                   echo "SNOWFLAKE_ROLE: $SNOWFLAKE_ROLE"
 
             # We clone the DB using the syntax seen here:
