@@ -1,0 +1,52 @@
+---
+name: Test Changes with Cloned DB
+
+on:
+    push:
+        branches: "main"
+    pull_request:
+        types: [ labeled ]
+
+permissions:
+    contents: read
+
+jobs:
+    test_with_clone:
+        runs-on: ubuntu-latest
+        if: contains(github.event.pull_request.labels.*.name, 'test_with_clone')
+        env:
+            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+            # TODO: Not the right role?
+            SNOWFLAKE_ROLE: DATA_ENGINEER
+            # TODO: This needs to be the dev db, since that is the bleeding edge
+            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_CLONED_DATABASE_NAME: "synapse_data_warehouse_${{ github.sha }}"
+            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+            SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+            STACK: ${{ vars.STACK }}
+
+        steps:
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+
+            - name: install-py-dependencies
+              shell: bash
+              run: |
+                  pip install schemachange==3.6.1
+                  pip install numpy==1.26.4
+                  pip install pandas==1.5.3
+
+            # We clone the DB using the syntax seen here:
+            # https://docs.snowflake.com/en/sql-reference/sql/create-clone#databases-schemas
+            - name: zero-copy clone the database
+              shell: bash
+              # TODO: How do we drop the tasks? Add "IGNORE TASKS" at the end? This is maybe only relevant if we use SYSADMIN role for cloning.
+              run: |
+                ~/bin/snowsql -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USER -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE \
+                -q "CREATE DATABASE $SNOWFLAKE_CLONED_DATABASE_NAME CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE"
