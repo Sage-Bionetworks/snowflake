@@ -42,4 +42,4 @@ jobs:
             - name: zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -q "CREATE DATABASE test_12 CLONE SYNAPSE_DATA_WAREHOUSE_DEV;"
+                ~/bin/snowsql -r DATA_ENGINEER -q "CREATE DATABASE test_12 CLONE SYNAPSE_DATA_WAREHOUSE_DEV;"
