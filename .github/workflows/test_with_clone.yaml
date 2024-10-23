@@ -42,4 +42,4 @@ jobs:
             - name: zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql --variable CLONED_DB_NAME="test123" -f admin/clone_db.sql
+                ~/bin/snowsql --variable cloned_db_name="test123" -f admin/clone_db.sql
