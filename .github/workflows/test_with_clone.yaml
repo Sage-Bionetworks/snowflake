@@ -42,6 +42,11 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
+            - name: Install SnowSQL
+              run: |
+                curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+                SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+
             # We clone the DB using the syntax seen here:
             # https://docs.snowflake.com/en/sql-reference/sql/create-clone#databases-schemas
             - name: zero-copy clone the database
