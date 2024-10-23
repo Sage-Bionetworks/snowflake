@@ -58,7 +58,18 @@ jobs:
             # https://docs.snowflake.com/en/sql-reference/sql/create-clone#databases-schemas
             - name: zero-copy clone the database
               shell: bash
+
               # TODO: How do we drop the tasks? Add "IGNORE TASKS" at the end? This is maybe only relevant if we use SYSADMIN role for cloning.
               run: |
-                ~/bin/snowsql -a $SNOWFLAKE_ACCOUNT -u $SNOWFLAKE_USER -r $SNOWFLAKE_ROLE -w $SNOWFLAKE_WAREHOUSE -p $SNOWFLAKE_PASSWORD \
+                env SNOWFLAKE_ACCOUNT=$SNOWFLAKE_ACCOUNT \
+                    SNOWFLAKE_USER=$SNOWFLAKE_USER \
+                    SNOWFLAKE_ROLE=$SNOWFLAKE_ROLE \
+                    SNOWFLAKE_WAREHOUSE=$SNOWFLAKE_WAREHOUSE \
+                    SNOWFLAKE_PASSWORD=$SNOWFLAKE_PASSWORD \
+                ~/bin/snowsql \
+                -a $SNOWFLAKE_ACCOUNT \
+                -u $SNOWFLAKE_USER \
+                -r $SNOWFLAKE_ROLE \
+                -w $SNOWFLAKE_WAREHOUSE \
+                -p $SNOWFLAKE_PASSWORD \
                 -q "CREATE DATABASE $SNOWFLAKE_CLONED_DATABASE_NAME CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE"
