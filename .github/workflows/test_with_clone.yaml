@@ -39,14 +39,7 @@ jobs:
                 curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
                 SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-            - name: debug
-              shell: bash
-              run: |
-                  echo "SNOWFLAKE_ACCOUNT: $SNOWSQL_ACCOUNT"
-                  echo "SNOWFLAKE_USER: $SNOWSQL_USER"
-                  echo "SNOWFLAKE_WH: $SNOWSQL_WAREHOUSE"
-
             - name: zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -f admin/clone_db.sql
+                ~/bin/snowsql --variable CLONED_DB_NAME="SYNAPSE_DATA_WAREHOUSE_${GITHUB_SHA:0:8}" -f admin/clone_db.sql
