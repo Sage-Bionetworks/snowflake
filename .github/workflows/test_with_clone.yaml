@@ -19,6 +19,8 @@ jobs:
             SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
             SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
             SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWSQL_ROLE: DATA_ENGINEER
+            CLONED_DB_NAME: "synapse_data_warehouse_${{ github.sha }}"
 
         steps:
 
@@ -42,4 +44,4 @@ jobs:
             - name: zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -r DATA_ENGINEER -q "CREATE DATABASE test_12 CLONE SYNAPSE_DATA_WAREHOUSE_DEV;"
+                ~/bin/snowsql -r $SNOWSQL_ROLE -q "CREATE DATABASE $CLONED_DB_NAME CLONE SYNAPSE_DATA_WAREHOUSE_DEV;"
