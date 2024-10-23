@@ -2,7 +2,7 @@
 
 USE ROLE DATA_ENGINEER;
 
-SET DB_NAME = CLONED_DB_NAME
+SET DB_NAME = CLONED_DB_NAME;
 
 -- We clone the DB using the syntax seen here:
 -- https://docs.snowflake.com/en/sql-reference/sql/create-clone#databases-schemas
