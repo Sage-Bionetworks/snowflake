@@ -14,13 +14,17 @@ jobs:
     test_with_clone:
         runs-on: ubuntu-latest
         if: contains(github.event.pull_request.labels.*.name, 'test_with_clone')
+        environment: dev
         env:
             SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
             SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
             SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
             SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-            SNOWSQL_ROLE: DATA_ENGINEER
-            CLONED_DB_NAME: "synapse_data_warehouse_${{ github.sha }}"
+            SNOWSQL_CLONE_ROLE: DATA_ENGINEER
+            #SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
+            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.sha }}"
+
 
         steps:
 
@@ -29,7 +33,7 @@ jobs:
               with:
                 python-version: '3.10'
 
-            - name: install-py-dependencies
+            - name: Install python libraries
               shell: bash
               run: |
                   pip install schemachange==3.6.1
@@ -41,7 +45,22 @@ jobs:
                 curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
                 SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-            - name: zero-copy clone the database
+            - name: Verify SnowSQL installation
+              run: ~/bin/snowsql -v
+              
+            - name: Zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -r $SNOWSQL_ROLE -q "CREATE DATABASE $CLONED_DB_NAME CLONE SYNAPSE_DATA_WAREHOUSE_DEV;"
+                ~/bin/snowsql -r $SNOWSQL_CLONE_ROLE -q "CREATE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_CLONE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE;"
+
+            # TODO: Do we need SYSADMIN to run schemachange?
+            - name: Run schemachange on the clone
+              shell: bash
+              run: |
+                schemachange \
+                -f synapse_data_warehouse \
+                -a $SNOWFLAKE_ACCOUNT \
+                -u $SNOWFLAKE_USER \
+                -r $SNOWSQL_CLONE_ROLE \
+                -w compute_xsmall \
+                --config-folder synapse_data_warehouse
