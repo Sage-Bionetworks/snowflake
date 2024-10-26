@@ -17,8 +17,12 @@ def push_cbio_files_to_snowflake(syn: synapseclient.Synapse, ctx: snowflake.conn
         synid (str): _description_
         structured_data (list): _description_
     """
+    cs = ctx.cursor()
     folder_ent = syn.get(synid)
-    release_name = folder_ent.name.split("-")[0].replace(".", "_")
+    release_name_meta = folder_ent.name.split("-")
+
+    release_name = release_name_meta[0].replace(".", "_")
+    release_type = release_name_meta[1]
 
     release_files = syn.getChildren(synid, includeTypes=["file", "folder", "link"])
     release_file_map = {
@@ -28,10 +32,11 @@ def push_cbio_files_to_snowflake(syn: synapseclient.Synapse, ctx: snowflake.conn
         release_file['name'].endswith(("txt", "bed"))
     }
 
-    ctx.execute(
-        f"CREATE SCHEMA IF NOT EXISTS consortium_{release_name} WITH MANAGED ACCESS;"
+    cs.execute(
+        f"CREATE SCHEMA IF NOT EXISTS {release_type}_{release_name} WITH MANAGED ACCESS;"
     )
-    ctx.execute(f"USE SCHEMA consortium_{release_name}")
+    cs.execute(f"USE SCHEMA {release_type}_{release_name}")
+    print(f"USE SCHEMA {release_type}_{release_name}")
     for release_file_key, release_file_ent in release_file_map.items():
         tbl_name = (release_file_key
             .replace("data_", "")
@@ -73,7 +78,6 @@ def main():
         role="SYSADMIN",
         warehouse="compute_xsmall"
     )
-    cs = ctx.cursor()
     # Exclude data_cna for now
     structured_data = (
         "data_clinical", "data_mutations", "data_fusions"
@@ -88,8 +92,9 @@ def main():
             # if dirname.endswith("-public") or folder_ent.name.startswith(("1.0", "2.0", "3.0")):
             if not dirname.endswith('-consortium'):
                 continue
-            print(dirname)
-            push_cbio_files_to_snowflake(syn=syn, ctx=cs, synid=dir_synid, structured_data=structured_data)
+            if dirname in ["16.7-consortium", "16.1-public"] or dirname.startswith("17"):
+                print(dirname)
+                push_cbio_files_to_snowflake(syn=syn, ctx=ctx, synid=dir_synid, structured_data=structured_data)
     ctx.close()
 
 if __name__ == "__main__":
