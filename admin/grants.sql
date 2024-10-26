@@ -38,6 +38,8 @@ GRANT ROLE GENIE_ADMIN
 TO USER "chelsea.nayan@sagebase.org";
 GRANT ROLE GENIE_ADMIN
 TO USER "rixing.xu@sagebase.org";
+GRANT ROLE GENIE_ADMIN
+TO USER "adam.taylor@sagebase.org";
 
 -- RECOVER privileges
 GRANT ROLE RECOVER_DATA_ENGINEER

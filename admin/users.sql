@@ -45,7 +45,7 @@ CREATE USER IF NOT EXISTS "william.poehlman@sagebase.org";
 // NF
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
 CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
-CREATE USER IF NOT EXISTS "christina.conrad@sagebase.org";
+CREATE USER IF NOT EXISTS "christina.parry@sagebase.org";
 CREATE USER IF NOT EXISTS "jineta.banerjee@sagebase.org";
 CREATE USER IF NOT EXISTS "aditi.gopalan@sagebase.org";
 
