@@ -20,7 +20,7 @@ jobs:
             SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWSQL_CLONE_ROLE: DATA_ENGINEER
             #SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
-            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
+            CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
             SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
 
 
@@ -46,6 +46,11 @@ jobs:
             - name: Verify SnowSQL installation
               run: ~/bin/snowsql -v
               
+            - name: Sanitize Clone Name
+              run: |
+                CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
+                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${CLONE_NAME_SANITIZED}" >> $GITHUB_ENV
+
             - name: Zero-copy clone the database
               shell: bash
               run: |
