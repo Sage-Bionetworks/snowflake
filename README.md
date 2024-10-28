@@ -65,7 +65,7 @@ pip install "snowflake-connector-python[pandas]" "synapseclient[pandas]" python-
 
 ## Contributing
 
-WIP
+For contribution guidelines, please see the `CONTRIBUTING.md` file in this repository.
 
 ## Visualizing with Streamlit
 
