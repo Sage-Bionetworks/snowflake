@@ -50,6 +50,7 @@ jobs:
               run: |
                 CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
                 echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${CLONE_NAME_SANITIZED}" >> $GITHUB_ENV
+                echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}"
 
             - name: Zero-copy clone the database
               shell: bash
