@@ -23,48 +23,53 @@ env:
   STACK: ${{ vars.STACK }}
 
 jobs:
-    setup_environment:
-      runs-on: ubuntu-latest
-      environment: dev
-      outputs:
-        clone_name: ${{ steps.sanitize_clone.outputs.clone_name }}
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-python@v4
-          with:
-            python-version: '3.10'
-
-        - name: Install python libraries
-          shell: bash
-          run: |
-            pip install schemachange==3.6.1
-            pip install numpy==1.26.4
-            pip install pandas==1.5.3
-
-        - name: Install SnowSQL
-          run: |
-            curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-            SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
-
-        - name: Verify SnowSQL installation
-          run: ~/bin/snowsql -v
-
-        - name: Sanitize Clone Name
-          id: sanitize_clone
-          run: |
-            CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
-            echo "::set-output name=clone_name::${CLONE_NAME_SANITIZED}"            
-            echo "Clone name has been updated! The clone name will be: ${CLONE_NAME_SANITIZED}"
-
+    
     create_clone_and_run_schemachange:
         runs-on: ubuntu-latest
-        needs: setup_environment
         if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange')
         environment: dev
         env:
-          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ needs.setup_environment.outputs.clone_name }}
+            SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
+            SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWSQL_CLONE_ROLE: DATA_ENGINEER
+            # We need to run schemachange on SYSADMIN for it to work
+            SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
+            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+            SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+            CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
+            STACK: ${{ vars.STACK }}
 
         steps:
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+
+            - name: Install python libraries
+              shell: bash
+              run: |
+                  pip install schemachange==3.6.1
+                  pip install numpy==1.26.4
+                  pip install pandas==1.5.3
+
+            - name: Install SnowSQL
+              run: |
+                curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+                SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+
+            - name: Verify SnowSQL installation
+              run: ~/bin/snowsql -v
+              
+            - name: Sanitize Clone Name
+              run: |
+                CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
+                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${CLONE_NAME_SANITIZED}" >> $GITHUB_ENV
+                echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}"
+                echo $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
 
             - name: Zero-copy clone the database
               shell: bash
@@ -84,13 +89,49 @@ jobs:
 
     drop_clone:
       runs-on: ubuntu-latest
-      needs: setup_environment
       if: contains(github.event.pull_request.labels.*.name, 'drop_clone')
       environment: dev
       env:
-        SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ needs.setup_environment.outputs.clone_name }}
+          SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
+          SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+          SNOWSQL_CLONE_ROLE: DATA_ENGINEER
+          #SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
+          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+          SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+          SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+          CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
+          STACK: ${{ vars.STACK }}
 
       steps:
+
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v4
+            with:
+              python-version: '3.10'
+
+          - name: Install python libraries
+            shell: bash
+            run: |
+                pip install schemachange==3.6.1
+                pip install numpy==1.26.4
+                pip install pandas==1.5.3
+
+          - name: Install SnowSQL
+            run: |
+              curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+              SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+
+          - name: Verify SnowSQL installation
+            run: ~/bin/snowsql -v
+            
+          - name: Sanitize Clone Name
+            run: |
+              CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
+              echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${CLONE_NAME_SANITIZED}" >> $GITHUB_ENV
+              echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}"
+              echo $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
 
           - name: Drop the clone
             shell: bash
