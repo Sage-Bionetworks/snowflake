@@ -67,7 +67,7 @@ jobs:
                 -f synapse_data_warehouse \
                 -a $SNOWSQL_ACCOUNT \
                 -u $SNOWSQL_USER \
-                -r $SNOWSQL_CLONE_ROLE \
+                -r SYSADMIN \
                 -w $SNOWSQL_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
