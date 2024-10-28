@@ -9,7 +9,7 @@ permissions:
     contents: read
 
 jobs:
-    test_with_clone:
+    create_clone_and_run_schemachange:
         runs-on: ubuntu-latest
         if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange')
         environment: dev
@@ -20,7 +20,7 @@ jobs:
             SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWSQL_CLONE_ROLE: DATA_ENGINEER
             #SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
-            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.sha }}"
+            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
             SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
 
 
@@ -49,7 +49,7 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -r $SNOWSQL_CLONE_ROLE -q "CREATE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                ~/bin/snowsql -r $SNOWSQL_CLONE_ROLE -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
 
             # TODO: Do we need SYSADMIN to run schemachange?
             - name: Run schemachange on the clone
@@ -57,8 +57,13 @@ jobs:
               run: |
                 schemachange \
                 -f synapse_data_warehouse \
-                -a $SNOWFLAKE_ACCOUNT \
-                -u $SNOWFLAKE_USER \
+                -a $SNOWSQL_ACCOUNT \
+                -u $SNOWSQL_USER \
                 -r $SNOWSQL_CLONE_ROLE \
-                -w compute_xsmall \
+                -w $SNOWSQL_WAREHOUSE \
                 --config-folder synapse_data_warehouse
+
+    # delete_clone:
+    #   runs-on: ubuntu-latest
+    #     if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange')
+    #     environment: dev
