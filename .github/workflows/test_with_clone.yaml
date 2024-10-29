@@ -8,20 +8,6 @@ on:
 permissions:
     contents: read
 
-# We define global environment variables needed to run the SnowSQL and schemachange commands
-env:
-  SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
-  SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-  SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
-  SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-  SNOWSQL_CLONE_ROLE: DATA_ENGINEER
-  SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
-  SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-  SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
-  SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-  CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
-  STACK: ${{ vars.STACK }}
-
 jobs:
     
     create_clone_and_run_schemachange:
@@ -34,7 +20,6 @@ jobs:
             SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
             SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWSQL_CLONE_ROLE: DATA_ENGINEER
-            # We need to run schemachange on SYSADMIN for it to work
             SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
             SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
             SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
@@ -96,12 +81,7 @@ jobs:
           SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
           SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
           SNOWSQL_CLONE_ROLE: DATA_ENGINEER
-          #SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
-          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-          SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
-          SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
           CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
-          STACK: ${{ vars.STACK }}
 
       steps:
 
@@ -109,13 +89,6 @@ jobs:
           - uses: actions/setup-python@v4
             with:
               python-version: '3.10'
-
-          - name: Install python libraries
-            shell: bash
-            run: |
-                pip install schemachange==3.6.1
-                pip install numpy==1.26.4
-                pip install pandas==1.5.3
 
           - name: Install SnowSQL
             run: |
