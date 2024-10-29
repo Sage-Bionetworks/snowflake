@@ -73,7 +73,8 @@ jobs:
 
     drop_clone:
       runs-on: ubuntu-latest
-      if: github.event.pull_request.merged == true
+      #if: github.event.pull_request.merged == true
+      if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange')
       environment: dev
       env:
           SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
