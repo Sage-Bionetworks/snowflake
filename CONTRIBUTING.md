@@ -87,4 +87,10 @@ An initial clone of the development database will not incur new resource costs, 
 (e.g. new schema changes are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
 **Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. For example, if your PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
 
+> [!NOTE]
+> Keep in mind that after dropping your cloned database, you will still have access to it through Snowflake's "Time Travel"
+> feature. Your database is retained through "Time Travel" for X amount of time before it is permanently deleted. To see
+> how long your database can be access after dropping, run the following query in a SQL worksheet on Snowsight:
+> `SHOW PARAMETERS IN DATABASE <your-database-name>;`
+
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
