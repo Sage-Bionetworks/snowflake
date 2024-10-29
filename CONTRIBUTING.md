@@ -6,7 +6,7 @@ By contributing, you are agreeing that we may redistribute your work under this 
 
 ## Getting Started
 
-To start contributing, follow these steps to set up your local repository:
+To start contributing, follow these steps to set up and develop on your local repository:
 
 ### 1. Clone the Repository
 
