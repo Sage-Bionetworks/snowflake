@@ -58,7 +58,7 @@ This repository includes automated CI jobs to validate changes against a cloned 
 
 Add the label `create_clone_and_run_schemachange` to your PR to trigger the CI workflow. This job does two things:
 
-* Creates a zero-copy clone of the database and run your proposed schema changes against it.
+* Creates a zero-copy clone of the database and runs your proposed schema changes against it.
 * Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
 affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
 
@@ -68,13 +68,13 @@ affecting the real development database. After the PR is merged, the clone is au
 > eye out for other PRs with the `create_clone_and_run_schemachange` label, and ensure that you are not performing changes on the
 > same tables to avoid conflicts.
 
-> [!TIP]
-> Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
-> `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_123_NEW_FEATURE`.
-
 ### 2. Perform Inspection using Snowsight
 
 You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. ensure there is no row duplication in the new/updated tables.
+
+> [!TIP]
+> Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
+> `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_123_NEW_FEATURE`.
 
 ### 3. Manually Drop the Cloned Database (Optional)
 
