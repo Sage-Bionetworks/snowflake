@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Welcome to the Snowflake repository! Please follow these guidelines to ensure a smooth development workflow and maintain the quality of our shared codebase.
+Please follow these guidelines to ensure a smooth development workflow and maintain the quality of our shared codebase.
 
 ## Getting Started
 
