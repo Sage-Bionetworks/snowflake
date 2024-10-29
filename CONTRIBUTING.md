@@ -1,6 +1,8 @@
 # Contributing Guidelines
 
-Please follow these guidelines to ensure a smooth development workflow and maintain the quality of our shared codebase.
+Welcome, and thanks for your interest in contributing to the `snowflake` repository! :snowflake:
+
+By contributing, you are agreeing that we may redistribute your work under this [license](https://github.com/Sage-Bionetworks/snowflake/tree/snow-90-auto-db-clone?tab=License-1-ov-file#).
 
 ## Getting Started
 
