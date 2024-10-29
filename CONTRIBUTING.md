@@ -6,7 +6,7 @@ Welcome to the Snowflake repository! Please follow these guidelines to ensure a 
 
 To start contributing, follow these steps to set up your local repository:
 
-### 1. Clone the Repository:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Sage-Bionetworks/snowflake
@@ -65,7 +65,7 @@ affecting the real development database. After the PR is merged, the clone is au
 > [!IMPORTANT]
 > Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that **there may be
 > other developers working on their own version of the development database, whose changes may not be reflected in your clone**. Keep an
-> eye out for other PRs with the `create_clone_and_run_schemachange` label, and ensure that you are not performing schema changes on the
+> eye out for other PRs with the `create_clone_and_run_schemachange` label, and ensure that you are not performing changes on the
 > same tables to avoid conflicts.
 
 > [!TIP]
@@ -74,13 +74,16 @@ affecting the real development database. After the PR is merged, the clone is au
 
 ### 2. Perform Inspection using Snowsight
 
-You can go on Snowsight to perform manual inspection of your database. We recommend using a SQL worksheet to query for expected behavior
-and ensure there is no row duplication in the new tables.
+You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. ensure there is no row duplication in the new/updated tables.
 
-> [!IMPORTANT]
-> An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
-> (e.g. new schema changes are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
-> **Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. If your 
-> PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
+### 3. Manually Drop the Cloned Database (Optional)
+
+There is a second job in the repository (`drop_clone`) that will drop your branch's database clone once it has been merged into `dev`.
+In other words, once your cloned database is created for testing, it will remain open until your PR is closed (unless you manually drop it).
+
+An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
+(e.g. new schema changes are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
+**Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. If your 
+PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
 
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
