@@ -40,7 +40,7 @@ Your branch will now be tracking `origin/dev` which you can merge with or rebase
 on how to resolve merge conflicts, [see here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts#resolving-merge-conflicts).
 
 > [!IMPORTANT]
-> If you plan to run the automated testing described in section [Running CI Jobs for Database Testing](running-ci-jobs-for-database-testing), your branch name needs to start with `snow-`,
+> If you plan to run the automated testing described in section [Running CI Jobs for Database Testing](#running-ci-jobs-for-database-testing), your branch name needs to start with `snow-`,
 > otherwise the test deployment will fail.
 
 ### 4. Push to The Remote Branch
