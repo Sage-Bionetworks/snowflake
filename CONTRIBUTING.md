@@ -83,7 +83,6 @@ In other words, once your cloned database is created for testing, it will remain
 
 An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
 (e.g. new schema changes are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
-**Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. If your 
-PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
+**Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. For example, if your PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
 
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
