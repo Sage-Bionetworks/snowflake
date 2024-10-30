@@ -56,6 +56,9 @@ git push origin snow-123-new-feature
 In order to initiate automated testing you will need to work on a draft pull request (PR) on GitHub. After pushing your commits to
 the remote branch in Step 4, use the GitHub UI to initate a PR and convert it to draft mode.
 
+After testing your changes against `schemachange` using the instructions in [Running CI Jobs for Database Testing](#running-ci-jobs-for-database-testing),
+you can then take your PR out of draft mode by marking it as Ready for Review in the GitHub UI.
+
 ## Running CI Jobs for Database Testing
 
 This repository includes automated CI jobs to validate changes against a cloned database. If you want to trigger these jobs to test your changes in an isolated database environment, please follow the steps below:
@@ -73,6 +76,10 @@ affecting the real development database. After the PR is merged, the clone is au
 > other developers working on their own version of the development database, whose changes may not be reflected in your clone**. Keep an
 > eye out for other PRs with the `create_clone_and_run_schemachange` label, and ensure that you are not performing changes on the
 > same tables to avoid conflicts.
+
+> [!NOTE]
+> As you are developing on your branch, you may want to re-run the `schemachange` test on your updates.
+> You can unlabel and relabel the PR with `create_clone_and_run_schemachange` to re-trigger the job.
 
 ### 2. Perform Inspection using Snowsight
 
