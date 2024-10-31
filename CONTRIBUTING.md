@@ -72,10 +72,8 @@ Add the label `create_clone_and_run_schemachange` to your PR to trigger the CI w
 affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
 
 > [!IMPORTANT]
-> Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that **there may be
-> other developers working on their own version of the development database, whose changes may not be reflected in your clone**. Keep an
-> eye out for other PRs with the `create_clone_and_run_schemachange` label, and ensure that you are not performing changes on the
-> same tables to avoid conflicts.
+> Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that
+> **there may have been changes made to the development database since your last clone**.
 
 > [!NOTE]
 > As you are developing on your branch, you may want to re-run the `schemachange` test on your updates.
