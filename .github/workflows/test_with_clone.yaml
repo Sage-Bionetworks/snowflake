@@ -41,26 +41,23 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
-            # - name: Install SnowSQL
-            #   run: |
-            #     curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-            #     SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
-
-            # - name: Verify SnowSQL installation
-            #   run: ~/bin/snowsql -v
-
             - name: Install Snowflake CLI
               uses: Snowflake-Labs/snowflake-cli-action@v1.5
 
-            - name: Set up Snowflake CLI connection
+            - name: Configure Snowflake connection
               run: |
-                snow connection create --name default \
-                  --account-name $SNOWFLAKE_ACCOUNT \
-                  --username $SNOWFLAKE_USER \
-                  --password $SNOWFLAKE_PASSWORD \
-                  --role $SNOWFLAKE_CLONE_ROLE \
-                  --warehouse $SNOWFLAKE_WAREHOUSE \
-                  --database $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG
+                # Create temporary files for config.toml and our private key
+                config_file=$(mktemp)
+      
+                # Write to config.toml file
+                echo 'default_connection_name = "dpe"' >> $config_file
+                echo '[connections.dpe]' >> $config_file
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
+                echo "role = \"${SNOWFLAKE_CLONE_ROLE}\"" >> $config_file
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file
 
             - name: Verify Snowflake CLI installation
               run: |
