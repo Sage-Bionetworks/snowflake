@@ -109,7 +109,17 @@ jobs:
           - name: Install Snowflake CLI
             uses: Snowflake-Labs/snowflake-cli-action@v1.5
 
-          - name: Verify Snowflake CLI installation
+          - name: Set up Snowflake CLI connection
+            run: |
+              snow connection create --name default \
+                --account-name $SNOWFLAKE_ACCOUNT \
+                --username $SNOWFLAKE_USER \
+                --password $SNOWFLAKE_PASSWORD \
+                --role $SNOWFLAKE_CLONE_ROLE \
+                --warehouse $SNOWFLAKE_WAREHOUSE \
+                --database $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG
+
+          - name: Verify Snowflake CLI installation and connection
             run: |
               snow --version
               snow connection test
