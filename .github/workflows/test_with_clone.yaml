@@ -41,9 +41,6 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
-            - name: Install Snowflake CLI
-              uses: Snowflake-Labs/snowflake-cli-action@v1.5
-
             - name: Configure Snowflake connection
               run: |
                 # Create temporary files for config.toml and our private key
@@ -59,7 +56,15 @@ jobs:
                 echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file
 
-            - name: Verify Snowflake CLI installation
+                # Write config.toml path to global environment
+                echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
+
+            - name: Install Snowflake CLI
+              uses: Snowflake-Labs/snowflake-cli-action@v1.5
+              with:
+                default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
+
+            - name: Verify Snowflake CLI installation and connection
               run: |
                 snow --version
                 snow connection test
