@@ -78,7 +78,7 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                snow sql -r $SNOWFLAKE_CLONE_ROLE -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
 
             - name: Run schemachange on the clone
               shell: bash
