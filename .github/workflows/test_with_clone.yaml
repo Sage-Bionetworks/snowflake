@@ -15,12 +15,12 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange') && github.event.pull_request.state == 'open'
         environment: dev
         env:
-            SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
-            SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-            SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
-            SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-            SNOWSQL_CLONE_ROLE: DATA_ENGINEER
-            SNOWSQL_SCHEMACHANGE_ROLE: SYSADMIN
+            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
+            SNOWFLAKE_SCHEMACHANGE_ROLE: SYSADMIN
             SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
             SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
             SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
@@ -41,14 +41,22 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
-            - name: Install SnowSQL
-              run: |
-                curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-                SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+            # - name: Install SnowSQL
+            #   run: |
+            #     curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+            #     SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+            
+            # - name: Verify SnowSQL installation
+            #   run: ~/bin/snowsql -v
 
-            - name: Verify SnowSQL installation
-              run: ~/bin/snowsql -v
-              
+            - name: Install Snowflake CLI
+              uses: Snowflake-Labs/snowflake-cli-action@v1.5
+
+            - name: Verify Snowflake CLI installation
+              run: |
+                snow --version
+                snow connection test
+
             - name: Sanitize Clone Name
               run: |
                 CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
@@ -58,17 +66,17 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                ~/bin/snowsql -r $SNOWSQL_CLONE_ROLE -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                snow sql -r $SNOWFLAKE_CLONE_ROLE -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
 
             - name: Run schemachange on the clone
               shell: bash
               run: |
                 schemachange \
                 -f synapse_data_warehouse \
-                -a $SNOWSQL_ACCOUNT \
-                -u $SNOWSQL_USER \
-                -r $SNOWSQL_SCHEMACHANGE_ROLE \
-                -w $SNOWSQL_WAREHOUSE \
+                -a $SNOWFLAKE_ACCOUNT \
+                -u $SNOWFLAKE_USER \
+                -r $SNOWFLAKE_SCHEMACHANGE_ROLE \
+                -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
     drop_clone:
@@ -76,11 +84,11 @@ jobs:
       if: github.event.pull_request.merged == true || github.event.action == 'closed'
       environment: dev
       env:
-          SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
-          SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-          SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
-          SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-          SNOWSQL_CLONE_ROLE: DATA_ENGINEER
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+          SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
           CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
 
       steps:
@@ -90,14 +98,22 @@ jobs:
             with:
               python-version: '3.10'
 
-          - name: Install SnowSQL
-            run: |
-              curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-              SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+          # - name: Install SnowSQL
+          #   run: |
+          #     curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+          #     SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-          - name: Verify SnowSQL installation
-            run: ~/bin/snowsql -v
-            
+          # - name: Verify SnowSQL installation
+          #   run: ~/bin/snowsql -v
+          
+          - name: Install Snowflake CLI
+            uses: Snowflake-Labs/snowflake-cli-action@v1.5
+
+          - name: Verify Snowflake CLI installation
+            run: |
+              snow --version
+              snow connection test
+
           - name: Sanitize Clone Name
             run: |
               CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
@@ -108,4 +124,4 @@ jobs:
           - name: Drop the clone
             shell: bash
             run: |
-              ~/bin/snowsql -r $SNOWSQL_CLONE_ROLE -q "DROP DATABASE IF EXISTS $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE;"
+              snow sql -r $SNOWFLAKE_CLONE_ROLE -q "DROP DATABASE IF EXISTS $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE;"
