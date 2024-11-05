@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS my_table (
 
 -- Insert arbitrary rows into the dummy table
 INSERT INTO my_table (id, name, created_at, value) VALUES 
-    (1, 'Alpha', CURRENT_TIMESTAMP, 10.5),
+    (1, 'Alpha', CURRENT_TIMESTAMP, 1000.5),
     (2, 'Beta', CURRENT_TIMESTAMP, 20.0),
     (3, 'Gamma', CURRENT_TIMESTAMP, 30.75),
     (4, 'Delta', CURRENT_TIMESTAMP, 40.1),
