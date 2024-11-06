@@ -42,33 +42,44 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
-            - name: Configure Snowflake connection
+            - name: Configure Snowflake connections
               run: |
-                # Create temporary files for config.toml and our private key
-                config_file=$(mktemp)
-      
-                # Write to config.toml file
-                echo 'default_connection_name = "dpe"' >> $config_file
-                echo '[connections.dpe]' >> $config_file
-                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
-                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
-                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
-                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
-                echo 'authenticator = "SNOWFLAKE"' >> $config_file
+                # Config file for DPE_ENGINEER
+                config_file_dpe=$(mktemp)
+                echo 'default_connection_name = "dpe"' >> $config_file_dpe
+                echo '[connections.dpe]' >> $config_file_dpe
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file_dpe
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file_dpe
+                echo "role = \"${SNOWFLAKE_CLONE_ROLE}\"" >> $config_file_dpe
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file_dpe
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file_dpe
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file_dpe
 
-                # Write config.toml path to global environment
-                echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
+                # Config file for SYSADMIN
+                config_file_sysadmin=$(mktemp)
+                echo 'default_connection_name = "sysadmin"' >> $config_file_sysadmin
+                echo '[connections.sysadmin]' >> $config_file_sysadmin
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file_sysadmin
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file_sysadmin
+                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file_sysadmin
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file_sysadmin
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file_sysadmin
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file_sysadmin
 
-            - name: Install Snowflake CLI
+                # Write config paths to environment
+                echo "SNOWFLAKE_CONFIG_PATH_DPE=$config_file_dpe" >> $GITHUB_ENV
+                echo "SNOWFLAKE_CONFIG_PATH_SYSADMIN=$config_file_sysadmin" >> $GITHUB_ENV
+
+            - name: Install Snowflake CLI with DPE_ENGINEER config
               uses: Snowflake-Labs/snowflake-cli-action@v1.5
               with:
-                default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
+                default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH_DPE }}
 
-            - name: Verify Snowflake CLI installation and connection
+            - name: Verify Snowflake CLI installation and connections
               run: |
                 snow --version
-                snow connection test
+                snow connection test -c sysadmin
+                snow connection test -c dpe
 
             - name: Sanitize Clone Name
               run: |
@@ -79,22 +90,23 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                snow sql -q "USE ROLE DPE_ENGINEER; CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
 
-            - name: Grant permissions to DPE_ENGINEER on cloned database schemas of interest
+            - name: Grant permissions to DPE_ENGINEER on cloned database
               shell: bash
               run: |
+                snow connection set-default sysadmin
                 snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DPE_ENGINEER;"
                 snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DPE_ENGINEER;"
 
-            - name: Run schemachange on the clone
+            - name: Run schemachange on the clone as DPE_ENGINEER
               shell: bash
               run: |
                 schemachange \
                 -f synapse_data_warehouse \
                 -a $SNOWFLAKE_ACCOUNT \
                 -u $SNOWFLAKE_USER \
-                -r DPE_ENGINEER \
+                -r $SNOWFLAKE_CLONE_ROLE \
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
