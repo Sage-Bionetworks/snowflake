@@ -52,7 +52,7 @@ jobs:
                 echo '[connections.dpe]' >> $config_file
                 echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
                 echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-                echo "role = \"${SNOWFLAKE_CLONE_ROLE}\"" >> $config_file
+                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
                 echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
                 echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file
@@ -79,7 +79,13 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                snow sql -q "USE ROLE DPE_ENGINEER; CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+
+            - name: Grant permissions to DPE_ENGINEER on cloned database schemas of interest
+              shell: bash
+              run: |
+                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DPE_ENGINEER;"
+                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DPE_ENGINEER;"
 
             - name: Run schemachange on the clone
               shell: bash
@@ -88,7 +94,7 @@ jobs:
                 -f synapse_data_warehouse \
                 -a $SNOWFLAKE_ACCOUNT \
                 -u $SNOWFLAKE_USER \
-                -r $SNOWFLAKE_SCHEMACHANGE_ROLE \
+                -r DPE_ENGINEER \
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
