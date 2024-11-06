@@ -56,19 +56,16 @@ jobs:
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file_dpe
 
                 # Config file for SYSADMIN
-                config_file_sysadmin=$(mktemp)
-                echo 'default_connection_name = "sysadmin"' >> $config_file_sysadmin
-                echo '[connections.sysadmin]' >> $config_file_sysadmin
-                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file_sysadmin
-                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file_sysadmin
-                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file_sysadmin
-                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file_sysadmin
-                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file_sysadmin
-                echo 'authenticator = "SNOWFLAKE"' >> $config_file_sysadmin
+                echo '[connections.sysadmin]' >> $config_file_dpe
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file_dpe
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file_dpe
+                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file_dpe
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file_dpe
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file_dpe
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file_dpe
 
                 # Write config paths to environment
                 echo "SNOWFLAKE_CONFIG_PATH_DPE=$config_file_dpe" >> $GITHUB_ENV
-                echo "SNOWFLAKE_CONFIG_PATH_SYSADMIN=$config_file_sysadmin" >> $GITHUB_ENV
 
             - name: Install Snowflake CLI with DPE_ENGINEER config
               uses: Snowflake-Labs/snowflake-cli-action@v1.5
