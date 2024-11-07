@@ -93,8 +93,19 @@ jobs:
               shell: bash
               run: |
                 snow connection set-default sysadmin
+
+                # Transfer ownership of: database
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE} TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+
+                # Transfer ownership of: schemas
+                snow sql -q "GRANT OWNERSHIP ON SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+                snow sql -q "GRANT OWNERSHIP ON SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+                
+                # Transfer ownership of: tables
                 snow sql -q "GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
                 snow sql -q "GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+                
+                # Transfer ownership of: dynamic tables
                 snow sql -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
 
             - name: Run schemachange on the clone as DATA_ENGINEER
