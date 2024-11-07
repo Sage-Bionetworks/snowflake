@@ -44,7 +44,7 @@ jobs:
 
             - name: Configure Snowflake connections
               run: |
-                # Config file for DPE_ENGINEER
+                # Config file for DATA_ENGINEER
                 config_file_dpe=$(mktemp)
                 echo 'default_connection_name = "dpe"' >> $config_file_dpe
                 echo '[connections.dpe]' >> $config_file_dpe
@@ -67,7 +67,7 @@ jobs:
                 # Write config paths to environment
                 echo "SNOWFLAKE_CONFIG_PATH_DPE=$config_file_dpe" >> $GITHUB_ENV
 
-            - name: Install Snowflake CLI with DPE_ENGINEER config
+            - name: Install Snowflake CLI with DATA_ENGINEER config
               uses: Snowflake-Labs/snowflake-cli-action@v1.5
               with:
                 default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH_DPE }}
@@ -89,14 +89,14 @@ jobs:
               run: |
                 snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
 
-            - name: Grant permissions to DPE_ENGINEER on cloned database
+            - name: Grant permissions to DATA_ENGINEER on cloned database
               shell: bash
               run: |
                 snow connection set-default sysadmin
-                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DPE_ENGINEER;"
-                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DPE_ENGINEER;"
+                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DATA_ENGINEER;"
+                snow sql -q "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DATA_ENGINEER;"
 
-            - name: Run schemachange on the clone as DPE_ENGINEER
+            - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
               run: |
                 schemachange \
