@@ -117,7 +117,8 @@ jobs:
                 -u $SNOWFLAKE_USER \
                 -r $SNOWFLAKE_CLONE_ROLE \
                 -w $SNOWFLAKE_WAREHOUSE \
-                --config-folder synapse_data_warehouse
+                --config-folder synapse_data_warehouse \
+                --apply-only
 
     drop_clone:
       runs-on: ubuntu-latest
