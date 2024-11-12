@@ -1,6 +1,6 @@
 use schema {{database_name}}.synapse; --noqa: JJ01,PRS,TMP,CP01
 
-CREATE OR REPLACE DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST
+CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     AS
@@ -17,7 +17,7 @@ CREATE OR REPLACE DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST
         SELECT
             verificationsubmissionsnapshots.*,
             ROW_NUMBER() OVER (
-                PARTITION BY snapshot_timestamp
+                PARTITION BY id
                 ORDER BY snapshot_timestamp DESC
             ) AS row_num
         FROM
