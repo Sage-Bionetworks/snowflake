@@ -33,4 +33,4 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
     FROM
         latest_unique_rows
     ORDER BY
-        latest_unique_rows.id;
+        latest_unique_rows.id ASC;
