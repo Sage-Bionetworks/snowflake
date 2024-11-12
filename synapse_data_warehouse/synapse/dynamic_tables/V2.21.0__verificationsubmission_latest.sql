@@ -16,10 +16,6 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
     latest_unique_rows AS (
         SELECT
             verificationsubmissionsnapshots.*,
-            ROW_NUMBER() OVER (
-                PARTITION BY id
-                ORDER BY snapshot_timestamp DESC
-            ) AS row_num
         FROM
             verificationsubmissionsnapshots
         JOIN
@@ -27,12 +23,14 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
         ON
             verificationsubmissionsnapshots.id = latest_rows.latest_id
             AND verificationsubmissionsnapshots.snapshot_timestamp = latest_rows.latest_timestamp
+        QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY id
+                ORDER BY snapshot_timestamp DESC
+            ) = 1
     )
     SELECT
-        * EXCLUDE (row_num)
+        *
     FROM
         latest_unique_rows
-    WHERE
-        row_num = 1
     ORDER BY
         latest_unique_rows.id;
