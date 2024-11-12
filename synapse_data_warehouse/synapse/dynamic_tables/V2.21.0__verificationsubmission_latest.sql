@@ -6,12 +6,12 @@ CREATE OR REPLACE DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST
     AS
     WITH latest_rows AS (
         SELECT
-            verificationsubmissionsnapshots.id AS the_id,
+            id AS latest_id,
             MAX(snapshot_timestamp) AS latest_timestamp
         FROM
             verificationsubmissionsnapshots
         GROUP BY
-            verificationsubmissionsnapshots.id
+            latest_id
     ),
     latest_unique_rows AS (
         SELECT
@@ -25,11 +25,11 @@ CREATE OR REPLACE DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST
         JOIN
             latest_rows
         ON
-            verificationsubmissionsnapshots.id = latest_rows.the_id
+            verificationsubmissionsnapshots.id = latest_rows.latest_id
             AND verificationsubmissionsnapshots.snapshot_timestamp = latest_rows.latest_timestamp
     )
     SELECT
-        *
+        * EXCLUDE (row_num)
     FROM
         latest_unique_rows
     WHERE
