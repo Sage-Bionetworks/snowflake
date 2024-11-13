@@ -4,6 +4,8 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     AS
+    -- We deduplicate simply by selecting the latest record for each
+    -- verification submission ID...
     WITH latest_unique_rows AS (
         SELECT
             verificationsubmissionsnapshots.*,
@@ -11,7 +13,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
             {{database_name}}.synapse_raw.verificationsubmissionsnapshots --noqa: TMP
         QUALIFY ROW_NUMBER() OVER (
                 PARTITION BY id
-                ORDER BY snapshot_timestamp DESC
+                ORDER BY change_timestamp DESC, snapshot_timestamp DESC
             ) = 1
     )
     SELECT
