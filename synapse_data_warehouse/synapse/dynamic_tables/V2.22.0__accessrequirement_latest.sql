@@ -11,7 +11,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACCESSREQUIREMENT_LATEST
             {{database_name}}.synapse_raw.accessrequirementsnapshots --noqa: TMP
         QUALIFY ROW_NUMBER() OVER (
                 PARTITION BY id
-                ORDER BY change_timestamp DESC,snapshot_timestamp DESC
+                ORDER BY change_timestamp DESC, snapshot_timestamp DESC
             ) = 1
     )
     SELECT
