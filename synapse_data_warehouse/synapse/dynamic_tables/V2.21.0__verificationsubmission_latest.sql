@@ -11,6 +11,8 @@ CREATE DYNAMIC TABLE IF NOT EXISTS VERIFICATIONSUBMISSION_LATEST
             verificationsubmissionsnapshots.*,
         FROM
             {{database_name}}.synapse_raw.verificationsubmissionsnapshots --noqa: TMP
+        WHERE
+            SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
         QUALIFY ROW_NUMBER() OVER (
                 PARTITION BY id
                 ORDER BY change_timestamp DESC, snapshot_timestamp DESC
