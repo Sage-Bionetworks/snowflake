@@ -1,7 +1,7 @@
 use schema {{database_name}}.synapse; --noqa: JJ01,PRS,TMP,CP01
 
 CREATE OR REPLACE DYNAMIC TABLE USERGROUP_LATEST
-    TARGET_LAG = DOWNSTREAM
+    TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     AS
         WITH dedup_usergroup AS (
@@ -13,7 +13,9 @@ CREATE OR REPLACE DYNAMIC TABLE USERGROUP_LATEST
                         ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
                     )
                     AS N
-            FROM SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE_RAW.USERGROUPSNAPSHOTS --noqa: TMP
+            FROM {{database_name}}.SYNAPSE_RAW.USERGROUPSNAPSHOTS --noqa: TMP
+            WHERE 
+                (SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days') 
             QUALIFY
                 N=1
         )
