@@ -15,7 +15,7 @@ CREATE OR REPLACE DYNAMIC TABLE USERGROUP_LATEST
                     AS N
             FROM {{database_name}}.SYNAPSE_RAW.USERGROUPSNAPSHOTS --noqa: TMP
             WHERE 
-                (SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days') 
+                SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '14 days'
             QUALIFY
                 N=1
         )
