@@ -4,6 +4,15 @@ Welcome, and thanks for your interest in contributing to the `snowflake` reposit
 
 By contributing, you are agreeing that we may redistribute your work under this [license](https://github.com/Sage-Bionetworks/snowflake/tree/snow-90-auto-db-clone?tab=License-1-ov-file#).
 
+## Development Rules
+
+There are some things you should make a note of before getting started...
+
+1. **Avoid Repeatable Scripts Without Introducing Objects Through V Scripts**:
+   Never use repeatable scripts for tables or any other objects that can potentially be dependencies without first introducing these objects in a V script. This ensures that all dependent objects are properly established in the correct sequence.
+2. **Branch Naming Convention**:
+   If you plan to run the automated testing described in section [Running CI Jobs for Database Testing](#running-ci-jobs-for-database-testing), your branch name needs to start with `snow-`, otherwise the test deployment will fail.
+   
 ## Getting Started
 
 To start contributing, follow these steps to set up and develop on your local repository:
@@ -38,10 +47,6 @@ git checkout -b snow-123-new-feature origin/dev
 
 Your branch will now be tracking `origin/dev` which you can merge with or rebase onto should a merge conflict occur. For more guidance
 on how to resolve merge conflicts, [see here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts#resolving-merge-conflicts).
-
-> [!IMPORTANT]
-> If you plan to run the automated testing described in section [Running CI Jobs for Database Testing](#running-ci-jobs-for-database-testing), your branch name needs to start with `snow-`,
-> otherwise the test deployment will fail.
 
 ### 4. Push to The Remote Branch
 
