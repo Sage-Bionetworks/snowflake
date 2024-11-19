@@ -10,8 +10,6 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACCESSREQUIREMENT_LATEST
         FROM
             {{database_name}}.synapse_raw.accessrequirementsnapshots --noqa: TMP
         WHERE
-            CHANGE_TYPE != 'DELETE'
-        AND
             SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '8 DAYS'
         QUALIFY ROW_NUMBER() OVER (
                 PARTITION BY id
@@ -22,5 +20,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACCESSREQUIREMENT_LATEST
         *
     FROM
         latest_unique_rows
+    WHERE
+        CHANGE_TYPE != 'DELETE'
     ORDER BY
         latest_unique_rows.id ASC;
