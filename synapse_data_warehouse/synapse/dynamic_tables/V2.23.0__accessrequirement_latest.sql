@@ -6,7 +6,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS ACCESSREQUIREMENT_LATEST
     AS
     WITH latest_unique_rows AS (
         SELECT
-            accessrequirementsnapshots.*,
+            *
         FROM
             {{database_name}}.synapse_raw.accessrequirementsnapshots --noqa: TMP
         WHERE
