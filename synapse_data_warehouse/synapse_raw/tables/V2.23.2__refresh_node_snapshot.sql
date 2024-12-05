@@ -1,12 +1,12 @@
 -- Configure environment
-USE ROLE sysadmin;
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
 USE WAREHOUSE compute_medium;
 
+SET cutoff_date = '2024-11-01';
 SET num_records_to_be_reloaded = (
     SELECT count(*)
     FROM nodesnapshots
-    WHERE snapshot_date >= '2024-11-01'
+    WHERE snapshot_date >= $cutoff_date
 );
 
 -- This scripting block is an attempt to avoid any `COPY INTO` action in
@@ -20,10 +20,10 @@ BEGIN
   IF (count > 0) THEN
     -- Drop all records added since the month wherein the `version_history` field
     -- was included in dev or prod. The field was added on 2024-11-12, but to simplify
-    -- the regex in the COPY INTO statement we drop/load all data from November onward.
+    -- the regex in the COPY INTO statement we drop/load all data from November 2024 onward.
     -- See https://github.com/Sage-Bionetworks/Synapse-Repository-Services/pull/5199 
     DELETE FROM nodesnapshots
-        WHERE snapshot_date >= '2024-11-01';
+        WHERE snapshot_date >= $cutoff_date;
 
     -- Run the same query as nodesnapshots_task except with FORCE=TRUE
     -- and PATTERN = all snapshot_date from 2024-11-.* onward (until 2099)
@@ -72,7 +72,7 @@ BEGIN
             PARSE_JSON(REPLACE(REPLACE($1:version_history, '\n', '\\n'), '\r', '\\r')) AS version_history
         FROM @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
     )
-    PATTERN = '.*nodesnapshots/snapshot_date=(2024-(11|12)-.*|202[5-9]-.*|20[3-9]-.*)/.*'
+    PATTERN = '.*nodesnapshots/snapshot_date=(2024-(11|12)-.*|202[5-9]-.*|20[3-9]\d-.*)/.*'
     FORCE = TRUE;
   END IF;
 END;
