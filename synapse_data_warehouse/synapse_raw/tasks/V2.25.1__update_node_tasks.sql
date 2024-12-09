@@ -5,7 +5,7 @@ USE WAREHOUSE compute_xsmall;
 -- suspend nodesnapshot task and its dependents
 ALTER TASK nodesnapshot_task SUSPEND;
 ALTER TASK upsert_to_node_latest_task SUSPEND;
-ALTER TASK remove_deleted_nodes_task SUSPEND;
+ALTER TASK remove_delete_nodes_task SUSPEND;
 
 -- Add `version_history` column to task definition
 ALTER TASK nodesnapshot_task MODIFY AS
