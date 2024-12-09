@@ -3,6 +3,7 @@ USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
 USE WAREHOUSE compute_xsmall;
 
 -- suspend nodesnapshot task and its dependents
+ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
 ALTER TASK nodesnapshot_task SUSPEND;
 ALTER TASK upsert_to_node_latest_task SUSPEND;
 ALTER TASK remove_delete_nodes_task SUSPEND;
