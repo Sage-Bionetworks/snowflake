@@ -15,22 +15,12 @@ CREATE DYNAMIC TABLE IF NOT EXISTS NODE_LATEST
                     PARTITION BY id
                     ORDER BY change_timestamp DESC, snapshot_timestamp DESC
                 ) = 1
-        ),
-        processed_latest_unique_rows AS (
-            SELECT
-                * EXCLUDE (annotations, reference),
-                PARSE_JSON(annotations):annotations::OBJECT AS annotations,
-                PARSE_JSON(annotations):etag::STRING AS etag,
-                PARSE_JSON(reference):targetId::STRING as reference_target_id,
-                PARSE_JSON(reference):targetVersionNumber::STRING as reference_target_version_number
-            FROM
-                latest_unique_rows
-            WHERE
-                CHANGE_TYPE != 'DELETE'
         )
         SELECT
             *
         FROM
-            processed_latest_unique_rows
+            latest_unique_rows
+        WHERE
+            CHANGE_TYPE != 'DELETE'
         ORDER BY
-            processed_latest_unique_rows.id ASC;
+            latest_unique_rows.id ASC;
