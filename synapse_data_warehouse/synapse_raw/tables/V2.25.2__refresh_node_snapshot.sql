@@ -2,28 +2,29 @@
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
 USE WAREHOUSE compute_medium;
 
-SET cutoff_date = '2024-11-01';
-SET num_records_to_be_reloaded = (
-    SELECT count(*)
-    FROM nodesnapshots
-    WHERE snapshot_date >= $cutoff_date
-);
-
 -- This scripting block is an attempt to avoid any `COPY INTO` action in
 -- the unlikely case of a rollback/replay of our database state. For example,
 -- if we are deploying our database from scratch -- or more specifically, if
 -- we don't have any table data requiring a `version_history` backfill -- we don't
 -- want to load data (that's a job for the associated data loading task).
 EXECUTE IMMEDIATE $$
+DECLARE
+    num_records_to_be_reloaded INT;
 BEGIN
-  LET count := $num_records_to_be_reloaded;
-  IF (count > 0) THEN
+  LET cutoff_date := '2024-11-01'; 
+  -- count how many records require reloading
+  SELECT COUNT(*)
+  INTO :num_records_to_be_reloaded
+  FROM nodesnapshots
+  WHERE snapshot_date >= :cutoff_date;
+
+  IF (num_records_to_be_reloaded > 0) THEN
     -- Drop all records added since the month wherein the `version_history` field
     -- was included in dev or prod. The field was added on 2024-11-12, but to simplify
     -- the regex in the COPY INTO statement we drop/load all data from November 2024 onward.
     -- See https://github.com/Sage-Bionetworks/Synapse-Repository-Services/pull/5199 
     DELETE FROM nodesnapshots
-        WHERE snapshot_date >= $cutoff_date;
+        WHERE snapshot_date >= :cutoff_date;
 
     -- Run the same query as nodesnapshots_task except with FORCE=TRUE
     -- and PATTERN = all snapshot_date from 2024-11-.* onward (until 2099)
