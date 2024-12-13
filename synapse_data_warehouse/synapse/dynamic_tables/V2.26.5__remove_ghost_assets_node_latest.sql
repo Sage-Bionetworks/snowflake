@@ -10,7 +10,7 @@ CREATE OR REPLACE DYNAMIC TABLE NODE_LATEST
             FROM
                 {{database_name}}.synapse_raw.nodesnapshots --noqa: TMP
             WHERE
-                SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS'
+                SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '21 DAYS'
             QUALIFY ROW_NUMBER() OVER (
                     PARTITION BY id
                     ORDER BY change_timestamp DESC, snapshot_timestamp DESC
