@@ -23,7 +23,7 @@ on:
 jobs:
 
   schemachange_synapse_data_warehouse_dev:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/dev'
     environment: dev
     env:
@@ -62,7 +62,7 @@ jobs:
             --config-folder synapse_data_warehouse
 
   snowsql_admin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
 
     env:
@@ -112,7 +112,7 @@ jobs:
           ~/bin/snowsql -f admin/grants.sql
 
   schemachange_admin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
     env:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
@@ -147,7 +147,7 @@ jobs:
             -d METADATA
 
   schemachange_synapse_data_warehouse_prod:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
     environment: prod
     env:
