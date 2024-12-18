@@ -22,6 +22,8 @@ FROM (
         $1:company as company,
         $1:position as position,
         $1:is_two_factor_auth_enabled as is_two_factor_auth_enabled,
+        $1:industry as industry,
+        $1:tos_agreements as tos_agreements,
         NULLIF(
             REGEXP_REPLACE(
                 metadata$filename,
