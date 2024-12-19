@@ -5,7 +5,7 @@ USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
 ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
 
 -- Suspend the child task in question
-ALTER TASK userprofilesnapshot_task SUSPEND
+ALTER TASK userprofilesnapshot_task SUSPEND;
 
 -- Add the new column to the child task
 ALTER TASK userprofilesnapshot_task MODIFY AS
