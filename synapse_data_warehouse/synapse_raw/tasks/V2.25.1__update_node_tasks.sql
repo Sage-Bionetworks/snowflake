@@ -1,6 +1,6 @@
 -- Configure environment
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
-USE WAREHOUSE compute_xsmall;
+USE WAREHOUSE compute_medium;
 
 -- suspend nodesnapshot task and its dependents
 ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
