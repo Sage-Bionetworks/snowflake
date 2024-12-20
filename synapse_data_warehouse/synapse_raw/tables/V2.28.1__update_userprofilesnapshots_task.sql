@@ -25,9 +25,6 @@ ALTER TASK userprofilesnapshot_task MODIFY AS
             $1:location as location,
             $1:company as company,
             $1:position as position,
-            $1:is_two_factor_auth_enabled as is_two_factor_auth_enabled,
-            $1:industry as industry,
-            $1:tos_agreements as tos_agreements,
             NULLIF(
                 REGEXP_REPLACE(
                     metadata$filename,
@@ -35,7 +32,10 @@ ALTER TASK userprofilesnapshot_task MODIFY AS
                 ),
                 '__HIVE_DEFAULT_PARTITION__'
             ) as snapshot_date,
-            $1:created_on as created_on
+            $1:created_on as created_on,
+            $1:is_two_factor_auth_enabled as is_two_factor_auth_enabled,
+            $1:industry as industry,
+            $1:tos_agreements as tos_agreements
         from
             @synapse_prod_warehouse_s3_stage/userprofilesnapshots --noqa: TMP
     )
