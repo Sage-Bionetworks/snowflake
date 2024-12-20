@@ -33,6 +33,6 @@ FROM (
         $1:industry as industry,
         $1:tos_agreements as tos_agreements
     from
-        @synapse_prod_warehouse_s3_stage/userprofilesnapshots --noqa: TMP
+        @{{stage_storage_integration}}_stage/userprofilesnapshots --noqa: TMP
 )
 pattern = '.*userprofilesnapshots/snapshot_date=.*/.*';
