@@ -1,5 +1,6 @@
 -- Configure environment
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP,CP02
+USE WAREHOUSE compute_medium;
 
 -- Drop all records from this table but keep structure and permissions intact
 TRUNCATE TABLE userprofilesnapshot;
