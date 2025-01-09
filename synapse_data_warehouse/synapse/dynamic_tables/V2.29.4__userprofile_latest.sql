@@ -18,6 +18,7 @@ CREATE OR REPLACE DYNAMIC TABLE USERPROFILE_LATEST
     )
     SELECT 
         * exclude (LOCATION, COMPANY, POSITION, INDUSTRY), 
+        -- TODO: Need to revisit this section after the mixture of NULL and empty strings issue being resolved in https://sagebionetworks.jira.com/browse/SWC-7215
         NULLIF(LOCATION, '') AS LOCATION, 
         NULLIF(COMPANY, '') AS COMPANY, 
         NULLIF(POSITION, '') AS POSITION, 
