@@ -2,7 +2,7 @@
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP,CP02
 
 -- Add the table and column comments
-ALTER DYNAMIC TABLE CERTIFIEDQUIZQUESTION_LATEST SET COMMENT = 'This table contains the latest snapshots of the questions of the certification quiz. With each entry representing a question answered by the user during the quiz.';
+ALTER DYNAMIC TABLE CERTIFIEDQUIZQUESTION_LATEST SET COMMENT = 'This table contains snapshots of the questions of the certification quiz taken within the last 14 days. With each entry representing a question answered by the user during the quiz.';
 
 ALTER DYNAMIC TABLE CERTIFIEDQUIZQUESTION_LATEST ALTER COLUMN change_type COMMENT 'The change type is always as CREATE since each instance of a user submitting a quiz results in a new submission of the quiz.';
 ALTER DYNAMIC TABLE CERTIFIEDQUIZQUESTION_LATEST ALTER COLUMN change_timestamp COMMENT 'The time when the user submitted the quiz.';
