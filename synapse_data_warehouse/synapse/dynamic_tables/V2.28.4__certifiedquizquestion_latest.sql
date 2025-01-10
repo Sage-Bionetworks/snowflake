@@ -10,7 +10,7 @@ CREATE DYNAMIC TABLE IF NOT EXISTS CERTIFIEDQUIZQUESTION_LATEST
             FROM
                 {{database_name}}.synapse_raw.certifiedquizquestionsnapshots --noqa: TMP
             WHERE
-                SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS'
+                SNAPSHOT_TIMESTAMP >= CURRENT_TIMESTAMP - INTERVAL '14 DAYS'
             QUALIFY ROW_NUMBER() OVER (
                     PARTITION BY response_id, question_index
                     ORDER BY change_timestamp DESC, snapshot_timestamp DESC
