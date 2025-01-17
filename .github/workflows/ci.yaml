@@ -146,6 +146,17 @@ jobs:
             -w compute_xsmall \
             -d METADATA
 
+      - name: future grants 
+        shell: bash
+        run: |
+          schemachange \
+            -f admin/future_grants \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SECURITYADMIN \
+            -w compute_xsmall \
+            -d METADATA
+
   schemachange_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
