@@ -53,7 +53,7 @@ ALTER TASK nodesnapshot_task MODIFY AS
             $1:is_search_enabled AS is_search_enabled,
             $1:defining_sql AS defining_sql,
             PARSE_JSON(REPLACE(REPLACE($1:internal_annotations, '\n', '\\n'), '\r', '\\r')) AS internal_annotations,
-            PARSE_JSON(REPLACE(REPLACE($1:version_history, '\n', '\\n'), '\r', '\\r')) AS version_history
+            PARSE_JSON(REPLACE(REPLACE($1:version_history, '\n', '\\n'), '\r', '\\r')) AS version_history,
             PARSE_JSON(REPLACE(REPLACE($1:project_storage_usage, '\n', '\\n'), '\r', '\\r')) AS project_storage_usage
         from
             @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
