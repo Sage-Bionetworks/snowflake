@@ -1,3 +1,3 @@
 -- Drop FILE_LATEST table
 USE SCHEMA {{database_name}}.synapse;
-DROP TABLE FILE_LATEST;
+DROP TABLE IF EXISTS FILE_LATEST;
