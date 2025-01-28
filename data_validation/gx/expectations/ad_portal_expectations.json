@@ -1,0 +1,663 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "ad_portal_expectations",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ID"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "NAME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "STUDY"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATATYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ASSAY"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ORGAN"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "TISSUE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIES"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SEX"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CONSORTIUM"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "GRANTNUMBER"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "MODELSYSTEMNAME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "TREATMENTTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIMENID"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "INDIVIDUALIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "SPECIMENIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "RESOURCETYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATASUBTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "METADATATYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ASSAYTARGET"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ANALYSISTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CELLTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "NUCLEICACIDSOURCE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "FILEFORMAT"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "GROUPS"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISMODELSYSTEM"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISCONSORTIUMANALYSIS"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISMULTISPECIMEN"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "METABOLITETYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "CHROMOSOME"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "MODELSYSTEMTYPE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "LIBRARYPREP"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "COHORT"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATACONTRIBUTIONGROUP"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "DATAGENERATIONSITE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "ISSAMPLEEXCHANGE"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "BATCH"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "DATATYPE",
+        "list_members": [
+          "behavior process",
+          "geneExpression",
+          "proteomics",
+          "metagenomics",
+          "Pharmacokinetic Study",
+          "gene expression",
+          "epigenetics",
+          "analysis",
+          "metabolomics",
+          "clinical",
+          "immunoassay",
+          "demographic",
+          "image",
+          "chromatinActivity",
+          "genomicVariants",
+          "electrophysiology",
+          "mRNA"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "STUDY",
+        "list_members": [
+          "Abeta_microglia",
+          "ACOM",
+          "ACT",
+          "AD-BXD",
+          "AD_CrossSpecies",
+          "ADMC_ADNI1",
+          "ADMC_ADNI1_NightingaleNMR",
+          "ADMC_ADNI2-GO",
+          "ADMC_ADNI_BakerLipidomics",
+          "ADMC_ADNI_NightingaleNMR",
+          "ADMC_ADNI_UHawaiiGutMetabolites",
+          "ADMC_UPenn",
+          "AD_CrossSpecies",
+          "AMP-AD_DiverseCohorts",
+          "APOEPSC",
+          "APOE-TR",
+          "Banner",
+          "BCM-DMAS",
+          "BLSA",
+          "BroadAstrom109",
+          "BroadMDMi",
+          "BroadiPSC",
+          "CHDWB",
+          "DiCAD",
+          "DiseasePseudotime",
+          "DroNc-Seq",
+          "DukeAD_PTSD",
+          "Emory_ADRC",
+          "EmoryDrosophilaTau",
+          "Emory_Vascular",
+          "eQTLmetaAnalysis",
+          "FreshMicro",
+          "GJA1_deficiency",
+          "HBI_scRNAseq",
+          "HBTRC",
+          "HDAC1-cKOBrain",
+          "IL10_APPmouse",
+          "IntegratedProteomics",
+          "iPSCAstrocytes",
+          "iPSCMicroglia",
+          "Jax.IU.Pitt.Proteomics_Metabolomics_Pilot",
+          "Jax.IU.Pitt_APP.PS1",
+          "Jax.IU.Pitt_APOE4.Trem2.R47H",
+          "Jax.IU.Pitt_5XFAD",
+          "Jax.IU.Pitt_LOAD1.PrimaryScreen",
+          "Jax.IU.Pitt_Levetiracetam_5XFAD",
+          "Jax.IU.Pitt_MicrobiomePilot",
+          "Jax.IU.Pitt_PrimaryScreen",
+          "Jax.IU.Pitt_Rat_TgF344-AD",
+          "Jax.IU.Pitt_StrainValidation",
+          "Jax.IU.Pitt_Verubecestat_5XFAD",
+          "Jax.IU.Pitt_hTau_Trem2",
+          "LBP",
+          "LillyMicroglia",
+          "MC-BrAD",
+          "MC-CAA",
+          "MC_snRNA",
+          "MCMPS",
+          "MCSA",
+          "MCPB",
+          "MIT_ROSMAP_Multiomics",
+          "MOA-PAD",
+          "MSBB",
+          "MSBB_ArrayTissuePanel",
+          "MSDM",
+          "MSMM",
+          "MSSMiPSC",
+          "MayoPilotRNAseq",
+          "MayoHippocampus",
+          "MayoLOADGWAS",
+          "MayoRNAseq",
+          "MayoeGWAS",
+          "MindPhenomeKB",
+          "MODEL-AD_JAX_GWAS_Gene_Survey",
+          "NPS-AD",
+          "omicsADDS",
+          "Plxnb1_KO",
+          "RNAseq_Harmonization",
+          "ROSMAP",
+          "ROSMAP-IA",
+          "ROSMAP-IN",
+          "ROSMAP_CellTypeSpecificHA",
+          "ROSMAP_CognitiveResilience",
+          "ROSMAP_CognitiveReslience",
+          "ROSMAP_Lipidomics_Emory",
+          "ROSMAP_MammillaryBody",
+          "ROSMAP_bsSeq",
+          "ROSMAP_nucleus_hashing",
+          "RR_APOE4",
+          "SEA-AD",
+          "SMIB-AD",
+          "SV_xQTL",
+          "SY5Y_Emory",
+          "SY5Y_REST",
+          "SUNYStrokeModel",
+          "SuperAgerEpiMap",
+          "StJude_BannerSun",
+          "TAUAPPms",
+          "TASTPM",
+          "TWAS",
+          "TyrobpKO",
+          "TyrobpKO_AppPs1",
+          "U1-70_PrimaryCellCulture",
+          "UCI_3xTg-AD",
+          "UCI_5XFAD",
+          "UCI_ABCA7",
+          "UCI_ABI3",
+          "UCI_Bin1K358R",
+          "UCI_CollaborativeCrossLines",
+          "UCI_PrimaryScreen",
+          "UCI_Trem2_Cuprizone",
+          "UCI_Trem2-R47H_NSS",
+          "UCI_hAbeta_KI",
+          "UCSF_MAC",
+          "UFL_Cxcl10",
+          "UFLOR_ABI3_GNGT2",
+          "UPP",
+          "UPennPilot",
+          "VMC",
+          "VirusResilience_LCL",
+          "VirusResilience_Mayo.MSBB.ROSMAP",
+          "WallOfTargets",
+          "WGS_Harmonization",
+          "iPSCAstrocytes",
+          "iPSCMicroglia",
+          "miR155",
+          "mtDNA_AD",
+          "rnaSeqReprocessing",
+          "rnaSeqSampleSwap",
+          "scRNAseq_microglia_wild_ADmice",
+          "snRNAseqAD_TREM2",
+          "snRNAseqPFC_BA10"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "ASSAY",
+        "list_members": [
+          "10x multiome",
+          "16SrRNAseq",
+          "active avoidance learning behavior",
+          "anxiety-related behavior",
+          "ATACSeq",
+          "autoradiography",
+          "Baker Lipidomics",
+          "Biocrates Bile Acids",
+          "Biocrates p180",
+          "bisulfiteSeq",
+          "Blood Chemistry Measurement",
+          "ChIPSeq",
+          "CITESeq",
+          "contextual conditioning behavior",
+          "electrochemiluminescence",
+          "electrophysiology",
+          "elevated plus maze test",
+          "elevated T maze apparatus method",
+          "ELISA",
+          "exomeSeq",
+          "FIA-MSMS",
+          "frailty assessment",
+          "GJA1_deficiency",
+          "HI-C",
+          "immunofluorescence",
+          "immunohistochemistry",
+          "kinesthetic behavior",
+          "label free mass spectrometry",
+          "Laser Speckle Imaging",
+          "LC-MS",
+          "LC-SRM",
+          "Leiden Oxylipins",
+          "LFP",
+          "locomotor activation behavior",
+          "long-read rnaSeq",
+          "LTP",
+          "MDMS-SL",
+          "memory behavior",
+          "Metabolon",
+          "methylationArray",
+          "mirnaArray",
+          "MRI",
+          "multiome",
+          "mRNAcounts",
+          "Nightingale NMR",
+          "novelty response behavior",
+          "open field test",
+          "pharmacokinetics",
+          "polymeraseChainReaction",
+          "Positron Emission Tomography",
+          "proximity extension assay",
+          "questionnaire",
+          "RNASeq",
+          "rnaArray",
+          "rotarod",
+          "rotarod performance test",
+          "scATACSeq",
+          "scrnaSeq",
+          "scwholeGenomeSeq",
+          "SiMoA",
+          "snpArray",
+          "snATACSeq",
+          "snrnaSeq",
+          "spontaneous alternation",
+          "TASTPM",
+          "TauD35",
+          "TMT quantification",
+          "UPLC-ESI-QTOF-MS",
+          "UPLC-MSMS",
+          "UPP",
+          "VirusResilience_LCL",
+          "wallOfTargets",
+          "westernBlot",
+          "wheel running",
+          "wholeGenomeSeq"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "ORGAN",
+        "value_set": [
+          "blood",
+          "brain",
+          "large intestine",
+          "liver",
+          "skin",
+          "spinal cord",
+          "temporal cortex"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "CONSORTIUM",
+        "value_set": [
+          "AMP-AD",
+          "CDCP",
+          "ELP",
+          "M2OVE-AD",
+          "MODEL-AD",
+          "Psych-AD",
+          "Resilience-AD",
+          "ROSMAP"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "FILEFORMAT",
+        "value_set": [
+          "R script",
+          "RData",
+          "RCC",
+          "RLF",
+          "Rdata",
+          "Sentrix descriptor file",
+          "XML",
+          "abf",
+          "avi",
+          "bam",
+          "bash script",
+          "bed",
+          "bigwig",
+          "bim",
+          "bai",
+          "bmp",
+          "bsc",
+          "cfg",
+          "cel",
+          "config",
+          "cov",
+          "cram",
+          "crai",
+          "csv",
+          "czi",
+          "dat",
+          "db",
+          "doc",
+          "docx",
+          "fam",
+          "fasta",
+          "fastq",
+          "gct",
+          "gzip",
+          "hdf",
+          "html",
+          "hyperlink",
+          "idat",
+          "idx",
+          "jpg",
+          "locs",
+          "mp4",
+          "msf",
+          "mtx",
+          "pdresult",
+          "pdstudy",
+          "pdview",
+          "pepXML",
+          "pdf",
+          "plink",
+          "png",
+          "powerpoint",
+          "Python script",
+          "pzfx",
+          "raw",
+          "saf",
+          "tbi",
+          "talon",
+          "tar",
+          "tsv",
+          "txt",
+          "vcf",
+          "xlsx",
+          "xml",
+          "yaml",
+          "zip"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "SPECIES",
+        "list_members": [
+          "Drosophila melanogaster",
+          "Human",
+          "Mouse",
+          "Rat"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_have_list_members",
+      "kwargs": {
+        "column": "GROUPS",
+        "list_members": [
+          "Broad-Rush",
+          "Columbia",
+          "Duke",
+          "Emory",
+          "GSK",
+          "Lilly",
+          "MSSM",
+          "Mayo",
+          "Myers-NIAGADS",
+          "Rush",
+          "Sage Bionetworks",
+          "UCI_DMP",
+          "UFL-ISB-Mayo"
+        ]
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "0.18.13"
+  }
+}

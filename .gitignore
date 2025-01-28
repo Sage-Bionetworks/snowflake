@@ -1,3 +1,5 @@
 .env
 .terraform*
 terraform.tfstate*
+*.csv
+.DS_Store

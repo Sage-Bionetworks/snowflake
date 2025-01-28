@@ -1,0 +1,3 @@
+USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
+
+DROP STREAM CERTIFIEDQUIZQUESTION_STREAM;

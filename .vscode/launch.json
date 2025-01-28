@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "debug streamlit",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "${workspaceFolder}/streamlit_template/app.py"
+            ],
+            "cwd": "${workspaceFolder}/streamlit_template",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "pytest for Streamlit app",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${workspaceFolder}/streamlit_template/tests/test_app.py"
+            ],
+            "cwd": "${workspaceFolder}/streamlit_template",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+    ]
+}

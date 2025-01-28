@@ -23,7 +23,7 @@ on:
 jobs:
 
   schemachange_synapse_data_warehouse_dev:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/dev'
     environment: dev
     env:
@@ -36,7 +36,7 @@ jobs:
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
       SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
       SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-
+      STACK: ${{ vars.STACK }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -46,7 +46,9 @@ jobs:
       - name: install-py-dependencies
         shell: bash
         run: |
-          pip install schemachange
+          pip install schemachange==3.6.1
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy synapse_data_warehouse
         shell: bash
@@ -60,7 +62,7 @@ jobs:
             --config-folder synapse_data_warehouse
 
   snowsql_admin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
 
     env:
@@ -110,7 +112,7 @@ jobs:
           ~/bin/snowsql -f admin/grants.sql
 
   schemachange_admin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
     env:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
@@ -129,7 +131,9 @@ jobs:
       - name: install-py-dependencies
         shell: bash
         run: |
-          pip install schemachange
+          pip install schemachange==3.6.1
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy warehouses
         shell: bash
@@ -142,8 +146,19 @@ jobs:
             -w compute_xsmall \
             -d METADATA
 
+      - name: future grants 
+        shell: bash
+        run: |
+          schemachange \
+            -f admin/future_grants \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SECURITYADMIN \
+            -w compute_xsmall \
+            -d METADATA
+
   schemachange_synapse_data_warehouse_prod:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref == 'refs/heads/main'
     environment: prod
     env:
@@ -156,6 +171,7 @@ jobs:
       SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
       SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
       SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+      STACK: ${{ vars.STACK }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -165,7 +181,9 @@ jobs:
       - name: install-py-dependencies
         shell: bash
         run: |
-          pip install schemachange
+          pip install schemachange==3.6.1
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
       - name: deploy synapse_data_warehouse
         shell: bash
