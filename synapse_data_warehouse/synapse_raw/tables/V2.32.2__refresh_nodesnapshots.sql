@@ -56,5 +56,6 @@ COPY INTO nodesnapshots FROM (
         PARSE_JSON(REPLACE(REPLACE($1:project_storage_usage, '\n', '\\n'), '\r', '\\r')) AS project_storage_usage
     FROM @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
 )
+-- Backfill for nodesnapshot rows with a snapshot date between 2025-01-16 and 2025-02-16
 PATTERN = '.*nodesnapshots/snapshot_date=(2025-01-(1[6-9]|2[0-9]|30|31)|2025-02-(0[1-9]|1[0-6]))/.*'
 FORCE = TRUE;
