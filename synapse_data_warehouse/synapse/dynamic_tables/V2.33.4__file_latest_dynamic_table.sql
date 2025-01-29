@@ -19,6 +19,4 @@ CREATE OR REPLACE DYNAMIC TABLE FILE_LATEST
     SELECT 
         * 
     FROM 
-        dedup_filesnapshots
-    WHERE
-        STATUS = 'AVAILABLE' OR NOT IS_PREVIEW;
+        dedup_filesnapshots;
