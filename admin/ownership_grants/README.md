@@ -1,0 +1,1 @@
+Sometimes granting ownership can have side-effects. For example, granting ownership on a task auto-suspends the task, even if we are transferring ownership to the current owner. This is why we only want to execute ownership grants once and separate them from other types of grants contained in `admin/grants.sql`.

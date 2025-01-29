@@ -146,6 +146,17 @@ jobs:
             -w compute_xsmall \
             -d METADATA
 
+      - name: ownership grants 
+        shell: bash
+        run: |
+          schemachange \
+            -f admin/ownership_grants \
+            -a $SNOWFLAKE_ACCOUNT \
+            -u $SNOWFLAKE_USER \
+            -r SECURITYADMIN \
+            -w compute_xsmall \
+            -d METADATA
+
       - name: future grants 
         shell: bash
         run: |
