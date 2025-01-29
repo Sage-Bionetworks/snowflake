@@ -54,7 +54,7 @@ COPY INTO nodesnapshots FROM (
         PARSE_JSON(REPLACE(REPLACE($1:internal_annotations, '\n', '\\n'), '\r', '\\r')) AS internal_annotations,
         PARSE_JSON(REPLACE(REPLACE($1:version_history, '\n', '\\n'), '\r', '\\r')) AS version_history,
         PARSE_JSON(REPLACE(REPLACE($1:project_storage_usage, '\n', '\\n'), '\r', '\\r')) AS project_storage_usage
-    FROM @{{stage_integration}}_stage/nodesnapshots/ --noqa: TMP
+    FROM @{{stage_storage_integration}}_stage/nodesnapshots/ --noqa: TMP
 )
 PATTERN = '.*nodesnapshots/snapshot_date=(2025-01-(1[6-9]|2[0-9]|30|31)|2025-02-(0[1-9]|1[0-6]))/.*'
 FORCE = TRUE;
