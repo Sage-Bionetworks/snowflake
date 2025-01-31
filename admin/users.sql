@@ -31,7 +31,6 @@ CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 CREATE USER IF NOT EXISTS "james.moon@sagebase.org";
 CREATE USER IF NOT EXISTS "orion.banks@sagebase.org";
 
-
 // ADTR
 CREATE USER IF NOT EXISTS "abby.vanderlinden@sagebase.org";
 CREATE USER IF NOT EXISTS "victor.baham@sagebase.org";
@@ -67,6 +66,8 @@ CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
+CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
+CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";

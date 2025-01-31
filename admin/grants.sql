@@ -179,6 +179,8 @@ GRANT ROLE DATA_ANALYTICS TO USER "lisa.pasquale@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "joni.harker@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jo.scanlan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "trisha.zintel@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "anthony.pena@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "hayley.sanchez@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
@@ -220,6 +222,8 @@ GRANT ROLE GOVERNANCE TO USER "kimberly.corrigan@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "ann.novakowski@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "thomas.yu@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "x.schildwachter@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "anthony.pena@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "hayley.sanchez@sagebase.org";
 GRANT ROLE GOVERNANCE TO ROLE SYSADMIN;
 
 -- Create governance privileges
