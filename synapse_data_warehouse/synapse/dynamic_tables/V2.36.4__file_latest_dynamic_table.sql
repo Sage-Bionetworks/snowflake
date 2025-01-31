@@ -17,6 +17,25 @@ CREATE OR REPLACE DYNAMIC TABLE FILE_LATEST
             ) = 1
     )
     SELECT 
-        * 
+        CHANGE_TYPE,
+        CHANGE_TIMESTAMP,
+        CHANGE_USER_ID,
+        SNAPSHOT_TIMESTAMP,
+        ID,
+        CREATED_BY,
+        CREATED_ON,
+        MODIFIED_ON,
+        CONCRETE_TYPE,
+        CONTENT_MD5,
+        CONTENT_TYPE,
+        FILE_NAME,
+        STORAGE_LOCATION_ID,
+        CONTENT_SIZE,
+        BUCKET,
+        KEY,
+        PREVIEW_ID,
+        IS_PREVIEW,
+        STATUS,
+        SNAPSHOT_DATE
     FROM 
         dedup_filesnapshots;
