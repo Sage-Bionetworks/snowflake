@@ -179,7 +179,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "lisa.pasquale@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "joni.harker@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jo.scanlan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "trisha.zintel@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "christine.suver@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "anthony.pena@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "hayley.sanchez@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
