@@ -66,9 +66,6 @@ CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
-
-// Privacy & Compliance 
-CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
 
