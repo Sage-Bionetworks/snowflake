@@ -103,12 +103,13 @@ jobs:
               run: |
                 snow connection set-default admin
 
-                # Transfer ownership of: *ALL_ADMIN aggregate database role
-                snow sql -q "GRANT OWNERSHIP ON DATABASE ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE} TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+                # Transfer ownership of: *ALL_ADMIN aggregate database roles (for each namespace/schema)
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_ALL_ADMIN TO ROLE DATA_ENGINEER;"
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE DATA_ENGINEER;"
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE DATA_ENGINEER;"
 
                 # Transfer ownership of: ownership proxy database role
-                snow sql -q "GRANT OWNERSHIP ON SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE_RAW TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
-                snow sql -q "GRANT OWNERSHIP ON SCHEMA ${SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE}.SYNAPSE TO ROLE DATA_ENGINEER REVOKE CURRENT GRANTS;"
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.??? TO ROLE DATA_ENGINEER;"
                 
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
