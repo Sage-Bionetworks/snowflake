@@ -11,9 +11,9 @@ permissions:
 
 jobs:
     
-    create_clone_and_run_schemachange:
+    test_with_clone:
         runs-on: ubuntu-latest
-        if: contains(github.event.pull_request.labels.*.name, 'create_clone_and_run_schemachange') && github.event.pull_request.state == 'open'
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' }}
         environment: dev
         env:
             SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
@@ -22,10 +22,10 @@ jobs:
             SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
             SNOWFLAKE_SCHEMACHANGE_ROLE: SYSADMIN
-            SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
             SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
             SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-            CLONE_NAME: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
             STACK: ${{ vars.STACK }}
 
         steps:
@@ -44,8 +44,10 @@ jobs:
 
             - name: Configure Snowflake connections
               run: |
-                # Config file for DATA_ENGINEER
+                # Make a temporary config file for the GH runner
                 config_file_dpe=$(mktemp)
+
+                # Configurations for DATA_ENGINEER
                 echo 'default_connection_name = "dpe"' >> $config_file_dpe
                 echo '[connections.dpe]' >> $config_file_dpe
                 echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file_dpe
@@ -80,14 +82,14 @@ jobs:
 
             - name: Sanitize Clone Name
               run: |
-                CLONE_NAME_SANITIZED="${CLONE_NAME//[^a-zA-Z0-9_]/_}"
-                echo "Clone name has been updated! The clone name will be: ${CLONE_NAME_SANITIZED}"
-                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${CLONE_NAME_SANITIZED}" >> $GITHUB_ENV
+                SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
+                echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
+                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
             - name: Zero-copy clone the database
               shell: bash
               run: |
-                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE_ORIG;"
+                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE CLONE $SNOWFLAKE_DOMAIN_ORIGINAL;"
 
             - name: Grant permissions to DATA_ENGINEER on cloned database
               shell: bash
@@ -119,6 +121,11 @@ jobs:
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
+
+
+
+
+                
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.pull_request.merged == true || github.event.action == 'closed'
