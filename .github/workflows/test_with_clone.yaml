@@ -17,16 +17,13 @@ jobs:
         environment: dev
         env:
             # Establish the snowflake account credentials
-            SNOWFLAKE_DPE_ACCOUNT: ${{ secrets.SNOWSQL_DPE_ACCOUNT }}
-            SNOWFLAKE_DPE_USER: ${{ secrets.SNOWSQL_DPE_USER }}
-            SNOWFLAKE_DPE_PASSWORD: ${{ secrets.SNOWSQL_DPE_PWD }}
-            SNOWFLAKE_ADMIN_ACCOUNT: ${{ secrets.SNOWSQL_ADMIN_ACCOUNT }}
-            SNOWFLAKE_ADMIN_USER: ${{ secrets.SNOWSQL_ADMIN_USER }}
-            SNOWFLAKE_ADMIN_PASSWORD: ${{ secrets.SNOWSQL_ADMIN_PWD }} # TODO: Replace with OAuth or key-pair access
+            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
             
             # Establish the account roles to be used
             SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
-            SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+            SNOWFLAKE_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
 
             # Establish the domains
             SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
@@ -60,19 +57,19 @@ jobs:
                 # Configurations for DATA_ENGINEER
                 echo 'default_connection_name = "dpe"' >> $config_file
                 echo '[connections.dpe]' >> $config_file
-                echo "account = \"${SNOWFLAKE_DPE_ACCOUNT}\"" >> $config_file
-                echo "user = \"${SNOWFLAKE_DPE_USER}\"" >> $config_file
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
                 echo "role = \"${SNOWFLAKE_CLONE_ROLE}\"" >> $config_file
-                echo "password = \"${SNOWFLAKE_DPE_PASSWORD}\"" >> $config_file
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
                 echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file
 
                 # Config file for *ADMIN
                 echo '[connections.admin]' >> $config_file
-                echo "account = \"${SNOWFLAKE_ADMIN_ACCOUNT}\"" >> $config_file
-                echo "user = \"${SNOWFLAKE_ADMIN_USER}\"" >> $config_file
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
                 echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
-                echo "password = \"${SNOWFLAKE_ADMIN_PASSWORD}\"" >> $config_file
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
                 echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file
 
@@ -118,8 +115,8 @@ jobs:
               run: |
                 schemachange \
                 -f synapse_data_warehouse \
-                -a $SNOWFLAKE_DPE_ACCOUNT \
-                -u $SNOWFLAKE_DPE_USER \
+                -a $SNOWFLAKE_ACCOUNT \
+                -u $SNOWFLAKE_USER \
                 -r $SNOWFLAKE_CLONE_ROLE \
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
@@ -131,12 +128,12 @@ jobs:
       environment: dev
       env:
           # Establish the snowflake account credentials
-          SNOWFLAKE_ADMIN_ACCOUNT: ${{ secrets.SNOWSQL_ADMIN_ACCOUNT }}
-          SNOWFLAKE_ADMIN_USER: ${{ secrets.SNOWSQL_ADMIN_USER }}
-          SNOWFLAKE_ADMIN_PASSWORD: ${{ secrets.SNOWSQL_ADMIN_PWD }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
 
           # Establish the account roles to be used
-          SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+          SNOWFLAKE_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
 
           # Establish the domains
           SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
@@ -159,10 +156,10 @@ jobs:
               # Config file for *ADMIN
               echo 'default_connection_name = "admin"' >> $config_file
               echo '[connections.admin]' >> $config_file
-              echo "account = \"${SNOWFLAKE_ADMIN_ACCOUNT}\"" >> $config_file
-              echo "user = \"${SNOWFLAKE_ADMIN_USER}\"" >> $config_file
+              echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+              echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
               echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
-              echo "password = \"${SNOWFLAKE_ADMIN_PASSWORD}\"" >> $config_file
+              echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
               echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
               echo 'authenticator = "SNOWFLAKE"' >> $config_file
 
