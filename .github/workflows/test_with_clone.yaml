@@ -68,7 +68,7 @@ jobs:
                 echo '[connections.admin]' >> $config_file
                 echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
                 echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-                echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
+                echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
                 echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
                 echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
                 echo 'authenticator = "SNOWFLAKE"' >> $config_file
