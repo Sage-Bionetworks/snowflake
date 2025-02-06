@@ -109,8 +109,8 @@ jobs:
                 snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE DATA_ENGINEER;"
 
                 # Transfer ownership of: ownership proxy database role
-                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.??? TO ROLE DATA_ENGINEER;"
-                
+                # snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.??? TO ROLE DATA_ENGINEER;"
+
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
               run: |
