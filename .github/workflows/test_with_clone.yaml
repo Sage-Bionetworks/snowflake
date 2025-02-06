@@ -93,7 +93,7 @@ jobs:
                 echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
                 echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
-            - name: Zero-copy clone the database
+            - name: Zero-copy clone the database as ADMIN
               shell: bash
               run: |
                 snow connection set-default admin
@@ -141,7 +141,7 @@ jobs:
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
 
           # Establish the account roles to be used
-          SNOWFLAKE_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+          SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
 
           # Establish the domains
           SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
@@ -166,7 +166,7 @@ jobs:
               echo '[connections.admin]' >> $config_file
               echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
               echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-              echo "role = \"${SNOWFLAKE_SCHEMACHANGE_ROLE}\"" >> $config_file
+              echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
               echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
               echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
               echo 'authenticator = "SNOWFLAKE"' >> $config_file
@@ -193,4 +193,4 @@ jobs:
           - name: Drop the clone
             shell: bash
             run: |
-              snow sql -r $SNOWFLAKE_CLONE_ROLE -q "DROP DATABASE IF EXISTS $SNOWFLAKE_DOMAIN_CLONE_SANITIZED;"
+              snow sql -r $SNOWFLAKE_ADMIN_ROLE -q "DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
