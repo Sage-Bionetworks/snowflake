@@ -9,7 +9,7 @@ CREATE OR REPLACE DYNAMIC TABLE FILE_LATEST
             *
         FROM {{database_name}}.SYNAPSE_RAW.FILESNAPSHOTS --noqa: TMP
         WHERE
-            SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+            SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND NOT IS_PREVIEW
         QUALIFY
             ROW_NUMBER() OVER (
                 PARTITION BY ID
@@ -40,4 +40,4 @@ CREATE OR REPLACE DYNAMIC TABLE FILE_LATEST
     FROM 
         dedup_filesnapshots
     WHERE
-        CHANGE_TYPE != 'DELETE' OR NOT IS_PREVIEW;
+        CHANGE_TYPE != 'DELETE';
