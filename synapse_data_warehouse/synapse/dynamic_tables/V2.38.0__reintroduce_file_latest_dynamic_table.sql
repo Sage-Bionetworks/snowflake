@@ -40,4 +40,4 @@ CREATE OR REPLACE DYNAMIC TABLE FILE_LATEST
     FROM 
         dedup_filesnapshots
     WHERE
-        CHANGE_TYPE != 'DELETE';
+        CHANGE_TYPE != 'DELETE' OR NOT IS_PREVIEW;
