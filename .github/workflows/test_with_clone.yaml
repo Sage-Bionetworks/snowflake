@@ -96,6 +96,8 @@ jobs:
             - name: Zero-copy clone the database
               shell: bash
               run: |
+                snow connection set-default admin
+
                 snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_DOMAIN_CLONE_SANITIZED CLONE $SNOWFLAKE_DOMAIN_ORIGINAL;"
 
             - name: Grant permissions to DATA_ENGINEER on cloned database
