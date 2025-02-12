@@ -33,12 +33,12 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
                 array_sort(value:"accesstype#1"::variant),
                 array_sort(value:"accesstype#2"::variant),
                 array_sort(value:"accesstype#3"::variant)
-            ) AS accesstype,
+            ) AS access_type,
             COALESCE(
                 value:"principalId"::number,
                 value:"principalid"::number,
                 value:"principalid#1"::number
-            ) AS principalid
+            ) AS principal_id
         FROM 
             dedup_acl,
             LATERAL FLATTEN(acl, outer=>TRUE)
