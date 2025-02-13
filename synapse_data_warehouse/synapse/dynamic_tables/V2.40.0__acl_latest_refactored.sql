@@ -17,33 +17,27 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
                 PARTITION BY OWNER_ID
                 ORDER BY CHANGE_TIMESTAMP DESC, SNAPSHOT_TIMESTAMP DESC
             ) = 1
-    ),
-    dedup_acl_expanded AS (
-        SELECT
-            CHANGE_TIMESTAMP,
-            CHANGE_TYPE,
-            CREATED_ON,
-            OWNER_ID,
-            OWNER_TYPE,
-            SNAPSHOT_DATE,
-            SNAPSHOT_TIMESTAMP,
-            COALESCE(
-                array_sort(value:"accesstype"::variant),
-                array_sort(value:"accessType"::variant),
-                array_sort(value:"accesstype#1"::variant),
-                array_sort(value:"accesstype#2"::variant),
-                array_sort(value:"accesstype#3"::variant)
-            ) AS access_type,
-            COALESCE(
-                value:"principalId"::number,
-                value:"principalid"::number,
-                value:"principalid#1"::number
-            ) AS principal_id
-        FROM 
-            dedup_acl,
-            LATERAL FLATTEN(acl, outer=>TRUE)
-    )
-    SELECT
-        *
-    FROM
-        dedup_acl_expanded;
+)
+SELECT
+    CHANGE_TIMESTAMP,
+    CHANGE_TYPE,
+    CREATED_ON,
+    OWNER_ID,
+    OWNER_TYPE,
+    SNAPSHOT_DATE,
+    SNAPSHOT_TIMESTAMP,
+    COALESCE(
+        array_sort(value:"accesstype"::variant),
+        array_sort(value:"accessType"::variant),
+        array_sort(value:"accesstype#1"::variant),
+        array_sort(value:"accesstype#2"::variant),
+        array_sort(value:"accesstype#3"::variant)
+    ) AS access_type,
+    COALESCE(
+        value:"principalId"::number,
+        value:"principalid"::number,
+        value:"principalid#1"::number
+    ) AS principal_id
+FROM 
+    dedup_acl,
+    LATERAL FLATTEN(acl, outer=>TRUE)
