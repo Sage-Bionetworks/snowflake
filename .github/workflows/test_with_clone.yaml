@@ -1,0 +1,196 @@
+---
+name: Test Changes with Cloned DB
+
+on:
+    pull_request:
+        types: [ labeled, synchronize, closed ]
+    push:
+
+permissions:
+    contents: read
+
+jobs:
+
+    test_with_clone:
+        runs-on: ubuntu-latest
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' }}
+        environment: dev
+        env:
+            # Establish the snowflake account credentials
+            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+            
+            # Establish the account roles to be used
+            SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+            SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
+
+            # Establish the domains
+            SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+            SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
+
+            # Establish other miscellaneous variables
+            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+            SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+            STACK: ${{ vars.STACK }}
+
+        steps:
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+
+            - name: Install python libraries
+              shell: bash
+              run: |
+                  pip install schemachange==3.6.1
+                  pip install numpy==1.26.4
+                  pip install pandas==1.5.3
+
+            - name: Configure Snowflake connections
+              run: |
+                # Make a temporary config file for the GH runner
+                config_file=$(mktemp)
+
+                # Configurations for DATA_ENGINEER
+                echo 'default_connection_name = "dpe"' >> $config_file
+                echo '[connections.dpe]' >> $config_file
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
+                echo "role = \"${SNOWFLAKE_CLONE_ROLE}\"" >> $config_file
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file
+
+                # Config file for *ADMIN
+                echo '[connections.admin]' >> $config_file
+                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
+                echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
+                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
+                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
+                echo 'authenticator = "SNOWFLAKE"' >> $config_file
+
+                # Write config paths to environment
+                echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
+
+            - name: Install Snowflake CLI with DATA_ENGINEER config
+              uses: Snowflake-Labs/snowflake-cli-action@v1.5
+              with:
+                default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
+
+            - name: Verify Snowflake CLI installation and connections
+              run: |
+                snow --version
+                snow connection test -c admin
+                snow connection test -c dpe
+
+            - name: Sanitize Clone Name
+              run: |
+                SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
+                echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
+                echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
+
+            - name: Zero-copy clone the database as ADMIN
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_DOMAIN_CLONE_SANITIZED CLONE $SNOWFLAKE_DOMAIN_ORIGINAL;"
+
+            - name: Grant permissions to DATA_ENGINEER on cloned database
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                # Revoke USAGE from <DOMAIN>_ADMIN account role
+                snow sql -q "REVOKE USAGE ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_ALL_ADMIN FROM ROLE ${SNOWFLAKE_ADMIN_ROLE};"
+                snow sql -q "REVOKE USAGE ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN FROM ROLE ${SNOWFLAKE_ADMIN_ROLE};"
+                snow sql -q "REVOKE USAGE ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN FROM ROLE ${SNOWFLAKE_ADMIN_ROLE};"
+
+                # Transfer ownership of: *ALL_ADMIN aggregate database roles (for each namespace/schema)
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_ALL_ADMIN TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+
+                # Transfer ownership of: ownership proxy database role
+                # snow sql -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.??? TO ROLE DATA_ENGINEER;"
+
+            - name: Run schemachange on the clone as DATA_ENGINEER
+              shell: bash
+              run: |
+                schemachange \
+                -f synapse_data_warehouse \
+                -a $SNOWFLAKE_ACCOUNT \
+                -u $SNOWFLAKE_USER \
+                -r $SNOWFLAKE_CLONE_ROLE \
+                -w $SNOWFLAKE_WAREHOUSE \
+                --config-folder synapse_data_warehouse
+
+       
+    drop_clone:
+      runs-on: ubuntu-latest
+      if: github.event.pull_request.merged == true || github.event.action == 'closed'
+      environment: dev
+      env:
+          # Establish the snowflake account credentials
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
+
+          # Establish the account roles to be used
+          SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+
+          # Establish the domains
+          SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
+
+          # Establish the warehouse
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+
+      steps:
+
+          - uses: actions/checkout@v4
+          - uses: actions/setup-python@v4
+            with:
+              python-version: '3.10'
+
+          - name: Configure Snowflake connection
+            run: |
+              # Make a temporary config file for the GH runner
+              config_file=$(mktemp)
+
+              # Config file for *ADMIN
+              echo 'default_connection_name = "admin"' >> $config_file
+              echo '[connections.admin]' >> $config_file
+              echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
+              echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
+              echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
+              echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
+              echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
+              echo 'authenticator = "SNOWFLAKE"' >> $config_file
+
+              # Write config paths to environment
+              echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
+
+          - name: Install Snowflake CLI
+            uses: Snowflake-Labs/snowflake-cli-action@v1.5
+            with:
+              default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
+
+          - name: Verify Snowflake CLI installation and connections
+            run: |
+              snow --version
+              snow connection test -c admin
+
+          - name: Sanitize Clone Name
+            run: |
+              SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
+              echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
+              echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
+
+          - name: Drop the clone
+            shell: bash
+            run: |
+              snow sql -r $SNOWFLAKE_ADMIN_ROLE -q "DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
