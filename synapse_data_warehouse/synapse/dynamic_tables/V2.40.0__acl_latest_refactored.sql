@@ -12,6 +12,8 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
         FROM {{database_name}}.SYNAPSE_RAW.ACLSNAPSHOTS --noqa: TMP
         WHERE
             SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days'
+        AND
+            RESOURCE_ACCESS != '[]'
         QUALIFY
             ROW_NUMBER() OVER (
                 PARTITION BY OWNER_ID
