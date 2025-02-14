@@ -15,7 +15,7 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
             SNAPSHOT_DATE,
             SNAPSHOT_TIMESTAMP,
             RESOURCE_ACCESS
-        FROM synapse_data_warehouse.SYNAPSE_RAW.ACLSNAPSHOTS --noqa: TMP
+        FROM {{database_name}}.SYNAPSE_RAW.ACLSNAPSHOTS --noqa: TMP
         WHERE
             SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days'
         AND
