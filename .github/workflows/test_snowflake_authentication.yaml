@@ -12,7 +12,7 @@ jobs:
       SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
       SNOWSQL_USER: ${{ vars.ADMIN_SERVICE_USER }}
       SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      SNOWSQL_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PRIVATE_PASS_PHRASE }}
+      SNOWSQL_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
 
     steps:
       - name: Write private key file
