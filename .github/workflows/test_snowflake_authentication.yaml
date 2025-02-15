@@ -3,10 +3,7 @@ name: Snowflake Connection Test
 on:
   push:
     branches:
-      - '**'  # Runs on push to any branch
-  create:
-    branches:
-      - '**'  # Runs when a branch is published
+      - 'snow-89-update-ci-with-service-user'
 
 jobs:
   test-snowflake-connection:
@@ -15,18 +12,19 @@ jobs:
       SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
       SNOWSQL_USER: ${{ vars.ADMIN_SERVICE_USER }}
       SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      SNOWSQL_PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
       SNOWSQL_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PRIVATE_PASS_PHRASE }}
 
-    - name: Write private key file
-      run: |
-        echo $SNOWSQL_PRIVATE_KEY > admin_service_key.p8
+    steps:
+      - name: Write private key file
+        run: |
+          echo "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > admin_service_key.p8
+          chmod 400 admin_service_key.p8
 
-    - name: Install SnowSQL
-    run: |
-        curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-        SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+      - name: Install SnowSQL
+        run: |
+            curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
+            SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
 
-    - name: Create users
-    run: |
-        ~/bin/snowsql --private-key-path admin_service_key.p8 -f admin/users.sql
+      - name: Test connection
+        run: |
+          ~/bin/snowsql --private-key-path admin_service_key.p8 -q "SELECT CURRENT_USER(), CURRENT_ROLE();"
