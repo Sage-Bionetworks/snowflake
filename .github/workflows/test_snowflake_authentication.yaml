@@ -22,8 +22,9 @@ jobs:
 
       - name: Install SnowSQL
         run: |
-            curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-            SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/install-latest.sh
+          chmod +x install-latest.sh
+          ./install-latest.sh
 
       - name: Test connection
         run: |
