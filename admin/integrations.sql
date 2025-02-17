@@ -1,6 +1,6 @@
 !set variable_substitution=true; --noqa: PRS
 
-USE ROLE account_admin;
+USE ROLE ACCOUNTADMIN;
 
 -- * Integration to prod (SNOW-14)
 CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
