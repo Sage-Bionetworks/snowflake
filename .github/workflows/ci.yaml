@@ -151,8 +151,7 @@ jobs:
             -u $SNOWFLAKE_USER \
             -r ACCOUNTADMIN \
             -w compute_xsmall \
-            -d POLICY_DB
-            -s PUBLIC
+            -d METADATA
 
       - name: ownership grants 
         shell: bash
