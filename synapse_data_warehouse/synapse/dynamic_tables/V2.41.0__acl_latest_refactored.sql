@@ -22,7 +22,7 @@ CREATE OR REPLACE DYNAMIC TABLE ACL_LATEST
         WHERE
             SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days'
         AND
-            RESOURCE_ACCESS != '[]'
+            RESOURCE_ACCESS != '[]' -- An empty RESOURCE_ACCESS means no ACL was captured for the owner_id
         QUALIFY
             ROW_NUMBER() OVER (
                 PARTITION BY OWNER_ID
