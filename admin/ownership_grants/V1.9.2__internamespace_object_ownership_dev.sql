@@ -1,4 +1,5 @@
--- Grant ownership of internamespace objects to proxy admin role
+-- Grant ownership of object types which potentially need
+-- internamespace privileges and/or account-level privileges to admin role.
 -- SYNAPSE
 GRANT OWNERSHIP
 	ON ALL DYNAMIC TABLES
