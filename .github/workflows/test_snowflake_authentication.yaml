@@ -6,26 +6,46 @@ on:
       - 'snow-89-update-ci-with-service-user'
 
 jobs:
-  test-snowflake-connection:
-    runs-on: ubuntu-latest
-    env:
-      SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-      SNOWSQL_USER: ${{ vars.ADMIN_SERVICE_USER }}
-      SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      SNOWSQL_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+    deploy-snowflake:
+        name: Deploy Snowflake resources
+        runs-on: ubuntu-latest
+        env:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v3
 
-    steps:
-      - name: Write private key file
-        run: |
-          echo "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > admin_service_key.p8
-          chmod 400 admin_service_key.p8
+          - name: Configure Snowflake connection
+            run: |
+              # Create temporary files for config.toml and our private key
+              mkdir -p $HOME/.snowflake
+              config_file=$HOME/.snowflake/config.toml
+              private_key_file=$(mktemp)
+            
+              # Write to the private key file
+              echo "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > $private_key_file
+                  
+              # Write to config.toml file
+              echo 'default_connection_name = "admin"' >> $config_file
+              echo '[connections.admin]' >> $config_file
+              echo "account = \"${{ secrets.SNOWSQL_ACCOUNT }}\"" >> $config_file
+              echo "user = \"${{ vars.ADMIN_SERVICE_USER }}\"" >> $config_file
+              echo 'warehouse = "${{ secrets.SNOWSQL_WAREHOUSE }}"' >> $config_file
+              echo 'authenticator = "SNOWFLAKE_JWT"' >> $config_file
+              echo "private_key_path = \"$private_key_file\"" >> $config_file
 
-      - name: Install SnowSQL
-        run: |
-          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/install-latest.sh
-          chmod +x install-latest.sh
-          ./install-latest.sh
+              # Restrict file owner read/write only (Snowflake requirement)
+              chmod 0600 $config_file
 
-      - name: Test connection
-        run: |
-          ~/bin/snowsql --private-key-path admin_service_key.p8 -q "SELECT CURRENT_USER(), CURRENT_ROLE();"
+          - name: Configuration file information
+            run: |
+              echo "Snowflake configuration is located at $config_file"
+              cat $config_file
+              
+          - name: Install Snowflake CLI
+            uses: Snowflake-Labs/snowflake-cli-action@v1.5
+
+          - name: Test Snowflake connection
+            run: |
+              snow --version
+              snow connection test
