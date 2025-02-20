@@ -75,4 +75,4 @@ jobs:
               echo "Snowflake CLI Version:"
               echo "${{ steps.configure-snowflake.outputs.version }}"
               echo "Snowflake Connection Status:"
-              echo "${{ steps.configure-snowflake.outputs.connection }}"
+              echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
