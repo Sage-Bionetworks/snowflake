@@ -18,12 +18,9 @@ inputs:
     required: false
     default: ""
 outputs:
-  version:
-    description: "The version of the Snowflake CLI"
-    value: ${{ steps.cli-test.outputs.version }}
-  connection:
-    description: "Information about the Snowflake connnection"
-    value: ${{ steps.cli-test.outputs.connection }}
+  config-file-path:
+    description: "The path to the Snowflake config.toml file"
+    value: ${{ steps.cli-test.outputs.config-file-path }}
 
 runs:
   using: "composite"
@@ -56,6 +53,7 @@ runs:
 
         # Make config.toml path available to other steps
         echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
+        echo "config-file-path=$CONFIG_FILE" >> $GITHUB_OUTPUT
 
     - name: Verify configuration file contents
       shell: bash
@@ -74,9 +72,4 @@ runs:
       run: |
         snow --version
         snow connection test
-        version=$(snow --version)
-        connection=$(snow connection test | base64)
-
-        echo "version=$version" >> $GITHUB_OUTPUT
-        echo "connection=$connection" >> $GITHUB_OUTPUT
         
