@@ -1,0 +1,3 @@
+-- Drop TEAMMEMBER_LATEST table
+USE SCHEMA {{database_name}}.synapse;
+DROP TABLE TEAMMEMBER_LATEST;
