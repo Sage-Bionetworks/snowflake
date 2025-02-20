@@ -75,3 +75,7 @@ jobs:
             run: |
               echo "Config file path:"
               echo "${{ steps.configure-snowflake.outputs.config-file-path }}"
+              echo "version:"
+              echo "${{ steps.configure-snowflake.outputs.version }}"
+              echo "connection:"
+              echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
