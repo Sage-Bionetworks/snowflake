@@ -55,6 +55,7 @@ jobs:
 
     deploy-snowflake-with-action:
         name: Deploy Snowflake resources with action
+        needs: deploy-snowflake
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
@@ -72,7 +73,5 @@ jobs:
 
           - name: Print Snowflake CLI Version & Connection Status
             run: |
-              echo "Snowflake CLI Version:"
-              echo "${{ steps.configure-snowflake.outputs.version }}"
-              echo "Snowflake Connection Status:"
-              echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
+              echo "Config file path:"
+              echo "${{ steps.configure-snowflake.outputs.config-file-path }}"
