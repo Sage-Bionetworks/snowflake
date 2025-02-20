@@ -52,3 +52,27 @@ jobs:
             run: |
               snow --version
               snow connection test
+
+    deploy-snowflake-with-action:
+        name: Deploy Snowflake resources with action
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v3
+
+          - name: My action
+            id: configure-snowflake
+            uses: ./.github/actions/configure-snowflake-cli
+            with:
+              PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+              PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+              ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+              USER: ${{ vars.ADMIN_SERVICE_USER }}
+              WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+
+          - name: Print Snowflake CLI Version & Connection Status
+            run: |
+              echo "Snowflake CLI Version:"
+              echo "${{ steps.configure-snowflake.outputs.version }}"
+              echo "Snowflake Connection Status:"
+              echo "${{ steps.configure-snowflake.outputs.connection }}"
