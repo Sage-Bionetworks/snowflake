@@ -1,0 +1,79 @@
+name: "Configure Snowflake CLI"
+description: "Configures a ~/.snowflake/config.toml file and install the Snowflake CLI"
+inputs:
+  PRIVATE_KEY_PASSPHRASE:
+    description: "The pass phrase used to decrypt the private key"
+    required: true
+  PRIVATE_KEY:
+    description: "The private key"
+    required: true
+  ACCOUNT:
+    description: "Snowflake account identifier"
+    required: true
+  USER:
+    description: "Snowflake user identifier"
+    required: true
+  WAREHOUSE:
+    description: "Snowflake warehouse"
+    required: false
+    default: ""
+outputs:
+  version:
+    description: "The version of the Snowflake CLI"
+    value: ${{ steps.cli-test.outputs.version }}
+  connection:
+    description: "Information about the Snowflake connnection"
+    value: ${{ steps.cli-test.outputs.connection }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Create config.toml file
+      shell: bash
+      run: |
+        # Create temporary files for config.toml and our private key
+        mkdir -p $HOME/.snowflake
+        CONFIG_FILE=$HOME/.snowflake/config.toml
+        PRIVATE_KEY_FILE=$HOME/.snowflake/rsa_key.p8
+      
+        # Write to the private key file
+        printf "%s" "${{ inputs.PRIVATE_KEY }}" > $PRIVATE_KEY_FILE
+            
+        # Write to config.toml file
+        echo 'default_connection_name = "default"' >> $CONFIG_FILE
+        echo '[connections.default]' >> $CONFIG_FILE
+        echo "account = \"${{ inputs.ACCOUNT }}\"" >> $CONFIG_FILE
+        echo "user = \"${{ inputs.USER }}\"" >> $CONFIG_FILE
+        echo 'warehouse = "${{ inputs.WAREHOUSE }}"' >> $CONFIG_FILE
+        echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONFIG_FILE
+        echo "private_key_path = \"$PRIVATE_KEY_FILE\"" >> $CONFIG_FILE
+
+        # Restrict file owner read/write only (Snowflake requirement)
+        chmod 0600 $CONFIG_FILE
+
+        # Make config.toml path available to other steps
+        echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
+
+    - name: Verify configuration file contents
+      shell: bash
+      run: |
+        echo "Snowflake configuration is located at $CONFIG_FILE"
+        cat $CONFIG_FILE
+        
+    - name: Install Snowflake CLI
+      uses: Snowflake-Labs/snowflake-cli-action@v1.5
+
+    - name: Test Snowflake connection
+      id: cli-test
+      shell: bash
+      env:
+        PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
+      run: |
+        version=$(snow --version)
+        echo "version=${version}" >> $GITHUB_OUTPUT
+        connection=$(snow connection test)
+        echo "connection=${connection}" >> $GITHUB_OUTPUT
+        
