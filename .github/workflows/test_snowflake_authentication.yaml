@@ -19,28 +19,31 @@ jobs:
             run: |
               # Create temporary files for config.toml and our private key
               mkdir -p $HOME/.snowflake
-              config_file=$HOME/.snowflake/config.toml
-              private_key_file=$(mktemp)
+              CONFIG_FILE=$HOME/.snowflake/config.toml
+              PRIVATE_KEY_FILE=$(mktemp)
             
               # Write to the private key file
-              echo "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > $private_key_file
+              printf "%s" "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > $PRIVATE_KEY_FILE
                   
               # Write to config.toml file
-              echo 'default_connection_name = "admin"' >> $config_file
-              echo '[connections.admin]' >> $config_file
-              echo "account = \"${{ secrets.SNOWSQL_ACCOUNT }}\"" >> $config_file
-              echo "user = \"${{ vars.ADMIN_SERVICE_USER }}\"" >> $config_file
-              echo 'warehouse = "${{ secrets.SNOWSQL_WAREHOUSE }}"' >> $config_file
-              echo 'authenticator = "SNOWFLAKE_JWT"' >> $config_file
-              echo "private_key_path = \"$private_key_file\"" >> $config_file
+              echo 'default_connection_name = "admin"' >> $CONFIG_FILE
+              echo '[connections.admin]' >> $CONFIG_FILE
+              echo "account = \"${{ secrets.SNOWSQL_ACCOUNT }}\"" >> $CONFIG_FILE
+              echo "user = \"${{ vars.ADMIN_SERVICE_USER }}\"" >> $CONFIG_FILE
+              echo 'warehouse = "${{ secrets.SNOWSQL_WAREHOUSE }}"' >> $CONFIG_FILE
+              echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONFIG_FILE
+              echo "private_key_path = \"$PRIVATE_KEY_FILE\"" >> $CONFIG_FILE
 
               # Restrict file owner read/write only (Snowflake requirement)
-              chmod 0600 $config_file
+              chmod 0600 $CONFIG_FILE
+
+              # Make config.toml path available to other steps
+              echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
 
           - name: Configuration file information
             run: |
-              echo "Snowflake configuration is located at $config_file"
-              cat $config_file
+              echo "Snowflake configuration is located at $CONFIG_FILE"
+              cat $CONFIG_FILE
               
           - name: Install Snowflake CLI
             uses: Snowflake-Labs/snowflake-cli-action@v1.5
