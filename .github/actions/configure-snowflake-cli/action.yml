@@ -72,8 +72,11 @@ runs:
       env:
         PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
       run: |
+        snow --version
+        snow connection test
         version=$(snow --version)
-        echo "version=${version}" >> $GITHUB_OUTPUT
-        connection=$(snow connection test)
-        echo "connection=${connection}" >> $GITHUB_OUTPUT
+        connection=$(snow connection test | base64)
+
+        echo "version=$version" >> $GITHUB_OUTPUT
+        echo "connection=$connection" >> $GITHUB_OUTPUT
         
