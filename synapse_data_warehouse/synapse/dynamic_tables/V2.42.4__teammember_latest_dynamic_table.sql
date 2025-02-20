@@ -18,7 +18,14 @@ CREATE OR REPLACE DYNAMIC TABLE TEAMMEMBER_LATEST
     AS 
     WITH dedup_teammembers AS (
         SELECT
-            *
+	    CHANGE_TYPE,
+	    CHANGE_TIMESTAMP,
+	    CHANGE_USER_ID, 
+	    SNAPSHOT_TIMESTAMP, 
+	    TEAM_ID, 
+	    MEMBER_ID, 
+	    IS_ADMIN, 
+	    SNAPSHOT_DATE 
         FROM {{database_name}}.SYNAPSE_RAW.teammembersnapshots --noqa: TMP
         WHERE
             SNAPSHOT_DATE >= CURRENT_TIMESTAMP - INTERVAL '14 days'
@@ -29,13 +36,6 @@ CREATE OR REPLACE DYNAMIC TABLE TEAMMEMBER_LATEST
             ) = 1
     )
     SELECT 
-        CHANGE_TYPE,
-	    CHANGE_TIMESTAMP,
-	    CHANGE_USER_ID, 
-	    SNAPSHOT_TIMESTAMP, 
-	    TEAM_ID, 
-	    MEMBER_ID, 
-	    IS_ADMIN, 
-	    SNAPSHOT_DATE 
+	*
     FROM 
         dedup_teammembers;
