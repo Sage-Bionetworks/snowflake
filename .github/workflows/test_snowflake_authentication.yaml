@@ -6,76 +6,47 @@ on:
       - 'snow-89-update-ci-with-service-user'
 
 jobs:
-    deploy-snowflake:
-        name: Deploy Snowflake resources
-        runs-on: ubuntu-latest
-        env:
+  deploy-snowflake-with-action:
+    name: Deploy Snowflake resources with action
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: My action
+        id: configure-snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
           PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v3
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
-          - name: Configure Snowflake connection
-            run: |
-              # Create temporary files for config.toml and our private key
-              mkdir -p $HOME/.snowflake
-              CONFIG_FILE=$HOME/.snowflake/config.toml
-              PRIVATE_KEY_FILE=$(mktemp)
-            
-              # Write to the private key file
-              printf "%s" "${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}" > $PRIVATE_KEY_FILE
-                  
-              # Write to config.toml file
-              echo 'default_connection_name = "admin"' >> $CONFIG_FILE
-              echo '[connections.admin]' >> $CONFIG_FILE
-              echo "account = \"${{ secrets.SNOWSQL_ACCOUNT }}\"" >> $CONFIG_FILE
-              echo "user = \"${{ vars.ADMIN_SERVICE_USER }}\"" >> $CONFIG_FILE
-              echo 'warehouse = "${{ secrets.SNOWSQL_WAREHOUSE }}"' >> $CONFIG_FILE
-              echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONFIG_FILE
-              echo "private_key_path = \"$PRIVATE_KEY_FILE\"" >> $CONFIG_FILE
+      - name: Print Snowflake CLI Version & Connection Status
+        run: |
+          echo "Config file path:"
+          echo "${{ steps.configure-snowflake.outputs.config-file-path }}"
+          echo "version:"
+          echo "${{ steps.configure-snowflake.outputs.version }}"
+          echo "connection:"
+          echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
 
-              # Restrict file owner read/write only (Snowflake requirement)
-              chmod 0600 $CONFIG_FILE
+      - name: install-py-dependencies
+        shell: bash
+        run: |
+          pip install schemachange==3.6.1
+          pip install numpy==1.26.4
+          pip install pandas==1.5.3
 
-              # Make config.toml path available to other steps
-              echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
-
-          - name: Configuration file information
-            run: |
-              echo "Snowflake configuration is located at $CONFIG_FILE"
-              cat $CONFIG_FILE
-              
-          - name: Install Snowflake CLI
-            uses: Snowflake-Labs/snowflake-cli-action@v1.5
-
-          - name: Test Snowflake connection
-            run: |
-              snow --version
-              snow connection test
-
-    deploy-snowflake-with-action:
-        name: Deploy Snowflake resources with action
-        needs: deploy-snowflake
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v3
-
-          - name: My action
-            id: configure-snowflake
-            uses: ./.github/actions/configure-snowflake-cli
-            with:
-              PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-              PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
-              ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-              USER: ${{ vars.ADMIN_SERVICE_USER }}
-              WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-
-          - name: Print Snowflake CLI Version & Connection Status
-            run: |
-              echo "Config file path:"
-              echo "${{ steps.configure-snowflake.outputs.config-file-path }}"
-              echo "version:"
-              echo "${{ steps.configure-snowflake.outputs.version }}"
-              echo "connection:"
-              echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
+      - name: deploy synapse_data_warehouse
+        shell: bash
+        run: |
+          schemachange \
+            --connections-file-path ${{ steps.configure-snowflake.outputs.config-file-path }} \
+            -f analytics \
+            -r SYSADMIN \
+            -d SYNAPSE_DATA_WAREHOUSE_PHIL \
+            --create-change-history-table
