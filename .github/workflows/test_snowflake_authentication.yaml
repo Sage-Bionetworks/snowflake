@@ -29,6 +29,8 @@ jobs:
         run: |
           echo "Config file path:"
           echo "${{ steps.configure-snowflake.outputs.config-file-path }}"
+          echo "Connection file path:"
+          echo "${{ steps.configure-snowflake.outputs.connection-file-path }}"
           echo "version:"
           echo "${{ steps.configure-snowflake.outputs.version }}"
           echo "connection:"
@@ -37,7 +39,7 @@ jobs:
       - name: install-py-dependencies
         shell: bash
         run: |
-          pip install schemachange==3.6.1
+          pip install schemachange==4.0.1
 
       - name: deploy synapse_data_warehouse
         shell: bash
