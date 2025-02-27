@@ -62,7 +62,7 @@ runs:
         echo "CONNECTION_FILE=$CONNECTION_FILE" >> $GITHUB_ENV
         echo "connection-file-path=$CONNECTION_FILE" >> $GITHUB_OUTPUT
 
-        # Write to config.toml file
+        # Set default connection name
         echo 'default_connection_name = "default"' >> $CONFIG_FILE
 
         # Restrict file owner read/write only (Snowflake requirement)
@@ -89,7 +89,7 @@ runs:
         python-version: '3.11'
 
     - name: Install Snowflake CLI
-      uses: Snowflake-Labs/snowflake-cli-action@v1
+      uses: Snowflake-Labs/snowflake-cli-action@v1.5
 
     - name: install-schemachange
       shell: bash
