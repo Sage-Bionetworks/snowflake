@@ -47,10 +47,10 @@ CREATE SECURITY INTEGRATION IF NOT EXISTS td_oauth_int2
 create security integration IF NOT EXISTS GOOGLE_SSO
     type = saml2
     enabled = true
-    saml2_issuer = '&saml2_issuer'
-    saml2_sso_url = '&saml2_sso_url'
+    saml2_issuer = '<% saml2_issuer %>'
+    saml2_sso_url = '<% saml2_sso_url %>' 
     saml2_provider = 'custom'
-    saml2_x509_cert='&saml2_x509_cert'
+    saml2_x509_cert='<% saml2_x509_cert %>'
     saml2_sp_initiated_login_page_label = 'GOOGLE_SSO'
     saml2_enable_sp_initiated = true
     SAML2_SIGN_REQUEST = true
