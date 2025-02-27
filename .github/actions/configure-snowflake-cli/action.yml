@@ -36,9 +36,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
     - name: Create config.toml file
       shell: bash
       id: configure-snowflake
