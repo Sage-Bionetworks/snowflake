@@ -89,7 +89,7 @@ runs:
         python-version: '3.11'
 
     - name: Install Snowflake CLI
-      uses: Snowflake-Labs/snowflake-cli-action@v1.5
+      uses: Snowflake-Labs/snowflake-cli-action@v1
 
     - name: install-schemachange
       shell: bash
