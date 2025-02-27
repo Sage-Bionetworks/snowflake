@@ -36,11 +36,6 @@ jobs:
           echo "connection:"
           echo "${{ steps.configure-snowflake.outputs.connection }}" | base64 --decode
 
-      - name: install-py-dependencies
-        shell: bash
-        run: |
-          pip install schemachange==4.0.1
-
       - name: deploy synapse_data_warehouse
         shell: bash
         run: |
