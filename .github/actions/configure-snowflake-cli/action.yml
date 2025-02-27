@@ -89,6 +89,10 @@ runs:
     - name: Install Snowflake CLI
       uses: Snowflake-Labs/snowflake-cli-action@v1.5
 
+    - name: install-schemachange
+      shell: bash
+      run: pip install schemachange==4.0.1
+
     - name: Test Snowflake connection
       id: connection-test
       shell: bash
