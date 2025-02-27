@@ -20,181 +20,147 @@ on:
 jobs:
   schemachange_synapse_data_warehouse_dev:
     runs-on: ubuntu-22.04
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref_name == 'dev'
     environment: dev
-    env:
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
-      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
-      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
-      SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-      STACK: ${{ vars.STACK }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: install-py-dependencies
-        shell: bash
-        run: |
-          pip install schemachange==3.6.1
-          pip install numpy==1.26.4
-          pip install pandas==1.5.3
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.DEVELOPER_SERVICE_USER }}
+          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: deploy synapse_data_warehouse
         shell: bash
+        env:
+          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+          SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+          SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+          STACK: ${{ vars.STACK }}
         run: |
           schemachange \
-            -f synapse_data_warehouse \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r SYSADMIN \
-            -w compute_xsmall \
-            --config-folder synapse_data_warehouse
+            --connection-name default \
+            --root-folder synapse_data_warehouse \
+            --config-folder synapse_data_warehouse \
+            --snowflake-role synapse_data_warehouse_dev
 
   schemachange_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
-    if: github.ref == 'refs/heads/main'
+    if: github.ref_name == 'main'
     environment: prod
-    env:
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
-      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
-      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-      SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
-      SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
-      STACK: ${{ vars.STACK }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
         with:
-          python-version: '3.10'
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
-      - name: install-py-dependencies
+      - name: Deploy synapse_data_warehouse
         shell: bash
-        run: |
-          pip install schemachange==3.6.1
-          pip install numpy==1.26.4
-          pip install pandas==1.5.3
-
-      - name: deploy synapse_data_warehouse
-        shell: bash
+        env:
+          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+          SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+          SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+          STACK: ${{ vars.STACK }}
         run: |
           schemachange \
-            -f synapse_data_warehouse \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r SYSADMIN \
-            -w compute_xsmall \
-            --config-folder synapse_data_warehouse
+            --connection-name default \
+            --root-folder synapse_data_warehouse \
+            --config-folder synapse_data_warehouse \
+            --snowflake-role synapse_data_warehouse_admin
 
   schemachange_admin:
     runs-on: ubuntu-22.04
     needs: schemachange_synapse_data_warehouse_prod
     if: github.ref == 'refs/heads/main'
-    env:
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
-      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-      SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
-      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
         with:
-          python-version: '3.10'
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
-      - name: install-py-dependencies
-        shell: bash
-        run: |
-          pip install schemachange==3.6.1
-          pip install numpy==1.26.4
-          pip install pandas==1.5.3
-
-      - name: deploy warehouses
+      - name: Deploy warehouses
         shell: bash
         run: |
           schemachange \
-            -f admin/warehouses \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r SYSADMIN \
-            -w compute_xsmall \
-            -d METADATA
+            --connection-name default \
+            --root-folder admin/warehouses \
+            --snowflake-role SYSADMIN
 
-      - name: policies
+      - name: Deploy policies
         shell: bash
         run: |
           schemachange \
-            -f admin/policies \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r ACCOUNTADMIN \
-            -w compute_xsmall \
-            -d METADATA
+            --connection-name default \
+            --root-folder admin/policies \
+            --snowflake-role ACCOUNTADMIN
 
-      - name: ownership grants 
+      - name: Deploy ownership grants 
         shell: bash
         run: |
           schemachange \
-            -f admin/ownership_grants \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r SECURITYADMIN \
-            -w compute_xsmall \
-            -d METADATA
+            --connection-name default \
+            --root-folder admin/ownership_grants \
+            --snowflake-role SECURITYADMIN
 
-      - name: future grants 
+      - name: Deploy future grants 
         shell: bash
         run: |
           schemachange \
-            -f admin/future_grants \
-            -a $SNOWFLAKE_ACCOUNT \
-            -u $SNOWFLAKE_USER \
-            -r SECURITYADMIN \
-            -w compute_xsmall \
-            -d METADATA
+            --connection-name default \
+            --root-folder admin/future_grants \
+            --snowflake-role SECURITYADMIN
 
   snowsql_admin:
     runs-on: ubuntu-22.04
     needs: schemachange_admin
     if: github.ref == 'refs/heads/main'
-    env:
-      SNOWSQL_PWD: ${{ secrets.SNOWSQL_PWD }}
-      SNOWSQL_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-      SNOWSQL_USER: ${{ secrets.SNOWSQL_USER }}
-      SNOWSQL_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
-      saml2_x509_cert: ${{ secrets.SAML2_X509_CERT }}
-      saml2_sso_url: ${{ secrets.SAML2_SSO_URL }}
-      saml2_issuer: ${{ secrets.SAML2_ISSUER }}
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install SnowSQL
-        run: |
-          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.9-linux_x86_64.bash
-          SNOWSQL_DEST=~/bin SNOWSQL_LOGIN_SHELL=~/.profile bash snowsql-1.2.9-linux_x86_64.bash
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: Create users
-        run: |
-          ~/bin/snowsql -f admin/users.sql
+        run: snow sql -f admin/users.sql
 
       - name: Create roles
-        run: |
-          ~/bin/snowsql -f admin/roles.sql
+        run: snow sql -f admin/roles.sql
 
       - name: Create databases
-        run: |
-          ~/bin/snowsql -f admin/databases.sql
+        run: snow sql -f admin/databases.sql
 
-      - name: Create integration
+      - name: Create integrations
         run: |
-          ~/bin/snowsql -f admin/integrations.sql --variable saml2_issuer=$saml2_issuer --variable saml2_sso_url=$saml2_sso_url --variable saml2_x509_cert=$saml2_x509_cert
+          snow sql -f admin/integrations.sql \
+            --variable saml2_issuer="${{ secrets.SAML2_ISSUER }}" \
+            --variable saml2_sso_url="${{ secrets.SAML2_SSO_URL }}" \
+            --variable saml2_x509_cert="${{ secrets.SAML2_X509_CERT }}"
 
       - name: Grant privileges
-        run: |
-          ~/bin/snowsql -f admin/grants.sql
+        run: snow sql -f admin/grants.sql
