@@ -45,8 +45,9 @@ jobs:
         shell: bash
         run: |
           schemachange \
-            --connections-file-path ${{ steps.configure-snowflake.outputs.config-file-path }} \
             -f analytics \
             -r SYSADMIN \
             -d SYNAPSE_DATA_WAREHOUSE_PHIL \
+            --change-history-table SYNAPSE_DATA_WAREHOUSE_PHIL.SCHEMACHANGE.CHANGE_HISTORY \
+            --connection-name default \
             --create-change-history-table
