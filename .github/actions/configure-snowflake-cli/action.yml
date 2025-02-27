@@ -86,6 +86,11 @@ runs:
         echo "Snowflake connection is located at $CONNECTION_FILE"
         cat $CONNECTION_FILE
         
+    - name: Configure Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Install Snowflake CLI
       uses: Snowflake-Labs/snowflake-cli-action@v1.5
 
