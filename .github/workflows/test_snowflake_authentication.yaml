@@ -38,10 +38,9 @@ jobs:
 
       - name: deploy synapse_data_warehouse
         shell: bash
-        env:
-          SNOWFLAKE_DEFAULT_CONNECTION_NAME: default
         run: |
           schemachange \
+            --connection-name default \
             -f analytics \
             -r SYSADMIN \
             -d SYNAPSE_DATA_WAREHOUSE_PHIL \

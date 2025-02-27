@@ -62,7 +62,8 @@ runs:
         echo "CONNECTION_FILE=$CONNECTION_FILE" >> $GITHUB_ENV
         echo "connection-file-path=$CONNECTION_FILE" >> $GITHUB_OUTPUT
 
-        # Set default connection name
+        # Set default connection name 
+        # This only works for Snowflake CLI. Schemachange does not yet recognize config.toml
         echo 'default_connection_name = "default"' >> $CONFIG_FILE
 
         # Restrict file owner read/write only (Snowflake requirement)
