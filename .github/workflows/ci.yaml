@@ -32,7 +32,7 @@ jobs:
           PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-          USER: ${{ vars.DEVELOPER_SERVICE_USER }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
           WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: deploy synapse_data_warehouse
@@ -83,7 +83,7 @@ jobs:
   schemachange_admin:
     runs-on: ubuntu-22.04
     needs: schemachange_synapse_data_warehouse_prod
-    if: github.ref == 'refs/heads/main'
+    if: github.ref_name == 'main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -132,7 +132,7 @@ jobs:
   snowsql_admin:
     runs-on: ubuntu-22.04
     needs: schemachange_admin
-    if: github.ref == 'refs/heads/main'
+    if: github.ref_name == 'main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
