@@ -38,11 +38,12 @@ jobs:
 
       - name: deploy synapse_data_warehouse
         shell: bash
+        env:
+          SNOWFLAKE_DEFAULT_CONNECTION_NAME: default
         run: |
           schemachange \
             -f analytics \
             -r SYSADMIN \
             -d SYNAPSE_DATA_WAREHOUSE_PHIL \
             --change-history-table SYNAPSE_DATA_WAREHOUSE_PHIL.SCHEMACHANGE.CHANGE_HISTORY \
-            --connection-name default \
             --create-change-history-table
