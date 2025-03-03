@@ -112,8 +112,9 @@ jobs:
                 snow connection set-default admin
 
                 # The *PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
-                # within the cloned database. First let's create the PROXY_ADMIN account role name:
-                echo "SNOWFLAKE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
+                # within the cloned database. First let's create the PROXY_ADMIN account role name and export for immediate use:
+                export SNOWFLAKE_PROXY_ADMIN_ROLE="${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN"
+                echo "SNOWFLAKE_PROXY_ADMIN_ROLE=${SNOWFLAKE_PROXY_ADMIN_ROLE}" >> $GITHUB_ENV
 
                 # Next let's create the role with the new name
                 snow sql -q "CREATE OR REPLACE ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
