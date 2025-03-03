@@ -100,7 +100,7 @@ jobs:
               run: |
                 snow connection set-default admin
 
-                snow sql -q "CREATE OR REPLACE DATABASE $SNOWFLAKE_DOMAIN_CLONE_SANITIZED CLONE $SNOWFLAKE_DOMAIN_ORIGINAL;"
+                snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
             - name: Creation and management of PROXY_ADMIN
               shell: bash
