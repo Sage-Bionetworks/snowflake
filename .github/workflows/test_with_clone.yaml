@@ -106,20 +106,28 @@ jobs:
 
                 snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
-            - name: Creation and management of PROXY_ADMIN
+            - name: Establish full account role name for PROXY_ADMIN
               shell: bash
               run: |
                 snow connection set-default admin
 
                 # The *PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
                 # within the cloned database. First let's create the PROXY_ADMIN account role name and export for immediate use:
-                export SNOWFLAKE_PROXY_ADMIN_ROLE="${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN"
-                echo "SNOWFLAKE_PROXY_ADMIN_ROLE=${SNOWFLAKE_PROXY_ADMIN_ROLE}" >> $GITHUB_ENV
+                echo "SNOWFLAKE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
 
-                # Next let's create the role with the new name
+            - name: Create account role PROXY_ADMIN
+              shell: bash
+              run: |
+                snow connection set-default admin
+
                 snow sql -q "CREATE OR REPLACE ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
 
-                # Next let's transfer ownership of tasks and dynamic tables to PROXY_ADMIN role
+            - name: Transfer ownership of current and future tasks and dynamic tables to PROXY_ADMIN
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                # First let's transfer ownership of CURRENT tasks and dynamic tables to PROXY_ADMIN role
                 snow sql -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
 
