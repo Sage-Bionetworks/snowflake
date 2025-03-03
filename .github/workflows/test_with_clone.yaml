@@ -89,9 +89,13 @@ jobs:
 
             - name: Sanitize Clone Name
               run: |
+                # Sanitize the clone name. That is, replace all non-alphanumeric characters with an underscore.
+                # Then create a new environment variable with the sanitized clone name to use in subsequent steps.
                 SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
                 echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
-                # Creating the environment variable: SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
+                echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
+
+                # Next, create the environment variable: SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
                 # which schemachange uses to deploy changes to the right database (this is used in the schemachange step)
                 echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
@@ -100,7 +104,7 @@ jobs:
               run: |
                 snow connection set-default admin
 
-                snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL}";
+                snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
             - name: Creation and management of PROXY_ADMIN
               shell: bash
