@@ -120,7 +120,8 @@ jobs:
               run: |
                 snow connection set-default admin
 
-                snow sql -q "CREATE OR REPLACE ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                # Briefly switch to ACCOUNTADMIN and create the PROXY_ADMIN role
+                snow sql -q "USE ROLE ACCOUNTADMIN; CREATE OR REPLACE ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
 
             - name: Transfer ownership of current and future tasks and dynamic tables to PROXY_ADMIN
               shell: bash
