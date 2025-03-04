@@ -130,3 +130,36 @@ CREATE USER IF NOT EXISTS ADMIN_SERVICE
 
 CREATE USER IF NOT EXISTS DEVELOPER_SERVICE
     TYPE = SERVICE;
+
+-- Set DEFAULT_SECONDARY_ROLES to [] (do not use secondary roles by default)
+-- for all users
+EXECUTE IMMEDIATE $$
+DECLARE
+    updated_users ARRAY DEFAULT ARRAY_CONSTRUCT(); -- users we updated
+    username STRING; -- a user identifier
+    dsr STRING; -- default secondary role setting
+    user_cursor CURSOR FOR 
+        SELECT "name", "default_secondary_roles" 
+        FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) 
+        WHERE "name" <> 'SNOWFLAKE'; -- A cursor over our users
+BEGIN
+    SHOW USERS;
+    OPEN user_cursor;
+    LOOP
+        FETCH user_cursor INTO username, dsr;
+
+        -- exit condition
+        IF (username IS NULL) THEN
+            BREAK;
+        END IF;
+
+        -- loop condition
+        IF (dsr != '[]') THEN
+            ALTER USER IDENTIFIER(:username) SET DEFAULT_SECONDARY_ROLES=();
+            updated_users := ARRAY_APPEND(updated_users, username);
+        END IF;
+    END LOOP;
+    CLOSE user_cursor;
+    RETURN updated_users;
+END;
+$$;
