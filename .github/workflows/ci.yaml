@@ -33,9 +33,8 @@ jobs:
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
-          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
-      - name: deploy synapse_data_warehouse
+      - name: Deploy synapse_data_warehouse_dev
         shell: bash
         env:
           SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
@@ -47,7 +46,7 @@ jobs:
             --connection-name default \
             --root-folder synapse_data_warehouse \
             --config-folder synapse_data_warehouse \
-            --snowflake-role synapse_data_warehouse_dev
+            --snowflake-role synapse_data_warehouse_dev_admin
 
   schemachange_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
@@ -64,7 +63,6 @@ jobs:
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
-          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: Deploy synapse_data_warehouse
         shell: bash
@@ -95,7 +93,6 @@ jobs:
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
-          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: Deploy warehouses
         shell: bash
@@ -144,7 +141,6 @@ jobs:
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
-          WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       - name: Create users
         run: snow sql -f admin/users.sql
