@@ -16,7 +16,7 @@ inputs:
   WAREHOUSE:
     description: "Snowflake warehouse"
     required: false
-    default: ""
+    default: "compute_xsmall"
 outputs:
   config-file-path:
     description: "The path to the Snowflake config.toml file"
@@ -36,7 +36,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Create config.toml file
+    - name: Create config.toml and connections.toml files
       shell: bash
       id: configure-snowflake
       run: |
@@ -50,7 +50,7 @@ runs:
         echo '[default]' >> $CONNECTION_FILE
         echo "account = \"${{ inputs.ACCOUNT }}\"" >> $CONNECTION_FILE
         echo "user = \"${{ inputs.USER }}\"" >> $CONNECTION_FILE
-        echo 'warehouse = "${{ inputs.WAREHOUSE }}"' >> $CONNECTION_FILE
+        echo "warehouse = \"${{ inputs.WAREHOUSE }}\"" >> $CONNECTION_FILE
         echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONNECTION_FILE
         echo "private_key_file = \"$PRIVATE_KEY_FILE\"" >> $CONNECTION_FILE
         echo "private_key_file_pwd = \"${{ inputs.PRIVATE_KEY_PASSPHRASE }}\"" >> $CONNECTION_FILE
