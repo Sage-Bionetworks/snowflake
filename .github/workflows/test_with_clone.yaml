@@ -129,7 +129,7 @@ jobs:
                 snow connection set-default admin
 
                 # Briefly switch to ACCOUNTADMIN and grant the PROXY_ADMIN role to service account
-                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO USER ${SNOWFLAKE_ACCOUNT};"
+                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO USER DPE_SERVICE;"
 
             - name: Transfer ownership of current and future tasks and dynamic tables to PROXY_ADMIN
               shell: bash
