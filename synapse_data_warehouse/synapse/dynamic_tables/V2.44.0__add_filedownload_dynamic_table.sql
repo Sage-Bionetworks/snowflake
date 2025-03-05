@@ -17,7 +17,7 @@ CREATE OR REPLACE DYNAMIC TABLE SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE.FILED
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = 'This dynamic table contains the latest direct and zip/package file handle download attempts. A file handle will either be downloaded via zip/package or by itself, but not both.  '
+    COMMENT = 'This dynamic table contains the latest direct and zip/package file handle download attempts. A file handle will either be downloaded via zip/package or by itself, but not both.'
     AS
     WITH dedup_filedownload AS (
         SELECT
