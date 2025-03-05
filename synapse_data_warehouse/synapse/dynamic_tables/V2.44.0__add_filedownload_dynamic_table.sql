@@ -1,7 +1,7 @@
 -- Introduce the dynamic table
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 
-CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD_LATEST
+CREATE OR REPLACE DYNAMIC TABLE SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE.FILEDOWNLOAD_LATEST
     (
         TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the file download event is pushed to the queue for recording, after generating the pre-signed url.',
 	    USER_ID NUMBER(38,0) COMMENT 'The id of the user who downloaded the file.',
@@ -17,6 +17,7 @@ CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD_LATEST
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
+    COMMENT = 'This dynamic table contains the latest direct and zip/package file handle download attempts. A file handle will either download via zip/package or by itself, but not both.  '
     AS
     WITH dedup_filedownload AS (
         SELECT
@@ -54,19 +55,18 @@ CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD_LATEST
         SELECT
             *
         FROM
-            dedup_filedownload D
+            dedup_filedownload
         WHERE
             file_handle_id = downloaded_file_handle_id
-        AND NOT EXISTS (
+        AND file_handle_id not in (
             SELECT
-                1
+                file_handle_id
             FROM
-                zip_download Z
+                dedup_filedownload
             WHERE
-                D.user_id = Z.user_id
-            AND D.record_date = Z.record_date
-            )
+                file_handle_id != downloaded_file_handle_id
         )
+    )
     SELECT 
         *
     FROM
