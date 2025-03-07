@@ -182,6 +182,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "trisha.zintel@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "anthony.pena@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "hayley.sanchez@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "bishoy.kamel@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "andrea.varsavsky@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders

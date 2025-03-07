@@ -105,6 +105,7 @@ CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "anna.greenwood@sagebase.org";
 CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
 CREATE USER IF NOT EXISTS "drew.duglan@sagebase.org";
+CREATE USER IF NOT EXISTS "andrea.varsavsky@sagebase.org";
 
 // finance
 CREATE USER IF NOT EXISTS "brandon.morgan@sagebase.org";
