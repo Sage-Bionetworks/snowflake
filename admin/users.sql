@@ -155,7 +155,8 @@ BEGIN
 
         -- loop condition
         IF (dsr != '[]') THEN
-            ALTER USER IDENTIFIER(:username) SET DEFAULT_SECONDARY_ROLES=();
+            LET quoted_username STRING := '"' || :username || '"';
+            ALTER USER IDENTIFIER(:quoted_username) SET DEFAULT_SECONDARY_ROLES=();
             updated_users := ARRAY_APPEND(updated_users, username);
         END IF;
     END LOOP;
