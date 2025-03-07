@@ -144,6 +144,9 @@ jobs:
                 # snow sql -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 # snow sql -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
 
+                # TODO: Revoke DATA_ENGINEER OWNERSHIP grants?
+                # TODO: Why isn't FUTURE TASKS/DYNAMIC TABLES grant not working?
+
             - name: Handle grants for objects/roles pertaining to cloned database for DATA_ENGINEER
               shell: bash
               run: |
