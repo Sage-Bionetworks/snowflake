@@ -1,0 +1,110 @@
+name: "Configure Snowflake CLI"
+description: "Configures a ~/.snowflake/config.toml file and install the Snowflake CLI"
+inputs:
+  PRIVATE_KEY_PASSPHRASE:
+    description: "The pass phrase used to decrypt the private key"
+    required: true
+  PRIVATE_KEY:
+    description: "The private key"
+    required: true
+  ACCOUNT:
+    description: "Snowflake account identifier"
+    required: true
+  USER:
+    description: "Snowflake user identifier"
+    required: true
+  WAREHOUSE:
+    description: "Snowflake warehouse"
+    required: false
+    default: "compute_xsmall"
+outputs:
+  config-file-path:
+    description: "The path to the Snowflake config.toml file"
+    value: ${{ steps.configure-snowflake.outputs.config-file-path }}
+  connection-file-path:
+    description: "The path to the Snowflake connections.toml file"
+    value: ${{ steps.configure-snowflake.outputs.connection-file-path }}
+  version:
+    description: A plain text description of the Snowflake CLI version
+    value: ${{ steps.connection-test.outputs.version }}
+  connection:
+    description: >
+      A pretty-printed description of the default Snowflake connection
+      encoded using base64. Decode using `base64 --decode`.
+    value: ${{ steps.connection-test.outputs.connection }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create config.toml and connections.toml files
+      shell: bash
+      id: configure-snowflake
+      run: |
+        # Specify path for config.toml, connections.toml, and our private key
+        mkdir -p $HOME/.snowflake
+        CONFIG_FILE=$HOME/.snowflake/config.toml
+        CONNECTION_FILE=$HOME/.snowflake/connections.toml
+        PRIVATE_KEY_FILE=$HOME/.snowflake/rsa_key.p8
+      
+        # Write to connections.toml file
+        echo '[default]' >> $CONNECTION_FILE
+        echo "account = \"${{ inputs.ACCOUNT }}\"" >> $CONNECTION_FILE
+        echo "user = \"${{ inputs.USER }}\"" >> $CONNECTION_FILE
+        echo "warehouse = \"${{ inputs.WAREHOUSE }}\"" >> $CONNECTION_FILE
+        echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONNECTION_FILE
+        echo "private_key_file = \"$PRIVATE_KEY_FILE\"" >> $CONNECTION_FILE
+        echo "private_key_file_pwd = \"${{ inputs.PRIVATE_KEY_PASSPHRASE }}\"" >> $CONNECTION_FILE
+
+        # Restrict file owner read/write only (Snowflake requirement)
+        chmod 0600 $CONNECTION_FILE 
+
+        # Make connection.toml path available to other steps
+        echo "CONNECTION_FILE=$CONNECTION_FILE" >> $GITHUB_ENV
+        echo "connection-file-path=$CONNECTION_FILE" >> $GITHUB_OUTPUT
+
+        # Set default connection name 
+        # This only works for Snowflake CLI. Schemachange does not yet recognize config.toml
+        echo 'default_connection_name = "default"' >> $CONFIG_FILE
+
+        # Restrict file owner read/write only (Snowflake requirement)
+        chmod 0600 $CONFIG_FILE
+
+        # Make config.toml path available to other steps
+        echo "CONFIG_FILE=$CONFIG_FILE" >> $GITHUB_ENV
+        echo "config-file-path=$CONFIG_FILE" >> $GITHUB_OUTPUT
+
+        # Write to the private key file
+        printf "%s" "${{ inputs.PRIVATE_KEY }}" > $PRIVATE_KEY_FILE
+            
+    - name: Verify configuration/connection file contents
+      shell: bash
+      run: |
+        echo "Snowflake configuration is located at $CONFIG_FILE"
+        cat $CONFIG_FILE
+        echo "Snowflake connection is located at $CONNECTION_FILE"
+        cat $CONNECTION_FILE
+        
+    - name: Configure Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Snowflake CLI
+      uses: Snowflake-Labs/snowflake-cli-action@v1.5
+
+    - name: install-schemachange
+      shell: bash
+      run: pip install schemachange==4.0.1
+
+    - name: Test Snowflake connection
+      id: connection-test
+      shell: bash
+      env:
+        PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
+      run: |
+        snow --version
+        snow connection test
+
+        echo "version=$(snow --version)" >> $GITHUB_OUTPUT
+        echo "connection=$(snow connection test | base64 --wrap=0)" >> $GITHUB_OUTPUT
+        
