@@ -22,7 +22,7 @@ jobs:
             SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
             
             # Establish the account roles to be used
-            SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+            SNOWFLAKE_ADMIN_ROLE: SECURITYADMIN
             SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
 
             # Establish the domains
