@@ -106,6 +106,13 @@ jobs:
 
                 snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
+            - name: Grant USAGE of clone database to DATA_ENGINEER
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+
             - name: Establish full account role name for PROXY_ADMIN
               shell: bash
               run: |
