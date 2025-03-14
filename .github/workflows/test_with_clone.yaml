@@ -192,6 +192,14 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE, SELECT ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
+            - name: Grant OWNERSHIP of all tables in synapse and synapse_raw to DATA_ENGINEER
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
               run: |
