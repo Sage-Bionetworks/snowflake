@@ -184,6 +184,14 @@ jobs:
                 # Transfer OWNERSHIP of: <CLONE-DOMAIN>_PROXY_ADMIN account role
                 snow sql -q "USE ROLE ACCOUNTADMIN; GRANT OWNERSHIP ON ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
 
+            - name: Grant USAGE of tasks and dynamic tables to DATA_ENGINEER
+              shell: bash
+              run: |
+                snow connection set-default admin
+
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
               run: |
@@ -256,6 +264,8 @@ jobs:
               SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
               echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
               echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
+
+          # TODO: Add a step to delete the <CLONE-DOMAIN>_PROXY_ADMIN account role
 
           - name: Drop the clone
             shell: bash
