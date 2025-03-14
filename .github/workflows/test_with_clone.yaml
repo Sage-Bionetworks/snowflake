@@ -37,6 +37,11 @@ jobs:
 
         steps:
 
+            ########################################################################################################
+            ########################################################################################################
+            ############################ ENVIRONMENT SETUP AND CONNECTION CONFIGURATION ############################
+            ########################################################################################################
+            ########################################################################################################
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v4
               with:
@@ -87,6 +92,11 @@ jobs:
                 snow connection test -c admin
                 snow connection test -c dpe
 
+            ########################################################################################################
+            ########################################################################################################
+            ############################## SETTING UP AND CREATING THE CLONE DATABASE ##############################
+            ########################################################################################################
+            ########################################################################################################
             - name: Sanitize Clone Name
               run: |
                 # Sanitize the clone name. That is, replace all non-alphanumeric characters with an underscore.
@@ -106,6 +116,11 @@ jobs:
 
                 snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
+            ########################################################################################################
+            ########################################################################################################
+            ########################################## MANAGING GRANTS #############################################
+            ########################################################################################################
+            ########################################################################################################
             - name: Grant USAGE of clone database to DATA_ENGINEER
               shell: bash
               run: |
@@ -176,6 +191,11 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
 
+                # Grant USAGE on *ALL_ADMIN aggregate database roles to CLONE role
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+
                 # Grant USAGE on schemas to <CLONE-DOMAIN>_PROXY_ADMIN account role
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
@@ -192,21 +212,26 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE, SELECT ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
-            - name: Grant OWNERSHIP of all tables in synapse and synapse_raw to DATA_ENGINEER
-              shell: bash
-              run: |
-                snow connection set-default admin
+            # - name: Grant OWNERSHIP of all tables in synapse and synapse_raw to DATA_ENGINEER
+            #   shell: bash
+            #   run: |
+            #     snow connection set-default admin
 
-                # Manually grant ownership of all tables to data_engineer... but shouldn't this already be done by grants like these in the above steps?:
-                # "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
+            #     # Manually grant ownership of all tables to data_engineer... but shouldn't this already be done by grants like these in the above steps?:
+            #     # "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+            #     snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
+            #     snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
 
                 # questions: i have to manually grant permissions at every level. what is the point of owning the role that owns the objects
                 # if i need to manually grant USAGE etc to the role anyways?
                 # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
                 # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
+            ########################################################################################################
+            ########################################################################################################
+            ##################################### RUNNING SCHEMACHANGE #############################################
+            ########################################################################################################
+            ########################################################################################################
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
               run: |
@@ -281,6 +306,7 @@ jobs:
               echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
           # TODO: Add a step to delete the <CLONE-DOMAIN>_PROXY_ADMIN account role
+          # TODO: When a clone and its objects are deleted, do the grants go away too? Check DATA_ENGINEER after drop_clone runs to confirm.
 
           - name: Drop the clone
             shell: bash
