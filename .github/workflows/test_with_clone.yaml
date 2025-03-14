@@ -177,8 +177,7 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE_ALL_ADMIN TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
 
                 # Transfer OWNERSHIP of: <CLONE-DOMAIN>_PROXY_ADMIN account role
-                # TODO: Might need to remove this. This is already done in "Grant account role PROXY_ADMIN to user SNOWFLAKE_ACCOUNT"
-                #snow sql -q "USE ROLE ACCOUNTADMIN; GRANT OWNERSHIP ON ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT OWNERSHIP ON ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
 
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
