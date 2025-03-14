@@ -3,9 +3,9 @@ USE SCHEMA {{database_name}}.SYNAPSE; --noqa: JJ01,PRS,TMP
 CREATE OR REPLACE DYNAMIC TABLE CERTIFIEDQUIZ_LATEST_DYNAMIC
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = 'This table, indexed by USER_ID, contains the latest snapshots of the certification quiz submissions by a Synapse user.'
+    COMMENT = 'This table, indexed by USER_ID, contains the latest snapshot of the certification quiz submissions by a Synapse user.'
     (
-        CHANGE_TYPE VARCHAR(10) COMMENT 'The change type is always as CREATE since each instance of a user submitting a quiz results in a new submission of the quiz.',
+        CHANGE_TYPE VARCHAR(10) COMMENT 'The type of change to the record e.g., CREATE, UPDATE. CREATE indicates an user submitting a quiz results in a new submission of the quiz while UPDATE indicates a change to the pre-existing user record usually to indicate it being revoked',
         CHANGE_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the user submitted the quiz.',
         SNAPSHOT_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the snapshot was taken (It is usually after the change happened).',
         RESPONSE_ID NUMBER(38,0) COMMENT 'The unique identifier of a response wherein a user submitted a set of answers while participating in the quiz.',
