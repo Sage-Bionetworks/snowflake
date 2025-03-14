@@ -184,13 +184,13 @@ jobs:
                 # Transfer OWNERSHIP of: <CLONE-DOMAIN>_PROXY_ADMIN account role
                 snow sql -q "USE ROLE ACCOUNTADMIN; GRANT OWNERSHIP ON ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE} COPY CURRENT GRANTS;"
 
-            - name: Grant USAGE of tasks and dynamic tables to DATA_ENGINEER
+            - name: Grant MONITOR, OPERATE, etc. of tasks and dynamic tables to DATA_ENGINEER
               shell: bash
               run: |
                 snow connection set-default admin
 
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR, OPERATE, SELECT ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
