@@ -231,6 +231,10 @@ jobs:
                 # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
                 # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
+                # TODO: I shouldn't have to do this, because synapse_all_admin is granted to data_engineer, right?
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT INSERT ON ALL TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT INSERT ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+
             ########################################################################################################
             ########################################################################################################
             ##################################### RUNNING SCHEMACHANGE #############################################
