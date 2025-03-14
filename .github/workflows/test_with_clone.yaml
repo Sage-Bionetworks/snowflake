@@ -204,8 +204,8 @@ jobs:
 
                 # questions: i have to manually grant permissions at every level. what is the point of owning the role that owns the objects
                 # if i need to manually grant USAGE etc to the role anyways?
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                # snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
             - name: Run schemachange on the clone as DATA_ENGINEER
               shell: bash
