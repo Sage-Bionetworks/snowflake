@@ -1,6 +1,6 @@
 # snowflake
 
-This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations.
+This repository will house all the configuration, and data exploration of data that will be often executed.  Configurations include warehouse, database, schema, table, user, role and other configurations. test
 
 ## Connecting to Snowflake
 
