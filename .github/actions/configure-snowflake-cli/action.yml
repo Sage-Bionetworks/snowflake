@@ -16,7 +16,7 @@ inputs:
   WAREHOUSE:
     description: "Snowflake warehouse"
     required: false
-    default: "compute_xsmall"
+    default: "dpe_automation"
 outputs:
   config-file-path:
     description: "The path to the Snowflake config.toml file"
