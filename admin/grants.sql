@@ -176,7 +176,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "james.moon@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "orion.banks@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "samia.ahmed@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "lisa.pasquale@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "joni.harker@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "JONI.HARKER@SAGEBASE.ORG";
 GRANT ROLE DATA_ANALYTICS TO USER "jo.scanlan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "trisha.zintel@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "anthony.pena@sagebase.org";
