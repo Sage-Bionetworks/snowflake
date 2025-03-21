@@ -1,5 +1,3 @@
-!set variable_substitution=true; --noqa: PRS
-
 USE ROLE ACCOUNTADMIN;
 
 -- * Integration to prod (SNOW-14)
