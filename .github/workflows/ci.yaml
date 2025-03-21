@@ -130,6 +130,8 @@ jobs:
     runs-on: ubuntu-22.04
     needs: schemachange_admin
     if: github.ref_name == 'main'
+    env:
+      PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
