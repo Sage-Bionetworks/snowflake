@@ -1,0 +1,267 @@
+import json
+import logging
+import os
+
+import backoff
+import pandas as pd
+import requests
+from requests.exceptions import RequestException
+import snowflake.connector as sc
+from snowflake.connector.pandas_tools import write_pandas
+import synapseclient
+from urllib3.exceptions import RequestError
+
+SECRETS = json.loads(os.getenv("SCHEDULED_JOB_SECRETS"))
+SYNAPSE_AUTH_TOKEN = secrets["SYNAPSE_AUTH_TOKEN"]
+SNOWFLAKE_PRIVATE_KEY = secrets["SNOWFLAKE_PRIVATE_KEY"]
+MIP_AUTH = secrets["MIP_AUTH"]
+
+with open("temp.p8", "w") as private_key_f:
+    private_key_f.write(SNOWFLAKE_PRIVATE_KEY)
+
+conn_params = {
+    'account': 'mqzfhld-vp00034',
+    'role': 'FINANCE_ADMIN',
+    'user': 'FINANCE_SERVICE',
+    'private_key_file': "temp.p8",
+    'private_key_file_pwd':None,
+    'warehouse': 'COMPUTE_XSMALL',
+    'database': 'FINANCE',
+    'schema': 'MIP_RAW'
+}
+
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
+
+_mips_url_login = "https://login.mip.com/api/v1/sso/mipadv/login"
+# https://documentation.mip.com/#/swagger/recursiveTransaction/transactions/recursiveTransactions
+_ledger_api = "https://api.mip.com/api/v1/recursiveTransactions/GeneralLedger/posted"
+# https://documentation.mip.com/#/swagger/maintenance/generalLedger/chartOfAccounts
+_chart_of_accounts_api = "https://api.mip.com/api/v1/maintain/ChartOfAccounts"
+_mips_url_logout = "https://api.mip.com/api/security/logout"
+
+
+@backoff.on_exception(backoff.expo, (RequestError, RequestException), max_time=11)
+def _request_login(creds):
+    """
+    Wrap login request with backoff decorator, using exponential backoff
+    and running for at most 11 seconds. With a connection timeout of 4
+    seconds, this allows two attempts.
+    """
+    timeout = 4
+    LOG.info("Logging in to upstream API")
+
+    login_response = requests.post(
+        _mips_url_login,
+        json=creds,
+        timeout=timeout,
+    )
+    login_response.raise_for_status()
+    token = login_response.json()["AccessToken"]
+    return token
+
+
+@backoff.on_exception(backoff.fibo, (RequestError, RequestException), max_time=28)
+def _request_logout(access_token):
+    """
+    Wrap logout request with backoff decorator, using fibonacci backoff
+    and running for at most 28 seconds. With a connection timeout of 6
+    seconds, this allows three attempts.
+
+    Prioritize spending time logging out over the other requests because
+    failing to log out after successfully logging in will lock us out of
+    the API; but CloudFront will only wait a maximum of 60 seconds for a
+    response from this lambda.
+    """
+    timeout = 6
+    LOG.info("Logging out of upstream API")
+
+    requests.post(
+        _mips_url_logout,
+        headers={"Authorization-Token": access_token},
+        timeout=timeout,
+    )
+
+
+def get_ledgers(
+    access_token: str,
+    max_session_posted_date: str = "2025-01-24 23:48:49.000",
+    page_number: int = 0,
+    page_size: int = 20,
+):
+    """Get ledgers from the MIP API
+
+    Args:
+        access_token (str): MIP access token
+        max_session_posted_date (str, optional): Max session posted date, used to filter for transactions after a specific date. Defaults to "2025-01-24 23:48:49.000".
+        page_number (int, optional): _description_. Defaults to 0.
+        page_size (int, optional): _description_. Defaults to 20.
+
+    Returns:
+        _type_: _description_
+    """
+    all_ledgers = []
+    initial_ledgers = requests.get(
+        _ledger_api,
+        headers={
+            "Authorization-Token": access_token,
+        },
+        params={
+            "page[number]": str(page_number),
+            "page[size]": str(page_size),
+            "filter[sessionPostedDate][gt]": max_session_posted_date,
+        },
+    )
+    total_records = initial_ledgers.json()["totalRecords"]
+    while len(all_ledgers) < total_records:
+        ledgers = requests.get(
+            _ledger_api,
+            headers={
+                "Authorization-Token": access_token,
+            },
+            params={
+                "page[number]": str(page_number),
+                "page[size]": str(page_size),
+                "filter[sessionPostedDate][gt]": max_session_posted_date,
+            },
+        )
+        page_number += 1
+        all_ledgers.extend(ledgers.json()["data"])
+    return all_ledgers
+
+
+def get_chart_of_accounts(access_token: str, page_number: int = 0, page_size: int = 20) -> list:
+    """Get chart of accounts from the MIP API. This includes all the program codes
+
+    Args:
+        access_token (str): MIP access token
+        page_number (int, optional): page number. Defaults to 0.
+        page_size (int, optional): page size. Defaults to 20.
+
+    Returns:
+        list: List of charts of accounts
+    """
+    all_ledgers = []
+    initial_ledgers = requests.get(
+        _chart_of_accounts_api,
+        headers={
+            "Authorization-Token": access_token,
+        },
+        params={"page[number]": str(page_number), "page[size]": str(page_size)},
+    )
+    total_records = initial_ledgers.json()["total"]
+    while len(all_ledgers) < total_records:
+        ledgers = requests.get(
+            _chart_of_accounts_api,
+            headers={
+                "Authorization-Token": access_token,
+            },
+            params={"page[number]": str(page_number), "page[size]": str(page_size)},
+        )
+        page_number += 1
+        all_ledgers.extend(ledgers.json()["data"])
+    return all_ledgers
+
+
+def update_mip_raw_tables():
+    """Update MIP raw tables including the general ledger and chart of accounts
+    """
+    access_token = None
+    mips_creds = {
+        "username": "itops",
+        "password": MIP_AUTH,
+        "org": "SAGE_24146",
+    }
+    access_token = _request_login(mips_creds)
+    ctx = sc.connect(**conn_params)
+    cs = ctx.cursor()
+    results = cs.execute("SELECT MAX(SESSIONPOSTEDDATE) as max_session_posted_date FROM finance.mip_raw.ledgers")
+    max_session_posted_date = results.fetchone()[0]
+    # df = results.fetch_pandas_all()
+    formatted_dt = max_session_posted_date.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    
+    ledgers = get_ledgers(
+        access_token, max_session_posted_date=formatted_dt, page_size=1000
+    )
+    if len(ledgers) > 0:
+        ledgers_df = pd.DataFrame(ledgers)
+        ledgers_df.to_csv("ledgers.csv", index=False)
+
+        results = cs.execute("SELECT * FROM finance.mip_raw.ledgers limit 1")
+        df = results.fetch_pandas_all()
+
+        ledgers_df.columns = ledgers_df.columns.str.upper()
+
+        for col, dtype in df.dtypes.items():
+            if col in ledgers_df.columns:
+                if "int" in str(dtype):
+                    # Replace empty strings or nulls with NaN, then cast safely
+                    ledgers_df[col] = pd.to_numeric(ledgers_df[col], errors='coerce').fillna(0).astype(dtype)
+                elif "float" in str(dtype):
+                    ledgers_df[col] = pd.to_numeric(ledgers_df[col], errors='coerce').fillna(0).astype(dtype)
+                else:
+                    ledgers_df[col] = ledgers_df[col].astype(dtype)
+        results = write_pandas(
+            ctx,
+            ledgers_df,
+            "ledgers",
+            quote_identifiers=False,
+            use_logical_type=True
+        )
+        if results[0]:
+            ledger_message = f"ledger appended with {results[2]} rows"
+        else:
+            ledger_message = "ledger append failed"
+    else:
+        ledger_message = "No new ledgers to append"
+    LOG.info(ledger_message)
+
+    # Update chart of accounts
+    results = cs.execute("SELECT count(*) as total_coa FROM finance.mip_raw.chart_of_accounts")
+    total_coa = results.fetchone()[0]
+
+    chart_of_accounts = get_chart_of_accounts(access_token, page_size=1000)
+    if len(chart_of_accounts) > total_coa:
+        chart_of_accounts_df = pd.DataFrame(chart_of_accounts)
+        chart_of_accounts_df.to_csv("chart_of_accounts.csv", index=False)
+        results = cs.execute("SELECT * FROM finance.mip_raw.chart_of_accounts limit 1")
+        df = results.fetch_pandas_all()
+
+        chart_of_accounts_df.columns = chart_of_accounts_df.columns.str.upper()
+
+        for col, dtype in df.dtypes.items():
+            if col in chart_of_accounts_df.columns:
+                if "int" in str(dtype):
+                    # Replace empty strings or nulls with NaN, then cast safely
+                    chart_of_accounts_df[col] = pd.to_numeric(chart_of_accounts_df[col], errors='coerce').fillna(0).astype(dtype)
+                elif "float" in str(dtype):
+                    chart_of_accounts_df[col] = pd.to_numeric(chart_of_accounts_df[col], errors='coerce').fillna(0).astype(dtype)
+                else:
+                    chart_of_accounts_df[col] = chart_of_accounts_df[col].astype(dtype)
+        results = write_pandas(
+            ctx,
+            chart_of_accounts_df,
+            "chart_of_accounts",
+            overwrite=True,
+            quote_identifiers=False,
+            use_logical_type=True
+        )
+        if results[0]:
+            coa_message = f"Chart of accounts updated with {results[2]} rows"
+        else:
+            coa_message = "Chart of accounts update failed"
+    else:
+        coa_message = "No new chart of accounts to update"
+    LOG.info(coa_message)
+
+    syn = synapseclient.login(authToken=SYNAPSE_AUTH_TOKEN)
+    syn.sendMessage(
+        messageSubject="MIP Raw Tables Update",
+        messageBody=f"{ledger_message}\n{coa_message}",
+        userIds=[3324230]
+    )
+    _request_logout(access_token)
+    cs.close()
+
+if __name__ == "__main__":
+    update_mip_raw_tables()
