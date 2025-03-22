@@ -12,9 +12,9 @@ import synapseclient
 from urllib3.exceptions import RequestError
 
 SECRETS = json.loads(os.getenv("SCHEDULED_JOB_SECRETS"))
-SYNAPSE_AUTH_TOKEN = secrets["SYNAPSE_AUTH_TOKEN"]
-SNOWFLAKE_PRIVATE_KEY = secrets["SNOWFLAKE_PRIVATE_KEY"]
-MIP_AUTH = secrets["MIP_AUTH"]
+SYNAPSE_AUTH_TOKEN = SECRETS["SYNAPSE_AUTH_TOKEN"]
+SNOWFLAKE_PRIVATE_KEY = SECRETS["SNOWFLAKE_PRIVATE_KEY"]
+MIP_AUTH = SECRETS["MIP_AUTH"]
 
 with open("temp.p8", "w") as private_key_f:
     private_key_f.write(SNOWFLAKE_PRIVATE_KEY)
