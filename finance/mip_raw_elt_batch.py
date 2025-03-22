@@ -20,14 +20,14 @@ with open("temp.p8", "w") as private_key_f:
     private_key_f.write(SNOWFLAKE_PRIVATE_KEY)
 
 conn_params = {
-    'account': 'mqzfhld-vp00034',
-    'role': 'FINANCE_ADMIN',
-    'user': 'FINANCE_SERVICE',
-    'private_key_file': "temp.p8",
-    'private_key_file_pwd':None,
-    'warehouse': 'COMPUTE_XSMALL',
-    'database': 'FINANCE',
-    'schema': 'MIP_RAW'
+    "account": "mqzfhld-vp00034",
+    "role": "FINANCE_ADMIN",
+    "user": "FINANCE_SERVICE",
+    "private_key_file": "temp.p8",
+    "private_key_file_pwd": None,
+    "warehouse": "COMPUTE_XSMALL",
+    "database": "FINANCE",
+    "schema": "MIP_RAW",
 }
 
 LOG = logging.getLogger(__name__)
@@ -130,7 +130,9 @@ def get_ledgers(
     return all_ledgers
 
 
-def get_chart_of_accounts(access_token: str, page_number: int = 0, page_size: int = 20) -> list:
+def get_chart_of_accounts(
+    access_token: str, page_number: int = 0, page_size: int = 20
+) -> list:
     """Get chart of accounts from the MIP API. This includes all the program codes
 
     Args:
@@ -164,8 +166,7 @@ def get_chart_of_accounts(access_token: str, page_number: int = 0, page_size: in
 
 
 def update_mip_raw_tables():
-    """Update MIP raw tables including the general ledger and chart of accounts
-    """
+    """Update MIP raw tables including the general ledger and chart of accounts"""
     access_token = None
     mips_creds = {
         "username": "itops",
@@ -175,11 +176,13 @@ def update_mip_raw_tables():
     access_token = _request_login(mips_creds)
     ctx = sc.connect(**conn_params)
     cs = ctx.cursor()
-    results = cs.execute("SELECT MAX(SESSIONPOSTEDDATE) as max_session_posted_date FROM finance.mip_raw.ledgers")
+    results = cs.execute(
+        "SELECT MAX(SESSIONPOSTEDDATE) as max_session_posted_date FROM finance.mip_raw.ledgers"
+    )
     max_session_posted_date = results.fetchone()[0]
     # df = results.fetch_pandas_all()
     formatted_dt = max_session_posted_date.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    
+
     ledgers = get_ledgers(
         access_token, max_session_posted_date=formatted_dt, page_size=1000
     )
@@ -196,17 +199,21 @@ def update_mip_raw_tables():
             if col in ledgers_df.columns:
                 if "int" in str(dtype):
                     # Replace empty strings or nulls with NaN, then cast safely
-                    ledgers_df[col] = pd.to_numeric(ledgers_df[col], errors='coerce').fillna(0).astype(dtype)
+                    ledgers_df[col] = (
+                        pd.to_numeric(ledgers_df[col], errors="coerce")
+                        .fillna(0)
+                        .astype(dtype)
+                    )
                 elif "float" in str(dtype):
-                    ledgers_df[col] = pd.to_numeric(ledgers_df[col], errors='coerce').fillna(0).astype(dtype)
+                    ledgers_df[col] = (
+                        pd.to_numeric(ledgers_df[col], errors="coerce")
+                        .fillna(0)
+                        .astype(dtype)
+                    )
                 else:
                     ledgers_df[col] = ledgers_df[col].astype(dtype)
         results = write_pandas(
-            ctx,
-            ledgers_df,
-            "ledgers",
-            quote_identifiers=False,
-            use_logical_type=True
+            ctx, ledgers_df, "ledgers", quote_identifiers=False, use_logical_type=True
         )
         if results[0]:
             ledger_message = f"ledger appended with {results[2]} rows"
@@ -217,7 +224,9 @@ def update_mip_raw_tables():
     LOG.info(ledger_message)
 
     # Update chart of accounts
-    results = cs.execute("SELECT count(*) as total_coa FROM finance.mip_raw.chart_of_accounts")
+    results = cs.execute(
+        "SELECT count(*) as total_coa FROM finance.mip_raw.chart_of_accounts"
+    )
     total_coa = results.fetchone()[0]
 
     chart_of_accounts = get_chart_of_accounts(access_token, page_size=1000)
@@ -233,9 +242,17 @@ def update_mip_raw_tables():
             if col in chart_of_accounts_df.columns:
                 if "int" in str(dtype):
                     # Replace empty strings or nulls with NaN, then cast safely
-                    chart_of_accounts_df[col] = pd.to_numeric(chart_of_accounts_df[col], errors='coerce').fillna(0).astype(dtype)
+                    chart_of_accounts_df[col] = (
+                        pd.to_numeric(chart_of_accounts_df[col], errors="coerce")
+                        .fillna(0)
+                        .astype(dtype)
+                    )
                 elif "float" in str(dtype):
-                    chart_of_accounts_df[col] = pd.to_numeric(chart_of_accounts_df[col], errors='coerce').fillna(0).astype(dtype)
+                    chart_of_accounts_df[col] = (
+                        pd.to_numeric(chart_of_accounts_df[col], errors="coerce")
+                        .fillna(0)
+                        .astype(dtype)
+                    )
                 else:
                     chart_of_accounts_df[col] = chart_of_accounts_df[col].astype(dtype)
         results = write_pandas(
@@ -244,7 +261,7 @@ def update_mip_raw_tables():
             "chart_of_accounts",
             overwrite=True,
             quote_identifiers=False,
-            use_logical_type=True
+            use_logical_type=True,
         )
         if results[0]:
             coa_message = f"Chart of accounts updated with {results[2]} rows"
@@ -258,10 +275,11 @@ def update_mip_raw_tables():
     syn.sendMessage(
         messageSubject="MIP Raw Tables Update",
         messageBody=f"{ledger_message}\n{coa_message}",
-        userIds=[3324230]
+        userIds=[3324230],
     )
     _request_logout(access_token)
     cs.close()
+
 
 if __name__ == "__main__":
     update_mip_raw_tables()
