@@ -45,8 +45,7 @@ Create and checkout your feature branch from the latest `dev` branch. Name it ba
 git checkout -b snow-123-new-feature origin/dev
 ```
 
-Your branch will now be tracking `origin/dev` which you can merge with or rebase onto should a merge conflict occur. For more guidance
-on how to resolve merge conflicts, [see here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts#resolving-merge-conflicts).
+Your branch will now be tracking `origin/dev` which you will merge into once your change is approved and merge conflicts are resolved (if any). For more guidance on how to resolve merge conflicts, [see here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts#resolving-merge-conflicts).
 
 ### 4. Push to The Remote Branch
 
@@ -66,31 +65,33 @@ you can then take your PR out of draft mode by marking it as Ready for Review in
 
 ## Running CI Jobs for Database Testing
 
-This repository includes automated CI jobs to validate changes against a cloned database. If you want to trigger these jobs to test your changes in an isolated database environment, please follow the steps below:
+This repository includes automated CI jobs to validate changes against a cloned database. If you want to trigger these jobs to test your changes in an isolated database environment on Snowflake, please follow the steps below:
 
 ### 1. Add the Label
 
-Add the label `create_clone_and_run_schemachange` to your PR to trigger the CI workflow. This job does two things:
+By default, each new commit you make in a PR will trigger the `create_clone_and_run_schemachange` job to trigger for your branch. This job does two things:
 
-* Creates a zero-copy clone of the database and runs your proposed schema changes against it.
-* Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
+1. Creates a zero-copy clone of the database and runs your proposed schema changes against it.
+2. Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
 affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
 
 > [!IMPORTANT]
 > Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that
-> **there may have been changes made to the development database since your last clone**.
+> **there may have been changes made to the development database since your last clone**. To see the latest changes on
+> the development database, you can view the commit history in the `dev` branch.
 
 > [!NOTE]
-> As you are developing on your branch, you may want to re-run the `schemachange` test on your updates.
-> You can unlabel and relabel the PR with `create_clone_and_run_schemachange` to re-trigger the job.
+> By default, every commit you make in your branch will trigger the clone to be created and schemachange to be executed.
+> If you are not making changes that require schemachange to run (e.g. documentation updates, or any changes outside of the
+> `synapse_data_warehouse` folder) you can opt-out of these workflow runs by adding the `skip_cloning` label to your PR.
 
 ### 2. Perform Inspection using Snowsight
 
-You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. ensure there is no row duplication in the new/updated tables.
+You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
 
 > [!TIP]
 > Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
-> `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_123_NEW_FEATURE`.
+> `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
 
 ### 3. Manually Drop the Cloned Database (Optional)
 
