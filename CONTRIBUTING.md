@@ -113,3 +113,4 @@ An initial clone of the development database will not incur new resource costs, 
 > ```
 
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
+
