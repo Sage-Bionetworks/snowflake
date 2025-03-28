@@ -26,6 +26,7 @@ jobs:
             
             # Establish the account roles to be used
             SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
+            SNOWFLAKE_PROXY_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_PROXY_ADMIN"
             SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
 
             # Establish the domains
@@ -85,6 +86,7 @@ jobs:
                 snow --version
                 snow connection test -c admin
 
+
             ########################################################################################################
             ########################################################################################################
             ############################## SETTING UP AND CREATING THE CLONE DATABASE ##############################
@@ -107,6 +109,26 @@ jobs:
               run: |
                 snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
+
+            ########################################################################################################
+            ########################################################################################################
+            ####################### SETTING UP AND CREATING <CLONE>_PROXY_ADMIN ACCOUNT ROLE #######################
+            ########################################################################################################
+            ########################################################################################################
+            - name: Establish full account role name for PROXY_ADMIN
+              shell: bash
+              run: |
+                # The <CLONE>_PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
+                # within the cloned database. First let's create the <CLONE>_PROXY_ADMIN account role name and export for immediate use:
+                echo "SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
+
+            - name: Create account role PROXY_ADMIN
+              shell: bash
+              run: |
+                # Briefly switch to ACCOUNTADMIN and create the <CLONE>_PROXY_ADMIN role
+                snow sql -q "USE ROLE ACCOUNTADMIN; CREATE OR REPLACE ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+
+
             ########################################################################################################
             ########################################################################################################
             ########################################## MANAGING GRANTS #############################################
@@ -117,73 +139,60 @@ jobs:
               run: |
                 snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
-            - name: Establish full account role name for PROXY_ADMIN
-              shell: bash
-              run: |
-                # The *PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
-                # within the cloned database. First let's create the PROXY_ADMIN account role name and export for immediate use:
-                echo "SNOWFLAKE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
-
-            - name: Create account role PROXY_ADMIN
-              shell: bash
-              run: |
-                # Briefly switch to ACCOUNTADMIN and create the PROXY_ADMIN role
-                snow sql -q "USE ROLE ACCOUNTADMIN; CREATE OR REPLACE ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-
             - name: Grant account role PROXY_ADMIN to user SNOWFLAKE_ACCOUNT
               shell: bash
               run: |
                 # Briefly switch to ACCOUNTADMIN and grant the PROXY_ADMIN role to service account
-                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO USER DPE_SERVICE;"
+                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO USER DPE_SERVICE;"
 
             - name: Grant USAGE of clone database to PROXY_ADMIN
               shell: bash
               run: |
-                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
             - name: Transfer ownership of current and future tasks and dynamic tables to PROXY_ADMIN
               shell: bash
               run: |
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 # For some reason you can't just peacefully transfer ownership for FUTURE objects, you need to explicitly revoke
                 # ownership from the previous role.
                 # Need to use SECURITYADMIN for future objects because they're technically not owned by the <DOMAIN>_ADMIN role for some reason?? Reasons unclear.
-                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE FROM ROLE ${SNOWFLAKE_DOMAIN_ORIGINAL}_PROXY_ADMIN;"
-                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW FROM ROLE ${SNOWFLAKE_DOMAIN_ORIGINAL}_PROXY_ADMIN;"
-                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE FROM ROLE ${SNOWFLAKE_DOMAIN_ORIGINAL}_PROXY_ADMIN;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
             - name: Give DE ownership of all objects in synapse, synapse_raw, schemachange
               shell: bash
               run: |
                 # TODO: Why REVOKE current grants? This might cause trouble.
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
             - name: Grant USAGE on schemas to PROXY_ADMIN
               shell: bash
               run: |
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
             - name: Grant USAGE on PROXY_ADMIN to DE
               shell: bash
               run: |
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
 
             ########################################################################################################
