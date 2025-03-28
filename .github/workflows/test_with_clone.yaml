@@ -273,10 +273,19 @@ jobs:
               echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
               echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
-          # TODO: Add a step to delete the <CLONE-DOMAIN>_PROXY_ADMIN account role
-          # TODO: When a clone and its objects are deleted, do the grants go away too? Check DATA_ENGINEER after drop_clone runs to confirm.
-
-          - name: Drop the clone
+          - name: Drop the clone (if it exists)
             shell: bash
             run: |
               snow sql -q "DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
+
+          - name: Establish full account role name for PROXY_ADMIN
+            shell: bash
+            run: |
+              # The <CLONE>_PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
+              # within the cloned database. First let's create the <CLONE>_PROXY_ADMIN account role name and export for immediate use:
+              echo "SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
+
+          - name: Drop <CLONE>_PROXY_ADMIN (if it exists)
+            shell: bash
+            run: |
+              snow sql -q "USE ROLE ACCOUNTADMIN; DROP ROLE IF EXISTS ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
