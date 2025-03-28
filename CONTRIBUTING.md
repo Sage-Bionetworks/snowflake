@@ -75,6 +75,8 @@ By default, each new commit you make in a PR AFTER you have initialized it will 
 2. Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
 affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
 
+Please be mindful that each commit after initializing your PR will trigger this job to run. As such, a new database is created and new assets are generated each time using `schemachange`. To avoid conflicts from back-to-back commits and ensure your cloned database contains the very latest changes, we have implemented a failsafe to interrupt incomplete runs when new runs are introduced. If you find that one of your deployments failed, it is possible the failure was due to this failsafe, as a result of many commits at once.
+
 > [!IMPORTANT]
 > Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that
 > **there may have been changes made to the development database since your last clone**. To see the latest changes on
