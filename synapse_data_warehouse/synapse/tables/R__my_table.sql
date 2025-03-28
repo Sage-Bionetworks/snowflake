@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS ci-cd-test-merge (
 );
 
 -- Insert arbitrary rows into the dummy table
-INSERT INTO my_table2 (id, name, created_at, value) VALUES 
+INSERT INTO ci-cd-test-merge (id, name, created_at, value) VALUES 
     (1, 'Alpha', CURRENT_TIMESTAMP, 1000.5),
     (2, 'Beta', CURRENT_TIMESTAMP, 20.0),
     (3, 'Gamma', CURRENT_TIMESTAMP, 30.75),
