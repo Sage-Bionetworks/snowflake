@@ -1,7 +1,7 @@
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 
 -- Create the dummy table with example columns
-CREATE TABLE IF NOT EXISTS ci_cd_test_merge (
+CREATE TABLE IF NOT EXISTS ci_cd_test_merge_ah (
     id INT,
     name STRING,
     created_at TIMESTAMP,
