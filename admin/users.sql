@@ -73,6 +73,7 @@ CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
 CREATE USER IF NOT EXISTS "rchai@sagebase.org";
 CREATE USER IF NOT EXISTS "maria.diaz@sagebase.org";
 CREATE USER IF NOT EXISTS "gaia.andreoletti@sagebase.org";
+CREATE USER IF NOT EXISTS "serghei.mangul@sagebase.org";
 
 // TECH
 CREATE USER IF NOT EXISTS "anthony.williams@sagebase.org";
