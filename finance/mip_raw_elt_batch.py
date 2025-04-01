@@ -16,20 +16,6 @@ SYNAPSE_AUTH_TOKEN = SECRETS["SYNAPSE_AUTH_TOKEN"]
 SNOWFLAKE_PRIVATE_KEY = SECRETS["SNOWFLAKE_PRIVATE_KEY"]
 MIP_AUTH = SECRETS["MIP_AUTH"]
 
-with open("temp.p8", "w") as private_key_f:
-    private_key_f.write(SNOWFLAKE_PRIVATE_KEY)
-
-conn_params = {
-    "account": "mqzfhld-vp00034",
-    "role": "FINANCE_ADMIN",
-    "user": "FINANCE_SERVICE",
-    "private_key_file": "temp.p8",
-    "private_key_file_pwd": None,
-    "warehouse": "COMPUTE_XSMALL",
-    "database": "FINANCE",
-    "schema": "MIP_RAW",
-}
-
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
@@ -284,6 +270,20 @@ def update_mip_raw_tables():
         "org": "SAGE_24146",
     }
     access_token = _request_login(mips_creds)
+
+    with open("temp.p8", "w") as private_key_f:
+        private_key_f.write(SNOWFLAKE_PRIVATE_KEY)
+
+    conn_params = {
+        "account": "mqzfhld-vp00034",
+        "role": "FINANCE_ADMIN",
+        "user": "FINANCE_SERVICE",
+        "private_key_file": "temp.p8",
+        "private_key_file_pwd": None,
+        "warehouse": "COMPUTE_XSMALL",
+        "database": "FINANCE",
+        "schema": "MIP_RAW",
+    }
     ctx = sc.connect(**conn_params)
     cs = ctx.cursor()
 
@@ -301,6 +301,7 @@ def update_mip_raw_tables():
     )
     _request_logout(access_token)
     cs.close()
+    os.remove("temp.p8")
 
 
 if __name__ == "__main__":
