@@ -165,6 +165,36 @@ def get_chart_of_accounts(
     return all_ledgers
 
 
+def cast_df_types(source_df: pd.DataFrame, target_df: pd.DataFrame) -> pd.DataFrame:
+    """Cast source dataframe into target dataframe
+
+    Args:
+        source_df (pd.DataFrame): Source dataframe with the expected types
+        target_df (pd.DataFrame): Target dataframe to update
+
+    Returns:
+        pd.DataFrame: Altered target dataframe with types cast to match source dataframe
+    """
+    for col, dtype in df.dtypes.items():
+        if col in target_df.columns:
+            if "int" in str(dtype):
+                # Replace empty strings or nulls with NaN, then cast safely
+                target_df[col] = (
+                    pd.to_numeric(target_df[col], errors="coerce")
+                    .fillna(0)
+                    .astype(dtype)
+                )
+            elif "float" in str(dtype):
+                target_df[col] = (
+                    pd.to_numeric(target_df[col], errors="coerce")
+                    .fillna(0)
+                    .astype(dtype)
+                )
+            else:
+                target_df[col] = target_df[col].astype(dtype)
+    return target_df
+
+
 def update_mip_raw_tables():
     """Update MIP raw tables including the general ledger and chart of accounts"""
     access_token = None
@@ -194,24 +224,7 @@ def update_mip_raw_tables():
         df = results.fetch_pandas_all()
 
         ledgers_df.columns = ledgers_df.columns.str.upper()
-
-        for col, dtype in df.dtypes.items():
-            if col in ledgers_df.columns:
-                if "int" in str(dtype):
-                    # Replace empty strings or nulls with NaN, then cast safely
-                    ledgers_df[col] = (
-                        pd.to_numeric(ledgers_df[col], errors="coerce")
-                        .fillna(0)
-                        .astype(dtype)
-                    )
-                elif "float" in str(dtype):
-                    ledgers_df[col] = (
-                        pd.to_numeric(ledgers_df[col], errors="coerce")
-                        .fillna(0)
-                        .astype(dtype)
-                    )
-                else:
-                    ledgers_df[col] = ledgers_df[col].astype(dtype)
+        ledgers_df = cast_df_types(df, ledgers_df)
         results = write_pandas(
             ctx, ledgers_df, "ledgers", quote_identifiers=False, use_logical_type=True
         )
@@ -237,24 +250,7 @@ def update_mip_raw_tables():
         df = results.fetch_pandas_all()
 
         chart_of_accounts_df.columns = chart_of_accounts_df.columns.str.upper()
-
-        for col, dtype in df.dtypes.items():
-            if col in chart_of_accounts_df.columns:
-                if "int" in str(dtype):
-                    # Replace empty strings or nulls with NaN, then cast safely
-                    chart_of_accounts_df[col] = (
-                        pd.to_numeric(chart_of_accounts_df[col], errors="coerce")
-                        .fillna(0)
-                        .astype(dtype)
-                    )
-                elif "float" in str(dtype):
-                    chart_of_accounts_df[col] = (
-                        pd.to_numeric(chart_of_accounts_df[col], errors="coerce")
-                        .fillna(0)
-                        .astype(dtype)
-                    )
-                else:
-                    chart_of_accounts_df[col] = chart_of_accounts_df[col].astype(dtype)
+        chart_of_accounts_df = cast_df_types(df, chart_of_accounts_df)
         results = write_pandas(
             ctx,
             chart_of_accounts_df,
