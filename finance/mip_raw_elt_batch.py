@@ -33,12 +33,12 @@ conn_params = {
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
-_mips_url_login = "https://login.mip.com/api/v1/sso/mipadv/login"
+MIPS_URL_LOGIN_API = "https://login.mip.com/api/v1/sso/mipadv/login"
 # https://documentation.mip.com/#/swagger/recursiveTransaction/transactions/recursiveTransactions
-_ledger_api = "https://api.mip.com/api/v1/recursiveTransactions/GeneralLedger/posted"
+LEDGER_API = "https://api.mip.com/api/v1/recursiveTransactions/GeneralLedger/posted"
 # https://documentation.mip.com/#/swagger/maintenance/generalLedger/chartOfAccounts
-_chart_of_accounts_api = "https://api.mip.com/api/v1/maintain/ChartOfAccounts"
-_mips_url_logout = "https://api.mip.com/api/security/logout"
+CHART_OF_ACCOUNTS_API = "https://api.mip.com/api/v1/maintain/ChartOfAccounts"
+MIPS_URL_LOGOUT_API = "https://api.mip.com/api/security/logout"
 
 
 @backoff.on_exception(backoff.expo, (RequestError, RequestException), max_time=11)
@@ -52,7 +52,7 @@ def _request_login(creds):
     LOG.info("Logging in to upstream API")
 
     login_response = requests.post(
-        _mips_url_login,
+        MIPS_URL_LOGIN_API,
         json=creds,
         timeout=timeout,
     )
@@ -77,7 +77,7 @@ def _request_logout(access_token):
     LOG.info("Logging out of upstream API")
 
     requests.post(
-        _mips_url_logout,
+        MIPS_URL_LOGOUT_API,
         headers={"Authorization-Token": access_token},
         timeout=timeout,
     )
@@ -102,7 +102,7 @@ def get_ledgers(
     """
     all_ledgers = []
     initial_ledgers = requests.get(
-        _ledger_api,
+        LEDGER_API,
         headers={
             "Authorization-Token": access_token,
         },
@@ -145,7 +145,7 @@ def get_chart_of_accounts(
     """
     all_ledgers = []
     initial_ledgers = requests.get(
-        _chart_of_accounts_api,
+        CHART_OF_ACCOUNTS_API,
         headers={
             "Authorization-Token": access_token,
         },
@@ -154,7 +154,7 @@ def get_chart_of_accounts(
     total_records = initial_ledgers.json()["total"]
     while len(all_ledgers) < total_records:
         ledgers = requests.get(
-            _chart_of_accounts_api,
+            CHART_OF_ACCOUNTS_API,
             headers={
                 "Authorization-Token": access_token,
             },
