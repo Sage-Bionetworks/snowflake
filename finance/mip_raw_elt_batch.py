@@ -88,7 +88,7 @@ def get_ledgers(
     max_session_posted_date: str = "2025-01-24 23:48:49.000",
     page_number: int = 0,
     page_size: int = 20,
-):
+) -> list[dict]:
     """Get ledgers from the MIP API
 
     Args:
@@ -98,7 +98,7 @@ def get_ledgers(
         page_size (int, optional): _description_. Defaults to 20.
 
     Returns:
-        _type_: _description_
+        list[dict]: An array of ledgers
     """
     all_ledgers = []
     initial_ledgers = requests.get(
