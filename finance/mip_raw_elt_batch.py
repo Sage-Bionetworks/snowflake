@@ -195,24 +195,22 @@ def cast_df_types(source_df: pd.DataFrame, target_df: pd.DataFrame) -> pd.DataFr
     return target_df
 
 
-def update_mip_raw_tables():
-    """Update MIP raw tables including the general ledger and chart of accounts"""
-    access_token = None
-    mips_creds = {
-        "username": "itops",
-        "password": MIP_AUTH,
-        "org": "SAGE_24146",
-    }
-    access_token = _request_login(mips_creds)
-    ctx = sc.connect(**conn_params)
-    cs = ctx.cursor()
+def update_ledgers(cs: sc.SnowflakeCursor, ctx: sc.SnowflakeConnection, access_token: str) -> str:
+    """Update the ledgers table in Snowflake
+
+    Args:
+        cs (sc.SnowflakeCursor): Snowflake cursor object
+        ctx (sc.SnowflakeConnection): Snowflake connection object
+        access_token (str): MIP access token
+
+    Returns:
+        str: Message indicating the result of the ledger update
+    """
     results = cs.execute(
         "SELECT MAX(SESSIONPOSTEDDATE) as max_session_posted_date FROM finance.mip_raw.ledgers"
     )
     max_session_posted_date = results.fetchone()[0]
-    # df = results.fetch_pandas_all()
     formatted_dt = max_session_posted_date.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-
     ledgers = get_ledgers(
         access_token, max_session_posted_date=formatted_dt, page_size=1000
     )
@@ -229,14 +227,24 @@ def update_mip_raw_tables():
             ctx, ledgers_df, "ledgers", quote_identifiers=False, use_logical_type=True
         )
         if results[0]:
-            ledger_message = f"ledger appended with {results[2]} rows"
+            return f"ledger appended with {results[2]} rows"
         else:
-            ledger_message = "ledger append failed"
+            return "ledger append failed"
     else:
-        ledger_message = "No new ledgers to append"
-    LOG.info(ledger_message)
+        return "No new ledgers to append"
 
-    # Update chart of accounts
+
+def update_chart_of_accounts(cs: sc.SnowflakeCursor, ctx: sc.SnowflakeConnection, access_token: str) -> str:
+    """Update the chart of accounts table in Snowflake
+
+    Args:
+        cs (sc.SnowflakeCursor): Snowflake cursor object
+        ctx (sc.SnowflakeConnection): Snowflake connection object
+        access_token (str): MIP access token
+
+    Returns:
+        str: Message indicating the result of the chart of accounts update
+    """
     results = cs.execute(
         "SELECT count(*) as total_coa FROM finance.mip_raw.chart_of_accounts"
     )
@@ -260,11 +268,29 @@ def update_mip_raw_tables():
             use_logical_type=True,
         )
         if results[0]:
-            coa_message = f"Chart of accounts updated with {results[2]} rows"
+            return f"Chart of accounts updated with {results[2]} rows"
         else:
-            coa_message = "Chart of accounts update failed"
+            return "Chart of accounts update failed"
     else:
-        coa_message = "No new chart of accounts to update"
+        return "No new chart of accounts to update"
+
+
+def update_mip_raw_tables():
+    """Update MIP raw tables including the general ledger and chart of accounts"""
+    access_token = None
+    mips_creds = {
+        "username": "itops",
+        "password": MIP_AUTH,
+        "org": "SAGE_24146",
+    }
+    access_token = _request_login(mips_creds)
+    ctx = sc.connect(**conn_params)
+    cs = ctx.cursor()
+
+    ledger_message = update_ledgers(cs=cs, ctx=ctx, access_token=access_token)
+    LOG.info(ledger_message)
+
+    coa_message = update_chart_of_accounts(cs=cs, ctx=ctx, access_token=access_token)
     LOG.info(coa_message)
 
     syn = synapseclient.login(authToken=SYNAPSE_AUTH_TOKEN)
