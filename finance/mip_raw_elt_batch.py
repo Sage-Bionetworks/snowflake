@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import List
 
 import backoff
 import pandas as pd
@@ -74,7 +75,7 @@ def get_ledgers(
     max_session_posted_date: str = "2025-01-24 23:48:49.000",
     page_number: int = 0,
     page_size: int = 20,
-) -> list[dict]:
+) -> List[dict]:
     """Get ledgers from the MIP API
 
     Args:
