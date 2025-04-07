@@ -17,7 +17,7 @@ CREATE OR REPLACE DYNAMIC TABLE SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE.FILED
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = 'This dynamic table contains the latest direct and zip/package file handle download attempts. A file handle will either download via zip/package or by itself, but not both.  '
+    COMMENT = 'This dynamic table, indexed by the USER_ID, ASSOCIATION_OBJECT_ID and RECORD_DATE columns, contains the most recent file download events.'
     AS
     WITH dedup_filedownload AS (
         SELECT
@@ -35,50 +35,11 @@ CREATE OR REPLACE DYNAMIC TABLE SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE.FILED
         FROM {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD --noqa: TMP
         QUALIFY
             ROW_NUMBER() OVER (
-                PARTITION BY USER_ID, FILE_HANDLE_ID, DOWNLOADED_FILE_HANDLE_ID, RECORD_DATE
+                PARTITION BY USER_ID, ASSOCIATION_OBJECT_ID, RECORD_DATE
                 ORDER BY TIMESTAMP DESC, RECORD_DATE DESC
             ) = 1
-    ),
-    zip_download AS ( -- Assume that each user downloads a zip/package only once per day.
-        SELECT
-            *
-        FROM dedup_filedownload --noqa: TMP
-        WHERE
-            file_handle_id != downloaded_file_handle_id
-        QUALIFY
-            ROW_NUMBER() OVER (
-                PARTITION BY USER_ID, DOWNLOADED_FILE_HANDLE_ID, RECORD_DATE
-                ORDER BY TIMESTAMP DESC, RECORD_DATE DESC
-            ) = 1
-    ),
-    direct_download AS ( -- Assume that if a file handle is obtained through a zip/package download, direct download is not implemented.
-        SELECT
-            *
-        FROM
-            dedup_filedownload
-        WHERE
-            file_handle_id = downloaded_file_handle_id
-        AND file_handle_id not in (
-            SELECT
-                file_handle_id
-            FROM
-                dedup_filedownload
-            WHERE
-                file_handle_id != downloaded_file_handle_id
-        )
     )
     SELECT 
-        *
-    FROM
-        zip_download
-    UNION ALL
-    
-    SELECT 
-        *
-    FROM
-        direct_download
-    ORDER BY 
-        USER_ID, 
-        FILE_HANDLE_ID, 
-        DOWNLOADED_FILE_HANDLE_ID, 
-        RECORD_DATE;
+    *
+    FROM 
+        dedup_filedownload;
