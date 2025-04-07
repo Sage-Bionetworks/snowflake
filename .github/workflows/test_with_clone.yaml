@@ -139,11 +139,11 @@ jobs:
               run: |
                 snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
 
-            - name: Grant account role PROXY_ADMIN to user SNOWFLAKE_ACCOUNT
-              shell: bash
-              run: |
-                # Briefly switch to ACCOUNTADMIN and grant the PROXY_ADMIN role to service account
-                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO USER DPE_SERVICE;"
+            # - name: Grant account role PROXY_ADMIN to DPE_SERVICE
+            #   shell: bash
+            #   run: |
+            #     # Briefly switch to ACCOUNTADMIN and grant the PROXY_ADMIN role to service account
+            #     snow sql -q "USE ROLE ACCOUNTADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO USER DPE_SERVICE;"
 
             - name: Grant USAGE of clone database to PROXY_ADMIN
               shell: bash
