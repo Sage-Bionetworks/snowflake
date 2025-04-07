@@ -125,8 +125,8 @@ jobs:
             - name: Create account role PROXY_ADMIN
               shell: bash
               run: |
-                # Briefly switch to ACCOUNTADMIN and create the <CLONE>_PROXY_ADMIN role
-                snow sql -q "USE ROLE ACCOUNTADMIN; CREATE OR REPLACE ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                # Briefly switch roles and create the <CLONE>_PROXY_ADMIN role
+                snow sql -q "USE ROLE USERADMIN; CREATE OR REPLACE ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
             ########################################################################################################
@@ -288,4 +288,4 @@ jobs:
           - name: Drop <CLONE>_PROXY_ADMIN (if it exists)
             shell: bash
             run: |
-              snow sql -q "USE ROLE ACCOUNTADMIN; DROP ROLE IF EXISTS ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+              snow sql -q "USE ROLE USERADMIN; DROP ROLE IF EXISTS ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
