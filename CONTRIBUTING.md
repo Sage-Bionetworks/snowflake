@@ -2,7 +2,7 @@
 
 Welcome, and thanks for your interest in contributing to the `snowflake` repository! :snowflake:
 
-By contributing, you are agreeing that we may redistribute your work under this [license](https://github.com/Sage-Bionetworks/snowflake/tree/snow-90-auto-db-clone?tab=License-1-ov-file#).
+By contributing, you are agreeing that we may redistribute your work under this [license](https://github.com/Sage-Bionetworks/snowflake?tab=Apache-2.0-1-ov-file).
 
 ## Development Rules
 
