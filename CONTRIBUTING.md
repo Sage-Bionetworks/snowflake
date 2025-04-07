@@ -15,7 +15,8 @@ There are some things you should make a note of before getting started...
    
 ## Getting Started
 
-To start contributing, follow these steps to set up and develop on your local repository:
+To start contributing, follow the steps below to set up and develop on your local repository. Please note that you must work
+on a branch off the original repository rather than a fork.
 
 ### 1. Clone the Repository
 
