@@ -3,7 +3,7 @@ name: Test Changes with Cloned DB
 
 on:
     pull_request:
-        types: [ synchronize, closed ]
+        types: [ opened, synchronize, reopened, closed ]
 
 permissions:
     contents: read

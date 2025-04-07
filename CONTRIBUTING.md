@@ -70,7 +70,7 @@ This repository includes automated CI jobs to validate changes against a cloned 
 
 ### 1. Add the Label
 
-By default, each new commit you make in a PR AFTER you have initialized it will trigger the `create_clone_and_run_schemachange` job for your branch (commits made before the PR existed will not be tested). This job does two things:
+By default, each new commit you make in a PR once you have initialized it will trigger the `create_clone_and_run_schemachange` job for your branch. This job does two things:
 
 1. Creates a zero-copy clone of the database and runs your proposed schema changes against it.
 2. Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
@@ -83,8 +83,7 @@ Please be mindful that each commit after initializing your PR will trigger this 
 > **there may have been changes made to the development database since your last clone**. To see the latest changes on
 > the development database, you can view the commit history in the `dev` branch.
 
-> [!NOTE]
-> By default, after initializing the PR, every commit you make in your branch will trigger the clone to be created and schemachange to be executed.
+> [!TIP]
 > If you are not making changes that require schemachange to run (e.g. documentation updates, or any changes outside of the
 > `synapse_data_warehouse` folder) you can opt-out of these workflow runs by adding the `skip_cloning` label to your PR.
 
