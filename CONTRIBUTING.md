@@ -92,8 +92,9 @@ Please be mindful that each commit after initializing your PR will trigger this 
 
 You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
 
-> [!TIP]
-> Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
+> [!NOTE]
+> * You must have access to the `DATA_ENGINEER` role in order to see your cloned database and the changes within it.
+> * Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
 > `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
 
 ### 3. Manually Drop the Cloned Database (Optional)
