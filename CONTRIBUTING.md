@@ -72,8 +72,8 @@ This repository includes automated CI jobs to validate changes against a cloned 
 
 By default, each new commit you make in a PR once you have initialized it will trigger the `create_clone_and_run_schemachange` job for your branch. This job does two things:
 
-1. Creates a zero-copy clone of the database and runs your proposed schema changes against it.
-2. Tests your schema changes on a cloned version of the development database, verifying that your updates work correctly without
+1. Creates a zero-copy clone of the database and runs your proposed changes to your schema against it.
+2. Tests your changes to your schema on a cloned version of the development database, verifying that your updates work correctly without
 affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
 
 Please be mindful that each commit after initializing your PR will trigger this job to run. As such, a new database is created and new assets are generated each time using `schemachange`. To avoid conflicts from back-to-back commits and ensure your cloned database contains the very latest changes, we have implemented a failsafe to interrupt incomplete runs when new runs are introduced. If you find that one of your deployments failed, it is possible the failure was due to this failsafe, as a result of many commits at once.
@@ -89,12 +89,12 @@ Please be mindful that each commit after initializing your PR will trigger this 
 
 ### 2. Perform Inspection using Snowsight
 
-You can go on Snowsight to perform manual inspection of the schema changes in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
+You can go on Snowsight to perform manual inspection of the changes to your schema in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
 
 > [!NOTE]
 > * You must have access to the `DATA_ENGINEER` role in order to see your cloned database and the changes within it.
 > * Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
-> `snow-123-new-feature`, your database might be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
+> `snow-123-new-feature`, your database will be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
 
 ### 3. Manually Drop the Cloned Database (Optional)
 
@@ -102,7 +102,7 @@ There is a second job in the repository (`drop_clone`) that will drop your branc
 In other words, once your cloned database is created for testing, it will remain open until your PR is closed (unless you manually drop it).
 
 An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
-(e.g. new schema changes are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
+(e.g. new changes to your schema are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
 **Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. For example, if your PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
 
 > [!NOTE]
