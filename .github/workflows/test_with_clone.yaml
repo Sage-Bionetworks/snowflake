@@ -198,7 +198,7 @@ jobs:
        
     drop_clone:
       runs-on: ubuntu-latest
-      if: github.event.pull_request.merged == true || github.event.action == 'closed'
+      if: github.event.action == 'closed'
       environment: dev
       env:
           # Establish the snowflake account credentials
