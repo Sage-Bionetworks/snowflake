@@ -108,7 +108,7 @@ An initial clone of the development database will not incur new resource costs, 
 > [!NOTE]
 > Keep in mind that after dropping your cloned database, you will still have access to it through Snowflake's "Time Travel"
 > feature. Your database is retained through "Time Travel" for X amount of time before it is permanently deleted. To see
-> how long your database can be accessed after dropping, run the following query in a SQL worksheet on Snowsight and look
+> how long your database can be accessed if you drop it, run the following query in a SQL worksheet on Snowsight and look
 > for the keyword `DATA_RETENTION_TIME_IN_DAYS`:
 > 
 > ```
