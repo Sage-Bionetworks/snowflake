@@ -134,7 +134,7 @@ jobs:
             ########################################## MANAGING GRANTS #############################################
             ########################################################################################################
             ########################################################################################################
-            - name: Grant USAGE of clone database to DATA_ENGINEER
+            - name: Grant USAGE of clone database to SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
               run: |
                 snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
@@ -172,7 +172,7 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
-            - name: Grant USAGE on <CLONE>_PROXY_ADMIN to DATA_ENGINEER
+            - name: Grant USAGE on <CLONE>_PROXY_ADMIN to SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
               run: |
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
@@ -183,7 +183,7 @@ jobs:
             ##################################### RUNNING SCHEMACHANGE #############################################
             ########################################################################################################
             ########################################################################################################
-            - name: Run schemachange on the clone as DATA_ENGINEER
+            - name: Run schemachange on the clone as SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
               run: |
                 schemachange \
