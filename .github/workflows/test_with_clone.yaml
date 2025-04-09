@@ -27,7 +27,7 @@ jobs:
             # Establish the account roles to be used
             SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
             SNOWFLAKE_PROXY_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_PROXY_ADMIN"
-            SNOWFLAKE_CLONE_ROLE: DATA_ENGINEER
+            SNOWFLAKE_CLONE_ADMIN_ROLE: DATA_ENGINEER
 
             # Establish the domains
             SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
@@ -137,7 +137,7 @@ jobs:
             - name: Grant USAGE of clone database to DATA_ENGINEER
               shell: bash
               run: |
-                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
 
             - name: Grant USAGE of clone database to PROXY_ADMIN
               shell: bash
@@ -175,7 +175,7 @@ jobs:
             - name: Grant USAGE on <CLONE>_PROXY_ADMIN to DATA_ENGINEER
               shell: bash
               run: |
-                snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
 
 
             ########################################################################################################
@@ -190,7 +190,7 @@ jobs:
                 -f synapse_data_warehouse \
                 -a $SNOWFLAKE_ACCOUNT \
                 -u $SNOWFLAKE_USER \
-                -r $SNOWFLAKE_CLONE_ROLE \
+                -r $SNOWFLAKE_CLONE_ADMIN_ROLE \
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse \
                 -v  # Enable verbose logging
