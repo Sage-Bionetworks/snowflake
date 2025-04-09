@@ -189,7 +189,7 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT USAGE ON SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SCHEMACHANGE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
-            - name: Grant USAGE on PROXY_ADMIN to DE
+            - name: Grant USAGE on <CLONE>_PROXY_ADMIN to DATA_ENGINEER
               shell: bash
               run: |
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ROLE};"
