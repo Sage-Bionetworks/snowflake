@@ -70,7 +70,7 @@ This repository includes automated CI jobs to validate changes against a cloned 
 
 ### 1. Add the Label
 
-By default, each new commit you make in a PR once you have initialized it will trigger the `create_clone_and_run_schemachange` job for your branch. This job does two things:
+By default, each new commit you make in a PR once you have initialized it will trigger the `test_with_clone` job for your branch. This job does two things:
 
 1. Creates a zero-copy clone of the database and runs your proposed changes to your schema against it.
 2. Tests your changes to your schema on a cloned version of the development database, verifying that your updates work correctly without
