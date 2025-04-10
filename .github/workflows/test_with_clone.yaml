@@ -134,15 +134,6 @@ jobs:
             ########################################## MANAGING GRANTS #############################################
             ########################################################################################################
             ########################################################################################################
-            - name: Grant USAGE of clone database to SNOWFLAKE_CLONE_ADMIN_ROLE
-              shell: bash
-              run: |
-                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-
-            - name: Grant USAGE of clone database to PROXY_ADMIN
-              shell: bash
-              run: |
-                snow sql -q "GRANT USAGE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
             - name: Transfer ownership of current and future tasks and dynamic tables to PROXY_ADMIN
               shell: bash
