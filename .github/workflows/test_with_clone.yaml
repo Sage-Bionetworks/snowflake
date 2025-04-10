@@ -177,6 +177,16 @@ jobs:
               run: |
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
 
+            - name: Grant database-level privileges to SNOWFLAKE_CLONE_ADMIN_ROLE
+              shell: bash
+              run: |
+                # Grant database privileges to the clone admin. These are privileges that would have otherwise come with the ownership of the clone,
+                # but since the clone admin is acting as a pseudo-admin and does not directly own the clone, these need to be granted explicitly.
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT MODIFY ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT CREATE SCHEMA ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
+                snow sql -q "USE ROLE SECURITYADMIN; GRANT CREATE DATABASE ROLE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
+
 
             ########################################################################################################
             ########################################################################################################
