@@ -68,7 +68,9 @@ you can then take your PR out of draft mode by marking it as Ready for Review in
 
 This repository includes automated CI jobs to validate changes against a cloned database. If you want to trigger these jobs to test your changes in an isolated database environment on Snowflake, please follow the steps below:
 
-### 1. Add the Label
+----
+
+### 1. Make A Commit
 
 By default, each new commit you make in a PR once you have initialized it will trigger the `test_with_clone` job for your branch. This job does two things:
 
@@ -87,6 +89,8 @@ Please be mindful that each commit after initializing your PR will trigger this 
 > If you are not making changes that require schemachange to run (e.g. documentation updates, or any changes outside of the
 > `synapse_data_warehouse` folder) you can opt-out of these workflow runs by adding the `skip_cloning` label to your PR.
 
+----
+
 ### 2. Perform Inspection using Snowsight
 
 You can go on Snowsight to perform manual inspection of the changes to your schema in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
@@ -96,14 +100,27 @@ You can go on Snowsight to perform manual inspection of the changes to your sche
 > * Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
 > `snow-123-new-feature`, your database will be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
 
+----
+
 ### 3. Manually Drop the Cloned Database (Optional)
 
-There is a second job in the repository (`drop_clone`) that will drop your branch's database clone once it has been merged into `dev`.
-In other words, once your cloned database is created for testing, it will remain open until your PR is closed (unless you manually drop it).
+It's important to note that once your cloned database is created for testing, it will remain open until your PR is closed (unless you manually drop it).
 
 An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
 (e.g. new changes to your schema are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
 **Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. For example, if your PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
+
+To manually drop your clone:
+
+1. Log onto Snowsight (the Snowflake web client)
+2. Navigate to `databases` on the sidebar:
+
+   <img width="200" alt="image" src="https://github.com/user-attachments/assets/076f6a68-69e6-4072-8562-753769be1a93" />
+
+3. Navigate to your clone in the new panel, and hit `Drop clone` from the `...` dropdown:
+
+   <img width="939" alt="image" src="https://github.com/user-attachments/assets/3155b26b-ced0-44f6-8563-6da4daf9cf0e" />
+
 
 > [!NOTE]
 > Keep in mind that after dropping your cloned database, you will still have access to it through Snowflake's "Time Travel"
@@ -114,6 +131,8 @@ An initial clone of the development database will not incur new resource costs, 
 > ```
 > SHOW PARAMETERS IN DATABASE <your-database-name>;
 > ```
+
+----
 
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
 
