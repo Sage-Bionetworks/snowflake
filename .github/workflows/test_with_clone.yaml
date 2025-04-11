@@ -192,8 +192,7 @@ jobs:
                 -u $SNOWFLAKE_USER \
                 -r $SNOWFLAKE_CLONE_ADMIN_ROLE \
                 -w $SNOWFLAKE_WAREHOUSE \
-                --config-folder synapse_data_warehouse \
-                -v  # Enable verbose logging
+                --config-folder synapse_data_warehouse
 
        
     drop_clone:
