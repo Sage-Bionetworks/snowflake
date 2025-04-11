@@ -4,6 +4,8 @@ name: Test Changes with Cloned DB
 on:
     pull_request:
         types: [ opened, synchronize, reopened, closed ]
+        branches:
+          - dev
 
 permissions:
     contents: read
