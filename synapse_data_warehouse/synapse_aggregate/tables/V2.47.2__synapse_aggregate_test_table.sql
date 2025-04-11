@@ -1,4 +1,4 @@
-USE DATABASE {{ database_name }}; --noqa: JJ01,PRS,TMP
+USE SCHEMA {{ database_name }}.SYNAPSE_AGGREGATE; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE TABLE dummy_table (
     id INT,
