@@ -102,35 +102,15 @@ You can go on Snowsight to perform manual inspection of the changes to your sche
 
 ----
 
-### 3. Manually Drop the Cloned Database (Optional)
+### 3. Dropping the Cloned Database
 
-It's important to note that once your cloned database is created for testing, it will remain open until your PR is closed (unless you manually drop it).
-
-An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
-(e.g. new changes to your schema are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
-**Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged. For example, if your PR is open for >1 week, consider manually dropping your cloned database on Snowflake to avoid unnecessary cost.
-
-To manually drop your clone:
-
-1. Log onto Snowsight (the Snowflake web client)
-2. Navigate to `Databases` on the sidebar:
-
-   <img width="200" alt="image" src="https://github.com/user-attachments/assets/076f6a68-69e6-4072-8562-753769be1a93" />
-
-3. Navigate to your clone in the new panel, and hit `Drop` from the `...` dropdown:
-
-   <img width="939" alt="image" src="https://github.com/user-attachments/assets/3155b26b-ced0-44f6-8563-6da4daf9cf0e" />
-
+Once your cloned database is created for testing, it will remain open until your PR is closed. Once your PR is closed or merged into its target branch (`dev`),
+a job will trigger that automatically drops the cloned database which corresponds to your branch.
 
 > [!NOTE]
-> Keep in mind that after dropping your cloned database, you will still have access to it through Snowflake's "Time Travel"
-> feature. Your database is retained through "Time Travel" for X amount of time before it is permanently deleted. To see
-> how long your database can be accessed if you drop it, run the following query in a SQL worksheet on Snowsight and look
-> for the keyword `DATA_RETENTION_TIME_IN_DAYS`:
-> 
-> ```
-> SHOW PARAMETERS IN DATABASE <your-database-name>;
-> ```
+> An initial clone of the development database will not incur new resource costs, **HOWEVER**, when a clone deviates from the original
+> (e.g. new changes to your schema are applied for testing), the cloned database will begin to incur costs the longer it exists in our warehouse.
+> **Please be mindful of the amount of time your PR stays open**, as cloned databases do not get dropped until a PR is merged.
 
 ----
 
