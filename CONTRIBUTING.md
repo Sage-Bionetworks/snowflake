@@ -113,11 +113,11 @@ An initial clone of the development database will not incur new resource costs, 
 To manually drop your clone:
 
 1. Log onto Snowsight (the Snowflake web client)
-2. Navigate to `databases` on the sidebar:
+2. Navigate to `Databases` on the sidebar:
 
    <img width="200" alt="image" src="https://github.com/user-attachments/assets/076f6a68-69e6-4072-8562-753769be1a93" />
 
-3. Navigate to your clone in the new panel, and hit `Drop clone` from the `...` dropdown:
+3. Navigate to your clone in the new panel, and hit `Drop` from the `...` dropdown:
 
    <img width="939" alt="image" src="https://github.com/user-attachments/assets/3155b26b-ced0-44f6-8563-6da4daf9cf0e" />
 
