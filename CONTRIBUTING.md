@@ -56,34 +56,26 @@ Once you've made your changes and committed them locally, push your branch to th
 git push origin snow-123-new-feature
 ```
 
-### 5. Create a Draft Pull Request
+### 5. Open a Draft Pull Request
 
-In order to initiate automated testing you will need to work on a draft pull request (PR) on GitHub. After pushing your commits to
-the remote branch in Step 4, use the GitHub UI to initate a PR and convert it to draft mode.
+After pushing your commits in Step 4 to your remote branch, open a pull request (PR) against the dev branch using the GitHub UI. Start your PR in draft mode, and mark it as ready for review after you've implemented all your necessary changes.
 
-After testing your changes against `schemachange` using the instructions in [Running CI Jobs for Database Testing](#running-ci-jobs-for-database-testing),
-you can then take your PR out of draft mode by marking it as Ready for Review in the GitHub UI.
+Opening your PR (whether in draft or not) will trigger the automated test workflows described in the next section. We recommend reading that section to understand how to further test your changes, OR if you are not introducing changes to the actual Snowflake data repository and want a way to opt-out of these workflow runs.
 
 ## Running CI Jobs for Database Testing
 
-This repository includes automated CI jobs to validate changes against a cloned database. If you want to trigger these jobs to test your changes in an isolated database environment on Snowflake, please follow the steps below:
+This repository includes automated CI jobs designed to validate your changes against a cloned version of the database in an isolated environment on Snowflake. Please follow the instructions below to enable this testing:
 
 ----
 
-### 1. Make A Commit
+### 1. Open a Draft Pull Request (if not done already)
 
-By default, each new commit you make in a PR once you have initialized it will trigger the `test_with_clone` job for your branch. This job does two things:
+The moment your draft PR is created, the `test_with_clone` workflow is triggered automatically for your branch. This workflow performs two primary actions:
 
-1. Creates a zero-copy clone of the database and runs your proposed changes to your schema against it.
-2. Tests your changes to your schema on a cloned version of the development database, verifying that your updates work correctly without
-affecting the real development database. After the PR is merged, the clone is automatically dropped to free up resources.
+* Database Cloning: It creates a zero‑copy clone of the development database and applies your schema changes to this clone.
+* Schema Validation: It runs tests against the cloned database to verify that your updates work correctly without affecting the production development environment.
 
-Please be mindful that each commit after initializing your PR will trigger this job to run. As such, a new database is created and new assets are generated each time using `schemachange`. To avoid conflicts from back-to-back commits and ensure your cloned database contains the very latest changes, we have implemented a failsafe to interrupt incomplete runs when new runs are introduced. If you find that one of your deployments failed, it is possible the failure was due to this failsafe, as a result of many commits at once.
-
-> [!IMPORTANT]
-> Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that
-> **there may have been changes made to the development database since your last clone**. To see the latest changes on
-> the development database, you can view the commit history in the `dev` branch.
+After your changes have been successfully validated, you can mark the PR as Ready for Review to proceed to the next steps.
 
 > [!TIP]
 > If you are not making changes that require schemachange to run (e.g. documentation updates, or any changes outside of the
@@ -91,7 +83,23 @@ Please be mindful that each commit after initializing your PR will trigger this 
 
 ----
 
-### 2. Perform Inspection using Snowsight
+### 2. Make A Commit
+
+Once the draft PR is in place, any new commit you push to the branch will re-trigger the `test_with_clone` job. Each commit generates a new database clone where your updated schema is tested. Note the following:
+
+* Per-Commit Testing: Every commit triggers a fresh run of the `test_with_clone` job to ensure that your cloned database always reflects your most recent changes.
+* Failsafe Mechanism: To prevent conflicts from rapid, successive commits, the system interrupts any incomplete test runs when a new commit is detected. If you encounter any deployment failures, it may be due to this failsafe interrupting overlapping runs.
+
+By organizing the process in this way, the draft PR creation is clearly established as the initial trigger for testing, followed by commits that update and re-run the tests as needed.
+
+> [!IMPORTANT]
+> Your cloned database is a clone of the development database as it exists at the time of cloning. Please be mindful that
+> **there may have been changes made to the development database since your last clone**. To see the latest changes on
+> the development database, you can view the commit history in the `dev` branch.
+
+----
+
+### 3. Perform Inspection using Snowsight
 
 You can go on Snowsight to perform manual inspection of the changes to your schema in your cloned database. We recommend using a SQL worksheet for manual quality assurance queries, e.g. to ensure there is no row duplication in the new/updated tables.
 
@@ -102,7 +110,7 @@ You can go on Snowsight to perform manual inspection of the changes to your sche
 
 ----
 
-### 3. Dropping the Cloned Database
+### 4. Dropping the Cloned Database
 
 Once your cloned database is created for testing, it will remain open until your PR is closed. Once your PR is closed or merged into its target branch (`dev`),
 a job will trigger that automatically drops the cloned database which corresponds to your branch.
