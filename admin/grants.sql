@@ -186,7 +186,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "andrea.varsavsky@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "serghei.mangul@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jaclyn.beck@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ziwei.pan@sagebase.org";
-
+GRANT ROLE DATA_ANALYTICS TO USER "jessica.britton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
