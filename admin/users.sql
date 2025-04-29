@@ -42,6 +42,7 @@ CREATE USER IF NOT EXISTS "william.poehlman@sagebase.org";
 CREATE USER IF NOT EXISTS "jo.scanlan@sagebase.org";
 CREATE USER IF NOT EXISTS "trisha.zintel@sagebase.org";
 CREATE USER IF NOT EXISTS "bishoy.kamel@sagebase.org";
+CREATE USER IF NOT EXISTS "jaclyn.beck@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 
 // NF
@@ -50,6 +51,7 @@ CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
 CREATE USER IF NOT EXISTS "christina.parry@sagebase.org";
 CREATE USER IF NOT EXISTS "jineta.banerjee@sagebase.org";
 CREATE USER IF NOT EXISTS "aditi.gopalan@sagebase.org";
+CREATE USER IF NOT EXISTS "ziwei.pan@sagebase.org";
 
 
 // Digital Health
