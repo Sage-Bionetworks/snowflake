@@ -12,7 +12,7 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 	    SNAPSHOT_DATE DATE COMMENT 'Date the aggregation was calculated and stored in the table.',
         IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
-    TARGET LAG = '1 day'
+    TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     COMMENT = 'This table shows the total number of unique users uploading to Synapse across yearly, monthly, and daily aggregate periods.'
     AS
