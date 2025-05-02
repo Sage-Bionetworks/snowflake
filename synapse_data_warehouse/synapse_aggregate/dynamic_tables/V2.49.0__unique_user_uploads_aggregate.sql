@@ -2,18 +2,19 @@ USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
     (
-	    CHANGE_TYPE VARCHAR(16777216) COMMENT 'The type of change that occurred to the member of team, e.g., CREATE, UPDATE (Snapshotting does not capture DELETE change).',
-	    CHANGE_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when any change to the team was made (e.g. update of the team or a change to its members).',
-	    CHANGE_USER_ID NUMBER(38,0) COMMENT 'The unique identifier of the user who made the change to the team member.',
-	    SNAPSHOT_TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the snapshot was taken (It is usually after the change happened).',
-	    TEAM_ID NUMBER(38,0) COMMENT 'The unique identifier of the team.',
-	    MEMBER_ID NUMBER(38,0) COMMENT 'The unique identifier of the member of the team. The member is a Synapse user.',
-	    IS_ADMIN BOOLEAN COMMENT 'If true, then the member is manager of the team.',
-	    SNAPSHOT_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The snapshot_timestamp field is converted into a date and stored in the snapshot_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.'
+	    GRANULARITY VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY).',
+	    UNIQUE_USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.',
+	    YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
+        MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
+        DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
+        AGGREGATE_PERIOD_START DATE COMMENT 'The time when any change to the team was made (e.g. update of the team or a change to its members).',
+        AGGREGATE_PERIOD_STOP DATE COMMENT 'The time when any change to the team was made (e.g. update of the team or a change to its members).',
+	    SNAPSHOT_DATE DATE COMMENT 'Date the aggregation was calculated and stored in the table.',
+        IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
     TARGET LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = ''
+    COMMENT = 'This table shows the total number of unique users uploading to Synapse across yearly, monthly, and daily aggregate periods.'
     AS
     WITH unique_users_rollup AS (
 
