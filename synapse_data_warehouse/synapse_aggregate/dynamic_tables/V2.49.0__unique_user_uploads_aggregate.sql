@@ -19,9 +19,9 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
     WITH unique_users_rollup AS (
 
         SELECT
-            YEAR(record_date)  AS aggregate_year,
-            MONTH(record_date) AS aggregate_month,
-            DAY(record_date)   AS aggregate_day,
+            YEAR(record_date)  AS year,
+            MONTH(record_date) AS month,
+            DAY(record_date)   AS day,
             COUNT(DISTINCT user_id) AS unique_user_count,
             GROUPING(day)   AS g_day,
             GROUPING(month) AS g_month,
@@ -37,9 +37,9 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
             -- 1. Grab the relevant original columns
             unique_user_count,
-            aggregate_year,
-            aggregate_month,
-            aggregate_day,
+            year,
+            month,
+            day,
 
             -- 2. Create `granularity` column...
             --    Determine granularity based on which dimensions were rolled up
@@ -51,9 +51,9 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
             -- 3. Create `aggregate_period_start` column
             CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(aggregate_year, aggregate_month, aggregate_day)
-                WHEN g_month = 0 THEN DATE_FROM_PARTS(aggregate_year, aggregate_month, 1)
-                ELSE DATE_FROM_PARTS(aggregate_year, 1, 1)
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
+                WHEN g_month = 0 THEN DATE_FROM_PARTS(year, month, 1)
+                ELSE DATE_FROM_PARTS(year, 1, 1)
             END AS aggregate_period_start,
 
             -- 4. Create `snapshot_date` column...
@@ -62,16 +62,16 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
             -- 5. Create `aggregate_period_stop` column (inclusive)
             CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(aggregate_year, aggregate_month, aggregate_day)
-                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(aggregate_year, aggregate_month, 1))
-                ELSE LAST_DAY(DATE_FROM_PARTS(aggregate_year, 1, 1), 'YEAR')
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
+                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(year, month, 1))
+                ELSE LAST_DAY(DATE_FROM_PARTS(year, 1, 1), 'YEAR')
             END AS aggregate_period_stop,
 
             -- 6. Create `is_complete` column...
             --    Mark complete once today's date is past the stop
             (CURRENT_DATE > 
                 CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(aggregate_year, aggregate_month, aggregate_day)
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
                 WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(year, month, 1))
                 ELSE                   LAST_DAY(DATE_FROM_PARTS(year, 1, 1), 'YEAR')
                 END
