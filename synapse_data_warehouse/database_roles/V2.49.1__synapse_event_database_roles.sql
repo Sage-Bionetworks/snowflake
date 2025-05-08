@@ -1,0 +1,39 @@
+USE DATABASE {{ database_name }}; --noqa: JJ01,PRS,TMP
+
+-- Create "admin" database role which will own the synapse_event objects
+CREATE OR REPLACE DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN;
+
+-- Grant ownership of this database role to the proxy admin
+GRANT OWNERSHIP
+    ON DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN
+    TO ROLE {{ database_name }}_PROXY_ADMIN; --noqa: JJ01,PRS,TMP
+
+-- Grant usage of database role to the proxy admin
+GRANT DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN
+    TO ROLE {{ database_name }}_PROXY_ADMIN; --noqa: JJ01,PRS,TMP
+
+-- Create "analyst" role which will inherit the object‐type‐specific roles
+CREATE OR REPLACE DATABASE ROLE SYNAPSE_EVENT_ALL_ANALYST;
+
+-- Grant ownership of the analyst role to the admin role
+GRANT OWNERSHIP
+    ON DATABASE ROLE SYNAPSE_EVENT_ALL_ANALYST
+    TO DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN;
+
+-- Create a database role for table read privileges
+CREATE OR REPLACE DATABASE ROLE SYNAPSE_EVENT_TABLE_READ;
+-- Grant ownership to the admin database role
+GRANT OWNERSHIP
+    ON DATABASE ROLE SYNAPSE_EVENT_TABLE_READ
+    TO DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN;
+-- Grant usage to the analyst database role
+GRANT DATABASE ROLE SYNAPSE_EVENT_TABLE_READ
+    TO DATABASE ROLE SYNAPSE_EVENT_ALL_ANALYST;
+
+-- Create developer role
+CREATE OR REPLACE DATABASE ROLE SYNAPSE_EVENT_ALL_DEVELOPER;
+GRANT OWNERSHIP
+    ON DATABASE ROLE SYNAPSE_EVENT_ALL_DEVELOPER
+    TO DATABASE ROLE SYNAPSE_EVENT_ALL_ADMIN;
+GRANT DATABASE ROLE SYNAPSE_EVENT_ALL_ANALYST
+    TO DATABASE ROLE SYNAPSE_EVENT_ALL_DEVELOPER;
