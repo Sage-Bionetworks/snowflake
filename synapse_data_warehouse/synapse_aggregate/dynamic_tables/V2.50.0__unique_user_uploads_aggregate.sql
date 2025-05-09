@@ -26,9 +26,9 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
             GROUPING(day)   AS g_day,
             GROUPING(month) AS g_month,
             GROUPING(year)  AS g_year
-        FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEUPLOAD
+        FROM {{database_name}}.SYNAPSE.FILEUPLOAD --noqa: JJ01,PRS,TMP
         -- exclude today’s partial data to avoid confusion in the final table
-        WHERE RECORD_DATE < (SELECT MAX(RECORD_DATE) FROM SYNAPSE_DATA_WAREHOUSE.SYNAPSE.FILEUPLOAD)
+        WHERE RECORD_DATE < (SELECT MAX(RECORD_DATE) FROM {{database_name}}.SYNAPSE.FILEUPLOAD) --noqa: JJ01,PRS,TMP
         GROUP BY ROLLUP(year, month, day)
 
         ),
