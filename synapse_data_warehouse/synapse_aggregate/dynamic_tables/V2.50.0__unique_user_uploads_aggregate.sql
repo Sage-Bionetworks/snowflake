@@ -19,17 +19,17 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
     WITH unique_users_rollup AS (
 
         SELECT
-            YEAR(record_date)  AS year,
-            MONTH(record_date) AS month,
-            DAY(record_date)   AS day,
+            YEAR(record_date)  AS agg_year,
+            MONTH(record_date) AS agg_month,
+            DAY(record_date)   AS agg_day,
             COUNT(DISTINCT user_id) AS unique_user_count,
-            GROUPING(day)   AS g_day,
-            GROUPING(month) AS g_month,
-            GROUPING(year)  AS g_year
+            GROUPING(agg_day)   AS g_day,
+            GROUPING(agg_month) AS g_month,
+            GROUPING(agg_year)  AS g_year
         FROM {{database_name}}.SYNAPSE.FILEUPLOAD --noqa: JJ01,PRS,TMP
         -- exclude today’s partial data to avoid confusion in the final table
         WHERE RECORD_DATE < (SELECT MAX(RECORD_DATE) FROM {{database_name}}.SYNAPSE.FILEUPLOAD) --noqa: JJ01,PRS,TMP
-        GROUP BY ROLLUP(year, month, day)
+        GROUP BY ROLLUP(agg_year, agg_month, agg_day)
 
         ),
     unique_users_rollup_with_new_columns AS (
@@ -38,9 +38,9 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
             -- 1. Grab the relevant original columns
             unique_user_count,
-            year,
-            month,
-            day,
+            agg_year,
+            agg_month,
+            agg_day,
 
             -- 2. Create `granularity` column...
             --    Determine granularity based on which dimensions were rolled up
@@ -48,14 +48,14 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
                 WHEN g_year  = 0 AND g_month = 1 AND g_day = 1 THEN 'YEARLY'
                 WHEN g_year  = 0 AND g_month = 0 AND g_day = 1 THEN 'MONTHLY'
                 WHEN g_day   = 0 THEN 'DAILY'
-            END AS granularity,
+            END AS agg_period,
 
             -- 3. Create `aggregate_period_start` column
             CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
-                WHEN g_month = 0 THEN DATE_FROM_PARTS(year, month, 1)
-                ELSE DATE_FROM_PARTS(year, 1, 1)
-            END AS aggregate_period_start,
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
+                WHEN g_month = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, 1)
+                ELSE DATE_FROM_PARTS(agg_year, 1, 1)
+            END AS agg_period_start,
 
             -- 4. Create `snapshot_date` column...
             --    This is when the table was updated
@@ -63,32 +63,32 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
             -- 5. Create `aggregate_period_stop` column (inclusive)
             CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
-                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(year, month, 1))
-                ELSE LAST_DAY(DATE_FROM_PARTS(year, 1, 1), 'YEAR')
-            END AS aggregate_period_stop,
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
+                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(agg_year, agg_month, 1))
+                ELSE LAST_DAY(DATE_FROM_PARTS(agg_year, 1, 1), 'YEAR')
+            END AS agg_period_end,
 
             -- 6. Create `is_complete` column...
             --    Mark complete once today's date is past the stop
             (CURRENT_DATE > 
                 CASE
-                WHEN g_day   = 0 THEN DATE_FROM_PARTS(year, month, day)
-                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(year, month, 1))
-                ELSE                   LAST_DAY(DATE_FROM_PARTS(year, 1, 1), 'YEAR')
+                WHEN g_day   = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
+                WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(agg_year, agg_month, 1))
+                ELSE LAST_DAY(DATE_FROM_PARTS(agg_year, 1, 1), 'YEAR')
                 END
-            ) AS is_complete
+            ) AS agg_period_is_complete
 
         FROM unique_users_rollup)
     SELECT
         granularity,
         unique_user_count,
-        year,
-        month,
-        day,
+        agg_year,
+        agg_month,
+        agg_day,
         aggregate_period_start,
         aggregate_period_stop,
         snapshot_date,
         is_complete
     FROM unique_users_rollup_with_new_columns
-    WHERE year IS NOT NULL -- drop the all-NULL “grand total” row
-    ORDER BY day, month, year;
+    WHERE agg_year IS NOT NULL -- drop the all-NULL “grand total” row
+    ORDER BY agg_day, agg_month, agg_year;
