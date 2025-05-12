@@ -1,16 +1,15 @@
 USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
-CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
+CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
     (
-	    GRANULARITY VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
-	    UNIQUE_USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.',
-	    YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
-        MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
-        DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
-        AGGREGATE_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
-        AGGREGATE_PERIOD_STOP DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
-	    SNAPSHOT_DATE DATE COMMENT 'Date the aggregation was calculated and stored in the table.',
-        IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
+	    AGG_PERIOD VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
+	    USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.',
+	    AGG_YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
+        AGG_MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
+        AGG_DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
+        AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
+        AGG_PERIOD_STOP DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
+        AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
@@ -22,7 +21,7 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
             YEAR(record_date)  AS agg_year,
             MONTH(record_date) AS agg_month,
             DAY(record_date)   AS agg_day,
-            COUNT(DISTINCT user_id) AS unique_user_count,
+            COUNT(DISTINCT user_id) AS user_count,
             GROUPING(agg_day)   AS g_day,
             GROUPING(agg_month) AS g_month,
             GROUPING(agg_year)  AS g_year
@@ -37,7 +36,7 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
         SELECT
 
             -- 1. Grab the relevant original columns
-            unique_user_count,
+            user_count,
             agg_year,
             agg_month,
             agg_day,
@@ -57,18 +56,14 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
                 ELSE DATE_FROM_PARTS(agg_year, 1, 1)
             END AS agg_period_start,
 
-            -- 4. Create `snapshot_date` column...
-            --    This is when the table was updated
-            CURRENT_DATE AS snapshot_date,
-
-            -- 5. Create `aggregate_period_stop` column (inclusive)
+            -- 4. Create `aggregate_period_stop` column (inclusive)
             CASE
                 WHEN g_day   = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
                 WHEN g_month = 0 THEN LAST_DAY(DATE_FROM_PARTS(agg_year, agg_month, 1))
                 ELSE LAST_DAY(DATE_FROM_PARTS(agg_year, 1, 1), 'YEAR')
             END AS agg_period_end,
 
-            -- 6. Create `is_complete` column...
+            -- 5 Create `is_complete` column...
             --    Mark complete once today's date is past the stop
             (CURRENT_DATE > 
                 CASE
@@ -80,15 +75,14 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
 
         FROM unique_users_rollup)
     SELECT
-        granularity,
-        unique_user_count,
+        agg_period,
+        user_count,
         agg_year,
         agg_month,
         agg_day,
-        aggregate_period_start,
-        aggregate_period_stop,
-        snapshot_date,
-        is_complete
+        agg_period_start,
+        agg_period_stop,
+        agg_period_is_complete
     FROM unique_users_rollup_with_new_columns
     WHERE agg_year IS NOT NULL -- drop the all-NULL “grand total” row
     ORDER BY agg_day, agg_month, agg_year;
