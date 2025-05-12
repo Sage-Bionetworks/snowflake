@@ -1,7 +1,7 @@
 -- Introduce the dynamic table
-USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
+USE SCHEMA {{database_name}}.SYNAPSE_EVENT; --noqa: JJ01,PRS,TMP
 
-CREATE OR REPLACE DYNAMIC TABLE SYNAPSE_DATA_WAREHOUSE_DanLu_STAGE.SYNAPSE.FILEDOWNLOAD_LATEST
+CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD
     (
         TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the file download event is pushed to the queue for recording, after generating the pre-signed url.',
 	    USER_ID NUMBER(38,0) COMMENT 'The id of the user who downloaded the file.',
