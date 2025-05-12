@@ -8,7 +8,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         AGG_MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
         AGG_DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
         AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
-        AGG_PERIOD_STOP DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
+        AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
         AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
     TARGET_LAG = '1 day'
@@ -81,7 +81,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         agg_month,
         agg_day,
         agg_period_start,
-        agg_period_stop,
+        agg_period_end,
         agg_period_is_complete
     FROM unique_users_rollup_with_new_columns
     WHERE agg_year IS NOT NULL -- drop the all-NULL “grand total” row
