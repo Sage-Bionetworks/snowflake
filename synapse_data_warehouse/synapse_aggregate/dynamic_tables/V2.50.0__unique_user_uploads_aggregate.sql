@@ -2,13 +2,13 @@ USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
     (
-	    GRANULARITY VARCHAR(16777216) PRIMARY KEY COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
+	    GRANULARITY VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
 	    UNIQUE_USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.',
 	    YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
         MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
         DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
-        AGGREGATE_PERIOD_START DATE PRIMARY KEY COMMENT 'The start date of the aggregation period. Part of composite PK.',
-        AGGREGATE_PERIOD_STOP DATE PRIMARY KEY COMMENT 'The stop date of the aggregation period. Part of composite PK.',
+        AGGREGATE_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
+        AGGREGATE_PERIOD_STOP DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
 	    SNAPSHOT_DATE DATE COMMENT 'Date the aggregation was calculated and stored in the table.',
         IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
