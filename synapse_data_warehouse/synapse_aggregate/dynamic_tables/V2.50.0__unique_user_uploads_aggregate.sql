@@ -10,7 +10,7 @@ CREATE OR REPLACE DYNAMIC TABLE UNIQUE_USER_UPLOADS
         AGGREGATE_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
         AGGREGATE_PERIOD_STOP DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
 	    SNAPSHOT_DATE DATE COMMENT 'Date the aggregation was calculated and stored in the table.',
-        IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
+        IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
