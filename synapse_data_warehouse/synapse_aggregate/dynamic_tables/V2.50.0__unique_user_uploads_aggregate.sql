@@ -101,16 +101,4 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         (CURRENT_DATE > agg_period_end) AS agg_period_is_complete
 
     FROM agg_period_calculations
-    WHERE agg_year is NOT NULL -- drop the all-NULL “grand total” row
-    ORDER BY
-        -- 1) current year first, then past years
-        agg_year DESC,
-
-        -- 2) display year, then quarter, then month, then day.
-        --    conveniently, the grain names for agg_period are in alphabetical order
-        agg_period DESC,
-
-        -- 3) within each grain, sort by the natural dimension
-        COALESCE(agg_quarter, 0),
-        COALESCE(agg_month, 0),
-        COALESCE(agg_day, 0);
+    WHERE agg_year is NOT NULL; -- drop the all-NULL “grand total” row
