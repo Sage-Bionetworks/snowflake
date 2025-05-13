@@ -2,8 +2,8 @@ USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
     (
-	    AGG_PERIOD VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
-	    AGG_YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
+        AGG_PERIOD VARCHAR(16777216) COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY). Part of composite PK.',
+        AGG_YEAR NUMBER(38,0) COMMENT 'Year of the aggregation period.',
         AGG_QUARTER NUMBER(38,0) COMMENT 'Quarter of the aggregation period.',
         AGG_MONTH NUMBER(38,0) COMMENT 'Month of the aggregation period.',
         AGG_DAY NUMBER(38,0) COMMENT 'Day of the aggregation period.',
