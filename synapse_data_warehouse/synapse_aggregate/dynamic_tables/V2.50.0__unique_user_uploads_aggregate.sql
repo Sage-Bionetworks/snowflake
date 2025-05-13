@@ -22,7 +22,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         SELECT
             -- Extracting our aggregate dimensions from ``record_date`` column
             YEAR(record_date)  AS agg_year,
-            CEIL(MONTH(record_date) / 3) AS agg_quarter,
+            QUARTER(record_date) AS agg_quarter,
             MONTH(record_date) AS agg_month,
             DAY(record_date)   AS agg_day,
 
@@ -89,7 +89,6 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
     -- Step 3: Compose the final table by ordering the columns for easier reading and adding the completion column
     SELECT
         agg_period,
-        user_count,
         agg_year,
         agg_quarter,
         agg_month,
@@ -98,7 +97,9 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         agg_period_end,
     
         -- 5. Mark the period as complete once today's date is past the stop
-        (CURRENT_DATE > agg_period_end) AS agg_period_is_complete
+        (CURRENT_DATE > agg_period_end) AS agg_period_is_complete,
+
+        user_count
 
     FROM agg_period_calculations
     WHERE agg_year is NOT NULL; -- drop the all-NULL “grand total” row
