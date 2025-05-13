@@ -10,7 +10,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
         AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period. Part of composite PK.',
         AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period. Part of composite PK.',
         AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
-        USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.',
+        USER_COUNT INT COMMENT 'The number of distinct unique users uploading during the aggregation period.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
