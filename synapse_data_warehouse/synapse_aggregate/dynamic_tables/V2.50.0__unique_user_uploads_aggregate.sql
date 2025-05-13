@@ -55,7 +55,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
             -- 2. Create `agg_period` column...
             --    Determine granularity based on which dimensions were rolled up
             CASE
-                WHEN g_year = 1 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN 'GRAND TOTAL'
+                WHEN g_year = 1 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN 'ALL TIME'
                 WHEN g_year = 0 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN 'YEARLY'
                 WHEN g_year = 0 AND g_quarter = 0 AND g_month = 1 AND g_day = 1 THEN 'QUARTERLY'
                 WHEN g_year = 0 AND g_quarter = 0 AND g_month = 0 AND g_day = 1 THEN 'MONTHLY'
@@ -86,27 +86,7 @@ CREATE OR REPLACE DYNAMIC TABLE USER_UPLOADS
                 WHEN g_day = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
             END AS agg_period_end
 
-        FROM user_count_rollup
-        ORDER BY
-
-            -- rank the period
-            CASE
-                WHEN agg_period = 'ALL TIME' THEN 0
-                WHEN agg_period = 'YEARLY'      THEN 1
-                WHEN agg_period = 'QUARTERLY'   THEN 2
-                WHEN agg_period = 'MONTHLY'     THEN 3
-                WHEN agg_period = 'DAILY'       THEN 4
-            END,
-
-            -- within each period, order years
-            -- grand-total has no year, but it’s already rank=0 so stays on top
-            agg_year DESC,
-
-            -- then natural quarter/month/day
-            COALESCE(agg_quarter, 0),
-            COALESCE(agg_month, 0),
-            COALESCE(agg_day, 0)
-        )
+        FROM user_count_rollup)
     -- Step 3: Compose the final table by ordering the columns for easier reading and adding the completion column
     SELECT
         agg_period,
