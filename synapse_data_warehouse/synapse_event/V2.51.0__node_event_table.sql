@@ -46,7 +46,7 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
                 {{ database_name }}.synapse_raw.nodesnapshots --noqa: TMP
             WHERE
                 snapshot_timestamp >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS'
-            QUALIFY ROW_NUMBER OVER (
+            QUALIFY ROW_NUMBER() OVER (
                     PARTITION BY id, version_number
                     ORDER BY change_timestamp DESC, snapshot_timestamp DESC
                 ) = 1
