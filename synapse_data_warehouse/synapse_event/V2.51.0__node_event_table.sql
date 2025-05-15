@@ -47,7 +47,7 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
             WHERE
                 snapshot_timestamp >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS'
             QUALIFY ROW_NUMBER() OVER (
-                    PARTITION BY id, version_number
+                    PARTITION BY id, version_number, change_type
                     ORDER BY change_timestamp DESC, snapshot_timestamp DESC
                 ) = 1
         )
