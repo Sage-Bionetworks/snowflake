@@ -66,7 +66,6 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
             MODIFIED_ON,
             MODIFIED_BY,
             FILE_HANDLE_ID,
-            PROJECT_STORAGE_USAGE
             NAME,
             IS_PUBLIC,
             IS_CONTROLLED,
@@ -86,6 +85,7 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
             IS_SEARCH_ENABLED,
             DEFINING_SQL,
             ALIAS,
+            PROJECT_STORAGE_USAGE,
             SNAPSHOT_DATE,
             SNAPSHOT_TIMESTAMP
         FROM

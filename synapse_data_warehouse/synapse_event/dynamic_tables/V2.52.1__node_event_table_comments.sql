@@ -2,7 +2,7 @@ USE SCHEMA {{database_name}}.synapse_event; --noqa: JJ01,PRS,TMP
 
 COMMENT ON COLUMN node_event.id IS 'PRIMARY KEY. The unique identifier of the node.';
 COMMENT ON COLUMN node_event.version_number IS 'PRIMARY KEY. The version of the node on which the change occurred, if applicable.';
-COMMENT ON COLUMN node_event.change_type IS 'The type of change that occurred on the node, e.g., CREATE, UPDATE, DELETE.';
+COMMENT ON COLUMN node_event.change_type IS 'PRIMARY KEY. The type of change that occurred on the node, e.g., CREATE, UPDATE, DELETE.';
 COMMENT ON COLUMN node_event.change_timestamp IS 'The time when the change (created/updated/deleted) on the node is pushed to the queue for snapshotting.';
 COMMENT ON COLUMN node_event.change_user_id IS 'The unique identifier of the user who made the change to the node.';
 COMMENT ON COLUMN node_event.node_type IS 'The type of the node. Allowed node types are : project, folder, file, table, link, entityview, dockerrepo, submissionview, dataset, datasetcollection, materializedview, virtualtable.';
