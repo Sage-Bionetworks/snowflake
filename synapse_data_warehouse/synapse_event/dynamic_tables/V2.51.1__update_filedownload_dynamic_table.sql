@@ -33,6 +33,8 @@ CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD
             RECORD_DATE,
             SESSION_ID
         FROM {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD --noqa: TMP
+        WHERE 
+            ASSOCIATION_OBJECT_ID IS NOT NULL
         QUALIFY
             ROW_NUMBER() OVER (
                 PARTITION BY USER_ID, ASSOCIATION_OBJECT_ID, RECORD_DATE
@@ -42,6 +44,4 @@ CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD
     SELECT 
     *
     FROM 
-        dedup_filedownload
-    WHERE 
-        ASSOCIATION_OBJECT_ID IS NOT NULL;
+        dedup_filedownload;
