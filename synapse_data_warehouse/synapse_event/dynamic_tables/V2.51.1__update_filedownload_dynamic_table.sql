@@ -32,7 +32,8 @@ CREATE OR REPLACE DYNAMIC TABLE FILEDOWNLOAD
             INSTANCE,
             RECORD_DATE,
             SESSION_ID
-        FROM {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD --noqa: TMP
+        FROM 
+            {{database_name}}.SYNAPSE_RAW.FILEDOWNLOAD --noqa: TMP
         WHERE 
             ASSOCIATION_OBJECT_ID IS NOT NULL
         QUALIFY
