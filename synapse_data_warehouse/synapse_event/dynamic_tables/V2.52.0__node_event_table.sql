@@ -45,10 +45,18 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
             FROM
                 {{ database_name }}.synapse_raw.nodesnapshots --noqa: TMP
             WHERE
-                snapshot_timestamp >= CURRENT_TIMESTAMP - INTERVAL '30 DAYS'
+                -- only `id`, `change_*`, and `snapshot_*` columns are defined regardless of `change_type`
+                id is not null
+                and change_type is not null
             QUALIFY ROW_NUMBER() OVER (
-                    PARTITION BY id, version_number, change_type
-                    ORDER BY change_timestamp DESC, snapshot_timestamp DESC
+                    -- `id` and `version_number` provide at least one record for each Synapse entity version.
+                    -- `change_type` ensures that simultaneous CREATE+UPDATE events are both retained.
+                    -- `modified_on` enables us to capture updates to Synapse Table entities and other
+                    -- update scenarios where the `version_number` does not change (like when we update annotations
+                    -- without incrementing the version). 
+                    PARTITION BY id, version_number, change_type, modified_on
+                    -- Ordering by `snapshot_timestamp` ascending means we keep the first snapshot of this event
+                    ORDER BY snapshot_timestamp
                 ) = 1
         )
         SELECT
