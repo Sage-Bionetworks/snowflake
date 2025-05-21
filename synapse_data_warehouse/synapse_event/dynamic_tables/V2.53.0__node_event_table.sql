@@ -4,7 +4,7 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
     AS
-        WITH latest_unique_rows AS (
+        WITH unique_events AS (
             SELECT
                 CHANGE_TYPE,
                 CHANGE_TIMESTAMP,
@@ -97,4 +97,4 @@ CREATE OR REPLACE DYNAMIC TABLE node_event
             SNAPSHOT_DATE,
             SNAPSHOT_TIMESTAMP
         FROM
-            latest_unique_rows;
+            unique_events;
