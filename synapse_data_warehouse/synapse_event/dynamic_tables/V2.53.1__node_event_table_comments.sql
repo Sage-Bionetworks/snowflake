@@ -1,8 +1,9 @@
 USE SCHEMA {{database_name}}.synapse_event; --noqa: JJ01,PRS,TMP
 
-COMMENT ON COLUMN node_event.id IS 'PRIMARY KEY. The unique identifier of the node.';
-COMMENT ON COLUMN node_event.version_number IS 'PRIMARY KEY. The version of the node on which the change occurred, if applicable.';
-COMMENT ON COLUMN node_event.change_type IS 'PRIMARY KEY. The type of change that occurred on the node, e.g., CREATE, UPDATE, DELETE.';
+COMMENT ON COLUMN node_event.id IS 'PRIMARY KEY (COMPOSITE). The unique identifier of the node.';
+COMMENT ON COLUMN node_event.version_number IS 'PRIMARY KEY (COMPOSITE). The version of the node on which the change occurred, if applicable.';
+COMMENT ON COLUMN node_event.change_type IS 'PRIMARY KEY (COMPOSITE). The type of change that occurred on the node, e.g., CREATE, UPDATE, DELETE.';
+COMMENT ON COLUMN node_event.modified_on IS 'PRIMARY KEY (COMPOSITE). The most recent change time of the node.';
 COMMENT ON COLUMN node_event.change_timestamp IS 'The time when the change (created/updated/deleted) on the node is pushed to the queue for snapshotting.';
 COMMENT ON COLUMN node_event.change_user_id IS 'The unique identifier of the user who made the change to the node.';
 COMMENT ON COLUMN node_event.node_type IS 'The type of the node. Allowed node types are : project, folder, file, table, link, entityview, dockerrepo, submissionview, dataset, datasetcollection, materializedview, virtualtable.';
@@ -11,7 +12,6 @@ COMMENT ON COLUMN node_event.benefactor_id IS 'The identifier of the (ancestor) 
 COMMENT ON COLUMN node_event.project_id IS 'The project where the node resides. It will be empty for the change type DELETE.';
 COMMENT ON COLUMN node_event.created_on IS 'The creation time of the node.';
 COMMENT ON COLUMN node_event.created_by IS 'The unique identifier of the user who created the node.';
-COMMENT ON COLUMN node_event.modified_on IS 'The most recent change time of the node.';
 COMMENT ON COLUMN node_event.modified_by IS 'The unique identifier of the user who last modified the node.';
 COMMENT ON COLUMN node_event.file_handle_id IS 'The unique identifier of the file handle if the node is a file, null otherwise.';
 COMMENT ON COLUMN node_event.project_storage_usage IS 'Nodes of type project include the project storage usage data for each storage location in the project.';
