@@ -29,7 +29,7 @@ CREATE OR REPLACE DYNAMIC TABLE PROCESSEDACCESS_EVENT
         CLIENT VARCHAR(16777216) COMMENT 'The is an alias of the user agent, e.g., WEB, JAVA, PYTHON.',
         CLIENT_VERSION VARCHAR(16777216) COMMENT 'The version of the client used to make the request.',
         ENTITY_ID NUMBER(38,0) COMMENT 'The Synapse object identifier sent by the user in the request url, if any.',
-        RECORD_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.',
+        RECORD_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
