@@ -11,7 +11,7 @@ CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
 	    ASSOCIATION_OBJECT_TYPE VARCHAR(16777216) COMMENT 'The type of the Synapse object that wraps the file, e.g., FileEntity, TableEntity, WikiAttachment, WikiMarkdown, UserProfileAttachment, MessageAttachment, TeamAttachment.',
 	    STACK VARCHAR(16777216) COMMENT 'The stack (prod, dev) on which the upload request was processed.',
 	    INSTANCE VARCHAR(16777216) COMMENT 'The version of the stack that processed the upload request.',
-	    RECORD_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.',
+	    RECORD_DATE DATE COMMENT 'The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
