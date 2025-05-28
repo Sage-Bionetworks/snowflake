@@ -1,9 +1,10 @@
 USE SCHEMA {{database_name}}.SYNAPSE_EVENT; --noqa: JJ01,PRS,TMP
 
+-- Step 1. Introduce the dynamic table
 CREATE OR REPLACE DYNAMIC TABLE PROCESSEDACCESS_EVENT
     (
-        SESSION_ID VARCHAR(16777216) COMMENT 'A unique identifier that the Synapse server assigns for the duration of a session. Sessions are linked to a user, an API key or a token.',
-        TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The timestamp when the user sends a request to the Synapse server.',
+        SESSION_ID VARCHAR(16777216) COMMENT 'PRIMARY KEY (Composite). A unique identifier that the Synapse server assigns for the duration of a session. Sessions are linked to a user, an API key or a token.',
+        TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'PRIMARY KEY (Composite). The timestamp when the user sends a request to the Synapse server.',
 	    USER_ID NUMBER(38,0) COMMENT 'The unique identifier of the Synapse user.',
 	    METHOD VARCHAR(16777216) COMMENT 'The http method of the request.',
         REQUEST_URL VARCHAR(16777216) COMMENT 'The url of the request.',
@@ -32,19 +33,50 @@ CREATE OR REPLACE DYNAMIC TABLE PROCESSEDACCESS_EVENT
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = 'This dynamic table, indexed by the <> columns, contains a history of file upload events on Synapse.'
+    COMMENT = 'This dynamic table, indexed by the composite primary key (SESSION_ID, TIMESTAMP), contains a history of processed access events on Synapse.'
     AS
     WITH dedup_processedaccess AS (
         SELECT
-            ???
+            SESSION_ID,
+            TIMESTAMP,
+            USER_ID,
+            METHOD,
+            REQUEST_URL,
+            USER_AGENT,
+            HOST,
+            ORIGIN,
+            X_FORWARDED_FOR,
+            VIA,
+            THREAD_ID,
+            ELAPSE_MS,
+            SUCCESS,
+            STACK,
+            INSTANCE,
+            VM_ID,
+            RETURN_OBJECT_ID,
+            QUERY_STRING,
+            RESPONSE_STATUS,
+            OAUTH_CLIENT_ID,
+            BASIC_AUTH_USERNAME,
+            AUTH_METHOD,
+            NORMALIZED_METHOD_SIGNATURE,
+            CLIENT,
+            CLIENT_VERSION,
+            ENTITY_ID,
+            RECORD_DATE
         FROM {{database_name}}.SYNAPSE_RAW.PROCESSEDACCESS --noqa: TMP
         QUALIFY
             ROW_NUMBER() OVER (
-                PARTITION BY ???
-                ORDER BY TIMESTAMP DESC, RECORD_DATE DESC
+                PARTITION BY SESSION_ID
+                ORDER BY TIMESTAMP DESC
             ) = 1
     )
     SELECT 
         *
     FROM 
         dedup_processedaccess;
+
+-- Step 2. Alter the dynamic table by adding the composite PK used to deduplicate the table rows
+ALTER TABLE PROCESSEDACCESS_EVENT
+    ADD CONSTRAINT processedaccess_event_primary_key
+    PRIMARY KEY (SESSION_ID, TIMESTAMP);
