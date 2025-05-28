@@ -1,6 +1,6 @@
 USE SCHEMA {{database_name}}.SYNAPSE_EVENT; --noqa: JJ01,PRS,TMP
 
--- Step 1. Introduce the dynamic table
+-- STEP 1. Introduce the dynamic table
 CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
     (
         USER_ID NUMBER(38,0) COMMENT 'PRIMARY KEY (Composite). The id of the user who requested the upload.',
@@ -40,7 +40,7 @@ CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
     FROM 
         dedup_fileupload;
 
--- Step 2. Alter the dynamic table by adding the composite PK used to deduplicate the table rows
+-- STEP 2. Alter the dynamic table by adding the composite PK used to deduplicate the table rows
 ALTER TABLE FILEUPLOAD_EVENT
     ADD CONSTRAINT fileupload_event_primary_key
     PRIMARY KEY (USER_ID, FILE_HANDLE_ID, TIMESTAMP);
