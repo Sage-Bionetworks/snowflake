@@ -1,6 +1,6 @@
 USE SCHEMA {{database_name}}.SYNAPSE_EVENT; --noqa: JJ01,PRS,TMP
 
-CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD
+CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
     (
         TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the file upload event is pushed to the queue, after a successful upload of a file or change in the existing table.',
 	    USER_ID NUMBER(38,0) COMMENT 'The id of the user who requested the upload.',
