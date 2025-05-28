@@ -1,11 +1,12 @@
 USE SCHEMA {{database_name}}.SYNAPSE_EVENT; --noqa: JJ01,PRS,TMP
 
+-- Step 1. Introduce the dynamic table
 CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
     (
-        TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'The time when the file upload event is pushed to the queue, after a successful upload of a file or change in the existing table.',
-	    USER_ID NUMBER(38,0) COMMENT 'The id of the user who requested the upload.',
+        USER_ID NUMBER(38,0) COMMENT 'PRIMARY KEY (Composite). The id of the user who requested the upload.',
+        FILE_HANDLE_ID NUMBER(38,0) COMMENT 'PRIMARY KEY (Composite). The unique identifier of the file handle.',
+        TIMESTAMP TIMESTAMP_NTZ(9) COMMENT 'PRIMARY KEY (Composite). The time when the file upload event is pushed to the queue, after a successful upload of a file or change in the existing table.',
 	    PROJECT_ID NUMBER(38,0) COMMENT 'The unique identifier of the project where the uploaded entity resides. Applicable only for FileEntity and TableEntity.',
-	    FILE_HANDLE_ID NUMBER(38,0) COMMENT 'The unique identifier of the file handle.',
 	    ASSOCIATION_OBJECT_ID NUMBER(38,0) COMMENT 'The unique identifier of the Synapse object (without ''syn'' prefix) that wraps the file.',
 	    ASSOCIATION_OBJECT_TYPE VARCHAR(16777216) COMMENT 'The type of the Synapse object that wraps the file, e.g., FileEntity, TableEntity, WikiAttachment, WikiMarkdown, UserProfileAttachment, MessageAttachment, TeamAttachment.',
 	    STACK VARCHAR(16777216) COMMENT 'The stack (prod, dev) on which the upload request was processed.',
@@ -14,14 +15,14 @@ CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_xsmall
-    COMMENT = 'This dynamic table, indexed by the <> columns, contains a history of file upload events on Synapse.'
+    COMMENT = 'This dynamic table, indexed by the composite primary key (USER_ID, FILE_HANDLE_ID, TIMESTAMP), contains a history of file upload events on Synapse.'
     AS
     WITH dedup_fileupload AS (
         SELECT
-            TIMESTAMP,
             USER_ID,
-            PROJECT_ID,
             FILE_HANDLE_ID,
+            TIMESTAMP,
+            PROJECT_ID,
             ASSOCIATION_OBJECT_ID,
             ASSOCIATION_OBJECT_TYPE,
             STACK,
@@ -30,11 +31,16 @@ CREATE OR REPLACE DYNAMIC TABLE FILEUPLOAD_EVENT
         FROM {{database_name}}.SYNAPSE_RAW.FILEUPLOAD --noqa: TMP
         QUALIFY
             ROW_NUMBER() OVER (
-                PARTITION BY USER_ID, ASSOCIATION_OBJECT_ID, RECORD_DATE
-                ORDER BY TIMESTAMP DESC, RECORD_DATE DESC
+                PARTITION BY USER_ID, FILE_HANDLE_ID
+                ORDER BY TIMESTAMP DESC
             ) = 1
     )
     SELECT 
         *
     FROM 
         dedup_fileupload;
+
+-- Step 2. Alter the dynamic table by adding the composite PK used to deduplicate the table rows
+ALTER TABLE FILEUPLOAD_EVENT
+    ADD CONSTRAINT fileupload_event_primary_key
+    PRIMARY KEY (USER_ID, FILE_HANDLE_ID, TIMESTAMP);
