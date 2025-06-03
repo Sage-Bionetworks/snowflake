@@ -17,6 +17,9 @@ alter task synapse_raw.clone_fileupload_task resume;
 alter task synapse_raw.fileupload_task resume;
 alter task synapse_raw.refresh_synapse_warehouse_s3_stage_task resume;
 
+-- Step 4) Execute the task of interest to generate the table
+execute synapse_raw.clone_fileupload_task;
+
 -- Step 4) Add a primary key to the event table
 alter table synapse_event.fileupload_event
 add constraint fileupload_event_primary_key
