@@ -5,12 +5,7 @@ alter table fileupload
 add constraint fileupload_pk
 primary key (user_id, file_handle_id, timestamp);
 
--- Step 2: Update column comments for PK columns (one at a time)
-alter table fileupload
-alter COLUMN user_id set COMMENT = 'PRIMARY KEY (Composite). The id of the user who requested the upload.';
-
-alter table fileupload
-alter COLUMN file_handle_id set COMMENT = 'PRIMARY KEY (Composite). The unique identifier of the file handle.';
-
-alter table fileupload
-alter COLUMN timestamp set COMMENT = 'PRIMARY KEY (Composite). The time when the upload event is pushed to the queue, after a successful upload of a file or change in the existing table.';
+-- Step 2) Update column comments for PK columns (one at a time)
+COMMENT ON COLUMN fileupload.user_id IS 'PRIMARY KEY (Composite). The id of the user who requested the upload.';
+COMMENT ON COLUMN fileupload.file_handle_id IS 'PRIMARY KEY (Composite). The unique identifier of the file handle.';
+COMMENT ON COLUMN timestamp IS 'PRIMARY KEY (Composite). The time when the upload event is pushed to the queue, after a successful upload of a file or change in the existing table.';
