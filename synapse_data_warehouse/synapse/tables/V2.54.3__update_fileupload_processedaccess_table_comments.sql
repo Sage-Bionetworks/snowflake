@@ -8,6 +8,6 @@ This table contains upload records for FileEntity (e.g. a new file creation, upl
 
 alter table processedaccess
 set comment =
-'[DEPRECATION NOTICE] This table is being deprecated and will be replaced by ``synapse_event.processedaccess_event`` in the near future. Please transition any dependencies accordingly.
+'[DEPRECATION NOTICE] This table is being deprecated and will be replaced by ``synapse_event.access_event`` in the near future. Please transition any dependencies accordingly.
 
 The table contains access records. Each record reflects a single API request received by the Synapse server. The recorded data is useful for audits and to analyse API performance such as delays, errors or success rates.';
