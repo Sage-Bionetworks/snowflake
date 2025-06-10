@@ -5,7 +5,7 @@ alter task synapse_raw.refresh_synapse_warehouse_s3_stage_task suspend;
 alter task synapse_raw.fileupload_task suspend;
 
 -- Step 2) Create the task of interest
-create or replace task synapse_raw.create_fileupload_event_task
+create or replace task synapse_event.create_fileupload_event_task
 after synapse_raw.fileupload_task
 as
     create or replace table synapse_event.fileupload_event
