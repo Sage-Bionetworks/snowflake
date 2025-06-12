@@ -1,0 +1,3 @@
+USE SCHEMA {{database_name}}.synapse_event; --noqa: JJ01,PRS,TMP
+
+DROP DYNAMIC TABLE IF EXISTS FILEDOWNLOAD;
