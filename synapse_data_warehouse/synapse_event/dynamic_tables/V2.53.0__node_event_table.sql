@@ -2,7 +2,7 @@ USE SCHEMA {{ database_name }}.SYNAPSE_EVENT;
 
 CREATE OR REPLACE DYNAMIC TABLE node_event
     TARGET_LAG = '1 day'
-    WAREHOUSE = compute_xsmall
+    WAREHOUSE = compute_medium
     AS
         WITH unique_events AS (
             SELECT
