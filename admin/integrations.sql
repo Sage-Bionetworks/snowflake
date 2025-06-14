@@ -15,15 +15,10 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_dev_warehouse_s3
     ENABLED = TRUE
     STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::449435941126:role/snowflake-access-SnowflakeServiceRole-BKQMHdbc4uU4'
     STORAGE_ALLOWED_LOCATIONS = ('s3://dev.datawarehouse.sagebase.org', 's3://dev.filehandles.sagebase.org');
--- DESC INTEGRATION synapse_dev_warehouse_s3;
 
 -- RECOVER dev integration
-CREATE STORAGE INTEGRATION IF NOT EXISTS recover_dev_s3
-  TYPE = EXTERNAL_STAGE
-  STORAGE_PROVIDER = 'S3'
-  ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::914833433684:role/snowflake-s3-role-SnowflakeRole-D2P94aXg5oR4'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://recover-dev-input-data', 's3://recover-dev-processed-data', 's3://recover-dev-intermediate-data');
+DROP STORAGE INTEGRATION IF EXISTS recover_dev_s3;
+
 -- DESC INTEGRATION synapse_dev_warehouse_s3;
 -- https://docs.snowflake.com/en/user-guide/oauth-partner
 -- Integration with tableau
@@ -40,8 +35,8 @@ CREATE SECURITY INTEGRATION IF NOT EXISTS td_oauth_int2
   OAUTH_CLIENT = TABLEAU_DESKTOP;
 
 -- DESC SECURITY INTEGRATION ts_oauth_int2;
-// Used these instructions to create google SAML integration
-// https://community.snowflake.com/s/article/configuring-g-suite-as-an-identity-provider
+-- Used these instructions to create google SAML integration
+-- https://community.snowflake.com/s/article/configuring-g-suite-as-an-identity-provider
 create security integration IF NOT EXISTS GOOGLE_SSO
     type = saml2
     enabled = true
