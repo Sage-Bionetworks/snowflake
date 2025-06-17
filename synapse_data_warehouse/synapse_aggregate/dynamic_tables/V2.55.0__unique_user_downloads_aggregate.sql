@@ -2,7 +2,8 @@ USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE 
     (
-        AGG_PERIOD VARCHAR COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY).',
+        AGG_PERIOD VARCHAR COMMENT 'The aggregate level of the time dimensions (e.g., YEARLY, MONTHLY, DAILY).',
+        AGG_LEVEL VARCHAR COMMENT 'The aggregate level of the non-time dimensions. This includes (listed in order of decreasing specificity) aggregates for a given object identifier associated with a given project (OBJECT WITHIN PROJECT) and objects which have no project association (OBJECT), as well as aggregates across every object of a given object type associated with a given project (OBJECT TYPE WITHIN PROJECT), every object (regardless of type) associated with a given project (PROJECT), every object of a given type within Synapse (OBJECT TYPE), and, finally, every object within Synapse (ALL OBJECTS). Note that only "FileEntity" and "TableEntity" object types are associated with a project.',
         AGG_YEAR NUMBER COMMENT 'PRIMARY KEY (Composite). Year of the aggregation period.',
         AGG_QUARTER NUMBER COMMENT 'PRIMARY KEY (Composite). Quarter of the aggregation period.',
         AGG_MONTH NUMBER COMMENT 'PRIMARY KEY (Composite). Month of the aggregation period.',
@@ -18,7 +19,7 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_medium
     COMMENT =
-        'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. This includes (listed in order of decreasing specificity) aggregates for a specific object identifier associated with a specific project, across every object of a specific type associated with a specific project, across every object (regardless of type) associated with a specific project, across every object of a specific type in Synapse, and, finally, across every object in Synapse. Note that only "FileEntity" and "TableEntity" object types are associated with a project.'
+        'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the `AGG_LEVEL` column.'
     AS
     WITH user_download_rollup AS (
         SELECT
@@ -41,9 +42,16 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
 
             -- Computing our aggregate
             COUNT(DISTINCT user_id) AS user_download_count
-        FROM {{database_name}}.synapse_event.filedownload --noqa: JJ01,PRS,TMP
-        -- exclude today’s partial data to avoid confusion in the final table
-        WHERE RECORD_DATE < (SELECT MAX(RECORD_DATE) FROM {{database_name}}.synapse_event.filedownload) --noqa: JJ01,PRS,TMP
+        FROM
+            {{ database_name }}.synapse_event.objectdownload_event --noqa: JJ01,PRS,TMP
+        WHERE
+            -- exclude today’s partial data to avoid confusion in the final table
+            RECORD_DATE < (SELECT MAX(RECORD_DATE) FROM {{ database_name }}.synapse_event.objectdownload_event) --noqa: JJ01,PRS,TMP
+            -- do not include file/table entities which have no project association
+            AND NOT (
+                association_object_type IN ('FileEntity', 'TableEntity')
+                AND project_id IS NULL
+            )
         GROUP BY
             ROLLUP(agg_year, agg_quarter, agg_month, agg_day),
             GROUPING SETS (
@@ -54,22 +62,18 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
                 -- (association_object_type, association_object_id),   -- 5) aggregates across projects for this object
                 (project_id, association_object_type, association_object_id)  -- 6) aggregates for a specific object in a specific project
             )
-        ORDER BY
-            agg_year, agg_quarter, agg_month, agg_day,
-            project_id, association_object_type, association_object_id
     ),
     -- Step 2: Determine the aggregate period (grain) and start and end dates
     agg_period_calculations AS (
 
         SELECT
-            -- 1. Grab the relevant original columns
             agg_year,
             agg_quarter,
             agg_month,
             agg_day,
 
-            -- 2. Create `agg_period` column...
-            --    Determine granularity based on which dimensions were rolled up
+            -- Create `agg_period` column
+            -- Determine granularity based on which dimensions were rolled up
             CASE
                 WHEN g_year = 1 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN 'ALL TIME'
                 WHEN g_year = 0 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN 'YEARLY'
@@ -78,7 +82,28 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
                 WHEN g_day = 0 THEN 'DAILY'
             END AS agg_period,
 
-            -- 3. Create `agg_period_start` column
+            -- Create `agg_level` column
+            -- Determine granularity based on which grouping sets were rolled up
+            CASE
+                WHEN project_id IS NOT NULL AND association_object_type IS NOT NULL AND association_object_id IS NOT NULL
+                    THEN 'OBJECT WITHIN PROJECT'
+                WHEN project_id IS NOT NULL AND association_object_type IS NOT NULL AND association_object_id IS NULL
+                    THEN 'OBJECT TYPE WITHIN PROJECT'
+                WHEN project_id IS NOT NULL AND association_object_type IS NULL
+                    THEN 'PROJECT'
+                -- This covers other object types, but doesn't match table/file aggregates across projects.
+                -- The check against table/file aggregates is not relevant, since we don't currently include
+                -- the (association_object_type, association_object_id) grouping set, but no harm in including it
+                -- to reduce maintenence burden.
+                WHEN project_id IS NULL AND association_object_type IS NOT NULL AND association_object_id IS NOT NULL AND association_object_type NOT IN ('TableEntity', 'FileEntity')
+                     THEN 'OBJECT'
+                WHEN project_id IS NULL AND association_object_type IS NOT NULL AND association_object_id IS NULL
+                    THEN 'OBJECT TYPE'
+                WHEN project_id IS NULL AND association_object_type IS NULL AND association_object_id IS NULL
+                    THEN 'ALL OBJECTS'
+            END AS agg_level,
+
+            -- Create `agg_period_start` column
             CASE
                 -- First day of the year
                 WHEN g_year = 0 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN DATE_FROM_PARTS(agg_year, 1, 1)
@@ -90,7 +115,7 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
                 WHEN g_day = 0 THEN DATE_FROM_PARTS(agg_year, agg_month, agg_day)
             END AS agg_period_start,
 
-            -- 4. Create `agg_period_end` column (inclusive)
+            -- Create `agg_period_end` column (inclusive)
             CASE
                 -- Last day of the year
                 WHEN g_year = 0 AND g_quarter = 1 AND g_month = 1 AND g_day = 1 THEN LAST_DAY(DATE_FROM_PARTS(agg_year, 1, 1), 'YEAR')
@@ -106,9 +131,9 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
             association_object_type,
             user_download_count
         FROM user_download_rollup
-        -- The following WHERE condition filters is omitted because we have omitted
-        -- (association_object_type, association_object_id) from our grouping sets.
-        -- It may be useful if we include this grouping set in the future.
+        -- The following WHERE condition is omitted because we don't include
+        -- (association_object_type, association_object_id) among our grouping sets.
+        -- The below condition may be useful if we decide to include this grouping set in the future.
         --
         -- Drop records which contain (association_object_type, association_object_id) aggregates for those
         -- project-specific objects (e.g., file and table entities) which have only ever been downloaded
@@ -168,11 +193,12 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
     -- Step 3: Compose the final table by ordering the columns for easier reading and adding the completion column
     SELECT
         agg_period,
+        agg_level,
         agg_year,
         agg_quarter,
         agg_month,
         agg_day,
-        agg_project_id,
+        project_id as agg_project_id,
         association_object_type as agg_object_type,
         association_object_id as agg_object_id,
         agg_period_start,
@@ -180,4 +206,6 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
         -- 5. Mark the period as complete once today's date is past the stop
         (CURRENT_DATE > agg_period_end) AS agg_period_is_complete,
         user_download_count
-    FROM agg_period_calculations;
+    FROM agg_period_calculations
+    ORDER BY
+        agg_year, agg_month, agg_day, agg_object_id, agg_object_type;
