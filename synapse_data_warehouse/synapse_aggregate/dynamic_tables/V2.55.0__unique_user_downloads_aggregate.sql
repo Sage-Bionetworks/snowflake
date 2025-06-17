@@ -1,6 +1,6 @@
 USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
-CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE 
+CREATE OR REPLACE DYNAMIC TABLE OBJECTDOWNLOAD_AGGREGATE 
     (
         AGG_PERIOD VARCHAR COMMENT 'The aggregate level of the time dimensions (e.g., YEARLY, MONTHLY, DAILY).',
         AGG_LEVEL VARCHAR COMMENT 'The aggregate level of the non-time dimensions. This includes (listed in order of decreasing specificity) aggregates for a given object identifier associated with a given project (OBJECT WITHIN PROJECT) and objects which have no project association (OBJECT), as well as aggregates across every object of a given object type associated with a given project (OBJECT TYPE WITHIN PROJECT), every object (regardless of type) associated with a given project (PROJECT), every object of a given type within Synapse (OBJECT TYPE), and, finally, every object within Synapse (ALL OBJECTS). Note that only "FileEntity" and "TableEntity" object types are associated with a project.',
