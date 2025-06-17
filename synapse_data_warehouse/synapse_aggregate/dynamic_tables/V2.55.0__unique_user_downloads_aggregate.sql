@@ -3,25 +3,24 @@ USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE 
     (
         AGG_PERIOD VARCHAR COMMENT 'The dimension of the aggregate (e.g., YEARLY, MONTHLY, DAILY).',
-        AGG_YEAR NUMBER COMMENT 'Primary key (composite). Year of the aggregation period.',
-        AGG_QUARTER NUMBER COMMENT 'Primary key (composite). Quarter of the aggregation period.',
-        AGG_MONTH NUMBER COMMENT 'Primary key (composite). Month of the aggregation period.',
-        AGG_DAY NUMBER COMMENT 'Primary key (composite). Day of the aggregation period.',
-        AGG_PROJECT_ID NUMBER COMMENT 'Primary key (composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when `object_type` is FileEntity or TableEntity.',
-        AGG_OBJECT_TYPE VARCHAR COMMENT 'Primary key (composite). The type of the Synapse entity or object.',
-        AGG_OBJECT_ID NUMBER COMMENT 'Primary key (composite). The unique identifier of the Synapse entity or object.',
+        AGG_YEAR NUMBER COMMENT 'PRIMARY KEY (Composite). Year of the aggregation period.',
+        AGG_QUARTER NUMBER COMMENT 'PRIMARY KEY (Composite). Quarter of the aggregation period.',
+        AGG_MONTH NUMBER COMMENT 'PRIMARY KEY (Composite). Month of the aggregation period.',
+        AGG_DAY NUMBER COMMENT 'PRIMARY KEY (Composite). Day of the aggregation period.',
+        AGG_PROJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when `object_type` is FileEntity or TableEntity.',
+        AGG_OBJECT_TYPE VARCHAR COMMENT 'PRIMARY KEY (Composite). The type of the Synapse entity or object.',
+        AGG_OBJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse entity or object.',
         AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period.',
         AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period.',
         AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
         USER_DOWNLOAD_COUNT NUMBER COMMENT 'The number of unique users that have generated a pre-signed URL for this entity during the aggregation period. This approximates a download.'
     )
     TARGET_LAG = '1 day'
-    WAREHOUSE = compute_xsmall
-    COMMENT = 'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for most combinations of the project, object type, and object identifier dimensions. Some combinations are omitted because they are either nonsensical or redundant with a more specific combination of dimensions.'
+    WAREHOUSE = compute_medium
+    COMMENT =
+        'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. This includes (listed in order of decreasing specificity) aggregates for a specific object identifier associated with a specific project, across every object of a specific type associated with a specific project, across every object (regardless of type) associated with a specific project, across every object of a specific type in Synapse, and, finally, across every object in Synapse. Note that only "FileEntity" and "TableEntity" object types are associated with a project.'
     AS
-    -- Step 1: Compute the aggregate user count and extract the aggregate dimensions
     WITH user_download_rollup AS (
-
         SELECT
             -- Extracting our aggregate dimensions from ``record_date`` column
             YEAR(record_date)  AS agg_year,
@@ -48,11 +47,11 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
         GROUP BY
             ROLLUP(agg_year, agg_quarter, agg_month, agg_day),
             GROUPING SETS (
-                (),                                                 -- 1) aggregates across every object
+                (),                                                 -- 1) aggregates across every object in Synapse
                 (project_id),                                       -- 2) aggregates across every object in this project
-                (association_object_type),                          -- 3) aggregates across every object of this type
+                (association_object_type),                          -- 3) aggregates across every object of this type in Synapse
                 (project_id, association_object_type),              -- 4) aggregates across every object of this type in this project
-                (association_object_type, association_object_id),   -- 5) aggregates across projects for this object
+                -- (association_object_type, association_object_id),   -- 5) aggregates across projects for this object
                 (project_id, association_object_type, association_object_id)  -- 6) aggregates for a specific object in a specific project
             )
         ORDER BY
@@ -107,60 +106,64 @@ CREATE OR REPLACE DYNAMIC TABLE DOWNLOAD_AGGREGATE
             association_object_type,
             user_download_count
         FROM user_download_rollup
+        -- The following WHERE condition filters is omitted because we have omitted
+        -- (association_object_type, association_object_id) from our grouping sets.
+        -- It may be useful if we include this grouping set in the future.
+        --
         -- Drop records which contain (association_object_type, association_object_id) aggregates for those
         -- project-specific objects (e.g., file and table entities) which have only ever been downloaded
         -- from a single project. Over 99% of aggregates over this grouping set are redundant because most
         -- project-specific objects exist in just one project. This is a nearly 25% reduction in records!
-        WHERE
-            -- Our strategy here is to match any aggregates which fit the description above
-            -- and exclude them from the query results.
-            NOT (
-                association_object_id IS NOT NULL
-                AND association_object_type IS NOT NULL
-                AND project_id IS NULL
-                -- Up to this point, we are matching all (association_object_type, association_object_id) aggregates
-                AND NOT (
-                    -- Exclude from our match objects which have downloads across more than a single project
-                    -- and objects which don't associate with a project. This NOT (A OR B) approach requires our
-                    -- query to do set operations on 20x fewer records than the more direct approach.
-                    -- Check out De Morgan's law if u a real nerd and want to write this like (NOT A) AND (NOT B).
+        -- WHERE
+        --     -- Our strategy here is to match any aggregates which fit the description above
+        --     -- and exclude them from the query results.
+        --     NOT (
+        --         association_object_id IS NOT NULL
+        --         AND association_object_type IS NOT NULL
+        --         AND project_id IS NULL
+        --         -- Up to this point, we are matching all (association_object_type, association_object_id) aggregates
+        --         AND NOT (
+        --             -- Exclude from our match objects which have downloads across more than a single project
+        --             -- and objects which don't associate with a project. This NOT (A OR B) approach requires our
+        --             -- query to do set operations on 20x fewer records than the more direct approach.
+        --             -- Check out De Morgan's law if u a real nerd and want to write this like (NOT A) AND (NOT B).
 
-                    -- Exclude from our match objects which have downloads across more than a single project.
-                    -- Objects which have downloads across more than one project will evaluate to TRUE
-                    -- Objects which have downloads in just one project will evaluate to FALSE
-                    -- Objects which don't associate with a project will evaluate to FALSE
-                    association_object_id IN (
-                        SELECT 
-                            association_object_id
-                        FROM 
-                            {{database_name}}.synapse_event.filedownload --noqa: JJ01,PRS,TMP
-                        WHERE
-                            project_id IS NOT NULL
-                        GROUP BY 
-                            association_object_id
-                        HAVING 
-                            COUNT(DISTINCT project_id) > 1
-                    )
+        --             -- Exclude from our match objects which have downloads across more than a single project.
+        --             -- Objects which have downloads across more than one project will evaluate to TRUE
+        --             -- Objects which have downloads in just one project will evaluate to FALSE
+        --             -- Objects which don't associate with a project will evaluate to FALSE
+        --             association_object_id IN (
+        --                 SELECT 
+        --                     association_object_id
+        --                 FROM 
+        --                     {{database_name}}.synapse_event.filedownload --noqa: JJ01,PRS,TMP
+        --                 WHERE
+        --                     project_id IS NOT NULL
+        --                 GROUP BY 
+        --                     association_object_id
+        --                 HAVING 
+        --                     COUNT(DISTINCT project_id) > 1
+        --             )
 
-                    OR 
+        --             OR 
 
-                    -- Exclude from our match objects which don't associate with a project.
-                    -- Objects which have downloads across more than one project will evaluate to FALSE
-                    -- Objects which appear in just one project will evaluate to FALSE
-                    -- Objects which don't associate with a project will evaluate to TRUE.
-                    association_object_id IN (
-                        SELECT 
-                            distinct association_object_id
-                        FROM 
-                            {{database_name}}.synapse_event.filedownload --noqa: JJ01,PRS,TMP
-                        WHERE
-                            project_id IS NULL
-                    )
-                    -- Only objects which appear in a single project will evaluate to FALSE both times!
-                ) 
-            )
-            -- Hence they are the only (association_object_type, association_object_id) aggregates
-            -- which will be excluded from the results of this CTE.
+        --             -- Exclude from our match objects which don't associate with a project.
+        --             -- Objects which have downloads across more than one project will evaluate to FALSE
+        --             -- Objects which appear in just one project will evaluate to FALSE
+        --             -- Objects which don't associate with a project will evaluate to TRUE.
+        --             association_object_id IN (
+        --                 SELECT 
+        --                     distinct association_object_id
+        --                 FROM 
+        --                     {{database_name}}.synapse_event.filedownload --noqa: JJ01,PRS,TMP
+        --                 WHERE
+        --                     project_id IS NULL
+        --             )
+        --             -- Only objects which appear in a single project will evaluate to FALSE both times!
+        --         ) 
+        --     )
+        --     -- Hence they are the only (association_object_type, association_object_id) aggregates
+        --     -- which will be excluded from the results of this CTE.
     )
     -- Step 3: Compose the final table by ordering the columns for easier reading and adding the completion column
     SELECT
