@@ -8,18 +8,42 @@ CREATE OR REPLACE DYNAMIC TABLE OBJECTDOWNLOAD_AGGREGATE
         AGG_QUARTER NUMBER COMMENT 'PRIMARY KEY (Composite). Quarter of the aggregation period.',
         AGG_MONTH NUMBER COMMENT 'PRIMARY KEY (Composite). Month of the aggregation period.',
         AGG_DAY NUMBER COMMENT 'PRIMARY KEY (Composite). Day of the aggregation period.',
-        AGG_PROJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when `object_type` is FileEntity or TableEntity.',
+        AGG_PROJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when {{object_type}} is FileEntity or TableEntity.',
         AGG_OBJECT_TYPE VARCHAR COMMENT 'PRIMARY KEY (Composite). The type of the Synapse entity or object.',
         AGG_OBJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse entity or object.',
         AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period.',
         AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period.',
         AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
-        USER_DOWNLOAD_COUNT NUMBER COMMENT 'The number of unique users that have generated a pre-signed URL for this entity during the aggregation period. This approximates a download.'
+        USER_DOWNLOAD_COUNT NUMBER COMMENT 'The number of unique users that have generated a pre-signed URL for this object during the aggregation period. This approximates a download.'
+        DOWNLOAD_EVENT_COUNT NUMBER COMMENT 'The number of download events for this object during the aggregation period. Download events for a given object are on a per user per day basis, hence for daily aggregates this will always be equal to the {{USER_DOWNLOAD_COUNT}}.'
     )
     TARGET_LAG = '1 day'
     WAREHOUSE = compute_medium
-    COMMENT =
-        'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the `AGG_LEVEL` column.'
+    COMMENT ='This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the {{agg_level}} column.
+
+h3. Understanding Aggregates
+
+Aggregates are computed over specific time periods, as well as over specific cross-sections of other non-time columns or dimensions.
+
+h4. Aggregates over Time Periods
+
+Aggregates over a given time period are labeled in {{agg_period}}:
+
+* YEARLY
+* QUARTERLY
+* MONTHLY
+* DAILY
+
+h4. Aggregates over Data Dimensions
+
+Aggregates over various non-time, data dimensions are labeled in {{agg_level}}:
+
+* *OBJECT WITHIN PROJECT* - Aggregates for objects within a given project. This encompasses only "FileEntity" and "TableEntity" {{object_type}}s.
+* *OBJECT* - Aggregates for objects which don\'t associate with a project. This encompasses all other {{object_type}}s. Note that we do not provide _cross-project_ download aggregates for FileEntity or TableEntity objects.
+* *OBJECT TYPE WITHIN PROJECT* - Aggregates for an object type within a given project. This only applies to object types which associate with a project: FileEntity and TableEntity.
+* *PROJECT* - Aggregates for _all_ objects within a given project. This encompasses FileEntity and TableEntity object types.
+* *OBJECT TYPE* - Aggregates for an object type, regardless of project.
+* *ALL OBJECTS* - Aggregates for all objects within Synapse. Note that this encompasses only those object types provided in {{object_type}}.'
     AS
     WITH user_download_rollup AS (
         SELECT
@@ -40,8 +64,9 @@ CREATE OR REPLACE DYNAMIC TABLE OBJECTDOWNLOAD_AGGREGATE
             association_object_id,
             association_object_type,
 
-            -- Computing our aggregate
-            COUNT(DISTINCT user_id) AS user_download_count
+            -- Computing our aggregates
+            COUNT(DISTINCT user_id) AS user_download_count,
+            COUNT(*) AS download_event_count
         FROM
             {{ database_name }}.synapse_event.objectdownload_event --noqa: JJ01,PRS,TMP
         WHERE
