@@ -1,25 +1,25 @@
 USE SCHEMA {{database_name}}.synapse_aggregate; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE OBJECTDOWNLOAD_AGGREGATE 
-    (
-        AGG_PERIOD VARCHAR COMMENT 'The aggregate level of the time dimensions (e.g., YEARLY, MONTHLY, DAILY).',
-        AGG_LEVEL VARCHAR COMMENT 'The aggregate level of the non-time dimensions. This includes (listed in order of decreasing specificity) aggregates for a given object identifier associated with a given project (OBJECT WITHIN PROJECT) and objects which have no project association (OBJECT), as well as aggregates across every object of a given object type associated with a given project (OBJECT TYPE WITHIN PROJECT), every object (regardless of type) associated with a given project (PROJECT), every object of a given type within Synapse (OBJECT TYPE), and, finally, every object within Synapse (ALL OBJECTS). Note that only "FileEntity" and "TableEntity" object types are associated with a project.',
-        AGG_YEAR NUMBER COMMENT 'PRIMARY KEY (Composite). Year of the aggregation period.',
-        AGG_QUARTER NUMBER COMMENT 'PRIMARY KEY (Composite). Quarter of the aggregation period.',
-        AGG_MONTH NUMBER COMMENT 'PRIMARY KEY (Composite). Month of the aggregation period.',
-        AGG_DAY NUMBER COMMENT 'PRIMARY KEY (Composite). Day of the aggregation period.',
-        AGG_PROJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when {{object_type}} is FileEntity or TableEntity.',
-        AGG_OBJECT_TYPE VARCHAR COMMENT 'PRIMARY KEY (Composite). The type of the Synapse entity or object.',
-        AGG_OBJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse entity or object.',
-        AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period.',
-        AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period.',
-        AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
-        USER_DOWNLOAD_COUNT NUMBER COMMENT 'The number of unique users that have generated a pre-signed URL for this object during the aggregation period. This approximates a download.'
-        DOWNLOAD_EVENT_COUNT NUMBER COMMENT 'The number of download events for this object during the aggregation period. Download events for a given object are on a per user per day basis, hence for daily aggregates this will always be equal to the {{USER_DOWNLOAD_COUNT}}.'
-    )
-    TARGET_LAG = '1 day'
-    WAREHOUSE = compute_medium
-    COMMENT ='This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the {{agg_level}} column.
+(
+    AGG_PERIOD VARCHAR COMMENT 'The aggregate level of the time dimensions (e.g., YEARLY, MONTHLY, DAILY).',
+    AGG_LEVEL VARCHAR COMMENT 'The aggregate level of the non-time dimensions. This includes (listed in order of decreasing specificity) aggregates for a given object identifier associated with a given project (OBJECT WITHIN PROJECT) and objects which have no project association (OBJECT), as well as aggregates across every object of a given object type associated with a given project (OBJECT TYPE WITHIN PROJECT), every object (regardless of type) associated with a given project (PROJECT), every object of a given type within Synapse (OBJECT TYPE), and, finally, every object within Synapse (ALL OBJECTS). Note that only "FileEntity" and "TableEntity" object types are associated with a project.',
+    AGG_YEAR NUMBER COMMENT 'PRIMARY KEY (Composite). Year of the aggregation period.',
+    AGG_QUARTER NUMBER COMMENT 'PRIMARY KEY (Composite). Quarter of the aggregation period.',
+    AGG_MONTH NUMBER COMMENT 'PRIMARY KEY (Composite). Month of the aggregation period.',
+    AGG_DAY NUMBER COMMENT 'PRIMARY KEY (Composite). Day of the aggregation period.',
+    AGG_PROJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse project where the entity or object resides. Applicable only when `object_type` is FileEntity or TableEntity.',
+    AGG_OBJECT_TYPE VARCHAR COMMENT 'PRIMARY KEY (Composite). The type of the Synapse entity or object.',
+    AGG_OBJECT_ID NUMBER COMMENT 'PRIMARY KEY (Composite). The unique identifier of the Synapse entity or object.',
+    AGG_PERIOD_START DATE COMMENT 'The start date of the aggregation period.',
+    AGG_PERIOD_END DATE COMMENT 'The stop date of the aggregation period.',
+    AGG_PERIOD_IS_COMPLETE BOOLEAN COMMENT 'If true, then the aggregation period is complete.',
+    USER_DOWNLOAD_COUNT NUMBER COMMENT 'The number of unique users that have generated a pre-signed URL for this object during the aggregation period. This approximates a download.',
+    DOWNLOAD_EVENT_COUNT NUMBER COMMENT 'The number of download events for this object during the aggregation period. Download events for a given object are on a per user per day basis, hence for daily aggregates this will always be equal to the `USER_DOWNLOAD_COUNT`.'
+)
+TARGET_LAG = '1 day'
+WAREHOUSE = compute_medium
+COMMENT = 'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the `agg_level` column.
 
 h3. Understanding Aggregates
 
@@ -27,7 +27,7 @@ Aggregates are computed over specific time periods, as well as over specific cro
 
 h4. Aggregates over Time Periods
 
-Aggregates over a given time period are labeled in {{agg_period}}:
+Aggregates over a given time period are labeled in `agg_period`:
 
 * YEARLY
 * QUARTERLY
@@ -36,14 +36,14 @@ Aggregates over a given time period are labeled in {{agg_period}}:
 
 h4. Aggregates over Data Dimensions
 
-Aggregates over various non-time, data dimensions are labeled in {{agg_level}}:
+Aggregates over various non-time, data dimensions are labeled in `agg_level`:
 
-* *OBJECT WITHIN PROJECT* - Aggregates for objects within a given project. This encompasses only "FileEntity" and "TableEntity" {{object_type}}s.
-* *OBJECT* - Aggregates for objects which don\'t associate with a project. This encompasses all other {{object_type}}s. Note that we do not provide _cross-project_ download aggregates for FileEntity or TableEntity objects.
+* *OBJECT WITHIN PROJECT* - Aggregates for objects within a given project. This encompasses only "FileEntity" and "TableEntity" `object_type`s.
+* *OBJECT* - Aggregates for objects which don\'t associate with a project. This encompasses all other `object_type`s. Note that we do not provide _cross-project_ download aggregates for FileEntity or TableEntity objects.
 * *OBJECT TYPE WITHIN PROJECT* - Aggregates for an object type within a given project. This only applies to object types which associate with a project: FileEntity and TableEntity.
 * *PROJECT* - Aggregates for _all_ objects within a given project. This encompasses FileEntity and TableEntity object types.
 * *OBJECT TYPE* - Aggregates for an object type, regardless of project.
-* *ALL OBJECTS* - Aggregates for all objects within Synapse. Note that this encompasses only those object types provided in {{object_type}}.'
+* *ALL OBJECTS* - Aggregates for all objects within Synapse. Note that this encompasses only those object types provided in `object_type`.'
     AS
     WITH user_download_rollup AS (
         SELECT
