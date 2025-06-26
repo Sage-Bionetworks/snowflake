@@ -168,7 +168,8 @@ Aggregates over various non-time, data dimensions are labeled in `agg_level`:
             project_id,
             association_object_id,
             association_object_type,
-            user_download_count
+            user_download_count,
+            download_event_count
         FROM user_download_rollup
         -- The following WHERE condition is omitted because we don't include
         -- (association_object_type, association_object_id) among our grouping sets.
@@ -244,7 +245,8 @@ Aggregates over various non-time, data dimensions are labeled in `agg_level`:
         agg_period_end,
         -- 5. Mark the period as complete once today's date is past the stop
         (CURRENT_DATE > agg_period_end) AS agg_period_is_complete,
-        user_download_count
+        user_download_count,
+        download_event_count
     FROM agg_period_calculations
     ORDER BY
         agg_year, agg_month, agg_day, agg_object_id, agg_object_type;
