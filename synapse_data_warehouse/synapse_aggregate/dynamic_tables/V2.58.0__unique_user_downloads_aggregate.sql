@@ -18,8 +18,8 @@ CREATE OR REPLACE DYNAMIC TABLE OBJECTDOWNLOAD_AGGREGATE
     DOWNLOAD_EVENT_COUNT NUMBER COMMENT 'The number of download events for this object during the aggregation period. Download events for a given object are on a per user per day basis, hence for daily aggregates this will always be equal to the `USER_DOWNLOAD_COUNT`.'
 )
 TARGET_LAG = '1 day'
-WAREHOUSE = compute_medium
-COMMENT = 'This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the `agg_level` column.
+WAREHOUSE = compute_xsmall
+COMMENT = '''This table contains download aggregates across yearly, quarterly, monthly, and daily periods. Aggregates for these periods are computed for various combinations of the project, object type, and object identifier dimensions. For ease of reference, each combination is assigned a label in the `agg_level` column.
 
 h3. Understanding Aggregates
 
@@ -43,7 +43,7 @@ Aggregates over various non-time, data dimensions are labeled in `agg_level`:
 * *OBJECT TYPE WITHIN PROJECT* - Aggregates for an object type within a given project. This only applies to object types which associate with a project: FileEntity and TableEntity.
 * *PROJECT* - Aggregates for _all_ objects within a given project. This encompasses FileEntity and TableEntity object types.
 * *OBJECT TYPE* - Aggregates for an object type, regardless of project.
-* *ALL OBJECTS* - Aggregates for all objects within Synapse. Note that this encompasses only those object types provided in `object_type`.'
+* *ALL OBJECTS* - Aggregates for all objects within Synapse. Note that this encompasses only those object types provided in `object_type`.'''
     AS
     WITH user_download_rollup AS (
         SELECT
