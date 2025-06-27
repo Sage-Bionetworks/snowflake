@@ -729,3 +729,18 @@ GRANT DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE_EVENT_ALL_ANALYST
     TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_ANALYST;
 GRANT DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE_EVENT_ALL_DEVELOPER
     TO ROLE DATA_ENGINEER;
+
+-- The proxy admin will own the task which creates our backup
+USE ROLE accountadmin;
+GRANT CREATE DATABASE
+	ON ACCOUNT
+	TO ROLE synapse_data_warehouse_proxy_admin;
+
+-- Revoke USAGE on GOOGLE_ANALYTICS database from the DATA_ANALYTICS
+-- role via the application role DATA_READER (in the GOOGLE_ANALYTICS share)
+-- For reasons which I don't entirely understand, SECURITYADMIN is not able to
+-- see this role despite having the MANAGE GRANTS privilege, although the
+-- role's owner, ACCOUNTADMIN, is able to. 
+REVOKE APPLICATION ROLE GOOGLE_ANALYTICS.DATA_READER
+  FROM ROLE DATA_ANALYTICS;
+USE ROLE securityadmin;
