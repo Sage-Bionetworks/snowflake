@@ -54,7 +54,7 @@ COMMENT ON COLUMN ACCESSREQUIREMENT_LATEST.SNAPSHOT_DATE IS 'The data is partiti
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE ACL_LATEST IS 'This dynamic table contains the latest snapshot of access control lists (ACLs) for Synapse objects. It is derived from ACLSNAPSHOTS raw data and provides deduplicated, flattened access control information. The table is refreshed daily and contains only the most recent ACL entries for each owner_id from the past 14 days. Each row represents a specific access permission granted to a principal (user or team) on a Synapse object.';
+COMMENT ON DYNAMIC TABLE ACL_LATEST IS 'This dynamic table, indexed by OWNER_ID, contains the latest snapshot of access control lists (ACLs) for Synapse objects. It is derived from ACLSNAPSHOTS raw data and provides deduplicated, flattened access control information. The table is refreshed daily and contains only the most recent ACL entries for each owner_id from the past 14 days. Each row represents a specific access permission granted to a principal (user or team) on a Synapse object.';
 
 -- Column comments
 COMMENT ON COLUMN ACL_LATEST.CHANGE_TIMESTAMP IS 'The timestamp when the change (created/updated) on an access control list was pushed to the queue for snapshotting.';
@@ -73,7 +73,7 @@ COMMENT ON COLUMN ACL_LATEST.PRINCIPAL_ID IS 'The unique identifier of the princ
 ------------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE FILEHANDLEASSOCIATION_LATEST IS 'This dynamic table contains the latest snapshot of file handle associations for Synapse objects. It is derived from FILEHANDLEASSOCIATIONSNAPSHOTS raw data and provides deduplicated file association information. The table is refreshed weekly and contains only the most recent association entries for each filehandleid-associateid pair from the past 14 days. Each row represents a specific file handle association with a Synapse object.';
+COMMENT ON DYNAMIC TABLE FILEHANDLEASSOCIATION_LATEST IS 'This dynamic table, indexed by FILEHANDLEID and ASSOCIATEID, contains the latest snapshot of file handle associations for Synapse objects. It is derived from FILEHANDLEASSOCIATIONSNAPSHOTS raw data and provides deduplicated file association information. The table is refreshed weekly and contains only the most recent association entries for each filehandleid-associateid pair from the past 14 days. Each row represents a specific file handle association with a Synapse object.';
 
 -- Column comments
 COMMENT ON COLUMN FILEHANDLEASSOCIATION_LATEST.ASSOCIATEID IS 'The unique identifier of the Synapse object that wraps the file. This represents the ID of the entity that contains or references the file handle.';
@@ -89,7 +89,7 @@ COMMENT ON COLUMN FILEHANDLEASSOCIATION_LATEST.TIMESTAMP IS 'The time when the a
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE NODE_LATEST IS 'This dynamic table contains the latest snapshot of Synapse nodes (projects, files, folders, tables, etc.). It is derived from NODESNAPSHOTS raw data and provides deduplicated node information. The table is refreshed daily and contains only the most recent node entries for each ID from the past 30 days. Each row represents a specific Synapse node with its current state and metadata.';
+COMMENT ON DYNAMIC TABLE NODE_LATEST IS 'This dynamic table, indexed by ID, contains the latest snapshot of Synapse nodes (projects, files, folders, tables, etc.). It is derived from NODESNAPSHOTS raw data and provides deduplicated node information. The table is refreshed daily and contains only the most recent node entries for each ID from the past 30 days. Each row represents a specific Synapse node with its current state and metadata.';
 
 -- Column comments
 COMMENT ON COLUMN NODE_LATEST.CHANGE_TYPE IS 'The type of change that occurred on the node, e.g., CREATE, UPDATE.';
@@ -135,7 +135,7 @@ COMMENT ON COLUMN NODE_LATEST.PROJECT_STORAGE_USAGE IS 'The storage usage inform
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE PROJECTSETTING_LATEST IS 'This dynamic table contains the latest snapshot of project settings for Synapse projects. It is derived from PROJECTSETTINGSNAPSHOTS raw data and provides deduplicated project settings information. The table is refreshed daily and contains only the most recent settings entries for each project ID from the past 14 days. Each row represents a specific project setting with its current configuration.';
+COMMENT ON DYNAMIC TABLE PROJECTSETTING_LATEST IS 'This dynamic table, indexed by ID, contains the latest snapshot of project settings for Synapse projects. It is derived from PROJECTSETTINGSNAPSHOTS raw data and provides deduplicated project settings information. The table is refreshed daily and contains only the most recent settings entries for each project ID from the past 14 days. Each row represents a specific project setting with its current configuration.';
 
 -- Column comments
 COMMENT ON COLUMN PROJECTSETTING_LATEST.CHANGE_TIMESTAMP IS 'The time when a project settings change (created/updated) occurred.';
@@ -156,7 +156,7 @@ COMMENT ON COLUMN PROJECTSETTING_LATEST.SNAPSHOT_DATE IS 'The data is partitione
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE TEAM_LATEST IS 'This dynamic table contains the latest snapshot of Synapse teams. It is derived from TEAMSNAPSHOTS raw data and provides deduplicated team information. The table is refreshed daily and contains only the most recent team entries for each ID from the past 30 days. Each row represents a specific team with its current state and membership configuration.';
+COMMENT ON DYNAMIC TABLE TEAM_LATEST IS 'This dynamic table, indexed by ID, contains the latest snapshot of Synapse teams. It is derived from TEAMSNAPSHOTS raw data and provides deduplicated team information. The table is refreshed daily and contains only the most recent team entries for each ID from the past 30 days. Each row represents a specific team with its current state and membership configuration.';
 
 -- Column comments
 COMMENT ON COLUMN TEAM_LATEST.CHANGE_TYPE IS 'The type of change that occurred to the team, e.g., CREATE, UPDATE.';
@@ -178,7 +178,7 @@ COMMENT ON COLUMN TEAM_LATEST.SNAPSHOT_DATE IS 'The data is partitioned for fast
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE USERGROUP_LATEST IS 'This dynamic table contains the latest snapshot of Synapse principals (individual users and groups of users). It is derived from USERGROUPSNAPSHOTS raw data and provides deduplicated user group information. The table is refreshed daily and contains only the most recent entries for each ID from the past 14 days. Each row represents a specific principal (individual user or group) with its current state.';
+COMMENT ON DYNAMIC TABLE USERGROUP_LATEST IS 'This dynamic table, indexed by ID, contains the latest snapshot of Synapse principals (individual users and groups of users). It is derived from USERGROUPSNAPSHOTS raw data and provides deduplicated user group information. The table is refreshed daily and contains only the most recent entries for each ID from the past 14 days. Each row represents a specific principal (individual user or group) with its current state.';
 
 -- Column comments
 COMMENT ON COLUMN USERGROUP_LATEST.CHANGE_TYPE IS 'The type of change that occurred to the user-group, e.g., CREATE, UPDATE.';
@@ -196,7 +196,7 @@ COMMENT ON COLUMN USERGROUP_LATEST.SNAPSHOT_DATE IS 'The data is partitioned for
 --------------------------------------
 
 -- Table comments
-COMMENT ON DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST IS 'This dynamic table contains the latest snapshot of user verification submissions by ACT. It is derived from VERIFICATIONSUBMISSIONSNAPSHOTS raw data and provides deduplicated verification submission information. The table is refreshed daily and contains only the most recent submission entries for each ID from the past 14 days. Each row represents a specific verification submission with its current state and history.';
+COMMENT ON DYNAMIC TABLE VERIFICATIONSUBMISSION_LATEST IS 'This dynamic table, indexed by ID, contains the latest snapshot of user verification submissions by ACT. It is derived from VERIFICATIONSUBMISSIONSNAPSHOTS raw data and provides deduplicated verification submission information. The table is refreshed daily and contains only the most recent submission entries for each ID from the past 14 days. Each row represents a specific verification submission with its current state and history.';
 
 -- Column comments
 COMMENT ON COLUMN VERIFICATIONSUBMISSION_LATEST.CHANGE_TIMESTAMP IS 'The time when the change (created/updated) on a submission is pushed to the queue for snapshotting.';
