@@ -64,7 +64,6 @@ COMMENT ON COLUMN ACL_LATEST.OWNER_ID IS 'The unique identifier of the Synapse o
 COMMENT ON COLUMN ACL_LATEST.OWNER_TYPE IS 'The type of the Synapse object that the access control list is affecting, e.g., ENTITY, FILE, SUBMISSION, MESSAGE, TEAM.';
 COMMENT ON COLUMN ACL_LATEST.SNAPSHOT_DATE IS 'The date when the snapshot was taken, used for data partitioning. This field is derived from SNAPSHOT_TIMESTAMP and should be used in WHERE clauses for efficient querying.';
 COMMENT ON COLUMN ACL_LATEST.SNAPSHOT_TIMESTAMP IS 'The timestamp when the snapshot was taken. This is usually after the change happened and represents when the ACL state was captured.';
-COMMENT ON COLUMN ACL_LATEST.RESOURCE_ACCESS IS 'The original JSON array containing all access control entries for this ACL. This is the raw data before flattening and contains the complete list of principals and their permissions.';
 COMMENT ON COLUMN ACL_LATEST.ACCESS_TYPE IS 'The specific type of access permission granted to the principal. This is extracted from the RESOURCE_ACCESS JSON and represents what actions the principal can perform on the object (e.g., READ, UPDATE, DELETE, ADMIN).';
 COMMENT ON COLUMN ACL_LATEST.PRINCIPAL_ID IS 'The unique identifier of the principal (user or team) that has been granted the specified access type on the object. This is extracted from the RESOURCE_ACCESS JSON and represents who has the permission.';
 
