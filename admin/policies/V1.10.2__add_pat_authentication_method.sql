@@ -15,7 +15,6 @@ ALTER AUTHENTICATION POLICY USER_AUTHENTICATION_POLICY
         NETWORK_POLICY_EVALUATION = ENFORCED_NOT_REQUIRED
     );
 
--- 4. Assign the dummy network policy to the authentication policy
-ALTER AUTHENTICATION POLICY USER_AUTHENTICATION_POLICY
-    SET NETWORK_POLICY = allow_all_ips;
-
+-- 4. Assign the dummy network policy to everyone
+----- as described in https://docs.snowflake.com/en/user-guide/network-policies#activate-a-network-policy-for-your-account
+ALTER ACCOUNT SET NETWORK_POLICY = allow_all_ips;
