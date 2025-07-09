@@ -207,3 +207,10 @@ COMMENT ON COLUMN VERIFICATIONSUBMISSION_LATEST.CREATED_ON IS 'The creation time
 COMMENT ON COLUMN VERIFICATIONSUBMISSION_LATEST.CREATED_BY IS 'The unique identifier of the user who created the submission.';
 COMMENT ON COLUMN VERIFICATIONSUBMISSION_LATEST.STATE_HISTORY IS 'The sequence of submission states (SUBMITTED, REJECTED, APPROVED) for the submission.';
 COMMENT ON COLUMN VERIFICATIONSUBMISSION_LATEST.SNAPSHOT_DATE IS 'The data is partitioned for fast and cost effective queries. The snapshot_timestamp field is converted into a date and stored in the snapshot_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries.';
+
+--------------------------------------
+------ CERTIFIEDQUIZQUESTION_LATEST ------
+--------------------------------------
+
+-- Table comments
+COMMENT ON DYNAMIC TABLE CERTIFIEDQUIZQUESTION_LATEST IS 'This table contains the latest snapshots of the questions of the certification quiz taken within the last 14 days. With each entry representing a question answered by the user during the quiz.';
