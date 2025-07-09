@@ -1,11 +1,21 @@
 USE SCHEMA POLICY_DB.PUBLIC;
 
--- Add the new authentication method to the existing policy
+-- 1. Create a permissive network policy
+CREATE OR REPLACE NETWORK POLICY allow_all_ips
+    ALLOWED_IP_LIST = ('0.0.0.0/0');
+
+-- 2. Update the authentication policy with all desired methods
 ALTER AUTHENTICATION POLICY USER_AUTHENTICATION_POLICY
     SET AUTHENTICATION_METHODS = ('SAML', 'KEYPAIR', 'PROGRAMMATIC_ACCESS_TOKEN');
 
--- Set the expiration to 30 days
+-- 3. Set the PAT policy to be user-friendly
 ALTER AUTHENTICATION POLICY USER_AUTHENTICATION_POLICY
     SET PAT_POLICY = (
-        DEFAULT_EXPIRY_IN_DAYS=365,
-        NETWORK_POLICY_EVALUATION=ENFORCED_NOT_REQUIRED);
+        DEFAULT_EXPIRY_IN_DAYS = 365,
+        NETWORK_POLICY_EVALUATION = ENFORCED_NOT_REQUIRED
+    );
+
+-- 4. Assign the dummy network policy to the authentication policy
+ALTER AUTHENTICATION POLICY USER_AUTHENTICATION_POLICY
+    SET NETWORK_POLICY = allow_all_ips;
+
