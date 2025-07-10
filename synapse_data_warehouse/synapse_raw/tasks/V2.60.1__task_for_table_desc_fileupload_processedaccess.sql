@@ -7,8 +7,6 @@ ALTER TASK processedaccess_task SUSPEND;
 ALTER TASK clone_fileupload_task SUSPEND;
 ALTER TASK clone_process_access_task SUSPEND;
 
-COMMIT;
-
 -- Step 2) Add deprecation notice to clone_fileupload_task
 CREATE OR REPLACE TASK clone_fileupload_task
   AFTER fileupload_task
@@ -40,4 +38,8 @@ AS
   $$;
 
 -- Step 4) Resume everything
-SELECT SYSTEM$TASK_DEPENDENTS_ENABLE( 'REFRESH_SYNAPSE_WAREHOUSE_S3_STAGE_TASK' );
+ALTER TASK clone_process_access_task RESUME;
+ALTER TASK clone_fileupload_task RESUME;
+ALTER TASK processedaccess_task RESUME;
+ALTER TASK fileupload_task RESUME;
+ALTER TASK refresh_synapse_warehouse_s3_stage_task RESUME;
