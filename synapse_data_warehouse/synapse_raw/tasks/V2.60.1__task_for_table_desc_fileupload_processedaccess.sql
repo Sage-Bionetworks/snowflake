@@ -8,7 +8,7 @@ alter task synapse_raw.clone_process_access_task suspend;
 -- Step 2) Create the tasks of interest
 ---- Task to alter fileupload table comment
 create or replace task synapse_raw.alter_fileupload_comment_task
-  after clone_fileupload_task
+  after synapse_raw.clone_fileupload_task
 as
   alter table synapse.fileupload
   set comment =
@@ -18,7 +18,7 @@ as
 
 ---- Task to alter processedaccess table comment
 create or replace task synapse_raw.alter_processedaccess_comment_task
-  after clone_process_access_task
+  after synapse_raw.clone_process_access_task
 as
   alter table synapse.processedaccess
   set comment =
