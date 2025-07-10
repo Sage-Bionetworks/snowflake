@@ -1,7 +1,9 @@
 USE DATABASE {{database_name}};  -- noqa: JJ01,PRS,TMP
 
--- Step 1) Pause the upstream tasks
+-- Step 1) Pause the entire task tree
 ALTER TASK synapse_raw.refresh_synapse_warehouse_s3_stage_task SUSPEND;
+ALTER TASK synapse_raw.fileupload_task SUSPEND;
+ALTER TASK synapse_raw.processedaccess_task SUSPEND;
 ALTER TASK synapse_raw.clone_fileupload_task SUSPEND;
 ALTER TASK synapse_raw.clone_process_access_task SUSPEND;
 
@@ -37,5 +39,7 @@ AS
 
 -- Step 4) Resume everything
 ALTER TASK synapse_raw.refresh_synapse_warehouse_s3_stage_task RESUME;
+ALTER TASK synapse_raw.fileupload_task RESUME;
+ALTER TASK synapse_raw.processedaccess_task RESUME;
 ALTER TASK synapse_raw.clone_fileupload_task RESUME;
 ALTER TASK synapse_raw.clone_process_access_task RESUME;
