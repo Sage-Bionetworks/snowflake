@@ -43,3 +43,6 @@ ALTER TASK clone_fileupload_task RESUME;
 ALTER TASK processedaccess_task RESUME;
 ALTER TASK fileupload_task RESUME;
 ALTER TASK refresh_synapse_warehouse_s3_stage_task RESUME;
+
+-- Step 5) Manually execute the root task to ensure the table comment gets updated accordingly...
+EXECUTE TASK refresh_synapse_warehouse_s3_stage_task;
