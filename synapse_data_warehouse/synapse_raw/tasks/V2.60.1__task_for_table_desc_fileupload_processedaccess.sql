@@ -7,7 +7,7 @@ ALTER TASK processedaccess_task SUSPEND;
 ALTER TASK clone_fileupload_task SUSPEND;
 ALTER TASK clone_process_access_task SUSPEND;
 
-ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
+COMMIT;
 
 -- Step 2) Add deprecation notice to clone_fileupload_task
 CREATE OR REPLACE TASK clone_fileupload_task
