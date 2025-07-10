@@ -1,7 +1,7 @@
 USE SCHEMA POLICY_DB.PUBLIC;
 
 -- 1. Create a permissive network policy
-CREATE OR REPLACE NETWORK POLICY allow_all_ips
+CREATE NETWORK POLICY IF NOT EXISTS allow_all_ips
     ALLOWED_IP_LIST = ('0.0.0.0/0');
 
 -- 2. Update the authentication policy with all desired methods
