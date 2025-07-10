@@ -40,8 +40,4 @@ AS
   $$;
 
 -- Step 4) Resume everything
-ALTER TASK refresh_synapse_warehouse_s3_stage_task RESUME;
-ALTER TASK fileupload_task RESUME;
-ALTER TASK processedaccess_task RESUME;
-ALTER TASK clone_fileupload_task RESUME;
-ALTER TASK clone_process_access_task RESUME;
+SELECT SYSTEM$TASK_DEPENDENTS_ENABLE( 'REFRESH_SYNAPSE_WAREHOUSE_S3_STAGE_TASK' );
