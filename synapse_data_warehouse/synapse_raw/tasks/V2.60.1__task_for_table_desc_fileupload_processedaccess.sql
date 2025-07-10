@@ -1,11 +1,13 @@
 USE SCHEMA {{database_name}}.synapse_raw;  -- noqa: JJ01,PRS,TMP
 
 -- Step 1) Pause the entire task tree
-ALTER TASK SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_247_ADD_COMMENTS_TO_LATEST_TABLES.synapse_raw.refresh_synapse_warehouse_s3_stage_task SUSPEND;
+ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
 ALTER TASK fileupload_task SUSPEND;
 ALTER TASK processedaccess_task SUSPEND;
 ALTER TASK clone_fileupload_task SUSPEND;
 ALTER TASK clone_process_access_task SUSPEND;
+
+ALTER TASK refresh_synapse_warehouse_s3_stage_task SUSPEND;
 
 -- Step 2) Add deprecation notice to clone_fileupload_task
 CREATE OR REPLACE TASK clone_fileupload_task
