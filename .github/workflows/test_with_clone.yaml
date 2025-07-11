@@ -81,7 +81,6 @@ jobs:
             - name: Install Snowflake CLI
               uses: Snowflake-Labs/snowflake-cli-action@v1.5
               with:
-                cli-version: "3.7.2"
                 default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
 
             - name: Verify Snowflake CLI installation and connections
@@ -208,7 +207,6 @@ jobs:
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
-       
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
