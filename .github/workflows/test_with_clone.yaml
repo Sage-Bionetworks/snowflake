@@ -180,7 +180,7 @@ jobs:
                 # This step will give SNOWFLAKE_CLONE_ADMIN_ROLE the ability to inherit the privileges of <CLONE>_PROXY_ADMIN (that is, ownership of all objects in all schemas)
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
 
-            - name: Grant database-level privileges to SNOWFLAKE_CLONE_(PROXY/)ADMIN_ROLE
+            - name: Grant database-level privileges to SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
               run: |
                 # Grant database privileges to the clone admin. These are privileges that would have otherwise come with the ownership of the clone,
@@ -189,8 +189,6 @@ jobs:
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT MONITOR ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT CREATE SCHEMA ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
                 snow sql -q "USE ROLE SECURITYADMIN; GRANT CREATE DATABASE ROLE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT EXECUTE MANAGED TASK ON ACCOUNT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-                snow sql -q "USE ROLE ACCOUNTADMIN; GRANT EXECUTE TASK ON ACCOUNT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
 
             ########################################################################################################
@@ -209,7 +207,6 @@ jobs:
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
-       
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
