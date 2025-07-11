@@ -207,7 +207,6 @@ jobs:
                 -w $SNOWFLAKE_WAREHOUSE \
                 --config-folder synapse_data_warehouse
 
-       
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
