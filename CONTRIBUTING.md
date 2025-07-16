@@ -18,11 +18,15 @@ There are some things you should make a note of before getting started...
 To start contributing, follow the steps below to set up and develop on your local repository. Please note that you must work
 on a branch off the original repository rather than a fork.
 
+----
+
 ### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Sage-Bionetworks/snowflake
 ```
+
+----
 
 ### 2. Fetch the Latest `dev` Branch
 
@@ -38,6 +42,8 @@ Then, fetch the latest updates from the `dev` branch to ensure you’re working 
 git fetch origin dev
 ```
 
+----
+
 ### 3. Create a New Branch Off `dev`
 
 Create and checkout your feature branch from the latest `dev` branch. Name it based on the Jira ticket number and your feature/fix. For example:
@@ -48,7 +54,37 @@ git checkout -b snow-123-new-feature origin/dev
 
 Your branch will now be tracking `origin/dev` which you will merge into once your change is approved and merge conflicts are resolved (if any). For more guidance on how to resolve merge conflicts, [see here](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/about-merge-conflicts#resolving-merge-conflicts).
 
-### 4. Push to The Remote Branch
+----
+
+### 4. Script Versioning
+
+Before creating a new versioned script, always verify the latest applied version in the appropriate `change_history` table:
+
+1. **Database-object SQL scripts**
+
+Check the `<database>.schemachange.change_history` table to find the highest version already applied to your target database:
+
+```sql
+select *
+from synapse_data_warehouse.schemachange.change_history;
+```
+
+Name your new script accordingly (e.g. `V{latest_version+0.1}__your_description.sql`).
+
+2. **Admin scripts (e.g. grant, revoke, maintenance)**
+
+Check the `metadata.schemachange.change_history` table to find the highest version applied for admin operations:
+
+```sql
+select *
+from metadata.schemachange.change_history;
+```
+
+Name your new admin script accordingly (e.g. `V{latest_admin_version+0.1}__admin_task.sql`).
+
+----
+
+### 5. Push to The Remote Branch
 
 Once you've made your changes and committed them locally, push your branch to the remote repository:
 
@@ -56,11 +92,15 @@ Once you've made your changes and committed them locally, push your branch to th
 git push origin snow-123-new-feature
 ```
 
-### 5. Open a Draft Pull Request
+----
+
+### 6. Open a Draft Pull Request
 
 After pushing your commits in Step 4 to your remote branch, open a pull request (PR) against the dev branch using the GitHub UI. Start your PR in draft mode, and mark it as ready for review after you've implemented all your necessary changes.
 
 Opening your PR (whether in draft or not) will trigger the automated test workflows described in the next section. We recommend reading that section to understand how to further test your changes, OR if you are not introducing changes to the actual Snowflake data repository and want a way to opt-out of these workflow runs.
+
+----
 
 ## Running CI Jobs for Database Testing
 
