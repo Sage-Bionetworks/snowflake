@@ -2,7 +2,7 @@ USE SCHEMA {{database_name}}.synapse_event; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE DYNAMIC TABLE FILE_EVENT
     TARGET_LAG = '1 day'
-    WAREHOUSE = compute_xsmall
+    WAREHOUSE = compute_medium
     AS 
     WITH dedup_filesnapshots AS (
         SELECT
