@@ -1,6 +1,5 @@
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 
-
 create or replace dynamic table ACL_LATEST(
 	CHANGE_TIMESTAMP COMMENT 'The timestamp when the change (created/updated) on an access control list was pushed to the queue for snapshotting.',
 	CHANGE_TYPE COMMENT 'The type of change that occurred on the access control list, e.g., CREATE, UPDATE.',
