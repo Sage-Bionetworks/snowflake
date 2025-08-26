@@ -219,6 +219,7 @@ GRANT ROLE GOVERNANCE TO USER "thomas.yu@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "anthony.pena@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "hayley.sanchez@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "samia.ahmed@sagebase.org";
 GRANT ROLE GOVERNANCE TO ROLE SYSADMIN;
 
 -- Create governance privileges
