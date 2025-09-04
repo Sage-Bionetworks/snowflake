@@ -1,7 +1,7 @@
 USE SCHEMA {{ database_name }}.synapse; --noqa: JJ01,PRS,TMP
 
 CREATE OR REPLACE FUNCTION list_sage_users()
-RETURNS TABLE ("USER_ID" NUMBER(38, 0))
+RETURNS TABLE ("USER_ID" NUMBER)
 LANGUAGE SQL
 COMMENT = 'Returns a table with column `user_id` containing the Synapse user IDs of current Sage employees'
 AS
