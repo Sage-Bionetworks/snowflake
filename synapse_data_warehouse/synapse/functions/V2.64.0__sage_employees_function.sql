@@ -9,7 +9,7 @@ $$
 SELECT
     member_id as user_id
 FROM
-    synapse_data_warehouse.synapse.teammember_latest
+    {{ database_name }}.synapse.teammember_latest
 WHERE
     team_id = 273957
 $$;
