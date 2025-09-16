@@ -176,6 +176,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "jessica.britton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "karina.leal@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ann.campton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "savitha.sangameswaran@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "vanessa.barone@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders

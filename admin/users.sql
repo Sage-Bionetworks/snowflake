@@ -46,8 +46,10 @@ CREATE USER IF NOT EXISTS "jaclyn.beck@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 CREATE USER IF NOT EXISTS "karina.leal@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.campton@sagebase.org";
-CREATE USER IF NOT EXISTS "savitha.sangameswaran@sagebase.org";
 
+// SciData Misc
+CREATE USER IF NOT EXISTS "vanessa.barone@sagebase.org";
+CREATE USER IF NOT EXISTS "savitha.sangameswaran@sagebase.org";
 
 // NF
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
@@ -57,14 +59,12 @@ CREATE USER IF NOT EXISTS "jineta.banerjee@sagebase.org";
 CREATE USER IF NOT EXISTS "aditi.gopalan@sagebase.org";
 CREATE USER IF NOT EXISTS "ziwei.pan@sagebase.org";
 
-
 // Digital Health
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
 CREATE USER IF NOT EXISTS "meghasyam@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
 CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
-
 
 // Governance
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
