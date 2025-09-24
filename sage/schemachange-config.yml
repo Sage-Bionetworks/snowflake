@@ -1,0 +1,13 @@
+config-version: 1
+
+# The root folder for the database change scripts
+root-folder: sage
+# The name of the default database to use. Can be overridden in the change scripts.
+snowflake-database: SAGE
+# Create the change history schema and table, if they do not exist (the default is False)
+create-change-history-table: True
+# Used to override the default name of the change history table (the default is METADATA.SCHEMACHANGE.CHANGE_HISTORY)
+change-history-table: SAGE.SCHEMACHANGE.CHANGE_HISTORY
+vars:
+  database_name: SAGE
+  stack: {{env_var('STACK')}}
