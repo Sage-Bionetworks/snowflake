@@ -9,7 +9,6 @@ on:
       - 'analytics/*'
       - 'README.md'
       - 'recover/*'
-      - 'sage/*'
     branches:
       - "main"
       - "dev"
