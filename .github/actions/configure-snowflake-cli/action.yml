@@ -39,6 +39,12 @@ runs:
     - name: Create config.toml and connections.toml files
       shell: bash
       id: configure-snowflake
+      env:
+        SNOWFLAKE_ACCOUNT: ${{ inputs.ACCOUNT }}
+        SNOWFLAKE_USER: ${{ inputs.USER }}
+        SNOWFLAKE_WAREHOUSE: ${{ inputs.WAREHOUSE }}
+        SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
+        SNOWFLAKE_PRIVATE_KEY: ${{ inputs.PRIVATE_KEY }}
       run: |
         # Specify path for config.toml, connections.toml, and our private key
         mkdir -p $HOME/.snowflake
@@ -48,12 +54,12 @@ runs:
       
         # Write to connections.toml file
         echo '[default]' >> $CONNECTION_FILE
-        echo "account = \"${{ inputs.ACCOUNT }}\"" >> $CONNECTION_FILE
-        echo "user = \"${{ inputs.USER }}\"" >> $CONNECTION_FILE
-        echo "warehouse = \"${{ inputs.WAREHOUSE }}\"" >> $CONNECTION_FILE
+        echo "account = \"$SNOWFLAKE_ACCOUNT\"" >> $CONNECTION_FILE
+        echo "user = \"$SNOWFLAKE_USER\"" >> $CONNECTION_FILE
+        echo "warehouse = \"$SNOWFLAKE_WAREHOUSE\"" >> $CONNECTION_FILE
         echo 'authenticator = "SNOWFLAKE_JWT"' >> $CONNECTION_FILE
         echo "private_key_file = \"$PRIVATE_KEY_FILE\"" >> $CONNECTION_FILE
-        echo "private_key_file_pwd = \"${{ inputs.PRIVATE_KEY_PASSPHRASE }}\"" >> $CONNECTION_FILE
+        echo "private_key_file_pwd = \"$SNOWFLAKE_PRIVATE_KEY_PASSPHRASE\"" >> $CONNECTION_FILE
 
         # Restrict file owner read/write only (Snowflake requirement)
         chmod 0600 $CONNECTION_FILE 
@@ -74,7 +80,7 @@ runs:
         echo "config-file-path=$CONFIG_FILE" >> $GITHUB_OUTPUT
 
         # Write to the private key file
-        printf "%s" "${{ inputs.PRIVATE_KEY }}" > $PRIVATE_KEY_FILE
+        printf "%s" "$SNOWFLAKE_PRIVATE_KEY" > $PRIVATE_KEY_FILE
             
     - name: Verify configuration/connection file contents
       shell: bash
