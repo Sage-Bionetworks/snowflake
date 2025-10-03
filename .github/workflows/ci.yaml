@@ -9,7 +9,6 @@ on:
       - 'analytics/*'
       - 'README.md'
       - 'recover/*'
-      - 'sage/*'
     branches:
       - "main"
       - "dev"
@@ -77,6 +76,30 @@ jobs:
             --root-folder synapse_data_warehouse \
             --config-folder synapse_data_warehouse \
             --snowflake-role synapse_data_warehouse_admin
+
+  schemachange_sage:
+    runs-on: ubuntu-22.04
+    if: github.ref_name == 'main'
+    environment: prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+
+      - name: Deploy sage
+        shell: bash
+        run: |
+          schemachange \
+            --connection-name default \
+            --config-folder sage \
+            --snowflake-role sage_admin
 
   schemachange_admin:
     runs-on: ubuntu-22.04
