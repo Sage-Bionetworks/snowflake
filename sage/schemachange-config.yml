@@ -10,4 +10,3 @@ create-change-history-table: True
 change-history-table: SAGE.SCHEMACHANGE.CHANGE_HISTORY
 vars:
   database_name: SAGE
-  stack: {{env_var('STACK')}}
