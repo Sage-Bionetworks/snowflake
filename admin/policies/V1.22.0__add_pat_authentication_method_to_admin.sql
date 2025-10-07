@@ -8,6 +8,9 @@ ALTER AUTHENTICATION POLICY ADMIN_AUTHENTICATION_POLICY
         'PROGRAMMATIC_ACCESS_TOKEN'
     );
 
--- 2. Assign the dummy network policy (created in admin/policies/V1.17.0[...]) to everyone
--- as described in https://docs.snowflake.com/en/user-guide/network-policies#activate-a-network-policy-for-your-account
-ALTER ACCOUNT SET NETWORK_POLICY = allow_all_ips;
+-- 2. Set the PAT policy to be user-friendly
+ALTER AUTHENTICATION POLICY ADMIN_AUTHENTICATION_POLICY
+    SET PAT_POLICY = (
+        DEFAULT_EXPIRY_IN_DAYS = 365,
+        NETWORK_POLICY_EVALUATION = ENFORCED_NOT_REQUIRED
+    );
