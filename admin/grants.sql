@@ -177,6 +177,14 @@ GRANT ROLE DATA_ANALYTICS TO USER "karina.leal@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ann.campton@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "savitha.sangameswaran@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "vanessa.barone@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jonathan.liaw-gray@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "laura.heath@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "melissa.klein@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "sarah.mansfield@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "andree-anne.berthiaume@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "dottie.young@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jordan.driscoll@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "ram.ayyala@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
