@@ -185,6 +185,8 @@ GRANT ROLE DATA_ANALYTICS TO USER "andree-anne.berthiaume@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "dottie.young@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jordan.driscoll@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ram.ayyala@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "beatriz.saldana@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "tera.derita@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
