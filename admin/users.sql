@@ -55,6 +55,7 @@ CREATE USER IF NOT EXISTS "laura.heath@sagebase.org";
 CREATE USER IF NOT EXISTS "andree-anne.berthiaume@sagebase.org";
 CREATE USER IF NOT EXISTS "jordan.driscoll@sagebase.org";
 CREATE USER IF NOT EXISTS "ram.ayyala@sagebase.org";
+CREATE USER IF NOT EXISTS "beatriz.saldana@sagebase.org";
 
 // NF
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
@@ -116,6 +117,7 @@ CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
 CREATE USER IF NOT EXISTS "andrea.varsavsky@sagebase.org";
 CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
+CREATE USER IF NOT EXISTS "tera.derita@sagebase.org";
 
 // finance
 CREATE USER IF NOT EXISTS "brandon.morgan@sagebase.org";
