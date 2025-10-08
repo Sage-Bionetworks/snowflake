@@ -46,10 +46,15 @@ CREATE USER IF NOT EXISTS "jaclyn.beck@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 CREATE USER IF NOT EXISTS "karina.leal@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.campton@sagebase.org";
+CREATE USER IF NOT EXISTS "melissa.klein@sagebase.org";
 
 // SciData Misc
 CREATE USER IF NOT EXISTS "vanessa.barone@sagebase.org";
 CREATE USER IF NOT EXISTS "savitha.sangameswaran@sagebase.org";
+CREATE USER IF NOT EXISTS "laura.heath@sagebase.org";
+CREATE USER IF NOT EXISTS "andree-anne.berthiaume@sagebase.org";
+CREATE USER IF NOT EXISTS "jordan.driscoll@sagebase.org";
+CREATE USER IF NOT EXISTS "ram.ayyala@sagebase.org";
 
 // NF
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
@@ -74,6 +79,7 @@ CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
+CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
@@ -109,6 +115,7 @@ CREATE USER IF NOT EXISTS "susheel.varma@sagebase.org";
 CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
 CREATE USER IF NOT EXISTS "andrea.varsavsky@sagebase.org";
+CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
 
 // finance
 CREATE USER IF NOT EXISTS "brandon.morgan@sagebase.org";
