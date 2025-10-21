@@ -42,14 +42,8 @@ GRANT ROLE GENIE_ADMIN
 TO USER "adam.taylor@sagebase.org";
 
 -- AD privileges
-GRANT ROLE AD
-TO ROLE SYSADMIN;
-GRANT ROLE AD
-TO USER "abby.vanderlinden@sagebase.org";
-GRANT ROLE AD
-TO USER DBT_SERVICE;
-GRANT ROLE AD
-TO USER AD_SERVICE;
+GRANT ROLE AD TO ROLE SYSADMIN;
+GRANT ROLE AD TO USER "samia.ahmed@sagebase.org";
 
 -- NF privileges
 GRANT ROLE NF_ADMIN
@@ -94,7 +88,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "anh.nguyet.vu@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "luca.foschini@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "xindi.guo@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "abby.vanderlinden@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "phil.snyder@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "chelsea.nayan@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "alexander.paynter@sagebase.org";
@@ -160,7 +153,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "angie.bowen@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "aditya.nath@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "james.moon@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "orion.banks@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER "samia.ahmed@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "lisa.pasquale@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "JONI.HARKER@SAGEBASE.ORG";
 GRANT ROLE DATA_ANALYTICS TO USER "jo.scanlan@sagebase.org";
@@ -187,7 +179,6 @@ GRANT ROLE DATA_ANALYTICS TO USER "jordan.driscoll@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ram.ayyala@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "beatriz.saldana@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "tera.derita@sagebase.org";
-GRANT ROLE DATA_ANALYTICS TO USER AD_SERVICE;
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
@@ -201,14 +192,16 @@ GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "milen.nikolov@sagebase.org";
+
+// Setting up the role hierarchy
 GRANT ROLE SAGE_LEADERS TO ROLE SYSADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE SAGE_LEADERS;
 GRANT ROLE DATA_ANALYTICS TO ROLE SCIDATA_ADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE NF_ADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE GENIE_ADMIN;
-GRANT ROLE DATA_ANALYTICS TO ROLE AD;
 GRANT ROLE DATA_ANALYTICS TO ROLE GOVERNANCE;
 
+// FAIR 
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
 GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
 GRANT ROLE FAIR TO USER "lingling.peng@sagebase.org";
@@ -322,6 +315,7 @@ TO ROLE GENIE_ADMIN;
 -- SYNAPSE_DATA_WAREHOUSE domain roles
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ADMIN TO ROLE SYSADMIN;
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST TO ROLE SYNAPSE_DATA_WAREHOUSE_ADMIN;
+GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST TO ROLE AD;
 
 -- SYNAPSE_DATA_WAREHOUSE_DEV domain roles
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_DEV_ADMIN TO ROLE SYSADMIN;
@@ -514,6 +508,12 @@ GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST
 	TO ROLE AD;
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST
 	TO ROLE DATA_ANALYTICS;
+
+-- Revoke DATA_ANALYTICS grants;
+-- The core analyst role should be granted to team-specific account roles
+-- as shown in this design: https://sagebionetworks.jira.com/wiki/spaces/DPE/pages/4076863503/Role+and+Privilege+Management#Implementation-examples
+REVOKE ROLE DATA_ANALYTICS
+	FROM ROLE AD;
 
 -- Revoke grants redundant with SYNAPSE_DATA_WAREHOUSE[_DEV]_ANALYST
 -- SYNAPSE_DATA_WAREHOUSE --
