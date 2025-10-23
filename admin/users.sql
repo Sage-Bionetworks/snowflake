@@ -76,9 +76,7 @@ CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 // Governance
 CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
-CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
-CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
 CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
 
 // CNB
