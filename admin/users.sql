@@ -46,6 +46,8 @@ CREATE USER IF NOT EXISTS "andree-anne.berthiaume@sagebase.org";
 CREATE USER IF NOT EXISTS "jordan.driscoll@sagebase.org";
 CREATE USER IF NOT EXISTS "laura.heath@sagebase.org";
 CREATE USER IF NOT EXISTS "tiara.adams@sagebase.org";
+CREATE USER IF NOT EXISTS "emma.costa@sagebase.org";
+CREATE USER IF NOT EXISTS "julia.gray@sagebase.org";
 
 // SciData Misc
 CREATE USER IF NOT EXISTS "ashley.clayton@sagebase.org";
