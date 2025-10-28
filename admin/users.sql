@@ -80,9 +80,9 @@ CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
-DROP USER IF EXISTS "lisa.pasquale@sagebase.org";
-DROP USER IF EXISTS "hayley.sanchez@sagebase.org";
--- These users have departed Sage
+CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
+CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
+-- The above two users have departed Sage and should be disabled in a separate PR
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
