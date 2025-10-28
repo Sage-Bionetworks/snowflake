@@ -179,6 +179,9 @@ GRANT ROLE DATA_ANALYTICS TO USER "jordan.driscoll@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "ram.ayyala@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "beatriz.saldana@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "tera.derita@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "belinda.garana@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "emma.costa@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
