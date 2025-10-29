@@ -23,7 +23,7 @@ jobs:
         env:
             # Establish the snowflake account credentials
             SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-            SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+            SNOWFLAKE_USER: ${{ secrets.ADMIN_SERVICE_USER }}
             SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
             
             # Establish the account roles to be used
@@ -60,34 +60,13 @@ jobs:
                   pip install numpy==1.26.4
                   pip install pandas==1.5.3
 
-            - name: Configure Snowflake connections
-              run: |
-                # Make a temporary config file for the GH runner
-                config_file=$(mktemp)
-
-                # Config file for *ADMIN
-                echo 'default_connection_name = "admin"' >> $config_file
-                echo '[connections.admin]' >> $config_file
-                echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
-                echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-                echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
-                echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
-                echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
-                echo 'authenticator = "SNOWFLAKE"' >> $config_file
-
-                # Write config paths to environment
-                echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
-
-            - name: Install Snowflake CLI
-              uses: Snowflake-Labs/snowflake-cli-action@v1.5
+            - name: Configure Snowflake
+              uses: ./.github/actions/configure-snowflake-cli
               with:
-                default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
-
-            - name: Verify Snowflake CLI installation and connections
-              run: |
-                snow --version
-                snow connection test -c admin
-
+                  PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                  PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                  ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                  USER: ${{ secrets.ADMIN_SERVICE_USER }}
 
             ########################################################################################################
             ########################################################################################################
@@ -214,7 +193,7 @@ jobs:
       env:
           # Establish the snowflake account credentials
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWSQL_USER }}
+          SNOWFLAKE_USER: ${{ secrets.ADMIN_SERVICE_USER }}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWSQL_PWD }}
 
           # Establish the account roles to be used
@@ -233,34 +212,13 @@ jobs:
             with:
               python-version: '3.10'
 
-          - name: Configure Snowflake connections
-            run: |
-              # Make a temporary config file for the GH runner
-              config_file=$(mktemp)
-
-              # Config file for *ADMIN
-              echo 'default_connection_name = "admin"' >> $config_file
-              echo '[connections.admin]' >> $config_file
-              echo "account = \"${SNOWFLAKE_ACCOUNT}\"" >> $config_file
-              echo "user = \"${SNOWFLAKE_USER}\"" >> $config_file
-              echo "role = \"${SNOWFLAKE_ADMIN_ROLE}\"" >> $config_file
-              echo "password = \"${SNOWFLAKE_PASSWORD}\"" >> $config_file
-              echo "warehouse = \"${SNOWFLAKE_WAREHOUSE}\"" >> $config_file
-              echo 'authenticator = "SNOWFLAKE"' >> $config_file
-
-              # Write config paths to environment
-              echo "SNOWFLAKE_CONFIG_PATH=$config_file" >> $GITHUB_ENV
-
-          - name: Install Snowflake CLI
-            uses: Snowflake-Labs/snowflake-cli-action@v1.5
+          - name: Configure Snowflake
+            uses: ./.github/actions/configure-snowflake-cli
             with:
-              cli-version: "3.7.2"
-              default-config-file-path: ${{ env.SNOWFLAKE_CONFIG_PATH }}
-
-          - name: Verify Snowflake CLI installation and connections
-            run: |
-              snow --version
-              snow connection test -c admin
+                PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                USER: ${{ secrets.ADMIN_SERVICE_USER }}
 
           - name: Sanitize Clone Name
             run: |
