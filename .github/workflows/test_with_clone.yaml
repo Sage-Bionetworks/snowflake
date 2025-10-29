@@ -24,6 +24,7 @@ jobs:
             # Establish the snowflake account credentials
             SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
             SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+            PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
             
             # Establish the account roles to be used
             SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
@@ -190,6 +191,7 @@ jobs:
           # Establish the snowflake account credentials
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
 
           # Establish the account roles to be used
           SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
