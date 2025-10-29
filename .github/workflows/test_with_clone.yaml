@@ -87,7 +87,7 @@ jobs:
             - name: Zero-copy clone the database as ADMIN
               shell: bash
               run: |
-                snow sql -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
+                snow sql -q "USE ROLE ${SNOWFLAKE_ADMIN_ROLE}; CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
 
 
             ########################################################################################################
@@ -226,7 +226,7 @@ jobs:
           - name: Drop the clone (if it exists)
             shell: bash
             run: |
-              snow sql -q "DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
+              snow sql -q "USE ROLE ${SNOWFLAKE_ADMIN_ROLE}; DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
 
           - name: Establish full account role name for <CLONE>_PROXY_ADMIN
             shell: bash
