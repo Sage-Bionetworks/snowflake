@@ -53,12 +53,6 @@ jobs:
               with:
                 python-version: '3.10'
 
-            - name: Install python libraries
-              shell: bash
-              run: |
-                  pip install numpy==1.26.4
-                  pip install pandas==1.5.3
-
             - name: Configure Snowflake
               uses: ./.github/actions/configure-snowflake-cli
               with:
