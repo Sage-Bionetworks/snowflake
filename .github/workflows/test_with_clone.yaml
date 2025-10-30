@@ -6,6 +6,7 @@ on:
         types: [ opened, synchronize, reopened, closed ]
         branches:
           - dev
+          - main
 
 permissions:
     contents: read
@@ -18,7 +19,7 @@ jobs:
 
     test_with_clone:
         runs-on: ubuntu-latest
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' && github.event.pull_request.base.ref == 'dev' }}
         environment: dev
         env:
             # Establish the snowflake account credentials
