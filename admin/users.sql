@@ -190,3 +190,4 @@ ALTER USER "nicholas.lee@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "pranav.anbarasu@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "richard.yaxley@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "sarah.chan@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "meghasyam@sagebase.org" SET DISABLED = TRUE;
