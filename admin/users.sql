@@ -180,7 +180,6 @@ ALTER USER "brad.macdonald@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "christina.conrad@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "drew.duglan@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "hayley.sanchez@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "hayley.sanchez@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "james.eddy@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "kim.baggett@sagebase.org" SET DISABLED = TRUE;
 ALTER USER "lakaija.johnson@sagebase.org" SET DISABLED = TRUE;
