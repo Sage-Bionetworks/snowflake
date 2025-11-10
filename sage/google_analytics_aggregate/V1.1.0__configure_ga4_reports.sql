@@ -5,7 +5,7 @@ CALL CONFIGURE_REPORT(
     REPORT_NAME => 'DEMOGRAPHIC_LOCATION',
     PROPERTY_ID => '311611973',
     DIMENSIONS => 'date,hostName,pagePath,pagePathPlusQueryString,continent,subcontinent,country,region,city',
-    METRICS => 'totalUsers,activeUsers,newUsers,sessions,averageSessionDuration,engagedSessions,engagementRate',
+    METRICS => 'totalUsers,activeUsers,active7DayUsers,active28DayUsers,newUsers,sessions,averageSessionDuration,engagedSessions,engagementRate',
     START_DATE => '2020-01-01',
     REFRESH_INTERVAL => 'EVERY 1 DAY',
     KEEP_EMPTY_ROWS => TRUE,
