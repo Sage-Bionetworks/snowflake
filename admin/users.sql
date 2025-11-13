@@ -138,12 +138,9 @@ CREATE USER IF NOT EXISTS DBT_SERVICE
 CREATE USER IF NOT EXISTS DPE_SERVICE
     PASSWORD = 'placeholder'
     MUST_CHANGE_PASSWORD = TRUE;
-
 CREATE USER IF NOT EXISTS AD_SERVICE
     PASSWORD = 'placeholder'
     MUST_CHANGE_PASSWORD = TRUE;
-
-DROP USER IF EXISTS RECOVER_SERVICE;
 
 CREATE USER IF NOT EXISTS ADMIN_SERVICE
     TYPE = SERVICE; --noqa: LT02, PRS
@@ -184,3 +181,26 @@ BEGIN
     RETURN updated_users;
 END;
 $$;
+
+-- disable users
+ALTER USER DBT_SERVICE SET DISABLED = TRUE;
+ALTER USER AD_SERVICE SET DISABLED = TRUE;
+ALTER USER "JOE.SMITH@SAGEBASE.ORG" SET DISABLED = TRUE;
+ALTER USER THOMASYU888 SET DISABLED = TRUE;
+ALTER USER "abby.vanderlinden@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "anna.greenwood@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "arti.singh@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "brad.macdonald@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "christina.conrad@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "drew.duglan@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "hayley.sanchez@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "james.eddy@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "kim.baggett@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "lakaija.johnson@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "lisa.pasquale@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "natosha.edmonds@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "nicholas.lee@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "pranav.anbarasu@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "richard.yaxley@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "sarah.chan@sagebase.org" SET DISABLED = TRUE;
+ALTER USER "meghasyam@sagebase.org" SET DISABLED = TRUE;

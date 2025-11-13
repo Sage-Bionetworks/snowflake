@@ -50,10 +50,6 @@ Fortunately, because of the rigorous privilege management performed during the i
 
 The RECOVER data is processed via AWS and is compressed to parquet datasets.  The parquet datasets are then ingested into snowflake for easy querying and validation.
 
-## GENIE (PoC)
-
-The GENIE public releases are loaded into snowflake via this [script](admin/genie_elt.py).  You must have a snowflake connection section, please copy and fill out this [template](.env_template) with your username and password.
-
 
 ## Portals data (PoC)
 
