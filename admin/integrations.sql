@@ -50,4 +50,9 @@ create security integration IF NOT EXISTS GOOGLE_SSO
     SAML2_SNOWFLAKE_ACS_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com/fed/login'
     SAML2_SNOWFLAKE_ISSUER_URL = 'https://mqzfhld-vp00034.snowflakecomputing.com';
 
--- DESC security integration GOOGLE_SSO;
+CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_snapshot_poc
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::766808016710:role/rds-snowflake-poc-role'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://synapse-rds-snapshots-dev/test-export/dev566/');
