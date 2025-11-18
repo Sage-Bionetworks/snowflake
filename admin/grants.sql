@@ -184,17 +184,12 @@ GRANT ROLE DATA_ANALYTICS TO USER "emma.costa@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
 
 // Leaders
-GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "luca.foschini@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "alberto.pepe@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "susheel.varma@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "christine.suver@sagebase.org";
-GRANT ROLE SAGE_LEADERS TO USER "anna.greenwood@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "mackenzie.wildman@sagebase.org";
-GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
-GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
-GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
-GRANT ROLE SAGE_LEADERS TO USER "milen.nikolov@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "andrea.varsavsky@sagebase.org";
 
 // Setting up the role hierarchy
 GRANT ROLE SAGE_LEADERS TO ROLE SYSADMIN;
@@ -222,11 +217,11 @@ GRANT ROLE DPE_OPS TO ROLE SYSADMIN;
 GRANT ROLE GOVERNANCE TO USER "christine.suver@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "kimberly.corrigan@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "ann.novakowski@sagebase.org";
-GRANT ROLE GOVERNANCE TO USER "thomas.yu@sagebase.org";
-GRANT ROLE GOVERNANCE TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "anthony.pena@sagebase.org";
-GRANT ROLE GOVERNANCE TO USER "hayley.sanchez@sagebase.org";
 GRANT ROLE GOVERNANCE TO USER "samia.ahmed@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "jonathan.liaw-gray@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "samuel.cason@sagebase.org";
+GRANT ROLE GOVERNANCE TO USER "amelia.weixler@sagebase.org";
 GRANT ROLE GOVERNANCE TO ROLE SYSADMIN;
 
 -- Create governance privileges
