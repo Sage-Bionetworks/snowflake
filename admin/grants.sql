@@ -182,8 +182,10 @@ GRANT ROLE DATA_ANALYTICS TO USER "tera.derita@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "belinda.garana@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "emma.costa@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "samuel.cason@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "amelia.weixler@sagebase.org";
 
-// Leaders
+// Sage Leadership
 GRANT ROLE SAGE_LEADERS TO USER "luca.foschini@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "alberto.pepe@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "susheel.varma@sagebase.org";
