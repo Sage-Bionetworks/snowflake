@@ -1,0 +1,12 @@
+sources:
+  - name: rds
+    database: "{{ var('synapse_data_warehouse') }}"  
+    schema: "{{ var('synapse_source_schema') }}"  
+    tables:
+      - name: access_approval 
+      - name: access_requirement
+      - name: access_requirement_project
+      - name: access_requirement_revision
+      - name: acl
+      - name: acl_resource_access
+      - name: acl_resource_access_type

@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_synapse__acl
+    description: "Staging ACL Data"
+    columns:
+      - name: acl_id
+        description: "The primary key for this table"
+        data_tests:
+          - unique
+          - not_null
+      - name: etag 
+      - name: created_on
+      - name: owner_id
+      - name: owner_type 
