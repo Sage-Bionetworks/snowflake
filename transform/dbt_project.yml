@@ -26,5 +26,5 @@ models:
       columns: true
 
 vars:
-  synapse_data_warehouse: 'SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_366_SYNAPSE_SNAPSHOT_POC'
-  synapse_source_schema: 'RDS_SNAPSHOT'
+  synapse_database_source: 'SYNAPSE_568_SNAPSHOT'
+  synapse_schema_source: 'RAW'

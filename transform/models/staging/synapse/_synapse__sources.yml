@@ -1,7 +1,7 @@
 sources:
   - name: rds
-    database: "{{ var('synapse_data_warehouse') }}"  
-    schema: "{{ var('synapse_source_schema') }}"  
+    database: "{{ var('synapse_database_source') }}"  
+    schema: "{{ var('synapse_schema_source') }}"  
     tables:
       - name: access_approval 
       - name: access_requirement
@@ -10,3 +10,9 @@ sources:
       - name: acl
       - name: acl_resource_access
       - name: acl_resource_access_type
+      - name: data_access_request
+      - name: data_access_notification
+      - name: data_access_submission
+      - name: data_access_submission_accessor_changes
+      - name: data_access_submission_status
+      - name: data_access_submission_submitter
