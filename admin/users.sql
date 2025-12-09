@@ -135,8 +135,8 @@ CREATE USER IF NOT EXISTS DEVELOPER_SERVICE
     TYPE = SERVICE;
 
 CREATE USER IF NOT EXISTS GENIE_SERVICE
-TYPE = SERVICE;
---COMMENT = 'Service user to be used for launching Genie workflows in snowflake';
+TYPE = SERVICE
+COMMENT = 'Service user to be used for launching Genie workflows in snowflake';
 
 -- Set DEFAULT_SECONDARY_ROLES to [] (do not use secondary roles by default)
 -- for all users
