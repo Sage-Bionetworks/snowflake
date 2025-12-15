@@ -70,7 +70,6 @@ CREATE USER IF NOT EXISTS "aditya.nath@sagebase.org";
 
 // Digital Health
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
-CREATE USER IF NOT EXISTS "meghasyam@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
 CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
@@ -80,9 +79,6 @@ CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
-CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
-CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
--- The above two users have departed Sage and should be disabled in a separate PR
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
@@ -105,7 +101,6 @@ CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.yu@sagebase.org";
-CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
 CREATE USER IF NOT EXISTS "jenny.medina@sagebase.org";
 CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
