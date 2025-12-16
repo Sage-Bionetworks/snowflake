@@ -40,6 +40,8 @@ GRANT ROLE GENIE_ADMIN
 TO USER "rixing.xu@sagebase.org";
 GRANT ROLE GENIE_ADMIN
 TO USER "adam.taylor@sagebase.org";
+GRANT ROLE GENIE_ADMIN
+TO USER GENIE_SERVICE;
 
 -- AD privileges
 GRANT ROLE AD TO ROLE SYSADMIN;
@@ -182,6 +184,9 @@ GRANT ROLE DATA_ANALYTICS TO USER "tera.derita@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "belinda.garana@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "emma.costa@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
+
+// Leaders
+GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "samuel.cason@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "amelia.weixler@sagebase.org";
 
@@ -191,6 +196,10 @@ GRANT ROLE SAGE_LEADERS TO USER "alberto.pepe@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "susheel.varma@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "christine.suver@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "mackenzie.wildman@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "amy.heiser@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "milen.nikolov@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "andrea.varsavsky@sagebase.org";
 
 // Setting up the role hierarchy
@@ -302,15 +311,9 @@ TO ROLE SCIDATA_ADMIN;
 
 
 -- GENIE database privileges
-GRANT USAGE ON DATABASE GENIE
-TO ROLE GENIE_ADMIN;
-GRANT USAGE ON FUTURE SCHEMAS IN DATABASE GENIE
-TO ROLE GENIE_ADMIN;
-GRANT SELECT ON FUTURE TABLES IN DATABASE GENIE
-TO ROLE GENIE_ADMIN;
-
 GRANT USAGE ON WAREHOUSE TABLEAU_XSMALL
 TO ROLE GENIE_ADMIN;
+
 
 -- SYNAPSE_DATA_WAREHOUSE domain roles
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ADMIN TO ROLE SYSADMIN;

@@ -57,7 +57,6 @@ CREATE USER IF NOT EXISTS "ram.ayyala@sagebase.org";
 CREATE USER IF NOT EXISTS "angie.bowen@sagebase.org";
 CREATE USER IF NOT EXISTS "tera.derita@sagebase.org";
 
-
 // NF Rare Disease
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
 CREATE USER IF NOT EXISTS "robert.allaway@sagebase.org";
@@ -72,7 +71,6 @@ CREATE USER IF NOT EXISTS "aditya.nath@sagebase.org";
 
 // Digital Health
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
-CREATE USER IF NOT EXISTS "meghasyam@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
 -- CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
@@ -109,7 +107,6 @@ CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.yu@sagebase.org";
--- CREATE USER IF NOT EXISTS "brad.macdonald@sagebase.org";
 CREATE USER IF NOT EXISTS "jenny.medina@sagebase.org";
 CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
@@ -125,6 +122,8 @@ CREATE USER IF NOT EXISTS "susheel.varma@sagebase.org";
 CREATE USER IF NOT EXISTS "christine.suver@sagebase.org";
 CREATE USER IF NOT EXISTS "mackenzie.wildman@sagebase.org";
 CREATE USER IF NOT EXISTS "andrea.varsavsky@sagebase.org";
+CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
+CREATE USER IF NOT EXISTS "tera.derita@sagebase.org";
 
 // HR
 CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
@@ -152,6 +151,10 @@ CREATE USER IF NOT EXISTS ADMIN_SERVICE
 
 CREATE USER IF NOT EXISTS DEVELOPER_SERVICE
     TYPE = SERVICE;
+
+CREATE USER IF NOT EXISTS GENIE_SERVICE
+TYPE = SERVICE
+COMMENT = 'Service user to be used for launching Genie workflows in snowflake';
 
 -- Set DEFAULT_SECONDARY_ROLES to [] (do not use secondary roles by default)
 -- for all users
