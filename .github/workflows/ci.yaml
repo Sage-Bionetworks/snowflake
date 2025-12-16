@@ -183,5 +183,8 @@ jobs:
             --variable saml2_sso_url="${{ secrets.SAML2_SSO_URL }}" \
             --variable saml2_x509_cert="${{ secrets.SAML2_X509_CERT }}"
 
+      - name: Grant application roles
+        run: snow sql -f admin/applications/grants.sql
+
       - name: Grant privileges
         run: snow sql -f admin/grants.sql
