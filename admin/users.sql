@@ -55,6 +55,7 @@ CREATE USER IF NOT EXISTS "vanessa.barone@sagebase.org";
 CREATE USER IF NOT EXISTS "savitha.sangameswaran@sagebase.org";
 CREATE USER IF NOT EXISTS "ram.ayyala@sagebase.org";
 CREATE USER IF NOT EXISTS "angie.bowen@sagebase.org";
+CREATE USER IF NOT EXISTS "tera.derita@sagebase.org";
 
 // NF Rare Disease
 CREATE USER IF NOT EXISTS "anh.nguyet.vu@sagebase.org";
@@ -71,14 +72,19 @@ CREATE USER IF NOT EXISTS "aditya.nath@sagebase.org";
 // Digital Health
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
-CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
+-- CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 
 // Governance
-CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
 CREATE USER IF NOT EXISTS "kimberly.corrigan@sagebase.org";
 CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
+CREATE USER IF NOT EXISTS "samuel.cason@sagebase.org";
+CREATE USER IF NOT EXISTS "amelia.weixler@sagebase.org";
+-- CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
+-- CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
+-- CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
+-- The above two users have departed Sage and should be disabled in a separate PR
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
@@ -119,7 +125,10 @@ CREATE USER IF NOT EXISTS "andrea.varsavsky@sagebase.org";
 CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
 CREATE USER IF NOT EXISTS "tera.derita@sagebase.org";
 
-// finance
+// HR
+CREATE USER IF NOT EXISTS "dottie.young@sagebase.org";
+
+// FINANCE
 CREATE USER IF NOT EXISTS "brandon.morgan@sagebase.org";
 CREATE USER IF NOT EXISTS "barry.webb@sagebase.org";
 CREATE USER IF NOT EXISTS "sarah.mansfield@sagebase.org";
