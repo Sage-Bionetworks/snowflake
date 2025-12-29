@@ -13,13 +13,13 @@ staging as (
         submission_id as data_access_submission_id,
         created_by,
         to_timestamp(created_on/1000) as created_on,
-        modified_by,
-        to_timestamp(modified_on/1000) as modified_on,
+        modified_by as state_modified_by,
+        to_timestamp(modified_on/1000) as state_modified_on,
         state,
         case
             when to_timestamp(created_on/1000) >= '2019-01-01' then to_varchar(reason, 'utf-8')
             -- any records not matching condition are implicitly null
-        end as reason
+        end as state_reason
     from
         source
 )
