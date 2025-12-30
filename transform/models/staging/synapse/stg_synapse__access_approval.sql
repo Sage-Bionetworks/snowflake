@@ -6,13 +6,13 @@ source as (
 
 staging as (
     select
-        id as ar_approval_id,
-        requirement_id as ar_id,
-        requirement_version as ar_version,
-        submitter_id as ar_submitter_user_id,
-        accessor_id as ar_accessor_user_id,
-        expired_on as ar_expired_on,
-        state as ar_state,
+        id as access_requirement_approval_id,
+        requirement_id as access_requirement_id,
+        requirement_version as access_requirement_version,
+        submitter_id,
+        accessor_id,
+        expired_on,
+        state,
         etag
     from
         source

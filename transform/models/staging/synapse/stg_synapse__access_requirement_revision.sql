@@ -6,11 +6,11 @@ source as (
 
 staging as (
     select
-        owner_id as ar_id,
-        number as ar_version,
+        owner_id as access_requirement_id,
+        number as access_requirement_version,
+        modified_by,
         to_timestamp(modified_on / 1000) as modified_on,
-        serialized_entity as ar_raw,
-        modified_by
+        serialized_entity as access_requirement_raw
     from
         source
 )
