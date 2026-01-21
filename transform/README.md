@@ -12,11 +12,11 @@ We currently only use dbt with Synapse RDS snapshot data.
 
 The CLI version of dbt is called dbt Core. You can install dbt with the Snowflake adapter via pip by following the instructions [here](https://docs.getdbt.com/docs/core/connect-data-platform/snowflake-setup). As usual, we recommend installing within a virtual environment.
 
-After installing, configure your `~/.dbt/profiles.yml` by following the instructions in the previous link. This is where you will specify both your authentication and deployment environment (i.e., database/schema) information. dbt models can be deployed to any schema which your role has write access to.
+After installing, configure your `~/.dbt/profiles.yml` by following the instructions in the previous link. This is where you can specify both your authentication and deployment environment (i.e., database/schema) information. dbt models can be deployed to any schema which your role has write access to.
 
 # Models
 
-Models are categorized according to their function in the dbt model paradigm. All models will deploy to the database and schema specified in [`dbt_project.yml`](./dbt_project.yml).
+Models are categorized according to their function in the dbt model paradigm. The source data for our models lives in the database and schema specified in [`dbt_project.yml`](./dbt_project.yml).
 
 ## Source 
 Source data is already loaded into Snowflake tables. Downstream models are precedented on these tables, which are specified in `models/staging/synapse/_synapse__sources.yml`. These tables can be found in either the `SYNAPSE_568_SNAPSHOT.RAW` schema (for production data) or the `SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_366_SYNAPSE_SNAPSHOT_POC.RDS_SNAPSHOT` schema (for dev data - which _might not contain every source table_).
@@ -47,6 +47,10 @@ We can specify a specific model to be deployed as well. dbt will handle the mode
 ```
 dbt run --select stg_synapse__data_access_submission_status
 ```
+
+# Developer Guidelines
+
+For developer guidelines, including structure and style conventions, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ### DBT Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
