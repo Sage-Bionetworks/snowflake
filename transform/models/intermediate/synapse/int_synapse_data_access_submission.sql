@@ -47,7 +47,12 @@ data_access_submission_submitter as (
 data_access_submission_accessor_changes_aggregated as (
     select
         data_access_submission_id,
-        object_agg(principal_id::varchar, to_variant(access_type)) as accessor_changes
+        to_variant(
+            object_agg(
+                principal_id::varchar,
+                to_variant(access_type)
+        )
+    ) as accessor_changes
     from
         {{ ref('stg_synapse__data_access_submission_accessor_changes') }}
     group by

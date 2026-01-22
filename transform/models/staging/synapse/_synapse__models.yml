@@ -1,15 +1,552 @@
 version: 2
-
 models:
+  - name: stg_synapse__access_approval
+    description: "Staging model for access approval records. Tracks which users have been granted or revoked access to specific access requirements."
+    constraints:
+      - type: primary_key
+        columns: [access_requirement_id, accessor_id, access_requirement_version, submitter_id]
+    columns:
+      - name: access_requirement_approval_id
+        description: "Unique identifier for the access approval record"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_id
+        description: "Which requirement this approval satisfies"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: access_requirement_version
+        description: "Version number of the access requirement at the time of approval"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_by
+        description: "Identifier of the user who created this access approval"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "UTC timestamp when the access approval was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: modified_by
+        description: "Identifier of the user who last modified this access approval"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: modified_on
+        description: "UTC timestamp when the access approval was last modified"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: submitter_id
+        description: "User ID of the person who submitted the approval request"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: accessor_id
+        description: "User ID of the person being granted access"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: expired_on
+        description: "UTC timestamp when the approval expires. 0 means no expiration."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: state
+        description: "State of the access approval. Valid values are 'APPROVED' or 'REVOKED'."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__access_requirement
+    description: "Staging model for access requirements. Defines requirements that must be met before accessing restricted data or participating in certain activities."
+    constraints:
+      - type: primary_key
+        columns: [access_requirement_id]
+    columns:
+      - name: access_requirement_id
+        description: "Unique identifier for the access requirement"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_name
+        description: "Unique human-readable name for the access requirement"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_type
+        description: "Simplified type name extracted from fully qualified class name"
+        data_type: VARCHAR
+      - name: created_by
+        description: "Identifier of the user who created this access requirement"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "UTC timestamp when the access requirement was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: access_requirement_current_version
+        description: "Current revision number of this access requirement. Revision numbers begin from 0."
+        data_type: NUMBER
+      - name: is_two_fa_required
+        description: "Boolean flag indicating whether two-factor authentication is required for this access"
+        data_type: BOOLEAN
+        constraints:
+          - type: not_null
+      - name: access_type
+        description: "Type of access controlled by this requirement"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__access_requirement_project
+    description: "Staging model for junction table linking access requirements to projects."
+    constraints:
+      - type: primary_key
+        columns: [access_requirement_id, project_id]
+    columns:
+      - name: access_requirement_id
+        description: "The access requirement identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: project_id
+        description: "The identifier of the project entity which this access requirement associates with."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__access_requirement_revision
+    description: "Staging model for historical revisions of access requirements. Each modification creates a new revision to maintain a complete audit trail."
+    constraints:
+      - type: primary_key
+        columns: [access_requirement_id, access_requirement_version]
+    columns:
+      - name: access_requirement_id
+        description: "The access requirement identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: access_requirement_version
+        description: "Revision number for this version of the access requirement. Revision numbers begin from 0."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: modified_by
+        description: "Identifier of the user who created this revision (i.e., modified the access requirement)"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: modified_on
+        description: "UTC timestamp when this revision was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: access_requirement_raw
+        description: "Serialized representation of the complete access requirement object at this revision"
+        data_type: BINARY
+
   - name: stg_synapse__acl
-    description: "Staging ACL Data"
+    description: "Staging model for ACLs. Defines who can access an entity and with what permissions."
+    constraints:
+      - type: primary_key
+        columns: [object_id, object_type]
     columns:
       - name: acl_id
-        description: "The primary key for this table"
-        data_tests:
-          - unique
-          - not_null
-      - name: etag 
+        description: "Unique identifier for the ACL (Access Control List)"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: object_id
+        description: "ID of the entity or object that this ACL grants access to"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: object_type
+        description: "Type of entity or object that owns this ACL"
+        data_type: VARCHAR
       - name: created_on
-      - name: owner_id
-      - name: owner_type 
+        description: "UTC Timestamp when the ACL was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__acl_resource_access
+    description: "Staging model defining which user groups have access to resources controlled by ACLs."
+    constraints:
+      - type: primary_key
+        columns: [acl_resource_access_id]
+    columns:
+      - name: acl_resource_access_id
+        description: "Unique identifier for this ACL resource access"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: acl_id
+        description: "The ACL identifier. Not to be confused with the entity or object upon which this ACL grants access to."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__acl')
+            to_columns: [acl_id]
+            warn_unenforced: false
+      - name: principal_id
+        description: "The user or team being granted access"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__acl_resource_access_type
+    description: "Staging model defining the specific permission types granted for each resource access record."
+    constraints:
+      - type: primary_key
+        columns: [acl_resource_access_id, access_type]
+    columns:
+      - name: acl_resource_access_id
+        description: "The ACL resource access identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__acl_resource_access')
+            to_columns: [acl_resource_access_id]
+            warn_unenforced: false
+      - name: access_type
+        description: "The permission type (e.g., 'READ', 'UPDATE', 'DELETE', 'CHANGE_PERMISSIONS', 'DOWNLOAD', 'CREATE', ...)."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: acl_id
+        description: "The ACL identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__acl')
+            to_columns: [acl_id]
+            warn_unenforced: false
+
+  - name: stg_synapse__data_access_request
+    description: "Staging model for formal requests for access to controlled data. Links users, access requirements, and research projects."
+    constraints:
+      - type: primary_key
+        columns: [data_access_request_id]
+    columns:
+      - name: data_access_request_id
+        description: "Unique identifier for the data access request"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_id
+        description: "Which access requirement this request is for"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: created_by
+        description: "Identifier of the user who created this request"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: research_project_id
+        description: "The identifier of the research project which this data access request associates with"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "UTC timestamp when the request was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: modified_by
+        description: "Identifier of the user who last modified this request"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: modified_on
+        description: "UTC timestamp when the request was last modified"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+      - name: data_access_request_raw
+        description: "Serialized representation of the complete request object"
+        data_type: BINARY
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__data_access_notification
+    description: "Staging model tracking notifications sent to users about their data access status, including renewal reminders and revocation notices."
+    constraints:
+      - type: primary_key
+        columns: [data_access_notification_id]
+    columns:
+      - name: data_access_notification_id
+        description: "Unique identifier for the notification record"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: data_access_notification_type
+        description: "Type of notification sent to the user (one of 'FIRST_RENEWAL_REMINDER', 'SECOND_RENEWAL_REMINDER', 'REVOCATION')"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: access_requirement_id
+        description: "The access requirement identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: principal_id
+        description: "User ID of the notification recipient"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_approval_id
+        description: "The identifier of the associated access approval"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_approval')
+            to_columns: [access_requirement_approval_id]
+            warn_unenforced: false
+      - name: sent_on
+        description: "UTC Timestamp when the notification was sent"
+        data_type: TIMESTAMP_NTZ(3)
+        constraints:
+          - type: not_null
+      - name: message_id
+        description: "Unique identifier of the message"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__data_access_submission
+    description: "Staging model for formal submissions for data access approval. Created when users submit their data access requests for review."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
+    columns:
+      - name: data_access_submission_id
+        description: "Unique identifier for the data access submission"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_id
+        description: "The access requirement identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: data_access_request_id
+        description: "The data access request identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_request')
+            to_columns: [data_access_request_id]
+            warn_unenforced: false
+      - name: research_project_id
+        description: "The research project associated with this submission"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_by
+        description: "Identifier of the user who made this submission"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "UTC timestamp when the submission was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: access_requirement_version
+        description: "Version of the access requirement at the time of submission"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+      - name: data_access_submission_raw
+        description: "Serialized representation of the complete submission object"
+        data_type: BINARY
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__data_access_submission_accessor_changes
+    description: "Staging model tracking changes to accessor permissions within a data access submission."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id, principal_id]
+    columns:
+      - name: data_access_submission_id
+        description: "The data access submission identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_submission')
+            to_columns: [data_access_submission_id]
+            warn_unenforced: false
+      - name: principal_id
+        description: "Identifier of the user whose access is being changed"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_type
+        description: "Type of access change. One of: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+
+  - name: stg_synapse__data_access_submission_status
+    description: "Staging model for current status of data access submissions. Tracks the approval workflow state and reasons for decisions."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
+    columns:
+      - name: data_access_submission_id
+        description: "The data access submission identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_submission')
+            to_columns: [data_access_submission_id]
+            warn_unenforced: false
+      - name: created_by
+        description: "Identifier of the user who created this status record"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "UTC timestamp when the status was created"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: state_modified_by
+        description: "User ID of the person who last modified this status"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: state_modified_on
+        description: "UTC timestamp when the submission status was last modified"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: state
+        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: state_reason
+        description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
+        data_type: VARCHAR
+
+  - name: stg_synapse__data_access_submission_submitter
+    description: "Staging model tracking the current active submission for each submitter per access requirement."
+    constraints:
+      - type: primary_key
+        columns: [access_requirement_id, principal_id]
+    columns:
+      - name: data_access_submission_submitter_id
+        description: "Unique identifier for this submitter record"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: access_requirement_id
+        description: "The access requirement identifier"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: principal_id
+        description: "User ID of the submitter"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: data_access_submission_id
+        description: "The current active data access submission"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_submission')
+            to_columns: [data_access_submission_id]
+            warn_unenforced: false
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null

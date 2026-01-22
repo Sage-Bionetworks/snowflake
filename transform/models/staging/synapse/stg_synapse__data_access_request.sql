@@ -8,8 +8,8 @@ staging as (
     select
         id as data_access_request_id,
         access_requirement_id,
-        created_by,
         research_project_id,
+        created_by,
         to_timestamp(created_on/1000) as created_on,
         modified_by,
         to_timestamp(modified_on/1000) as modified_on,

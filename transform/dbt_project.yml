@@ -24,6 +24,7 @@ models:
     +persist_docs:
       relation: true
       columns: true
+    +contract: {enforced: true}
 
 vars:
   synapse_database_source: 'SYNAPSE_568_SNAPSHOT'

@@ -1,18 +1,517 @@
 sources:
   - name: rds
     database: "{{ var('synapse_database_source') }}"  
-    schema: "{{ var('synapse_schema_source') }}"  
+    schema: "{{ var('synapse_schema_source') }}"
+    description: "Synapse RDS snapshot source tables from MySQL database, containing access control, data access management, and approval workflows."
     tables:
-      - name: access_approval 
+      - name: access_approval
+        description: "Records of approved or revoked access to restricted data resources. Tracks which users have been granted access to specific access requirements."
+        columns:
+          - name: id
+            description: "Unique identifier for the access approval record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: created_by
+            description: "User ID of the person who created this approval"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the approval was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_by
+            description: "User ID of the person who last modified this approval"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_on
+            description: "Timestamp (Unix epoch in milliseconds) when the approval was last modified"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: requirement_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying which requirement this approval satisfies"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: requirement_version
+            description: "Version number of the access requirement at the time of approval"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: submitter_id
+            description: "User ID of the person who submitted the approval request"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: accessor_id
+            description: "User ID of the person being granted access"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: expired_on
+            description: "Timestamp (Unix epoch in milliseconds) when the approval expires. 0 means no expiration."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: state
+            description: "State of the access approval. Valid values are 'APPROVED' or 'REVOKED'."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['APPROVED', 'REVOKED']
+
       - name: access_requirement
+        description: "Defines requirements that must be met before accessing restricted data or participating in certain activities. Can require approval workflows or two-factor authentication."
+        columns:
+          - name: id
+            description: "Unique identifier for the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: name
+            description: "Unique human-readable name for the access requirement"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - unique
+          - name: current_rev_num
+            description: "Current revision number of this access requirement. Revision numbers begin from 0."
+            data_type: NUMBER
+          - name: created_by
+            description: "User ID of the person who created this access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the access requirement was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: access_type
+            description: "Type of access controlled by this requirement"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['DOWNLOAD', 'PARTICIPATE']
+          - name: concrete_type
+            description: "Fully qualified class name indicating the specific type of access requirement (e.g., ManagedACTAccessRequirement)"
+            data_type: VARCHAR
+          - name: is_two_fa_required
+            description: "Boolean flag indicating whether two-factor authentication is required for this access"
+            data_type: BOOLEAN
+            data_tests:
+              - not_null
+
       - name: access_requirement_project
+        description: "Junction table linking access requirements to projects. Defines which projects are subject to which access requirements."
+        columns:
+          - name: ar_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: project_id
+            description: "Foreign key to NODE table representing the project entity"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+
       - name: access_requirement_revision
+        description: "Stores historical revisions of access requirements. Each modification creates a new revision to maintain a complete audit trail."
+        columns:
+          - name: owner_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: number
+            description: "Revision number for this version of the access requirement. Revision numbers begin from 0."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_by
+            description: "User ID of the person who created this revision"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_on
+            description: "Timestamp (Unix epoch in milliseconds) when this revision was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: serialized_entity
+            description: "Serialized representation of the complete access requirement object at this revision"
+            data_type: BINARY
+
       - name: acl
+        description: "Access Control Lists (ACL) define who can access an entity and with what permissions."
+        columns:
+          - name: id
+            description: "Unique identifier for the ACL record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: owner_id
+            description: "ID of the entity or object that this ACL controls access to"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: owner_type
+            description: "Type of entity or object that owns this ACL"
+            data_type: VARCHAR
+            data_tests:
+              - accepted_values:
+                  values: ['ENTITY', 'EVALUATION', 'TEAM', 'FORM_GROUP', 'ORGANIZATION', 'ACCESS_REQUIREMENT', 'PORTAL', 'OAUTH_CLIENT']
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the ACL was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+
       - name: acl_resource_access
+        description: "Defines which user groups have access to resources controlled by ACLs. Junction table between ACLs and user groups."
+        columns:
+          - name: id
+            description: "Unique identifier for this resource access record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: owner_id
+            description: "Foreign key to ACL table identifying the access control list. Not to be confused with the entity or object upon which this ACL applies."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'acl')
+                  field: id
+          - name: group_id
+            description: "Foreign key to USER_GROUP table identifying the user or team being granted access"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+
       - name: acl_resource_access_type
+        description: "Defines the specific permission types (e.g., READ, UPDATE, DELETE) granted for each resource access record."
+        columns:
+          - name: id_oid
+            description: "Foreign key to ACL_RESOURCE_ACCESS table identifying the resource access record."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'acl_resource_access')
+                  field: id
+          - name: owner_id
+            description: "Foreign key to ACL table identifying the access control list"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'acl')
+                  field: id
+          - name: string_ele
+            description: "String representing the permission type (e.g., 'READ', 'UPDATE', 'DELETE', 'CHANGE_PERMISSIONS', 'DOWNLOAD', 'CREATE', ...)."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['CHANGE_PERMISSIONS', 'TEAM_MEMBERSHIP_UPDATE', 'MODERATE', 'SEND_MESSAGE', 'READ_PRIVATE_SUBMISSION', 'SUBMIT', 'CHANGE_SETTINGS', 'EXEMPTION_ELIGIBLE', 'PARTICIPATE', 'CREATE', 'DELETE', 'UPDATE', 'DELETE_SUBMISSION', 'DOWNLOAD', 'READ', 'UPDATE_SUBMISSION', 'REVIEW_SUBMISSIONS', 'UPLOAD']
+
       - name: data_access_request
+        description: "Data Access Requests are created when a user requests access to controlled data. They should not be confused with Data Access Submissions, which are created when a user submits a data access request for approval."
+        columns:
+          - name: id
+            description: "Unique identifier for the data access request"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: access_requirement_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying which access requirement this request is for"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: research_project_id
+            description: "Foreign key to RESEARCH_PROJECT table describing the intended use of the data"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_by
+            description: "User ID of the person who created this request"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the request was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_by
+            description: "User ID of the person who last modified this request"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_on
+            description: "Timestamp (Unix epoch in milliseconds) when the request was last modified"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: request_serialized
+            description: "Serialized representation of the complete request object"
+            data_type: BINARY
+            data_tests:
+              - not_null
+
       - name: data_access_notification
+        description: "Tracks notifications sent to users about their data access status, including renewal reminders and revocation notices."
+        columns:
+          - name: id
+            description: "Unique identifier for the notification record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: notification_type
+            description: "Type of notification sent to the user"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['FIRST_RENEWAL_REMINDER', 'SECOND_RENEWAL_REMINDER', 'REVOCATION']
+          - name: requirement_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: recipient_id
+            description: "User ID of the notification recipient"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: sent_on
+            description: "Timestamp (Unix epoch in milliseconds) when the notification was sent"
+            data_type: TIMESTAMP_NTZ(3)
+            data_tests:
+              - not_null
+          - name: access_approval_id
+            description: "Foreign key to ACCESS_APPROVAL table identifying the associated access approval"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_approval')
+                  field: id
+          - name: message_id
+            description: "Unique identifier of the message"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+
       - name: data_access_submission
+        description: "Data Access Submissions derived from Data Access Requests. These are created when users submit their data access requests for review."
+        columns:
+          - name: id
+            description: "Unique identifier for the data access submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: access_requirement_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: access_requirement_version
+            description: "Version of the access requirement at the time of submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: data_access_request_id
+            description: "Foreign key to DATA_ACCESS_REQUEST table identifying the data access request"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'data_access_request')
+                  field: id
+          - name: created_by
+            description: "User ID of the person who created this submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the submission was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: submission_serialized
+            description: "Serialized representation of the complete submission object"
+            data_type: BINARY
+            data_tests:
+              - not_null
+          - name: research_project_id
+            description: "Foreign key to RESEARCH_PROJECT table identifying the research project associated with this submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+
       - name: data_access_submission_accessor_changes
+        description: "Tracks changes in access to controlled data (the accessors) with respect to a data access submission. Records whether users are gaining, renewing, or having access revoked."
+        columns:
+          - name: submission_id
+            description: "Foreign key to DATA_ACCESS_SUBMISSION table identifying the data access submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'data_access_submission')
+                  field: id
+          - name: accessor_id
+            description: "User ID of the person whose access is being changed"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: access_type
+            description: "Type of access change"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
+
       - name: data_access_submission_status
+        description: "Current status of data access submissions. Tracks the approval workflow state and reasons for decisions."
+        columns:
+          - name: submission_id
+            description: "Foreign key to DATA_ACCESS_SUBMISSION table identifying the data access submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+              - relationships:
+                  to: source('rds', 'data_access_submission')
+                  field: id
+          - name: created_by
+            description: "User ID of the person who created this status record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the status was created"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_by
+            description: "User ID of the person who last modified this status"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: modified_on
+            description: "Timestamp (Unix epoch in milliseconds) when the status was last modified"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: state
+            description: "Current state in the submission workflow"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED']
+          - name: reason
+            description: "A UTF-8 encoded binary blob containing an explanation for the current state, particularly for rejections or cancellations"
+            data_type: BINARY
+
       - name: data_access_submission_submitter
+        description: "Tracks the current active submission for each submitter per access requirement. Ensures only one active submission exists per user-access requirement pair."
+        columns:
+          - name: id
+            description: "Unique identifier for this submitter record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: access_requirement_id
+            description: "Foreign key to ACCESS_REQUIREMENT table identifying the access requirement"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'access_requirement')
+                  field: id
+          - name: submitter_id
+            description: "User ID of the submitter"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: current_submission_id
+            description: "Foreign key to DATA_ACCESS_SUBMISSION table identifying the current active data access submission"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - relationships:
+                  to: source('rds', 'data_access_submission')
+                  field: id
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null

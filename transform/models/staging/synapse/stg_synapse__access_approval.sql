@@ -15,7 +15,7 @@ staging as (
         to_timestamp(modified_on / 1000) as modified_on,
         submitter_id,
         accessor_id,
-        expired_on,
+        to_timestamp(expired_on / 1000) as expired_on,
         state,
         etag
     from
