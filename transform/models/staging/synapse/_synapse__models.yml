@@ -137,7 +137,7 @@ models:
             to: ref('stg_synapse__access_requirement')
             to_columns: [access_requirement_id]
             warn_unenforced: false
-      - name: project_id
+      - name: access_requirement_project
         description: "The identifier of the project entity which this access requirement associates with."
         data_type: NUMBER
         constraints:

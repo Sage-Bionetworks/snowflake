@@ -7,7 +7,7 @@ source as (
 staging as (
     select
         ar_id as access_requirement_id,
-        project_id,
+        project_id as access_requirement_project,
     from
         source
 )
