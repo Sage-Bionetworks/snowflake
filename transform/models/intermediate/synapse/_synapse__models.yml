@@ -47,11 +47,6 @@ models:
       - name: is_two_fa_required
         description: "Boolean flag indicating whether two-factor authentication is required for this access. Null except for the most recent revision."
         data_type: BOOLEAN
-      - name: access_requirement_project
-        description: "The identifier of the project entity which this access requirement associates with."
-        data_type: NUMBER
-        constraints:
-          - type: not_null
       - name: access_type
         description: "Type of access controlled by this requirement"
         data_type: VARCHAR

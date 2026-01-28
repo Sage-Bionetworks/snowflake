@@ -14,13 +14,6 @@ access_requirement_revision as (
         {{ ref('stg_synapse__access_requirement_revision') }}
 ),
 
-access_requirement_project as (
-    select
-        *
-    from
-        {{ ref('stg_synapse__access_requirement_project') }}
-),
-
 access_requirement_created as (
     select
         access_requirement_id,
@@ -47,7 +40,6 @@ select
         then base.is_two_fa_required 
         else null 
     end as is_two_fa_required,
-    project.access_requirement_project,
     base.access_type,
     revision.access_requirement_raw
 from
@@ -60,7 +52,3 @@ inner join
     access_requirement_revision revision
 on 
     base.access_requirement_id = revision.access_requirement_id
-inner join
-    access_requirement_project project
-on
-    base.access_requirement_id = project.access_requirement_id
