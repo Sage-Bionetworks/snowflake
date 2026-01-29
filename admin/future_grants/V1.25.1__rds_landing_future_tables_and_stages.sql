@@ -2,9 +2,9 @@
 -- and are following the RBAC design pattern for schemas documented here:
 -- https://sagebionetworks.jira.com/wiki/spaces/DPE/pages/4115366084/Managing+Object+Privileges#Schemas
 
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 -- Step 9) Grant ownership of future tables/stages in PROD database to <SCHEMA>_ALL_ADMIN database role:
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 GRANT OWNERSHIP
 	ON FUTURE TABLES
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE.RDS_LANDING

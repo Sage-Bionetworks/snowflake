@@ -128,7 +128,7 @@ jobs:
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
-            - name: Give <CLONE>_PROXY_ADMIN ownership of all objects in synapse, synapse_raw, schemachange, synapse_aggregate, synapse_event schemas
+            - name: Give <CLONE>_PROXY_ADMIN ownership of all objects in synapse, synapse_raw, schemachange, synapse_aggregate, synapse_event, rds_landing schemas
               shell: bash
               run: |
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
@@ -145,6 +145,9 @@ jobs:
 
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_event_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_event_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_landing_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
+                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_landing_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
             - name: Grant USAGE on <CLONE>_PROXY_ADMIN to SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
