@@ -45,3 +45,10 @@ CREATE OR REPLACE DATABASE ROLE RDS_LANDING_STAGE_READ;
 ----------------------------------------------------------------------------------------------------
 GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_TABLE_READ TO DATABASE ROLE RDS_LANDING_ALL_ADMIN;
 GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_STAGE_READ TO DATABASE ROLE RDS_LANDING_ALL_ADMIN;
+
+
+--------------------------------------------------------------------------------------------------------
+-- Step 6) Assign inheritance of these read access database roles to <SCHEMA>_ALL_ANALYST database role:
+--------------------------------------------------------------------------------------------------------
+GRANT DATABASE ROLE RDS_LANDING_TABLE_READ TO DATABASE ROLE RDS_LANDING_ALL_ANALYST;
+GRANT DATABASE ROLE RDS_LANDING_STAGE_READ TO DATABASE ROLE RDS_LANDING_ALL_ANALYST;
