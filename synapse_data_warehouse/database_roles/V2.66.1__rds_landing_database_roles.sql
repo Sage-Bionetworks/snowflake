@@ -24,9 +24,24 @@ GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_ALL_DEVELOPER TO DATABASE ROLE RDS_
 GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_ALL_ADMIN TO ROLE {{ database_name }}_PROXY_ADMIN;
 
 
----------------------------------------------------------------------------------------
--- Step 3) Assign inheritance of these database roles to the appropriate account roles:
----------------------------------------------------------------------------------------
-GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_ADMIN TO ROLE {{ database_name }}_PROXY_ADMIN;
-GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_ANALYST TO ROLE {{ database_name }}_ANALYST;
-GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_DEVELOPER TO ROLE DATA_ENGINEER;
+------------------------------------------------------------------------------------------------
+-- Step 3) Assign inheritance of these database roles to the appropriate database/account roles:
+------------------------------------------------------------------------------------------------
+GRANT DATABASE ROLE RDS_LANDING_ALL_ADMIN TO ROLE {{ database_name }}_PROXY_ADMIN;
+GRANT DATABASE ROLE RDS_LANDING_ALL_ANALYST TO ROLE {{ database_name }}_ANALYST;
+GRANT DATABASE ROLE RDS_LANDING_ALL_ANALYST TO ROLE RDS_LANDING_ALL_DEVELOPER;
+GRANT DATABASE ROLE RDS_LANDING_ALL_DEVELOPER TO ROLE DATA_ENGINEER;
+
+
+----------------------------------------------------------------------------------------------------
+-- Step 4) Create read access database roles for anticipated object types (table and stage objects):
+----------------------------------------------------------------------------------------------------
+CREATE OR REPLACE DATABASE ROLE RDS_LANDING_TABLE_READ;
+CREATE OR REPLACE DATABASE ROLE RDS_LANDING_STAGE_READ;
+
+
+----------------------------------------------------------------------------------------------------
+-- Step 5) Assign ownership of these read access database roles to <SCHEMA>_ALL_ADMIN database role:
+----------------------------------------------------------------------------------------------------
+GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_TABLE_READ TO DATABASE ROLE RDS_LANDING_ALL_ADMIN;
+GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_STAGE_READ TO DATABASE ROLE RDS_LANDING_ALL_ADMIN;
