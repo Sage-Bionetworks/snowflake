@@ -22,3 +22,11 @@ GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_ALL_ANALYST TO DATABASE ROLE RDS_LA
 GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_ALL_DEVELOPER TO DATABASE ROLE RDS_LANDING_ALL_ADMIN;
 -- <DATABASE>_PROXY_ADMIN account role owns the <SCHEMA>_ALL_ADMIN database role
 GRANT OWNERSHIP ON DATABASE ROLE RDS_LANDING_ALL_ADMIN TO ROLE {{ database_name }}_PROXY_ADMIN;
+
+
+---------------------------------------------------------------------------------------
+-- Step 3) Assign inheritance of these database roles to the appropriate account roles:
+---------------------------------------------------------------------------------------
+GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_ADMIN TO ROLE {{ database_name }}_PROXY_ADMIN;
+GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_ANALYST TO ROLE {{ database_name }}_ANALYST;
+GRANT USAGE ON DATABASE ROLE RDS_LANDING_ALL_DEVELOPER TO ROLE DATA_ENGINEER;
