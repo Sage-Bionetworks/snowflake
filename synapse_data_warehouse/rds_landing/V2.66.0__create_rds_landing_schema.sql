@@ -1,0 +1,3 @@
+USE DATABASE {{ database_name }}; --noqa: JJ01,PRS,TMP
+
+CREATE OR REPLACE SCHEMA RDS_LANDING;
