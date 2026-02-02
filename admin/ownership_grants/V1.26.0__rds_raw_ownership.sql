@@ -7,7 +7,7 @@
 ------------------------------------------------------------------------------------------
 GRANT OWNERSHIP
     ON SCHEMA SYNAPSE_DATA_WAREHOUSE.RDS_RAW
-    TO DATABASE ROLE RDS_RAW_ALL_ADMIN
+    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.RDS_RAW_ALL_ADMIN
     REVOKE CURRENT GRANTS;
 
 
@@ -16,5 +16,5 @@ GRANT OWNERSHIP
 -----------------------------------------------------------------------------------------
 GRANT OWNERSHIP
     ON SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
-    TO DATABASE ROLE RDS_RAW_ALL_ADMIN
+    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_ALL_ADMIN
     REVOKE CURRENT GRANTS;
