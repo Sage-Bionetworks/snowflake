@@ -134,6 +134,10 @@ CREATE USER IF NOT EXISTS "barry.webb@sagebase.org";
 CREATE USER IF NOT EXISTS "sarah.mansfield@sagebase.org";
 CREATE USER IF NOT EXISTS "ranell.nystrom@sagebase.org";
 
+// SPONSORED RESEARCH
+CREATE USER IF NOT EXISTS "luisa.chekrygin@sagebase.org";
+CREATE USER IF NOT EXISTS "laurielle.roberson@sagebase.org";
+
 
 // SERVICE users
 CREATE USER IF NOT EXISTS DBT_SERVICE
