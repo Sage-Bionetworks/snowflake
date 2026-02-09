@@ -826,3 +826,8 @@ GRANT ROLE GOOGLE_ANALYTICS_AGGREGATE_ANALYST
 	TO ROLE DATA_ENGINEER;
 GRANT ROLE GOOGLE_ANALYTICS_AGGREGATE_ANALYST
 	TO ROLE DATA_ANALYTICS;
+
+-- SYNAPSE_568_SNAPSHOT grants
+-- Following this syntax: https://docs.snowflake.com/en/sql-reference/sql/grant-database-role#syntax
+GRANT DATABASE ROLE SYNAPSE_568_SNAPSHOT.RAW_TABLE_READ
+	TO USER mackenzie.wildman@sagebase.org;
