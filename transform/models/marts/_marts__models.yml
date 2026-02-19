@@ -1,0 +1,71 @@
+version: 2
+models:
+  - name: data_access_submission_event
+    config:
+      schema: synapse_event
+    description: "{{ doc('data_access_submission') }}"
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
+    columns:
+      - name: data_access_submission_id
+        description: "{{ doc('col_data_access_submission_id') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: data_access_request_id
+        description: "{{ doc('col_submission_data_access_request_id') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_id
+        description: "{{ doc('col_access_requirement_id') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version
+        description: "{{ doc('col_submission_access_requirement_version') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: research_project_id
+        description: "{{ doc('col_submission_research_project_id') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_by
+        description: "{{ doc('col_submission_created_by') }}"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: created_on
+        description: "{{ doc('col_submission_created_on') }}"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: state_modified_by
+        description: "{{ doc('col_submission_state_modified_by') }}"
+        data_type: NUMBER
+      - name: state_modified_on
+        description: "{{ doc('col_submission_state_modified_on') }}"
+        data_type: TIMESTAMP_NTZ
+      - name: state
+        description: "{{ doc('col_submission_state') }}"
+        data_type: VARCHAR
+      - name: state_reason
+        description: "{{ doc('col_submission_state_reason') }}"
+        data_type: VARCHAR
+      - name: etag
+        description: "{{ doc('col_etag') }}"
+        data_type: VARCHAR(36)
+        constraints:
+          - type: not_null
+      - name: data_access_submission_raw
+        description: "{{ doc('col_data_access_submission_raw') }}"
+        data_type: BINARY
+        constraints:
+          - type: not_null
+      - name: accessor_changes
+        description: "{{ doc('col_submission_accessor_changes') }}"
+        data_type: VARIANT

@@ -25,7 +25,12 @@ models:
       relation: true
       columns: true
     +contract: {enforced: true}
+    marts:
+      +materialized: dynamic_table
+      +on_configuration_change: apply
+      +target_lag: downstream
+      +snowflake_warehouse: compute_xsmall
 
 vars:
-  synapse_database_source: 'SYNAPSE_568_SNAPSHOT'
-  synapse_schema_source: 'RAW'
+  synapse_database_source: 'SYNAPSE_DATA_WAREHOUSE_DEV'
+  synapse_schema_source: 'RDS_RAW'
