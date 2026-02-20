@@ -5,7 +5,7 @@ CREATE OR REPLACE STORAGE INTEGRATION synapse_snapshot
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = S3
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::766808016710:role/<TODO>'
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::766808016710:role/snowflake-role-synapse-snowflake-rds-snapshots-dev'
 
 -- * Integration to prod (SNOW-14)
 CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
