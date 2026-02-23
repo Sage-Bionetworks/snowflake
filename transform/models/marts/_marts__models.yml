@@ -3,69 +3,69 @@ models:
   - name: data_access_submission_event
     config:
       schema: synapse_event
-    description: "{{ doc('data_access_submission') }}"
+    description: "This event table contains all data access submissions and their associated state. A data access submission is created each time a user makes a revision of their data access request."
     constraints:
       - type: primary_key
         columns: [data_access_submission_id]
     columns:
       - name: data_access_submission_id
-        description: "{{ doc('col_data_access_submission_id') }}"
+        description: "Unique identifier for the data access submission."
         data_type: NUMBER
         constraints:
           - type: not_null
           - type: unique
       - name: data_access_request_id
-        description: "{{ doc('col_submission_data_access_request_id') }}"
+        description: "The identifier of the access request that this submission was created from."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: access_requirement_id
-        description: "{{ doc('col_access_requirement_id') }}"
+        description: "The identifier of the access requirement that the access request associates with."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: access_requirement_version
-        description: "{{ doc('col_submission_access_requirement_version') }}"
+        description: "Version of the access requirement at the time of submission."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: research_project_id
-        description: "{{ doc('col_submission_research_project_id') }}"
+        description: "The research project associated with this submission."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: created_by
-        description: "{{ doc('col_submission_created_by') }}"
+        description: "Identifier of the user who made this submission."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: created_on
-        description: "{{ doc('col_submission_created_on') }}"
+        description: "UTC timestamp when the submission was created."
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
       - name: state_modified_by
-        description: "{{ doc('col_submission_state_modified_by') }}"
+        description: "Identifier of the user who last modified the submission status."
         data_type: NUMBER
       - name: state_modified_on
-        description: "{{ doc('col_submission_state_modified_on') }}"
+        description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
       - name: state
-        description: "{{ doc('col_submission_state') }}"
+        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
         data_type: VARCHAR
       - name: state_reason
-        description: "{{ doc('col_submission_state_reason') }}"
+        description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
       - name: etag
-        description: "{{ doc('col_etag') }}"
+        description: "Entity tag for optimistic concurrency control (36-character UUID)."
         data_type: VARCHAR(36)
         constraints:
           - type: not_null
       - name: data_access_submission_raw
-        description: "{{ doc('col_data_access_submission_raw') }}"
+        description: "Serialized representation of the complete submission object."
         data_type: BINARY
         constraints:
           - type: not_null
       - name: accessor_changes
-        description: "{{ doc('col_submission_accessor_changes') }}"
+        description: "A mapping of principal IDs (as strings) to their access type changes (e.g., {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}). Access types include: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
         data_type: VARIANT
