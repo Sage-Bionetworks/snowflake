@@ -12,6 +12,8 @@ vars:
   database_name: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE')}}
   stage_storage_integration: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION')}}
   stage_url: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_URL')}}
+  snapshots_stage_storage_integration: {{env_var('SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION')}}
+  snapshots_stage_url: {{env_var('SNOWFLAKE_SNAPSHOTS_STAGE_URL')}}
   stack: {{env_var('STACK')}}
   # secrets:
   #   # not a good example of secrets, just here to demo the secret filtering
