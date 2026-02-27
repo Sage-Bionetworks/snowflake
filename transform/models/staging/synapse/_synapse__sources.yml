@@ -1,8 +1,8 @@
 sources:
   - name: rds
-    database: "{{ var('synapse_database_source') }}"  
-    schema: "{{ var('synapse_schema_source') }}"
-    description: "Synapse RDS snapshot source tables from MySQL database, containing access control, data access management, and approval workflows."
+    database: "{{ 'SYNAPSE_DATA_WAREHOUSE' if target.name == 'prod' else 'SYNAPSE_DATA_WAREHOUSE_DEV' }}"  
+    schema: RDS_RAW
+    description: "Synapse RDS snapshot source tables from MySQL database, containing access control, data access management,and approval workflows."
     tables:
       - name: access_approval
         description: "Records of approved or revoked access to restricted data resources. Tracks which users have been granted access to specific access requirements."
