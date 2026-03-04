@@ -829,6 +829,10 @@ GRANT ROLE SAGE_GOVERNANCE_ANALYST
 	TO ROLE GOVERNANCE;
 GRANT ROLE SAGE_GOVERNANCE_ANALYST
 	TO ROLE DATA_ENGINEER;
+-- Allow the admin role to own and refresh dynamic tables
+-- sourced from `synapse_data_warehouse`
+GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST
+	TO ROLE SAGE_GOVERNANCE_ADMIN;
 
 -- Sage DB related role inheritance
 GRANT ROLE SAGE_ADMIN
