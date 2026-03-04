@@ -5,7 +5,7 @@
 <!-- Describe the specific technical problem that this PR solves. -->
 
 <!-- REQUIRED -->
-Ticket: [SNOW-404](https://sagebionetworks.jira.com/browse/SNOW-404-fake)
+Ticket: [SNOW-NNN](https://sagebionetworks.jira.com/browse/SNOW-NNN-fake)
 
 <!-- OPTIONAL -->
 <!-- A brief description of the *technical* or *implementation* aspects of the problem -->
