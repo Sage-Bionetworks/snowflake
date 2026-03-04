@@ -5,7 +5,7 @@
 <!-- Describe the specific technical problem that this PR solves. -->
 
 <!-- REQUIRED -->
-Ticket: [SNOW-NNN](https://sagebionetworks.jira.com/browse/SNOW-NNN-fake)
+Ticket: [](https://sagebionetworks.jira.com/browse/)
 
 <!-- OPTIONAL -->
 <!-- A brief description of the *technical* or *implementation* aspects of the problem -->
@@ -18,7 +18,7 @@ Ticket: [SNOW-NNN](https://sagebionetworks.jira.com/browse/SNOW-NNN-fake)
 <!-- For each of the acceptance criteria specified in the Jira ticket, describe how this criterion was addressed. -->
 <!-- If you feel that it helps with clarity, provide links to specific lines within your changes. -->
 1. My first acceptance criteria
-    * How I addressed this in [these lines of code](https://github.com/Sage-Bionetworks/snowflake/pull/NNN/files#diff-shaR1-R100) 
+    * How I addressed this in [these lines of code]() 
 
 <!-- OPTIONAL -->
 <!-- Describe any additional changes made that aren't relevant to the acceptance criteria. -->
