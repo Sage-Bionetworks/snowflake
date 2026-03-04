@@ -3,9 +3,10 @@ USE ROLE ACCOUNTADMIN;
 -- Storage integration for 2026 Synapse RDS -> Snowflake pipeline (SNOW-392)
 CREATE OR REPLACE STORAGE INTEGRATION synapse_snapshot
   TYPE = EXTERNAL_STAGE
-  STORAGE_PROVIDER = S3
+  STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
   STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::766808016710:role/snowflake-role-synapse-snowflake-rds-snapshots-dev'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://synapse-snowflake-rds-snapshots-dev');
 
 -- * Integration to prod (SNOW-14)
 CREATE STORAGE INTEGRATION IF NOT EXISTS synapse_prod_warehouse_s3
