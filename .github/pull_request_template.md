@@ -1,6 +1,6 @@
 <!-- REQUIRED -->
 <!-- The title of this PR must be prefixed with the Jira ticket -->
-<!-- e.g., "[SNOW-404] My brief title" -->
+<!-- e.g., "[] My brief title" -->
 # Problem
 <!-- Describe the specific technical problem that this PR solves. -->
 
