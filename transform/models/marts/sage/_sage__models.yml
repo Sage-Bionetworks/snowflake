@@ -1,0 +1,74 @@
+version: 2
+models:
+  - name: data_access_submission_dashboard
+    config:
+      schema: governance
+    description: "Dashboard view of data access submissions with calculated fields for approval cycles and attempt numbers. This dynamic table refreshes every 8 hours to provide reporting-ready data about data access requests."
+    columns:
+      - name: data_access_submission_id
+        description: "Unique identifier for the data access submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: data_access_request_id
+        description: "The identifier of the access request that this submission was created from."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_id
+        description: "The identifier of the access requirement that the access request associates with."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version
+        description: "Version of the access requirement at the time of submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: research_project_id
+        description: "The research project associated with this submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: submitted_by
+        description: "Identifier of the user who made this submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: submitted_by_user_name
+        description: "Username of the user who made this submission."
+        data_type: VARCHAR
+      - name: submitted_on
+        description: "UTC timestamp when the submission was created."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: attempt
+        description: "The submission attempt number within the current approval cycle for this data access request."
+        data_type: NUMBER
+      - name: submission_status
+        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
+        data_type: VARCHAR
+      - name: reviewed_by
+        description: "Identifier of the user who last modified the submission status."
+        data_type: NUMBER
+      - name: reviewed_by_user_name
+        description: "Username of the user who last modified the submission status."
+        data_type: VARCHAR
+      - name: reviewed_on
+        description: "UTC timestamp when the submission status was last modified."
+        data_type: TIMESTAMP_NTZ
+      - name: submission_status_reason
+        description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations."
+        data_type: VARCHAR
+      - name: accessor_changes
+        description: "A mapping of principal IDs (as strings) to their access type changes (e.g., {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}). Access types include: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
+        data_type: VARIANT
+      - name: accessor_count
+        description: "The number of accessors (principals) affected by this submission."
+        data_type: NUMBER
+      - name: data_access_submission_raw
+        description: "Serialized representation of the complete submission object."
+        data_type: BINARY
+        constraints:
+          - type: not_null
