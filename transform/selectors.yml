@@ -1,0 +1,17 @@
+selectors:
+  - name: synapse_data_warehouse
+    description: "All models that deploy to a synapse_data_warehouse environment"
+    definition:
+      union:
+        - method: fqn
+          value: staging
+        - method: fqn
+          value: intermediate
+        - method: fqn
+          value: marts.synapse_data_warehouse
+  
+  - name: sage
+    description: "All models that deploy to a sage environment"
+    definition:
+      method: fqn
+      value: marts.sage
