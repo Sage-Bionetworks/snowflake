@@ -251,7 +251,7 @@ TO ROLE SYSADMIN;
 GRANT USAGE ON INTEGRATION SYNAPSE_PROD_WAREHOUSE_S3
 TO ROLE DATA_ENGINEER;
 
--- Grant storage integration privileges to SYSADMIN, DATA_ENGINEER, and <DATABASE>_PROXY_ADMIN
+-- Grant storage integration privileges to DATA_ENGINEER, and <DATABASE>_PROXY_ADMIN
 ---- `DEV`
 GRANT USAGE
 	ON INTEGRATION synapse_snapshots_dev
