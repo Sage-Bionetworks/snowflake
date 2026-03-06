@@ -3,7 +3,7 @@ models:
   - name: data_access_submission_dashboard
     config:
       schema: governance
-    description: "Dashboard view of data access submissions with calculated fields for approval cycles and attempt numbers. This dynamic table refreshes every 8 hours to provide reporting-ready data about data access requests."
+    description: "Dashboard view of data access submissions with additional, governance-specific enrichment"
     columns:
       - name: data_access_submission_id
         description: "Unique identifier for the data access submission."
