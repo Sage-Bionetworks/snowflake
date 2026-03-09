@@ -39,6 +39,9 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
+      - name: created_by_user_name
+        description: "Username of the user who made this submission."
+        data_type: VARCHAR
       - name: created_on
         description: "UTC timestamp when the submission was created."
         data_type: TIMESTAMP_NTZ
@@ -47,6 +50,9 @@ models:
       - name: state_modified_by
         description: "Identifier of the user who last modified the submission status."
         data_type: NUMBER
+      - name: state_modified_by_user_name
+        description: "Username of the user who last modified the submission status."
+        data_type: VARCHAR
       - name: state_modified_on
         description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
@@ -56,16 +62,11 @@ models:
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
-      - name: etag
-        description: "Entity tag for optimistic concurrency control (36-character UUID)."
-        data_type: VARCHAR(36)
-        constraints:
-          - type: not_null
+      - name: accessor_changes
+        description: "A mapping of principal IDs (as strings) to their access type changes (e.g., {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}). Access types include: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
+        data_type: VARIANT
       - name: data_access_submission_raw
         description: "Serialized representation of the complete submission object."
         data_type: BINARY
         constraints:
           - type: not_null
-      - name: accessor_changes
-        description: "A mapping of principal IDs (as strings) to their access type changes (e.g., {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}). Access types include: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
-        data_type: VARIANT
