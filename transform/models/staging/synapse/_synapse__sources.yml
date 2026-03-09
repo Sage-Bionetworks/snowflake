@@ -515,3 +515,41 @@ sources:
             data_type: VARCHAR(36)
             data_tests:
               - not_null
+
+      - name: principal_alias
+        description: "Stores aliases for user and team principals, including usernames, team names, email addresses, ORCID IDs, and OpenIDs. Each alias must be globally unique across all principals."
+        columns:
+          - name: id
+            description: "Unique identifier for the principal alias record"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR(36)
+            data_tests:
+              - not_null
+          - name: principal_id
+            description: "The globally unique identifier of the principal associated with this alias. For a Synapse user, this is the user ID. For a Synapse team, this is the team ID."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: alias_unique
+            description: "Unique normalized alias value used for lookups and validation. Guaranteed to be globally unique across all principals."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - unique
+          - name: alias_display
+            description: "Display version of the alias, preserving original character casing and formatting"
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: type
+            description: "Type of alias. Valid values are 'USER_NAME', 'TEAM_NAME', 'USER_EMAIL', 'USER_OPEN_ID' (OpenID identifier), or 'USER_ORCID' (ORCID identifier)."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+              - accepted_values:
+                  values: ['USER_NAME', 'TEAM_NAME', 'USER_EMAIL', 'USER_OPEN_ID', 'USER_ORCID']
