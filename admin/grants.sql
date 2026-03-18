@@ -8,8 +8,8 @@ GRANT ROLE ACCOUNTADMIN
 TO USER "phil.snyder@sagebase.org";
 
 -- SYSADMIN privileges
-GRANT ROLE SYSADMIN
-TO USER "kevin.boske@sagebase.org";
+REVOKE ROLE SYSADMIN
+FROM USER "kevin.boske@sagebase.org";
 GRANT ROLE SYSADMIN
 TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE SYSADMIN
