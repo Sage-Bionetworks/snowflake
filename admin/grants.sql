@@ -888,3 +888,7 @@ GRANT ROLE TECH_PRODUCT TO USER "ann.novakowski@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "samia.ahmed@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "sophia.jobe@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "shaun.kalweit@sagebase.org";
+GRANT ROLE TECH_PRODUCT TO USER "thomas.yu@sagebase.org";
+GRANT ROLE TECH_PRODUCT TO USER "phil.snyder@sagebase.org";
+GRANT ROLE TECH_PRODUCT TO USER "jenny.medina@sagebase.org";
+
