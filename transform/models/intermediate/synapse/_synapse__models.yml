@@ -144,9 +144,13 @@ models:
       - name: state_modified_on
         description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
       - name: state
         description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
         data_type: VARCHAR
+        constraints:
+          - type: not_null
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
@@ -218,9 +222,13 @@ models:
       - name: state_modified_on
         description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
       - name: state
         description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
         data_type: VARCHAR
+        constraints:
+          - type: not_null
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
