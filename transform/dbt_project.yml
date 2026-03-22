@@ -28,5 +28,8 @@ models:
     marts:
       +materialized: dynamic_table
       +on_configuration_change: apply
-      +target_lag: downstream
+      +target_lag: "8 hours"
       +snowflake_warehouse: compute_xsmall
+      sage:
+        +database: "SAGE"
+        +enabled: "{{ target.name == 'prod' }}"
