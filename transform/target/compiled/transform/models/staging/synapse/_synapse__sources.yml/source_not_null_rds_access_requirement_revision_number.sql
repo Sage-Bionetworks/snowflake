@@ -1,0 +1,3 @@
+select number
+from synapse_data_warehouse.rds_raw.access_requirement_revision
+where number is null

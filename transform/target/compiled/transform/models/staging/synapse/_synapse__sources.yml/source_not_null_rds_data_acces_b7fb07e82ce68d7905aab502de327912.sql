@@ -1,0 +1,3 @@
+select submission_id
+from synapse_data_warehouse.rds_raw.data_access_submission_accessor_changes
+where submission_id is null

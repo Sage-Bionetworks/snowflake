@@ -1,0 +1,3 @@
+select access_requirement_id
+from synapse_data_warehouse.rds_raw.data_access_request
+where access_requirement_id is null

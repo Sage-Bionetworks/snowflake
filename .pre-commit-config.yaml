@@ -4,7 +4,8 @@ repos:
   hooks:
     - id: sqlfluff-lint
       args: [--dialect, "snowflake", '--exclude-rules', 'RF05,AM04,LT05,ST07']
+      exclude: ^transform/target/
     - id: sqlfluff-fix
-      # Arbitrary arguments to show an example
       args: [--dialect, "snowflake", '--exclude-rules', 'RF05,AM04,LT05,ST07']
+      exclude: ^transform/target/
       # additional_dependencies: ['<dbt-adapter>', 'sqlfluff-templater-dbt']

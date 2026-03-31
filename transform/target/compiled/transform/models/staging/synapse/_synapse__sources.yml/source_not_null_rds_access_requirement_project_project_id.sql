@@ -1,0 +1,3 @@
+select project_id
+from synapse_data_warehouse.rds_raw.access_requirement_project
+where project_id is null

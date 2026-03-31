@@ -1,0 +1,3 @@
+select research_project_id
+from synapse_data_warehouse.rds_raw.data_access_request
+where research_project_id is null

@@ -1,0 +1,3 @@
+select notification_type
+from synapse_data_warehouse.rds_raw.data_access_notification
+where notification_type is null

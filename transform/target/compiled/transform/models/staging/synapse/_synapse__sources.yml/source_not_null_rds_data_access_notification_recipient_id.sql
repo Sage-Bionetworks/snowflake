@@ -1,0 +1,3 @@
+select recipient_id
+from synapse_data_warehouse.rds_raw.data_access_notification
+where recipient_id is null

@@ -1,0 +1,3 @@
+select is_two_fa_required
+from synapse_data_warehouse.rds_raw.access_requirement
+where is_two_fa_required is null

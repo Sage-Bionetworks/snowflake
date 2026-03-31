@@ -1,0 +1,3 @@
+select requirement_version
+from synapse_data_warehouse.rds_raw.access_approval
+where requirement_version is null

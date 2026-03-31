@@ -1,0 +1,3 @@
+select state
+from synapse_data_warehouse.rds_raw.data_access_submission_status
+where state is null

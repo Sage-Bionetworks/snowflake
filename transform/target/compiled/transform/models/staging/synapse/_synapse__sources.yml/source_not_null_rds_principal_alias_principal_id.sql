@@ -1,0 +1,3 @@
+select principal_id
+from synapse_data_warehouse.rds_raw.principal_alias
+where principal_id is null

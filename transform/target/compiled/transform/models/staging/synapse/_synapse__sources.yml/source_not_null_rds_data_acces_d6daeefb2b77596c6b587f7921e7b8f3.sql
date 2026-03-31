@@ -1,0 +1,3 @@
+select access_type
+from synapse_data_warehouse.rds_raw.data_access_submission_accessor_changes
+where access_type is null

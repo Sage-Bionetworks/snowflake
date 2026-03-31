@@ -1,0 +1,3 @@
+select submission_serialized
+from synapse_data_warehouse.rds_raw.data_access_submission
+where submission_serialized is null

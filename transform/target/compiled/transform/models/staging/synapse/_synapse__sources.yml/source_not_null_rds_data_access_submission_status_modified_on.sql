@@ -1,0 +1,3 @@
+select modified_on
+from synapse_data_warehouse.rds_raw.data_access_submission_status
+where modified_on is null

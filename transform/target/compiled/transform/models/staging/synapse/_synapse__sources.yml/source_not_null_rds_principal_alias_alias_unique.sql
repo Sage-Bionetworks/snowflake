@@ -1,0 +1,3 @@
+select alias_unique
+from synapse_data_warehouse.rds_raw.principal_alias
+where alias_unique is null

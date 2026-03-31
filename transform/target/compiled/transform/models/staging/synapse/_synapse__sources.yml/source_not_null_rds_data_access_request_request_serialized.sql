@@ -1,0 +1,3 @@
+select request_serialized
+from synapse_data_warehouse.rds_raw.data_access_request
+where request_serialized is null

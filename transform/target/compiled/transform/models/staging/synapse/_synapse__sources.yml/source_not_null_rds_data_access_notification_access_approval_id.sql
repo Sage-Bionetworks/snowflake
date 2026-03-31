@@ -1,0 +1,3 @@
+select access_approval_id
+from synapse_data_warehouse.rds_raw.data_access_notification
+where access_approval_id is null

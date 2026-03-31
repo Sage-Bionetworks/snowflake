@@ -1,0 +1,3 @@
+select access_requirement_version
+from synapse_data_warehouse.rds_raw.data_access_submission
+where access_requirement_version is null

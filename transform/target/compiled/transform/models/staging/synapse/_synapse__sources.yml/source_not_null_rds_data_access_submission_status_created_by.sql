@@ -1,0 +1,3 @@
+select created_by
+from synapse_data_warehouse.rds_raw.data_access_submission_status
+where created_by is null

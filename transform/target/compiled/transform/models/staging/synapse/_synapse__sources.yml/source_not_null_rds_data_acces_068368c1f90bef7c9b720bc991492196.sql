@@ -1,0 +1,3 @@
+select submitter_id
+from synapse_data_warehouse.rds_raw.data_access_submission_submitter
+where submitter_id is null

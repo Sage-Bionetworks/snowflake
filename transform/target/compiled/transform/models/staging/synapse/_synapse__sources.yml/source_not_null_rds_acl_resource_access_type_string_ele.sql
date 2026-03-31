@@ -1,0 +1,3 @@
+select string_ele
+from synapse_data_warehouse.rds_raw.acl_resource_access_type
+where string_ele is null

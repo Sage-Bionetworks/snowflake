@@ -1,0 +1,3 @@
+select data_access_request_id
+from synapse_data_warehouse.rds_raw.data_access_submission
+where data_access_request_id is null

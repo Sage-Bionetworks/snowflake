@@ -1,0 +1,3 @@
+select requirement_id
+from synapse_data_warehouse.rds_raw.data_access_notification
+where requirement_id is null

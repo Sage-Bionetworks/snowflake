@@ -1,0 +1,3 @@
+select modified_by
+from synapse_data_warehouse.rds_raw.data_access_request
+where modified_by is null

@@ -1,0 +1,3 @@
+select message_id
+from synapse_data_warehouse.rds_raw.data_access_notification
+where message_id is null
