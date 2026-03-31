@@ -14,6 +14,9 @@ The CLI version of dbt is called dbt Core. You can install dbt with the Snowflak
 
 After installing, configure your `~/.dbt/profiles.yml` by following the instructions in the previous link. This is where you can specify both your authentication and deployment environment (i.e., database/schema) information. dbt models can be deployed to any schema which your role has write access to.
 
+> [!IMPORTANT]
+> The profile name in `~/.dbt/profiles.yml` must match the `profile` field in `dbt_project.yml`. This project uses `profile: 'transform'`, so your `profiles.yml` must have a top-level key named `transform`.
+
 # Models
 
 Models are categorized according to their function in the dbt model paradigm.
