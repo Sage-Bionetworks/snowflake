@@ -1,0 +1,80 @@
+name: dbt
+
+on:
+  push:
+    paths:
+      - 'transform/**'
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+jobs:
+  dbt_dev:
+    runs-on: ubuntu-22.04
+    if: github.ref_name == 'dev'
+    environment: dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+
+      - name: Install dbt-snowflake
+        run: pip install dbt-snowflake~=1.9
+
+      - name: Set private key path
+        run: echo "SNOWFLAKE_PRIVATE_KEY_PATH=$HOME/.snowflake/rsa_key.p8" >> $GITHUB_ENV
+
+      - name: dbt deps
+        working-directory: transform
+        run: dbt deps
+
+      - name: dbt build (dev)
+        working-directory: transform
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+        run: dbt build --target dev --profiles-dir .
+
+  dbt_prod:
+    runs-on: ubuntu-22.04
+    if: github.ref_name == 'main'
+    environment: prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+
+      - name: Install dbt-snowflake
+        run: pip install dbt-snowflake~=1.9
+
+      - name: Set private key path
+        run: echo "SNOWFLAKE_PRIVATE_KEY_PATH=$HOME/.snowflake/rsa_key.p8" >> $GITHUB_ENV
+
+      - name: dbt deps
+        working-directory: transform
+        run: dbt deps
+
+      - name: dbt build (prod)
+        working-directory: transform
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+          SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+        run: dbt build --target prod --profiles-dir .

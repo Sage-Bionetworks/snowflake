@@ -185,6 +185,31 @@ jobs:
                 --config-folder synapse_data_warehouse \
                 --snowflake-role $SNOWFLAKE_CLONE_ADMIN_ROLE
 
+            ########################################################################################################
+            ########################################################################################################
+            ############################################# RUNNING DBT ###############################################
+            ########################################################################################################
+            ########################################################################################################
+            - name: Install dbt-snowflake
+              run: pip install dbt-snowflake~=1.9
+
+            - name: Set private key path
+              run: echo "SNOWFLAKE_PRIVATE_KEY_PATH=$HOME/.snowflake/rsa_key.p8" >> $GITHUB_ENV
+
+            - name: dbt deps
+              working-directory: transform
+              run: dbt deps
+
+            - name: dbt build (CI clone)
+              working-directory: transform
+              env:
+                SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+                SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                # SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE is already set to the clone name
+                # by the "Sanitize Clone Name" step above
+              run: dbt build --target ci --profiles-dir .
+
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
