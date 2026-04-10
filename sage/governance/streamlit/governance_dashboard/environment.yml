@@ -1,0 +1,6 @@
+name: governance_dashboard
+channels:
+    - snowflake
+dependencies:
+    - streamlit=1.*
+    - snowflake-snowpark-python

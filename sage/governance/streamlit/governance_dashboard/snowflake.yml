@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+    governance_dashboard:
+        type: streamlit
+        identifier:
+            name: GOVERNANCE_DASHBOARD
+            schema: GOVERNANCE
+            database: SAGE
+        stage: governance_dashboard_stage
+        query_warehouse: STREAMLIT_XSMALL
+        main_file: streamlit_app.py
+        artifacts:
+            - streamlit_app.py
+            - environment.yml
+            - .streamlit/config.toml
