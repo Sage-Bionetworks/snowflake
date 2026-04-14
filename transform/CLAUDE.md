@@ -31,7 +31,7 @@ dbt docs generate --target prod
 dbt test
 ```
 
-**Profiles:** `~/.dbt/profiles.yml` must define a `transform` profile with `dev` and `prod` outputs. See `profiles.yml` in this directory for the required structure (fill in credentials; do not commit credentials).
+**Profiles:** `~/.dbt/profiles.yml` must define a `transform` profile with `dev` and `prod` outputs. Create or update that file locally using the standard dbt profile format and Snowflake adapter settings; see the dbt profile configuration and Snowflake setup docs for the required structure and fields. Fill in credentials locally and do not commit them.
 
 ## Data Models
 
