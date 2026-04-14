@@ -1,0 +1,3 @@
+[snowflake]
+[snowflake.sleep]
+streamlitSleepTimeoutMinutes = 5

@@ -1,5 +1,5 @@
-USE SCHEMA {{ database_name }}.GOVERNANCE;
+USE SCHEMA {{ database_name }}.governance;
 
--- Internal named stage for the governance dashboard Streamlit app source files.
+-- This DDL is a formality:
 -- File population and Streamlit object lifecycle are managed by Snowflake CLI in CI.
-CREATE STAGE IF NOT EXISTS governance_dashboard_stage;
+CREATE OR REPLACE STREAMLIT data_access_dashboard;

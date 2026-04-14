@@ -1,13 +1,12 @@
 definition_version: 2
 entities:
-    governance_dashboard:
+    data_access_dashboard:
         type: streamlit
         identifier:
-            name: GOVERNANCE_DASHBOARD
-            schema: GOVERNANCE
-            database: SAGE
-        stage: governance_dashboard_stage
-        query_warehouse: STREAMLIT_XSMALL
+            name: data_access_dashboard
+            schema: governance
+            database: sage
+        query_warehouse: streamlit_xsmall
         main_file: streamlit_app.py
         artifacts:
             - streamlit_app.py
