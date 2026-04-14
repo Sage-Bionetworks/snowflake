@@ -7,7 +7,7 @@ Sage Bionetworks' Snowflake data warehouse: ingests Synapse platform data (MySQL
 ## Stack
 
 - SQL: Snowflake dialect
-- Python: 3.10 (finance/Docker), 3.11 (GitHub Actions)
+- Python: 3.10 (finance/Docker; GitHub Actions `test_with_clone`), 3.11 (GitHub Actions shared `configure-snowflake-cli` action)
 - schemachange: 4.0.1 (schema migration runner)
 - dbt: Snowflake adapter (profile name: `transform`)
 - SQLFluff: 3.0.6 — lints SQL with `--dialect snowflake --exclude-rules RF05,AM04,LT05,ST07`
@@ -88,15 +88,15 @@ Tableau / Streamlit / ad-hoc SQL
 
 ## Conventions
 
-**Branch naming:** Feature branches must start with `snow-` (e.g., `snow-407-new-feature`) — the CI test workflow only triggers on branches matching this pattern. Work off `dev`, not `main`.
+**Branch naming:** Feature branches must start with `snow-` (e.g., `snow-407-new-feature`) for the cloned-db test/deploy to succeed. Work off `dev`, not `main`.
 
 **PR title format:** `[SNOW-NNN] Brief description` — Jira ticket prefix is required by the PR template.
 
 **Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
 
-**Template variables in SQL:** Use `{{database_name}}`, `{{stage_storage_integration}}`, etc. (double curly braces). These are resolved by schemachange from environment variables. Add `--noqa: TMP,PRS` to suppress SQLFluff template warnings on these lines.
+**Template variables in SQL:** Use `{{database_name}}`, `{{stage_storage_integration}}`, etc. (double curly braces). These are resolved by schemachange from environment variables. Add `--noqa: JJ01,PRS,TMP` on these lines to suppress the common SQLFluff template/jinja warnings.
 
-**SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP,CP01` on lines with template variables or schema USE statements.
+**SQLFluff noqa:** For lines with template variables or schema `USE` statements, use `--noqa: JJ01,PRS,TMP` by default. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
 **Warehouse sizes:** Use `XSMALL` for most tasks; `MEDIUM` only for COPY INTO operations. All warehouses created with `initially_suspended = TRUE` and `auto_resume = TRUE`.
 
