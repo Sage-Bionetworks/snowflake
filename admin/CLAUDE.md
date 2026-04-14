@@ -7,7 +7,7 @@ Manages all Snowflake account-level configuration: user/role creation, warehouse
 ## Commands
 
 ```bash
-# Executed by CI on push to dev/main (different roles per script):
+# Executed by CI on push to main (different roles per script):
 snow sql -f admin/users.sql          # USERADMIN
 snow sql -f admin/roles.sql          # SYSADMIN
 snow sql -f admin/databases.sql      # SYSADMIN
