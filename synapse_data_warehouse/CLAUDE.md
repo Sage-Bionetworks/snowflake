@@ -140,4 +140,4 @@ NULLIF(REGEXP_REPLACE(METADATA$FILENAME, '.*partition_key=([^/]+)/.*', '\\1'), '
 ## Anti-Patterns — Do NOT
 
 - **Do NOT convert stable snapshot tables to dynamic tables without testing** — dynamic table conversion was reverted once (`Revert 'convert file latest to dynamic table'`, commit `2a07475`) due to ownership and lag behavior issues. Validate in dev first.
-- **Do NOT omit `--noqa: TMP,PRS` on template variable lines** — SQLFluff will error on `{{` syntax without the noqa comment.
+- **Do NOT omit the established `--noqa` pattern on template variable lines** — use the repo convention, generally `--noqa: JJ01,PRS,TMP` (and sometimes additional `CP01`/`CP02` as needed), because SQLFluff will error on `{{` syntax without the appropriate noqa comment.
