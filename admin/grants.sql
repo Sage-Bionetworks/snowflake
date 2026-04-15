@@ -214,7 +214,7 @@ GRANT ROLE DATA_ANALYTICS TO ROLE NF_ADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE GENIE_ADMIN;
 GRANT ROLE DATA_ANALYTICS TO ROLE GOVERNANCE;
 
-// FAIR 
+// FAIR
 GRANT ROLE FAIR TO USER "anthony.williams@sagebase.org";
 GRANT ROLE FAIR TO USER "loren.wolfe@sagebase.org";
 GRANT ROLE FAIR TO USER "lingling.peng@sagebase.org";
@@ -348,7 +348,7 @@ GRANT CREATE DATABASE ON ACCOUNT TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_ADMIN;
 USE ROLE SECURITYADMIN;
 
 ---- RBAC reconfiguration of data warehouse ----
--- The following grants provide read access on most 
+-- The following grants provide read access on most
 -- objects presently within the data warehouse.
 
 ---- SYNAPSE_DATA_WAREHOUSE ----
@@ -485,7 +485,7 @@ GRANT SELECT, INSERT
 -- Grant appropriate roles to our service accounts
 GRANT ROLE ACCOUNTADMIN
 	TO USER ADMIN_SERVICE;
-GRANT ROLE DATA_ENGINEER 
+GRANT ROLE DATA_ENGINEER
 	TO USER DEVELOPER_SERVICE;
 
 -- Allow the proxy admins to run serverless tasks
@@ -537,7 +537,7 @@ USE ROLE SECURITYADMIN;
 
 -- SYNAPSE_DATA_WAREHOUSE_DEV --
 -- Only DATA_ENGINEER needs read-type privileges on DEV
--- No action required since read-type privileges propagate 
+-- No action required since read-type privileges propagate
 -- via *ALL_DEVELOPER database roles.
 
 -- SYNAPSE_DATA_WAREHOUSE --
@@ -782,7 +782,7 @@ GRANT CREATE DATABASE
 -- role via the application role DATA_READER (in the GOOGLE_ANALYTICS share)
 -- For reasons which I don't entirely understand, SECURITYADMIN is not able to
 -- see this role despite having the MANAGE GRANTS privilege, although the
--- role's owner, ACCOUNTADMIN, is able to. 
+-- role's owner, ACCOUNTADMIN, is able to.
 REVOKE APPLICATION ROLE GOOGLE_ANALYTICS.DATA_READER
   FROM ROLE DATA_ANALYTICS;
 USE ROLE securityadmin;
@@ -800,10 +800,10 @@ GRANT USAGE
 -- Conform `SAGE.CITATIONS` to standard analyst schema privilege model
 -- DB/Schema
 GRANT USAGE
-	ON DATABASE SAGE 
+	ON DATABASE SAGE
 	TO ROLE SAGE_CITATIONS_ADMIN;
 GRANT USAGE
-	ON DATABASE SAGE 
+	ON DATABASE SAGE
 	TO ROLE SAGE_CITATIONS_ANALYST;
 GRANT USAGE
 	ON SCHEMA SAGE.CITATIONS
@@ -830,10 +830,10 @@ GRANT ROLE SAGE_CITATIONS_ANALYST
 -- Conform `SAGE.GOVERNANCE` to standard analyst schema privilege model
 -- DB/Schema
 GRANT USAGE
-	ON DATABASE SAGE 
+	ON DATABASE SAGE
 	TO ROLE SAGE_GOVERNANCE_ADMIN;
 GRANT USAGE
-	ON DATABASE SAGE 
+	ON DATABASE SAGE
 	TO ROLE SAGE_GOVERNANCE_ANALYST;
 GRANT USAGE
 	ON SCHEMA SAGE.GOVERNANCE
@@ -887,4 +887,14 @@ GRANT ROLE TECH_PRODUCT TO USER "shaun.kalweit@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "thomas.yu@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "phil.snyder@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "jenny.medina@sagebase.org";
+
+-- Warehouse access for Streamlit apps in SAGE.GOVERNANCE
+GRANT USAGE ON WAREHOUSE STREAMLIT_XSMALL
+	TO ROLE SAGE_GOVERNANCE_ADMIN;
+GRANT USAGE ON WAREHOUSE STREAMLIT_XSMALL
+	TO ROLE SAGE_GOVERNANCE_ANALYST;
+GRANT USAGE ON WAREHOUSE STREAMLIT_XSMALL
+	TO ROLE DATA_ENGINEER;
+GRANT USAGE ON WAREHOUSE STREAMLIT_XSMALL
+	TO ROLE TECH_PRODUCT;
 
