@@ -90,6 +90,18 @@ snow streamlit deploy --replace --prune [--connection <connection-name>]
 
 The `snowflake.yml` in each app directory defines the target database, schema, warehouse, and artifacts to upload.
 
+## RBAC and Ownership
+
+Streamlit objects have an RBAC peculiarity: Snowflake does not support `GRANT OWNERSHIP`
+or `GRANT OWNERSHIP ON FUTURE` for `STREAMLIT` objects.
+
+Because ownership cannot be reassigned via grants, ensure the correct role is active at
+creation time by including a `USE ROLE <schema_admin_role>;` statement before any
+`CREATE ... STREAMLIT` statements so the app is created with the schema admin role as owner.
+
+Other object grants are unaffected. Standard grants and future grants for non-ownership
+privileges (for example `USAGE`) continue to work normally.
+
 ## Snowflake Runtime Constraints
 
 - Python version: **3.11**
