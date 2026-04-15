@@ -105,6 +105,27 @@ jobs:
             --config-folder sage \
             --snowflake-role sage_admin
 
+  deploy_streamlit:
+    runs-on: ubuntu-22.04
+    needs: schemachange_sage
+    if: github.ref_name == 'main'
+    environment: prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Snowflake
+        uses: ./.github/actions/configure-snowflake-cli
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+
+      - name: Deploy Governance dashboard 
+        working-directory: sage/governance/streamlit/data_access_dashboard
+        run: snow streamlit deploy --replace --prune
+
   schemachange_admin:
     runs-on: ubuntu-22.04
     needs: schemachange_synapse_data_warehouse_prod
@@ -192,24 +213,3 @@ jobs:
 
       - name: Grant privileges
         run: snow sql -f admin/grants.sql
-
-  deploy_streamlit:
-    runs-on: ubuntu-22.04
-    needs: schemachange_sage
-    if: github.ref_name == 'main'
-    environment: prod
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Configure Snowflake
-        uses: ./.github/actions/configure-snowflake-cli
-        with:
-          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
-          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
-          USER: ${{ vars.ADMIN_SERVICE_USER }}
-
-      - name: Deploy Governance dashboard 
-        working-directory: sage/governance/streamlit/governance_dashboard
-        run: snow streamlit deploy governance_dashboard --replace --prune
