@@ -2,6 +2,7 @@ definition_version: 2
 entities:
     data_access_dashboard:
         type: streamlit
+        title: Data Access Dashboard
         identifier:
             name: data_access_dashboard
             schema: governance
