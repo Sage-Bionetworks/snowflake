@@ -1,0 +1,19 @@
+config-version: 1
+
+snowflake-account: '{{env_var("SNOWFLAKE_ACCOUNT")}}'
+snowflake-user: '{{env_var("SNOWFLAKE_USER")}}'
+snowflake-role: ACCOUNTADMIN
+snowflake-warehouse: COMPUTE_XSMALL
+snowflake-database: METADATA
+
+root-folder: infrastructure
+
+change-history-table: METADATA.SCHEMACHANGE.CHANGE_HISTORY
+
+vars:
+  database_name: '{{env_var("SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE", "SYNAPSE_DATA_WAREHOUSE_DEV")}}'
+  stage_storage_integration: '{{env_var("SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION", "synapse_dev_warehouse_s3")}}'
+  stage_url: '{{env_var("SNOWFLAKE_SYNAPSE_STAGE_URL")}}'
+  snapshots_stage_storage_integration: '{{env_var("SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION")}}'
+  snapshots_stage_url: '{{env_var("SNOWFLAKE_SNAPSHOTS_STAGE_URL")}}'
+  stack: '{{env_var("STACK")}}'

@@ -1,0 +1,23 @@
+config-version: 1
+
+# Infrastructure R scripts manage account-level resources declaratively:
+# databases, warehouses, roles, users, integrations, policies, and grants.
+# Scripts switch roles internally as needed (ACCOUNTADMIN, SECURITYADMIN, etc.).
+snowflake-account: '{{env_var("SNOWFLAKE_ACCOUNT")}}'
+snowflake-user: '{{env_var("SNOWFLAKE_USER")}}'
+snowflake-role: ACCOUNTADMIN
+snowflake-warehouse: COMPUTE_XSMALL
+snowflake-database: METADATA
+
+root-folder: infrastructure
+
+# Track change history alongside the admin versioned scripts
+change-history-table: METADATA.SCHEMACHANGE.CHANGE_HISTORY
+
+vars:
+  database_name: '{{env_var("SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE")}}'
+  stage_storage_integration: '{{env_var("SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION")}}'
+  stage_url: '{{env_var("SNOWFLAKE_SYNAPSE_STAGE_URL")}}'
+  snapshots_stage_storage_integration: '{{env_var("SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION")}}'
+  snapshots_stage_url: '{{env_var("SNOWFLAKE_SNAPSHOTS_STAGE_URL")}}'
+  stack: '{{env_var("STACK")}}'
