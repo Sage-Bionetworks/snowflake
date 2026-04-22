@@ -18,6 +18,35 @@ WITH base AS (
         data_access_submission_raw
     FROM {{ ref('int_synapse_data_access_submission') }}
 ),
+submission_types AS (
+    SELECT
+        data_access_submission_id,
+        CASE
+            WHEN submission_sequence = 1 THEN 'new'
+            WHEN most_recent_previously_approved_state_modified_on IS NULL THEN 'new'
+            WHEN DATEDIFF(
+                month,
+                most_recent_previously_approved_state_modified_on,
+                created_on
+            ) < 10 THEN 'update'
+            ELSE 'annual renewal'
+        END AS submission_type
+    FROM (
+        SELECT
+            data_access_submission_id,
+            created_on,
+            ROW_NUMBER() OVER (
+                PARTITION BY data_access_request_id
+                ORDER BY created_on, data_access_submission_id
+            ) AS submission_sequence,
+            MAX(CASE WHEN state = 'APPROVED' THEN state_modified_on END) OVER (
+                PARTITION BY data_access_request_id
+                ORDER BY created_on, data_access_submission_id
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+            ) AS most_recent_previously_approved_state_modified_on
+        FROM base
+    ) base
+),
 principal_usernames AS (
     SELECT
         principal_id,
@@ -38,10 +67,13 @@ SELECT
     pa_modified.alias_display AS state_modified_by_user_name,
     base.state_modified_on,
     base.state,
+    submission_types.submission_type,
     base.state_reason,
     base.accessor_changes,
     base.data_access_submission_raw
 FROM base
+LEFT JOIN submission_types
+    ON base.data_access_submission_id = submission_types.data_access_submission_id
 LEFT JOIN principal_usernames pa_created
     ON base.created_by = pa_created.principal_id
 LEFT JOIN principal_usernames pa_modified

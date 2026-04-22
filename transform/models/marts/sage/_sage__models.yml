@@ -49,6 +49,9 @@ models:
       - name: submission_status
         description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
         data_type: VARCHAR
+      - name: submission_type
+        description: "Submission classification. One of: 'new', 'update', or 'annual renewal'."
+        data_type: VARCHAR
       - name: reviewed_by
         description: "Identifier of the user who last modified the submission status."
         data_type: NUMBER

@@ -59,6 +59,9 @@ models:
       - name: state
         description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
         data_type: VARCHAR
+      - name: submission_type
+        description: "Submission classification. One of: 'new', 'update', or 'annual renewal'."
+        data_type: VARCHAR
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
