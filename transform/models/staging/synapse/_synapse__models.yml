@@ -502,7 +502,7 @@ models:
         constraints:
           - type: not_null
       - name: state
-        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
+        description: "Current state in the submission workflow. One of: 'Submitted', 'Approved', 'Rejected', 'Cancelled'"
         data_type: VARCHAR
         constraints:
           - type: not_null
