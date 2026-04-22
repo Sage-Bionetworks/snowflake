@@ -39,7 +39,7 @@ submission_types AS (
                 PARTITION BY data_access_request_id
                 ORDER BY created_on, data_access_submission_id
             ) AS submission_sequence,
-            MAX(CASE WHEN state = 'APPROVED' THEN state_modified_on END) OVER (
+            MAX(CASE WHEN state = 'Approved' THEN state_modified_on END) OVER (
                 PARTITION BY data_access_request_id
                 ORDER BY created_on, data_access_submission_id
                 ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING

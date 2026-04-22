@@ -23,7 +23,7 @@ approval_cycles AS (
     SELECT
         data_access_submission_id,
         COALESCE(
-            SUM(CASE WHEN state = 'APPROVED' THEN 1 ELSE 0 END) 
+            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END) 
                 OVER (PARTITION BY data_access_request_id ORDER BY created_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),
             0
         ) AS approval_cycle

@@ -57,7 +57,7 @@ models:
         description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
       - name: state
-        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
+        description: "Current state in the submission workflow. One of: 'Submitted', 'Approved', 'Rejected', 'Cancelled'"
         data_type: VARCHAR
       - name: submission_type
         description: "Submission classification. One of: 'New', 'Update', or 'Annual Renewal'."
