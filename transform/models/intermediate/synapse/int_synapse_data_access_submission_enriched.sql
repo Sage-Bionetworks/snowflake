@@ -22,14 +22,14 @@ submission_types AS (
     SELECT
         data_access_submission_id,
         CASE
-            WHEN submission_sequence = 1 THEN 'new'
-            WHEN most_recent_previously_approved_state_modified_on IS NULL THEN 'new'
+            WHEN submission_sequence = 1 THEN 'New'
+            WHEN most_recent_previously_approved_state_modified_on IS NULL THEN 'New'
             WHEN DATEDIFF(
                 month,
                 most_recent_previously_approved_state_modified_on,
                 created_on
-            ) < 10 THEN 'update'
-            ELSE 'annual renewal'
+            ) < 10 THEN 'Update'
+            ELSE 'Annual Renewal'
         END AS submission_type
     FROM (
         SELECT
