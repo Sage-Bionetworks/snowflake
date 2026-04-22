@@ -66,3 +66,5 @@ For contribution guidelines, please see the `CONTRIBUTING.md` file in this repos
 ## Visualizing with Streamlit
 
 For repository guidelines on developing and deploying Streamlit in Snowflake apps, see [STREAMLIT.md](STREAMLIT.md).
+
+Our legacy support for developing Streamlit for Snowflake is the [streamlit-snowflake-template](https://github.com/Sage-Bionetworks/streamlit-snowflake-template). This is a template repository which helps maintain a [Streamlit](https://streamlit.io/) app within its own repository. This can be useful if you'd like to [use git as a backend store](https://docs.snowflake.com/en/developer-guide/streamlit/features/git-integration) for your Streamlit app, which would allow you to edit your Streamlit app in Snowsight and version control the changes in git.
