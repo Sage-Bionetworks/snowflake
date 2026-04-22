@@ -11,6 +11,7 @@ select
     state_modified_by_user_name,
     state_modified_on,
     state,
+    submission_type,
     state_reason,
     accessor_changes,
     data_access_submission_raw

@@ -13,6 +13,7 @@ WITH base AS (
         state_modified_by_user_name,
         state_modified_on,
         state,
+        submission_type,
         state_reason,
         accessor_changes,
         data_access_submission_raw
@@ -50,6 +51,7 @@ SELECT
     base.created_on as submitted_on,
     attempts.attempt,
     base.state as submission_status,
+    base.submission_type,
     base.state_modified_by as reviewed_by,
     state_modified_by_user_name as reviewed_by_user_name,
     base.state_modified_on as reviewed_on,
