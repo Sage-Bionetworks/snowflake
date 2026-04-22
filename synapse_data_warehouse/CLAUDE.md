@@ -2,13 +2,7 @@
 
 ## Project
 
-schemachange-managed DDL for the primary Synapse data warehouse. Contains all table definitions, dynamic tables, tasks, streams, and staged data ingestion for raw Synapse snapshots, RDS snapshots, and event aggregations. Version history tracked in `SYNAPSE_DATA_WAREHOUSE.SCHEMACHANGE.CHANGE_HISTORY`.
-
-## Stack
-
-- schemachange 4.0.1
-- Snowflake SQL (dialect)
-- Template variables resolved at deploy time from env vars
+schemachange-managed DDL for the primary Synapse data warehouse. Contains all table definitions, dynamic tables, tasks, streams, and staged data ingestion for raw Synapse snapshots, RDS snapshots, and event aggregations. Version history tracked in `<database>.SCHEMACHANGE.CHANGE_HISTORY`.
 
 ## Commands
 
@@ -27,13 +21,11 @@ schemachange \
   --config-folder synapse_data_warehouse \
   --snowflake-role synapse_data_warehouse_admin
 
-# Check what has been applied
--- SELECT * FROM SYNAPSE_DATA_WAREHOUSE.SCHEMACHANGE.CHANGE_HISTORY ORDER BY INSTALLED_ON DESC;
+# Check what has been applied (substitute the target database name)
+-- SELECT * FROM <database>.SCHEMACHANGE.CHANGE_HISTORY ORDER BY INSTALLED_ON DESC;
 ```
 
-## Data Models
-
-### Schema layout
+## Schema layout
 
 | Schema | Contents | Pattern |
 |--------|----------|---------|
@@ -46,7 +38,11 @@ schemachange \
 | `DATABASE_ROLES` | Role grant SQL (RBAC setup for this database) | V-scripts |
 | `SCHEMACHANGE` | Version history metadata — never edit manually | Auto-created |
 
-### Template variables
+## RBAC
+
+This database follows the structured database-role-based access pattern. See `admin/CLAUDE.md` for the full hierarchy and `admin/future_grants/CLAUDE.md` for adding new object types. The `database_roles/` subdirectory contains the V-scripts that set up database roles and grants for each schema.
+
+## Template variables
 
 Every SQL file uses `{{database_name}}` to stay environment-agnostic:
 
@@ -57,7 +53,7 @@ COPY INTO {{database_name}}.synapse_raw.my_table
   FROM @{{stage_storage_integration}}_STAGE/path/;
 ```
 
-Available variables (set via env vars in schemachange-config.yml):
+Available variables (set via env vars resolved from `schemachange-config.yml`):
 - `database_name` → `SYNAPSE_DATA_WAREHOUSE` or `SYNAPSE_DATA_WAREHOUSE_DEV`
 - `stage_storage_integration` → name of the Synapse S3 stage integration
 - `stage_url` → S3 URL for the Synapse stage
@@ -65,9 +61,9 @@ Available variables (set via env vars in schemachange-config.yml):
 - `snapshots_stage_url` → S3 URL for RDS snapshots
 - `stack` → environment identifier
 
-## Conventions
+**SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
-### Versioned vs. repeatable scripts
+## Versioned vs. repeatable scripts
 
 **Versioned (`V{major}.{minor}.{patch}__{description}.sql`):**
 - Use for: `CREATE TABLE`, `CREATE STREAM`, new objects that other objects depend on
@@ -77,9 +73,9 @@ Available variables (set via env vars in schemachange-config.yml):
 **Repeatable (`R__{description}.sql`):**
 - Use for: `CREATE OR ALTER TABLE`, `CREATE TASK IF NOT EXISTS` (idempotent re-runs)
 - Re-executed whenever the file content changes
-- Do NOT use for tables that are referenced by tasks, streams, or dynamic tables that won't be recreated — use a V-script instead
+- Do NOT use for tables referenced by tasks, streams, or dynamic tables that won't be recreated — use a V-script instead
 
-### Dynamic table pattern
+## Dynamic table pattern
 
 ```sql
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.schema.table_name
@@ -89,8 +85,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.schema.table_name
 AS
 SELECT
     col1,
-    col2,
-    ...
+    col2
 FROM {{database_name}}.source_schema.source_table
 QUALIFY ROW_NUMBER() OVER (
     PARTITION BY <grain_columns>
@@ -98,7 +93,9 @@ QUALIFY ROW_NUMBER() OVER (
 ) = 1;
 ```
 
-### Task pattern (repeatable scripts)
+Do NOT convert stable snapshot tables to dynamic tables without testing — dynamic table conversion was reverted once (`Revert 'convert file latest to dynamic table'`, commit `2a07475`) due to ownership and lag behavior issues. Validate in dev first.
+
+## Task pattern (repeatable scripts)
 
 ```sql
 CREATE TASK IF NOT EXISTS {{database_name}}.schema.task_name
@@ -115,7 +112,7 @@ ALTER TASK {{database_name}}.schema.task_name RESUME;
 - Use `user_task_managed_initial_warehouse_size` — avoids needing a separate warehouse.
 - CRON uses `America/Los_Angeles` timezone.
 
-### S3 COPY INTO pattern
+## S3 COPY INTO pattern
 
 ```sql
 COPY INTO {{database_name}}.synapse_raw.table_name
@@ -134,10 +131,6 @@ NULLIF(REGEXP_REPLACE(METADATA$FILENAME, '.*partition_key=([^/]+)/.*', '\\1'), '
 
 - **Never edit `SCHEMACHANGE.CHANGE_HISTORY` directly** — schemachange uses this to determine which scripts have been applied.
 - **Never reuse or edit an applied version number** — increment the minor or patch version instead.
-- **Do NOT use repeatable scripts to create tables with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first, then reference it (evidence: explicit rule in CONTRIBUTING.md).
+- **Do NOT use repeatable scripts to create tables with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
 - **Ownership transfers for this database belong in `admin/ownership_grants/`** — do not add `GRANT OWNERSHIP` here; it will auto-suspend tasks.
 
-## Anti-Patterns — Do NOT
-
-- **Do NOT convert stable snapshot tables to dynamic tables without testing** — dynamic table conversion was reverted once (`Revert 'convert file latest to dynamic table'`, commit `2a07475`) due to ownership and lag behavior issues. Validate in dev first.
-- **Do NOT omit the established `--noqa` pattern on template variable lines** — use the repo convention, generally `--noqa: JJ01,PRS,TMP` (and sometimes additional `CP01`/`CP02` as needed), because SQLFluff will error on `{{` syntax without the appropriate noqa comment.
