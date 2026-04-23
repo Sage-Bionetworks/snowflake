@@ -22,7 +22,7 @@ def read_args() -> argparse.Namespace:
         help=(
             "Run in local development mode. Creates a Snowflake session using the "
             "'default' connection from ~/.snowflake/connections.toml instead of "
-            "the active Snowflake in Snowflake (SiS) session. "
+            "the active Streamlit in Snowflake (SiS) session. "
             "Usage: streamlit run streamlit_app.py -- --local-dev"
         ),
     )
@@ -165,20 +165,20 @@ def filter_submission_dashboard_data(
     Returns:
         A filtered copy of the input DataFrame.
     """
-    filtered_data = dashboard_data
-
     access_requirement_id_column = get_dashboard_column_name(
-        filtered_data.columns,
+        dashboard_data.columns,
         "access_requirement_id",
     )
     submitted_by_user_name_column = get_dashboard_column_name(
-        filtered_data.columns,
+        dashboard_data.columns,
         "submitted_by_user_name",
     )
     submission_status_column = get_dashboard_column_name(
-        filtered_data.columns,
+        dashboard_data.columns,
         "submission_status",
     )
+
+    filtered_data = dashboard_data
 
     if access_requirement_id_exact and access_requirement_id_column:
         filtered_data = filtered_data[

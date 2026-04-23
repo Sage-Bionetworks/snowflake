@@ -8,11 +8,11 @@ Streamlit apps live under `sage/<project>/streamlit/<app-name>/`. Each app direc
 
 ```text
 sage/<project>/streamlit/<app-name>/
-├── streamlit_app.py        # Main entry point
-├── environment.yml         # Conda environment definition
-├── snowflake.yml           # Deployment config for the Snowflake CLI
+├── streamlit_app.py        # Main entry point: app logic, data loading, filtering, and UI rendering
+├── environment.yml         # Conda environment definition: pins Python and package versions for local dev and SiS runtime alignment
+├── snowflake.yml           # Snowflake CLI entity config: specifies the target database, schema, warehouse, and artifacts to upload
 └── .streamlit/
-    └── config.toml         # Streamlit runtime config
+    └── config.toml         # Streamlit runtime config: e.g. session timeout and other Snowflake-specific settings
 ```
 
 ## Local Development
