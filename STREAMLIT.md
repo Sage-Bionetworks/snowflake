@@ -4,7 +4,7 @@ This document covers local development and deployment of Streamlit in Snowflake 
 
 ## Overview
 
-Streamlit apps live under `sage/<project>/streamlit/<app-name>/`. Each app directory contains:
+Streamlit apps live under `sage/<schema>/streamlit/<app-name>/`. Each app directory contains:
 
 ```text
 sage/<project>/streamlit/<app-name>/
@@ -14,6 +14,8 @@ sage/<project>/streamlit/<app-name>/
 └── .streamlit/
     └── config.toml         # Streamlit runtime config: e.g. session timeout and other Snowflake-specific settings
 ```
+
+For more information on how to organize the files which make up a Streamlit app, see [the Snowflake docs on Streamlit file organization](https://docs.snowflake.com/en/developer-guide/streamlit/app-development/file-organization).
 
 ## Local Development
 
