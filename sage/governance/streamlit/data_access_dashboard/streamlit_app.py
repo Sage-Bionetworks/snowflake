@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import dataclass
 from typing import Optional
 
 import pandas as pd
@@ -145,130 +146,124 @@ def get_unique_column_values(
     return unique_values
 
 
-def filter_submission_dashboard_data(
-    dashboard_data: pd.DataFrame,
-    access_requirement_id_exact: Optional[str],
-    submitted_by_user_name_exact: Optional[str],
-    submission_status_exact: Optional[str],
+def filter_dataframe(
+    data: pd.DataFrame,
+    filters: dict[str, Optional[str]],
 ) -> pd.DataFrame:
-    """Apply exact-match filters to the submission dashboard DataFrame.
+    """Apply exact-match filters to a DataFrame.
 
-    Filters are case- and whitespace-insensitive. A None or empty filter value
-    means no filtering is applied for that column.
+    Filters are case- and whitespace-insensitive. Entries with a None or empty
+    string value are skipped.
 
     Args:
-        dashboard_data: The full unfiltered dashboard DataFrame.
-        access_requirement_id_exact: Exact access requirement ID to filter by, or None.
-        submitted_by_user_name_exact: Exact submitter username to filter by, or None.
-        submission_status_exact: Exact submission status to filter by, or None.
+        data: The unfiltered DataFrame.
+        filters: Mapping of actual column name to exact-match filter value.
+            Columns not present in the DataFrame are silently skipped.
 
     Returns:
         A filtered copy of the input DataFrame.
     """
-    access_requirement_id_column = get_dashboard_column_name(
-        dashboard_data.columns,
-        "access_requirement_id",
-    )
-    submitted_by_user_name_column = get_dashboard_column_name(
-        dashboard_data.columns,
-        "submitted_by_user_name",
-    )
-    submission_status_column = get_dashboard_column_name(
-        dashboard_data.columns,
-        "submission_status",
-    )
+    result = data
+    for column, value in filters.items():
+        if value and column in result.columns:
+            result = result[
+                result[column].astype(str).str.strip().str.lower()
+                == value.strip().lower()
+            ]
+    return result
 
-    filtered_data = dashboard_data
 
-    if access_requirement_id_exact and access_requirement_id_column:
-        filtered_data = filtered_data[
-            filtered_data[access_requirement_id_column]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            == access_requirement_id_exact.strip().lower()
-        ]
+@dataclass
+class FilterSpec:
+    """Specification for a single dropdown filter in a dashboard section.
 
-    if submitted_by_user_name_exact and submitted_by_user_name_column:
-        filtered_data = filtered_data[
-            filtered_data[submitted_by_user_name_column]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            == submitted_by_user_name_exact.strip().lower()
-        ]
+    Attributes:
+        column_key: Internal key passed to ``get_dashboard_column_name`` to resolve
+            the actual column name in the DataFrame.
+        label: Display label for the selectbox.
+        placeholder: Placeholder text shown when no option is selected.
+        key: Unique Streamlit widget key.
+    """
 
-    if submission_status_exact and submission_status_column:
-        filtered_data = filtered_data[
-            filtered_data[submission_status_column].astype(str).str.strip().str.lower()
-            == submission_status_exact.strip().lower()
-        ]
+    column_key: str
+    label: str
+    placeholder: str
+    key: str
 
-    return filtered_data
+
+def render_dashboard_filters(
+    data: pd.DataFrame,
+    filter_specs: list[FilterSpec],
+) -> dict[str, Optional[str]]:
+    """Render a row of dropdown filters for any set of columns.
+
+    Lays out one selectbox per spec in equal-width columns. Options are derived
+    from unique non-blank values in the DataFrame. Specs whose column cannot be
+    resolved are silently skipped.
+
+    Args:
+        data: The full unfiltered DataFrame, used to populate dropdown options.
+        filter_specs: Ordered list of filter specifications to render.
+
+    Returns:
+        A dict mapping each resolved column name to the selected filter value,
+        or None if no selection was made.
+    """
+    filters: dict[str, Optional[str]] = {}
+    cols = streamlit.columns(len(filter_specs))
+
+    for col, spec in zip(cols, filter_specs):
+        column_name = get_dashboard_column_name(data.columns, spec.column_key)
+        if not column_name:
+            continue
+        with col:
+            filters[column_name] = streamlit.selectbox(
+                spec.label,
+                options=get_unique_column_values(data, spec.column_key),
+                index=None,
+                placeholder=spec.placeholder,
+                key=spec.key,
+            )
+
+    return filters
 
 
 def render_submission_dashboard_filters(
     submission_dashboard_data: pd.DataFrame,
-) -> tuple[Optional[str], Optional[str], Optional[str]]:
-    """Render the three dropdown filters for the submission dashboard.
-
-    Displays selectboxes for Access Requirement, Submitted By, and Status.
-    Dropdown options are derived from unique values in the provided DataFrame.
+) -> dict[str, Optional[str]]:
+    """Render the dropdown filters for the submission dashboard.
 
     Args:
-        submission_dashboard_data: The full unfiltered dashboard DataFrame,
-            used to populate dropdown options.
+        submission_dashboard_data: The full unfiltered dashboard DataFrame.
 
     Returns:
-        A 3-tuple of ``(access_requirement_id_filter, submitted_by_user_name_filter,
-        submission_status_filter)``. Each value is the selected string, or None
-        if no selection was made.
+        A dict mapping each resolved column name to the selected filter value.
     """
-    filter_col_1, filter_col_2, filter_col_3 = streamlit.columns(3)
-
-    with filter_col_1:
-        access_requirement_id_options = get_unique_column_values(
-            submission_dashboard_data,
-            "access_requirement_id",
-        )
-        access_requirement_id_filter = streamlit.selectbox(
-            "Access Requirement",
-            options=access_requirement_id_options,
-            index=None,
-            placeholder="Select access requirement",
-            key="access_requirement_id_filter",
-        )
-
-    with filter_col_2:
-        submitted_by_user_name_options = get_unique_column_values(
-            submission_dashboard_data,
-            "submitted_by_user_name",
-        )
-        submitted_by_user_name_filter = streamlit.selectbox(
-            "Submitted By",
-            options=submitted_by_user_name_options,
-            index=None,
-            placeholder="Select submitter",
-            key="submitted_by_user_name_filter",
-        )
-
-    with filter_col_3:
-        submission_status_options = get_unique_column_values(
-            submission_dashboard_data,
-            "submission_status",
-        )
-        submission_status_filter = streamlit.selectbox(
-            "Status",
-            options=submission_status_options,
-            index=None,
-            placeholder="Select status",
-            key="submission_status_filter",
-        )
-
-    return (
-        access_requirement_id_filter,
-        submitted_by_user_name_filter,
-        submission_status_filter,
+    access_requirement_id_filter = FilterSpec(
+        column_key="access_requirement_id",
+        label="Access Requirement",
+        placeholder="Select access requirement",
+        key="access_requirement_id_filter",
+    )
+    submitted_by_user_name_filter = FilterSpec(
+        column_key="submitted_by_user_name",
+        label="Submitted By",
+        placeholder="Select submitter",
+        key="submitted_by_user_name_filter",
+    )
+    submission_status_filter = FilterSpec(
+        column_key="submission_status",
+        label="Status",
+        placeholder="Select status",
+        key="submission_status_filter",
+    )
+    return render_dashboard_filters(
+        submission_dashboard_data,
+        [
+            access_requirement_id_filter,
+            submitted_by_user_name_filter,
+            submission_status_filter,
+        ],
     )
 
 
@@ -286,17 +281,9 @@ def render_access_requests_section(snowflake_session: Session) -> None:
 
     try:
         submission_dashboard_data = load_submission_dashboard_data(snowflake_session)
-        (
-            access_requirement_id_filter,
-            submitted_by_user_name_filter,
-            submission_status_filter,
-        ) = render_submission_dashboard_filters(submission_dashboard_data)
-
-        filtered_submission_dashboard_data = filter_submission_dashboard_data(
-            submission_dashboard_data,
-            access_requirement_id_filter,
-            submitted_by_user_name_filter,
-            submission_status_filter,
+        filters = render_submission_dashboard_filters(submission_dashboard_data)
+        filtered_submission_dashboard_data = filter_dataframe(
+            submission_dashboard_data, filters
         )
 
         streamlit.caption(
