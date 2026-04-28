@@ -304,7 +304,14 @@ def main() -> None:
     session = get_session(args.local_dev)
 
     streamlit.title("Data Access Dashboard")
-    streamlit.caption("Access request and data access submission tracker")
+    streamlit.markdown(
+        '<p style="color: #cc0000; font-size: 0.85rem; margin-top: -0.4rem;">'
+        "This app is "
+        '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on Github</a>. '
+        "Any local edits will not be retained."
+        "</p>",
+        unsafe_allow_html=True,
+    )
 
     render_access_requests_section(session)
 
