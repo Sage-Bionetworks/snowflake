@@ -164,3 +164,9 @@ a job will trigger that automatically drops the cloned database which correspond
 
 Following these guidelines helps maintain a clean, efficient, and well-tested codebase. Thank you for contributing!
 
+----
+
+## Streamlit Apps
+
+For guidelines on local development, environment setup, code organization, and deployment of Streamlit in Snowflake (SiS) apps, see [STREAMLIT.md](STREAMLIT.md).
+

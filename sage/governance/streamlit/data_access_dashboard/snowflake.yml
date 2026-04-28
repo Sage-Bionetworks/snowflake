@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+    data_access_dashboard:
+        type: streamlit
+        title: Data Access Dashboard
+        identifier:
+            name: data_access_dashboard
+            schema: governance
+            database: sage
+        query_warehouse: streamlit_xsmall
+        main_file: streamlit_app.py
+        artifacts:
+            - streamlit_app.py
+            - environment.yml
+            - .streamlit/config.toml
