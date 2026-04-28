@@ -185,7 +185,10 @@ jobs:
 
   snowsql_admin:
     runs-on: ubuntu-22.04
-    needs: schemachange_admin
+    needs:
+      - schemachange_admin
+      - schemachange_sage
+      - deploy_streamlit
     if: github.ref_name == 'main'
     env:
       PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
