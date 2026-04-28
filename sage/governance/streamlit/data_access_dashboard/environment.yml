@@ -1,0 +1,8 @@
+name: data_access_dashboard
+channels:
+    - snowflake
+dependencies:
+    - python=3.11.*
+    - streamlit=1.*
+    - snowflake-snowpark-python
+    - pandas
