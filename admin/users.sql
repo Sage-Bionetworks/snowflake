@@ -103,6 +103,7 @@ CREATE USER IF NOT EXISTS "christina.parry@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.novakowski@sagebase.org";
 CREATE USER IF NOT EXISTS "samia.ahmed@sagebase.org";
 CREATE USER IF NOT EXISTS "shaun.kalweit@sagebase.org";
+CREATE USER IF NOT EXISTS "jon.long@sagebase.org";
 
 // DPE
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
