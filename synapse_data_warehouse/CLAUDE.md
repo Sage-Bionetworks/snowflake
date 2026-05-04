@@ -54,21 +54,19 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 
 ```sql
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.schema.table_name
-    TARGET_LAG = '1 day'                        -- use '7 days' only for cold/infrequently-queried tables
+    TARGET_LAG = '8 hours'                        -- use '7 days' only for cold/infrequently-queried tables
     WAREHOUSE = COMPUTE_XSMALL
-    COMMENT = 'Grain: one row per ...'
+    COMMENT = '...'
 AS
 SELECT
     col1,
     col2
 FROM {{database_name}}.source_schema.source_table
 QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY <grain_columns>
+    PARTITION BY <primary key columns>
     ORDER BY <timestamp> DESC
 ) = 1;
 ```
-
-Do NOT convert stable snapshot tables to dynamic tables without testing — dynamic table conversion was reverted once (`Revert 'convert file latest to dynamic table'`, commit `2a07475`) due to ownership and lag behavior issues. Validate in dev first.
 
 ## Task pattern
 
