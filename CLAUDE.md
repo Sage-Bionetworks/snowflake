@@ -58,7 +58,9 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 **Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
 
-**`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`).
+**`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`). If the `dev` based changes are dependent on changes in `admin/`, then the description of the associated PR should indicate that this PR "depends on" the PR associated with the `admin/` changes.
+
+**CONTRIBUTING.md** Additional contribution guidelines are contained in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Schemachange rules
 
@@ -69,7 +71,6 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 - **Do not use repeatable scripts to create objects with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
 - **All `GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`** — adding them inside DDL migration scripts will auto-suspend tasks.
 - **SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
-
 
 ## Off-limits paths
 
