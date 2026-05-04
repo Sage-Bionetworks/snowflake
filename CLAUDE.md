@@ -83,4 +83,4 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 - **DataCite API**: source for `sage/citations/` DOI tracking.
 - **Google Analytics 4**: source for `sage/google_analytics_aggregate/` via service account (`Ga4_service_account.json`).
 - Jira project: SNOW (`https://sagebionetworks.jira.com/browse/SNOW`)
-- Architecture docs: `https://sagebionetworks.jira.com/wiki/spaces/DPE/`
+- Internal developer docs: `https://sagebionetworks.jira.com/wiki/spaces/DPE/pages/3015508258/Sage+Data+Warehouse+Snowflake`
