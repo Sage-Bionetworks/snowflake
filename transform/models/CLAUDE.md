@@ -37,13 +37,11 @@ Use `TIMESTAMP_NTZ(3)` when millisecond precision matters; plain `TIMESTAMP_NTZ`
 ## Intermediate layer responsibilities
 
 - Join staging models into unified business entities
-- Aggregate accessor changes into `VARIANT` columns
 
-`int_synapse_data_access_submission` stores `accessor_changes` as a `VARIANT` mapping of `principal_id (string) → access_type (GAIN_ACCESS | RENEW_ACCESS | REVOKE_ACCESS)`. Downstream mart models consume this as-is.
+## Mart layer responsibilities
 
-## Mart materialization config
-
-Mart models configuration and materialization is configured in `dbt_project.yml` (do not override in individual models)
+- Mart layers models are the only modeling layer which we expose to analysts. 
+- Mart models configuration and materialization is configured in `dbt_project.yml` (do not override in individual models)
 
 ## Prod-only sage models
 
