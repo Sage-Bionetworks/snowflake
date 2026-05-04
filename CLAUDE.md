@@ -72,6 +72,10 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 - **All `GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`** — adding them inside DDL migration scripts will auto-suspend tasks.
 - **SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
+## Querying Snowflake
+
+Snowflake can be queried using the `snow` CLI tool. Full documentation is [here](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index).
+
 ## Off-limits paths
 
 - **Never edit `private_keys/`** — Snowflake private key files used for authentication.
