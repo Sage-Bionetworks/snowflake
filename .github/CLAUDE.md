@@ -25,8 +25,11 @@ The `schemachange_admin` → `snowsql_admin` dependency means all DDL migrations
 Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label is present.
 
 1. Zero-copy clones `SYNAPSE_DATA_WAREHOUSE_DEV` → `SYNAPSE_DATA_WAREHOUSE_DEV_{branch}` (branch name sanitized to alphanumeric + underscores)
-2. Applies `synapse_data_warehouse/` schemachange migrations to the clone
-3. Tears down the clone when the PR is closed
+2. Creates a `<CLONE>_PROXY_ADMIN` account role, transfers ownership of all inter-schema objects (tasks, dynamic tables) and database roles in the clone to it, then grants it to `DATA_ENGINEER` so the clone admin can act through the proxy
+3. Applies `synapse_data_warehouse/` schemachange migrations to the clone
+4. Tears down the clone when the PR is closed
+
+**Maintenance:** When a new schema is added to `synapse_data_warehouse/`, the ownership-transfer and database-role grant steps in `test_with_clone.yml` must be updated to cover it (see `RDS_RAW` as a recent example).
 
 **Branch naming requirement:** Feature branches must start with `snow-` (e.g., `snow-407-feature`) for the `test_with_clone.yaml` workflow to trigger.
 
