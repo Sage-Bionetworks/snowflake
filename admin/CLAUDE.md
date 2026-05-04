@@ -51,7 +51,7 @@ The `SYNAPSE_DATA_WAREHOUSE` and `SYNAPSE_DATA_WAREHOUSE_DEV` databases use a st
 ```
 
 - **Database roles** cannot be assumed directly by users; they must be inherited by account roles.
-- **Proxy admin** roles are account roles that own database roles and hold any account-level privileges needed (e.g., `EXECUTE MANAGED TASK`). This keeps functional and access-based role concerns separate.
+- **Proxy admin** roles are account roles that own the `{SCHEMA}_ALL_ADMIN` database role, directly own any objects requiring cross-schema privileges (tasks, dynamic tables), and hold account-level privileges needed to manage them (e.g., `EXECUTE MANAGED TASK`).
 - **Only new object types** need role and privilege setup. Once future grants are in place, new objects of the same type are covered automatically.
 
 ## RBAC for `SAGE` database
