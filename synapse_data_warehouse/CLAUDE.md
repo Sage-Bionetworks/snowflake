@@ -23,7 +23,7 @@ This database follows the structured database-role-based access pattern. See `ad
 
 ## Template variables
 
-Every SQL file uses `{{database_name}}` to stay environment-agnostic:
+Every schemachange SQL script uses `{{database_name}}` to stay environment-agnostic:
 
 ```sql
 USE SCHEMA {{database_name}}.synapse_raw; --noqa: JJ01,PRS,TMP
@@ -39,8 +39,6 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 - `snapshots_stage_storage_integration` → name of the RDS snapshots stage integration
 - `snapshots_stage_url` → S3 URL for RDS snapshots
 - `stack` → environment identifier
-
-**SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
 ## Versioned vs. repeatable scripts
 
