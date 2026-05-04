@@ -60,7 +60,7 @@ models:
         description: "Current state in the submission workflow. One of: 'Submitted', 'Approved', 'Rejected', 'Cancelled'"
         data_type: VARCHAR
       - name: submission_type
-        description: "Submission classification. One of: 'New', 'Update', or 'Annual Renewal'."
+        description: "Submission classification. One of: 'New', 'Update', or 'Annual Renewal'. A record is 'New' when it is the first submission for the data access request or when no previously approved submission exists for that request. A record is 'Update' when a previously approved submission exists and its most recent approved state_modified_on is less than 10 months before the current submission created_on. A record is 'Annual Renewal' when a previously approved submission exists and its most recent approved state_modified_on is 10 or more months before the current submission created_on."
         data_type: VARCHAR
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
