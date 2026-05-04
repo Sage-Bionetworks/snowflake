@@ -6,20 +6,7 @@ Manages all Snowflake account-level configuration: user/role creation, warehouse
 
 ## Deployment order (CI, push to `main` only)
 
-CI runs these steps in strict order via `schemachange_admin` → `snowsql_admin` job dependency:
-
-1. `schemachange admin/warehouses` — as `SYSADMIN`
-2. `schemachange admin/policies` — as `ACCOUNTADMIN`
-3. `schemachange admin/ownership_grants` — as `SECURITYADMIN`
-4. `schemachange admin/future_grants` — as `SECURITYADMIN`
-5. `snow sql -f admin/users.sql` — as `USERADMIN`
-6. `snow sql -f admin/roles.sql` — as `SYSADMIN`
-7. `snow sql -f admin/databases.sql` — as `SYSADMIN`
-8. `snow sql -f admin/integrations.sql` — as `ACCOUNTADMIN` (secrets passed as `--variable` flags)
-9. `snow sql -f admin/applications/grants.sql` — as `SECURITYADMIN`
-10. `snow sql -f admin/grants.sql` — as `SECURITYADMIN`
-
-The `snowsql_admin` job has `needs: schemachange_admin`, so schemachange steps always run before `snow sql` steps.
+See `.github/CLAUDE.md` — the `ci.yaml` section covers the full deployment order, roles, and job dependencies for `admin/`.
 
 ## Subdirectories
 
