@@ -40,8 +40,8 @@ The `SYNAPSE_DATA_WAREHOUSE` and `SYNAPSE_DATA_WAREHOUSE_DEV` databases use a st
 **Summary:** Each schema is governed by a set of database roles scoped to that schema:
 
 ```
-{DATABASE}_PROXY_ADMIN          ← account role; owns the cross-schema database roles below
-  └── {SCHEMA}_ALL_ADMIN        ← owns all objects in schema; granted OWNERSHIP on schema
+{DATABASE}_PROXY_ADMIN          ← account role; owns {SCHEMA}_ALL_ADMIN database role + any objects requiring cross-schema privileges (tasks, dynamic tables)
+  └── {SCHEMA}_ALL_ADMIN        ← owns standard schema objects (tables, views, stages, streams); granted OWNERSHIP on schema
         ├── {SCHEMA}_TABLE_READ
         ├── {SCHEMA}_VIEW_READ
         ├── {SCHEMA}_STAGE_READ
