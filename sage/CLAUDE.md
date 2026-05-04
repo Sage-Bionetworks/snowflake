@@ -4,16 +4,6 @@
 
 schemachange-managed DDL for the `SAGE` analyst database. Contains schemas for domain-specific analytics: citations (DataCite DOI tracking), governance, and Google Analytics 4 aggregates. Deployed to prod only — there is no `SAGE_DEV` database.
 
-## Commands
-
-```bash
-# Prod deploy only (no dev environment for SAGE)
-schemachange \
-  --connection-name default \
-  --config-folder sage \
-  --snowflake-role sage_admin
-```
-
 ## Schema layout
 
 | Schema | Contents | Managed by |
