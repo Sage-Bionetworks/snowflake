@@ -52,11 +52,13 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 ## Contributing conventions
 
-**Branch naming:** Feature branches must start with `snow-` (e.g., `snow-407-new-feature`) for the cloned-db test/deploy to succeed. Work off `dev`, not `main`.
+**Branch naming:** Feature branches must be prefixed with their Jira ticket identifier (e.g., `snow-407-new-feature`) for the cloned-db test/deploy to succeed. Work off `dev`, not `main`.
 
 **PR title format:** `[SNOW-NNN] Brief description` — Jira ticket prefix is required by the PR template.
 
 **Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
+
+**`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`).
 
 ## Schemachange rules
 
