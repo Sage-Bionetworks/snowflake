@@ -48,9 +48,7 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 - Current sequence is in the V2.x range; check `CHANGE_HISTORY` before picking a new version
 
 **Repeatable (`R__{description}.sql`):**
-- Use for: `CREATE OR ALTER TABLE`, `CREATE TASK IF NOT EXISTS` (idempotent re-runs)
-- Re-executed whenever the file content changes
-- Do NOT use for tables referenced by tasks, streams, or dynamic tables that won't be recreated — use a V-script instead
+- Repeatable scripts run whenever the file contents change. It is strongly discouraged to use R scripts unless they provide a workaround for something that cannot be accomplished via a versioned script.
 
 ## Dynamic table pattern
 
