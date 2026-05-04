@@ -4,27 +4,6 @@
 
 schemachange-managed DDL for the primary Synapse data warehouse. Contains all table definitions, dynamic tables, tasks, streams, and staged data ingestion for raw Synapse snapshots, RDS snapshots, and event aggregations. Version history tracked in `<database>.SCHEMACHANGE.CHANGE_HISTORY`.
 
-## Commands
-
-```bash
-# Dev deploy
-schemachange \
-  --connection-name default \
-  --root-folder synapse_data_warehouse \
-  --config-folder synapse_data_warehouse \
-  --snowflake-role synapse_data_warehouse_dev_admin
-
-# Prod deploy
-schemachange \
-  --connection-name default \
-  --root-folder synapse_data_warehouse \
-  --config-folder synapse_data_warehouse \
-  --snowflake-role synapse_data_warehouse_admin
-
-# Check what has been applied (substitute the target database name)
--- SELECT * FROM <database>.SCHEMACHANGE.CHANGE_HISTORY ORDER BY INSTALLED_ON DESC;
-```
-
 ## Schema layout
 
 | Schema | Contents | Pattern |
@@ -95,11 +74,11 @@ QUALIFY ROW_NUMBER() OVER (
 
 Do NOT convert stable snapshot tables to dynamic tables without testing — dynamic table conversion was reverted once (`Revert 'convert file latest to dynamic table'`, commit `2a07475`) due to ownership and lag behavior issues. Validate in dev first.
 
-## Task pattern (repeatable scripts)
+## Task pattern
 
 ```sql
-CREATE TASK IF NOT EXISTS {{database_name}}.schema.task_name
-    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'SMALL'
+CREATE OR REPLACE TASK {{database_name}}.schema.task_name
+    USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL'
     AFTER predecessor_task
     SCHEDULE = 'USING CRON 0 0 * * * America/Los_Angeles'
 AS
@@ -112,25 +91,8 @@ ALTER TASK {{database_name}}.schema.task_name RESUME;
 - Use `user_task_managed_initial_warehouse_size` — avoids needing a separate warehouse.
 - CRON uses `America/Los_Angeles` timezone.
 
-## S3 COPY INTO pattern
-
-```sql
-COPY INTO {{database_name}}.synapse_raw.table_name
-FROM @{{stage_storage_integration}}_STAGE/path/
-    FILE_FORMAT = (TYPE = PARQUET)
-    MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
-    PATTERN = '.*partition_key=.*/.*';
-```
-
-Extract partition date from metadata filename:
-```sql
-NULLIF(REGEXP_REPLACE(METADATA$FILENAME, '.*partition_key=([^/]+)/.*', '\\1'), '__HIVE_DEFAULT_PARTITION__')::DATE
-```
 
 ## Constraints
 
-- **Never edit `SCHEMACHANGE.CHANGE_HISTORY` directly** — schemachange uses this to determine which scripts have been applied.
-- **Never reuse or edit an applied version number** — increment the minor or patch version instead.
-- **Do NOT use repeatable scripts to create tables with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
-- **Ownership transfers for this database belong in `admin/ownership_grants/`** — do not add `GRANT OWNERSHIP` here; it will auto-suspend tasks.
+See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers).
 

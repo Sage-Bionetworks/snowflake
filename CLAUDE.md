@@ -58,6 +58,15 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 **Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
 
+## Schemachange rules
+
+These apply to every schemachange-managed directory in this repo (`synapse_data_warehouse/`, `sage/`, `admin/` subdirs):
+
+- **Never edit `SCHEMACHANGE.CHANGE_HISTORY` directly** — schemachange uses this to determine which scripts have been applied.
+- **Never reuse or edit an applied version number** — increment the minor or patch version instead.
+- **Do not use repeatable scripts to create objects with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
+- **All `GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`** — adding them inside DDL migration scripts will auto-suspend tasks.
+
 ## Off-limits paths
 
 - **Never edit `private_keys/`** — Snowflake private key files used for authentication.
