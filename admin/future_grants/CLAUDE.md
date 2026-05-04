@@ -11,10 +11,14 @@ Without future grants, new objects created in a schema (e.g., a new table added 
 ## When to add a script here
 
 Add a new versioned script here whenever:
-- A new schema is created (bootstrap all archetypes for every object type in that schema)
+- A new schema is created (bootstrap future grants for each object type that actually exists in that schema — not all schemas have tasks or dynamic tables)
 - A new object type (e.g., FUNCTION) is introduced to an existing schema for the first time
 
 **Only new object types need grants set up.** Once future grants are in place for a given object type in a schema, new objects of that type are covered automatically.
+
+## Special case: tasks and dynamic tables
+
+OWNERSHIP on tasks and dynamic tables must be granted to the `{DATABASE}_PROXY_ADMIN` **account role** directly, not to a `{SCHEMA}_ALL_ADMIN` database role. Snowflake requires an account role to own cross-schema objects like these. See `test_with_clone.yaml` for an example of how the proxy admin pattern is applied in the clone environment.
 
 ## Pattern
 
