@@ -32,6 +32,8 @@ dbt test
 
 **Profiles:** `~/.dbt/profiles.yml` must define a `transform` profile with `dev` and `prod` outputs. Create or update that file locally using the standard dbt profile format and Snowflake adapter settings; see the dbt profile configuration and Snowflake setup docs for the required structure and fields. Fill in credentials locally and do not commit them.
 
+**DO NOT execute `dbt run` unless:** You specify `--selector dev` and have ensured that the database and/or schema in `~/.dbt/profiles.yml` corresponds to the feature branch developer database/schema OR if the user specifically requests for models to be deployed to the `prod` environment.
+
 ## Selectors
 
 Defined in `selectors.yml`:
