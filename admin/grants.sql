@@ -48,6 +48,12 @@ TO USER GENIE_SERVICE;
 -- AD privileges
 GRANT ROLE AD TO ROLE SYSADMIN;
 GRANT ROLE AD TO USER "samia.ahmed@sagebase.org";
+GRANT ROLE AD TO USER "jo.scanlan@sagebase.org";
+GRANT ROLE AD TO USER "karina.leal@sagebase.org";
+GRANT ROLE AD TO USER "jessica.britton@sagebase.org";
+GRANT ROLE AD TO USER "zoe.leanza@sagebase.org";
+GRANT ROLE AD TO USER "milan.vu@sagebase.org";
+GRANT ROLE AD TO USER "jessica.malenfant@sagebase.org";
 
 -- NF privileges
 GRANT ROLE NF_ADMIN
