@@ -188,6 +188,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "emma.costa@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "luisa.chekrygin@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "laurielle.roberson@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jon.long@sagebase.org";
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";

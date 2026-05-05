@@ -116,6 +116,7 @@ jobs:
         app:
           - name: Governance dashboard
             path: sage/governance/streamlit/data_access_dashboard
+            role: sage_governance_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,7 +131,9 @@ jobs:
 
       - name: Deploy ${{ matrix.app.name }}
         working-directory: ${{ matrix.app.path }}
-        run: snow streamlit deploy --replace --prune
+        env:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+        run: snow streamlit deploy --role ${{ matrix.app.role }} --replace --prune 
 
   schemachange_admin:
     runs-on: ubuntu-22.04
@@ -182,7 +185,10 @@ jobs:
 
   snowsql_admin:
     runs-on: ubuntu-22.04
-    needs: schemachange_admin
+    needs:
+      - schemachange_admin
+      - schemachange_sage
+      - deploy_streamlit
     if: github.ref_name == 'main'
     env:
       PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
