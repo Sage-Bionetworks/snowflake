@@ -1121,7 +1121,7 @@ GRANT ROLE SAGE_GENIE_ANALYST TO USER "adam.taylor@sagebase.org";
 GRANT ROLE SAGE_GENIE_ANALYST TO USER "ashley.clayton@sagebase.org";
 
 -- SAGE.ELITE analyst user grants
-GRANT ROLE SAGE_ELITE_ANALYST TO USER "milen.nikolov@sagebase.org";
+GRANT ROLE SAGE_ELITE_ANALYST TO USER "milan.vu@sagebase.org";
 GRANT ROLE SAGE_ELITE_ANALYST TO USER "melissa.klein@sagebase.org";
 
 -- Restrict DATA_ACCESS_SUBMISSION_EVENT to SYNAPSE_EVENT_GOVERNANCE_READ only
