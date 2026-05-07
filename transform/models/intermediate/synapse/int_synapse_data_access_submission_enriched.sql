@@ -37,12 +37,12 @@ submission_types AS (
             created_on,
             ROW_NUMBER() OVER (
                 PARTITION BY data_access_request_id
-                ORDER BY created_on, data_access_submission_id
+                ORDER BY created_on ASC, data_access_submission_id ASC
             ) AS submission_sequence,
             -- Take the `state_modified_on` of the most recently approved request
             MAX(CASE WHEN state = 'Approved' THEN state_modified_on END) OVER (
                 PARTITION BY data_access_request_id
-                ORDER BY created_on, data_access_submission_id
+                ORDER BY created_on ASC, data_access_submission_id ASC
                 -- Consider all previous requests, but NOT the current request
                 ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
             ) AS most_recent_previously_approved_state_modified_on
