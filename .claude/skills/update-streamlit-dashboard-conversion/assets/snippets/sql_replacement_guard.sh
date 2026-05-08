@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_FILE="<APP_FILE>"
-UNQUALIFIED_NAMES_CSV="<UNQUALIFIED_NAMES_CSV>" # e.g. processedaccess,filedownload
-DEPRECATED_FQ_CSV="<DEPRECATED_FQ_CSV>"       # e.g. synapse_data_warehouse.synapse.processedaccess
+# APP_FILE: path to the app Python file
+# UNQUALIFIED_NAMES_CSV: comma-separated bare table names, e.g. processedaccess,filedownload
+# DEPRECATED_FQ_CSV: comma-separated old FQ identifiers, e.g. synapse_data_warehouse.synapse.processedaccess
+if [[ -z "${APP_FILE:-}" || -z "${UNQUALIFIED_NAMES_CSV:-}" || -z "${DEPRECATED_FQ_CSV:-}" ]]; then
+  echo "Usage: APP_FILE=<path> UNQUALIFIED_NAMES_CSV=<csv> DEPRECATED_FQ_CSV=<csv> bash sql_replacement_guard.sh" >&2
+  exit 1
+fi
 
 python3 - <<'PY' "${APP_FILE}" "${UNQUALIFIED_NAMES_CSV}" "${DEPRECATED_FQ_CSV}"
 import re

@@ -6,7 +6,7 @@ usage() {
 Fetch a Streamlit app's staged source files from Snowflake into this repository.
 
 Usage:
-  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database <database> \
     --schema <schema> \
     --name <streamlit_name> \
@@ -15,12 +15,12 @@ Usage:
     [--target-root <relative_or_absolute_path>]
 
 Examples:
-  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_451_STREAMLIT_CONVERSION_SKILL \
     --schema SYNAPSE \
     --name OWTYLBMJ_4CXKQGK
 
-  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_451_STREAMLIT_CONVERSION_SKILL \
     --schema SYNAPSE \
     --name OWTYLBMJ_4CXKQGK \
