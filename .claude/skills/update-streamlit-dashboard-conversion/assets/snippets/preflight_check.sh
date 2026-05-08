@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATABASE="${1:-<DATABASE>}"
-SCHEMA="${2:-<SCHEMA>}"
+DATABASE="${DATABASE:-${1:-}}"
+SCHEMA="${SCHEMA:-${2:-}}"
 
-if [[ "${DATABASE}" == "<DATABASE>" || "${SCHEMA}" == "<SCHEMA>" ]]; then
-      echo "Usage: bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/preflight_check.sh <DATABASE> <SCHEMA>" >&2
+if [[ -z "${DATABASE}" || -z "${SCHEMA}" ]]; then
+      echo "Usage: DATABASE=<db> SCHEMA=<schema> bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/preflight_check.sh" >&2
       exit 1
 fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-TMP_DIR="${TMP_DIR:-${REPO_ROOT}/.github/tmp}"
+TMP_DIR="${TMP_DIR:-${REPO_ROOT}/.claude/tmp}"
 mkdir -p "${TMP_DIR}"
 
 command -v snow >/dev/null

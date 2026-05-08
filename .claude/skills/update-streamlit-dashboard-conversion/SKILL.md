@@ -32,7 +32,7 @@ Example: `Phil's testing dashboard` -> `phils_testing_dashboard`
 
 The fetch script source of truth is the bundled skill asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`
 
 Before any fetch action, run this asset script directly with `bash`.
 
@@ -40,13 +40,19 @@ Before any fetch action, run this asset script directly with `bash`.
 
 Always do this step before making any app code edits:
 
-1. Use the bundled asset script directly from `.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`.
+1. Use the bundled asset script directly from `.claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`.
 2. Resolve which Streamlit object to fetch (details below).
 3. Run:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh`
+
+```bash
+source venv/snowflake/bin/activate
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh
+```
 
 This script writes files into the title-based slug directory.
 
@@ -64,7 +70,15 @@ Use JSON output from Snowflake CLI:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh`
+
+Run it with `DATABASE` and `SCHEMA` exported in the environment:
+
+```bash
+source venv/snowflake/bin/activate
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh
+```
 
 For each object, derive slug from the `title` using:
 
@@ -109,7 +123,7 @@ After fetch validation, ensure each app `environment.yml` pins the Streamlit dep
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/streamlit_major_pin.yml`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/streamlit_major_pin.yml`
 
 3. If `streamlit` is missing, add `- streamlit=1.*` under `dependencies`.
 4. If `streamlit` is present but unpinned (or pinned differently), update it to `- streamlit=1.*` unless the user explicitly requests another major version.
@@ -124,7 +138,15 @@ After fetching the app, inspect all SQL queries in the app code for unqualified 
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sql`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh`
+
+Run it with `TABLE_NAMES` set to a comma-separated list of uppercase names:
+
+```bash
+source venv/snowflake/bin/activate
+TABLE_NAMES="FILE_LATEST,OBJECTDOWNLOAD_EVENT" \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh
+```
 
 2. For each match found, replace the unqualified reference with the fully qualified lowercase identifier: `synapse_data_warehouse.<schema_lower>.<table_lower>`.
 
@@ -161,6 +183,40 @@ After conversion edits, remove deprecated `use_container_width` usage from chart
 3. Apply this to Streamlit chart/data display calls (for example `st.line_chart`, `st.bar_chart`, `st.dataframe`) where relevant.
 4. Run the app and confirm no immediate deprecation warning about `use_container_width` appears at startup/request time.
 
+## Static Chart Input Validation (Required)
+
+Before running the app locally, validate that every chart call receives only numeric (non-index) columns. This step catches mixed-type render errors without requiring a browser and must pass before proceeding to local execution.
+
+### Why this is required
+
+Log-based smoke scans only catch startup-level errors. Streamlit chart rendering failures (mixed column types, Vega errors, etc.) only surface after the page renders in a client — they do not appear in server logs. `WebFetch` and similar fetch tools do not work with `localhost` URLs, so direct in-browser inspection is unreliable in this environment. This static check closes that gap.
+
+### Process
+
+For each `st.bar_chart`, `st.line_chart`, or `st.area_chart` call in the app:
+
+1. Identify the query function that feeds data to the chart cell.
+2. Run the query with representative default parameters via `snow sql --format JSON`.
+3. Pipe the result to the validation snippet:
+
+Use snippet asset:
+
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py`
+
+```bash
+source venv/snowflake/bin/activate
+snow sql -q "<QUERY>" --format JSON | \
+  mamba run -n <ENV_NAME> python \
+    .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py \
+    --index-col <INDEX_COLUMN>
+```
+
+4. A `FAIL` result means the chart will raise a mixed-type rendering error at runtime. Apply the appropriate remediation before proceeding:
+   - Categorical/string column in chart input → pivot to columns (`df.pivot_table(...)`)
+   - Duplicate columns → deduplicate before charting
+5. Re-run the validation script after each fix to confirm `PASS`.
+6. Repeat for every chart call site in the app.
+
 ## Mirror Local and SiS Session Setup
 
 Generated apps should support both local development and Streamlit in Snowflake (SiS) using the canonical session pattern below.
@@ -178,7 +234,7 @@ Generated apps should support both local development and Streamlit in Snowflake 
 
 Use the canonical snippet asset instead of inlining code in this skill:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/local_sis_session_pattern.py`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/local_sis_session_pattern.py`
 
 When applying the snippet, preserve existing query-tag behavior in the app when present.
 
@@ -203,17 +259,32 @@ For each app directory:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh`
+
+```bash
+APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh
+```
 
 2. Run locally with `--local-dev` from the app directory in headless mode:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh`
 
-3. Validate startup output before proceeding:
+```bash
+APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh
+```
+
+3. Validate startup output and capture the app URL:
    - Confirm Streamlit prints `You can now view your Streamlit app in your browser.`
    - Confirm a `Local URL:` line is present.
+   - **Parse and record the exact URL** from the `Local URL:` line — do not assume the port. Streamlit increments the port when a previous process still holds it, so a restarted app may be on a different port than the prior run. Extract it with:
+     ```bash
+     APP_URL=$(grep "Local URL:" /tmp/app.log | awk '{print $NF}')
+     ```
+   - Use `$APP_URL` for all subsequent browser, curl, and smoke-test steps.
    - Confirm there is no immediate traceback in startup logs.
 
 4. Validate key app behavior after startup:
@@ -234,7 +305,8 @@ Startup log scans are necessary but not sufficient. Many Streamlit rendering fai
 
 ### Prerequisite
 
-- Ensure browser chat tools are enabled (`workbench.browser.enableChatTools`) so the agent can inspect page state and console events.
+- The **Static Chart Input Validation** step above must pass for all chart call sites before proceeding here.
+- Browser chat tools (`workbench.browser.enableChatTools`) are required for full in-browser inspection. Note: fetch tools including `WebFetch` do not work with `localhost` URLs — they will return errors rather than page content. If browser tools are unavailable, the static chart validation step is the primary render-time gate; skip the in-browser steps below and proceed directly to the smoke-test process.
 
 ### Required in-browser validation process
 
@@ -284,7 +356,12 @@ When an in-browser error is found, follow this loop until resolved or blocked:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh`
+
+```bash
+LOG_FILE=/tmp/app.log \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh
+```
 
 4. Treat any script-reported error pattern match as a failed validation step.
 5. Report pass/fail with the matched log lines (if any).
@@ -300,7 +377,12 @@ When warning cleanup is in scope, run:
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh`
+
+```bash
+LOG_FILE=/tmp/app.log \
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh
+```
 
 ## Final User Review And Commit Flow (Required)
 
@@ -322,7 +404,7 @@ After validation is complete and before ending the workflow, run a final user-fa
 
 Use snippet asset:
 
-- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
+- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
 
 7. If the user declines commit, do not update `ci.yaml` and do not create a commit.
 

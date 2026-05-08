@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-TMP_DIR="${TMP_DIR:-${REPO_ROOT}/.github/tmp}"
+TMP_DIR="${TMP_DIR:-${REPO_ROOT}/.claude/tmp}"
 mkdir -p "${TMP_DIR}"
 
 cat > "${TMP_DIR}/preflight.json" <<'JSON'
