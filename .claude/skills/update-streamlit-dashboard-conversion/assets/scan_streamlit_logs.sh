@@ -6,7 +6,7 @@ usage() {
 Scan Streamlit runtime logs for error and warning patterns.
 
 Usage:
-  bash .github/skills/update-streamlit-dashboard-conversion/assets/scan_streamlit_logs.sh [options] [LOG_FILE]
+  bash .claude/skills/update-streamlit-dashboard-conversion/assets/scan_streamlit_logs.sh [options] [LOG_FILE]
 
 If LOG_FILE is omitted or '-', input is read from stdin.
 

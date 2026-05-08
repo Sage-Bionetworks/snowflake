@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-TMP_DIR="${REPO_ROOT}/.github/tmp"
+TMP_DIR="${REPO_ROOT}/.claude/tmp"
 mkdir -p "${TMP_DIR}"
 
 # ...run workflow, writing temp artifacts under ${TMP_DIR}...
