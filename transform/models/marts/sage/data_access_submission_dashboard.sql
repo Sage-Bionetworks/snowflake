@@ -1,5 +1,11 @@
 -- This dynamic table provides a dashboard view of data access submissions
-WITH base AS (
+WITH access_requirements AS (
+    SELECT
+        access_requirement_id,
+        access_requirement_name
+    FROM {{ ref('int_synapse_access_requirement') }}
+),
+base AS (
     SELECT
         data_access_submission_id,
         data_access_request_id,
@@ -43,6 +49,7 @@ SELECT
     base.data_access_submission_id,
     base.data_access_request_id,
     base.access_requirement_id,
+    access_requirements.access_requirement_name,
     base.access_requirement_version,
     base.research_project_id,
     base.created_by as submitted_by,
@@ -58,5 +65,7 @@ SELECT
     ARRAY_SIZE(OBJECT_KEYS(base.accessor_changes)) AS accessor_count,
     base.data_access_submission_raw
 FROM base
-LEFT JOIN attempts 
+LEFT JOIN attempts
     ON base.data_access_submission_id = attempts.data_access_submission_id
+LEFT JOIN access_requirements
+    ON base.access_requirement_id = access_requirements.access_requirement_id
