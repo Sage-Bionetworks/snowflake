@@ -13,6 +13,7 @@ WITH base AS (
         state_modified_by_user_name,
         state_modified_on,
         state,
+        submission_type,
         state_reason,
         accessor_changes,
         data_access_submission_raw
@@ -22,7 +23,7 @@ approval_cycles AS (
     SELECT
         data_access_submission_id,
         COALESCE(
-            SUM(CASE WHEN state = 'APPROVED' THEN 1 ELSE 0 END) 
+            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END) 
                 OVER (PARTITION BY data_access_request_id ORDER BY created_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),
             0
         ) AS approval_cycle
@@ -50,6 +51,7 @@ SELECT
     base.created_on as submitted_on,
     attempts.attempt,
     base.state as submission_status,
+    base.submission_type,
     base.state_modified_by as reviewed_by,
     state_modified_by_user_name as reviewed_by_user_name,
     base.state_modified_on as reviewed_on,

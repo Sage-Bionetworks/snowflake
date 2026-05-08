@@ -57,8 +57,13 @@ models:
         description: "UTC timestamp when the submission status was last modified."
         data_type: TIMESTAMP_NTZ
       - name: state
-        description: "Current state in the submission workflow. One of: 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELLED'"
+        description: "Current state in the submission workflow. One of: 'Submitted', 'Approved', 'Rejected', 'Cancelled'"
         data_type: VARCHAR
+      - name: submission_type
+        description: "Submission classification. One of: 'New', 'Update', or 'Annual Renewal'. A submission is 'New' when it is the first submission for the data access request or when no previously approved submission exists for that request. A submission is 'Update' when the most recently approved submission associated with the data access request was approved less than 10 months before the current submission was created. A submission is 'Annual Renewal' when the most recently approved submission associated with the data access request was approved more than 10 months before this submission was created."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
