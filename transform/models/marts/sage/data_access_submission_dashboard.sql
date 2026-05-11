@@ -1,6 +1,6 @@
 -- This dynamic table provides a dashboard view of data access submissions
 WITH access_requirements AS (
-    SELECT
+    SELECT DISTINCT
         access_requirement_id,
         access_requirement_name
     FROM {{ ref('int_synapse_access_requirement') }}
