@@ -23,6 +23,19 @@ For more information on how to organize the files which make up a Streamlit app,
 
 Install [Miniforge](https://github.com/conda-forge/miniforge) and follow the [official installation instructions](https://github.com/conda-forge/miniforge?tab=readme-ov-file#unix-like-platforms-macos-linux--wsl) to initialize your shell.
 
+Configure a `default` connection in `~/.snowflake/config.toml` with a role that has access to the schemas the dashboard queries. The required role depends on the app — check the app's `snowflake.yml` and the schemas it reads from to determine the right role.
+
+```toml
+[connections.default]
+account = "<account>"
+user = "<user>@sagebase.org"
+authenticator = "PROGRAMMATIC_ACCESS_TOKEN"
+token = "<your-programmatic-access-token>"
+role = "<role>"  # e.g. DATA_ENGINEER for dashboards querying SAGE.GOVERNANCE
+```
+
+To obtain a programmatic access token, log in to [Snowsight](https://app.snowflake.com), go to **Avatar menu → My profile → Programmatic access tokens**, and generate a new token. Copy the token value and paste it into the `token` field above.
+
 ### Set Up the Environment
 
 > [!WARNING]
@@ -32,6 +45,7 @@ From the app directory:
 
 ```bash
 mamba env create -f environment.yml
+eval "$(mamba shell hook --shell zsh)"
 mamba activate <env-name>
 ```
 
