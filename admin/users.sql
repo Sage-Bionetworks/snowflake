@@ -162,34 +162,91 @@ CREATE USER IF NOT EXISTS GENIE_SERVICE
 TYPE = SERVICE
 COMMENT = 'Service user to be used for launching Genie workflows in snowflake';
 
--- Set DEFAULT_SECONDARY_ROLES to [] (do not use secondary roles by default)
--- for all users
+-- Set DEFAULT_SECONDARY_ROLES based on user type and role access.
+-- A user is treated as an analyst if ALL of the following are true:
+--   1) user type is not SERVICE
+--   2) user name does not contain 'service' (case-insensitive)
+--   3) user is not granted any of these roles:
+--      DATA_ENGINEER, ACCOUNTADMIN, SYSADMIN, SECURITYADMIN, USERADMIN
+-- Analysts get DEFAULT_SECONDARY_ROLES=('ALL').
+-- Non-analysts (any user failing one or more checks above) get
+-- DEFAULT_SECONDARY_ROLES=().
 EXECUTE IMMEDIATE $$
 DECLARE
     updated_users ARRAY DEFAULT ARRAY_CONSTRUCT(); -- users we updated
     username STRING; -- a user identifier
-    dsr STRING; -- default secondary role setting
+    user_type STRING; -- user type from SHOW USERS
+    dsr_value STRING; -- default secondary role setting
+    normalized_dsr_value STRING; -- normalized default secondary role setting
+    role_name STRING; -- role granted to a user
+    is_service_user BOOLEAN; -- service users are excluded
+    is_excluded_by_role BOOLEAN; -- developers/admins are excluded
+    should_enable_all BOOLEAN; -- whether user should receive ['ALL']
     user_cursor CURSOR FOR 
-        SELECT "name", "default_secondary_roles" 
+        SELECT "name", "type", "default_secondary_roles" 
         FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) 
         WHERE "name" <> 'SNOWFLAKE'; -- A cursor over our users
+    role_cursor CURSOR FOR
+        SELECT "name"
+        FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+        WHERE "granted_on" = 'ROLE'; -- A cursor over roles granted to a user
 BEGIN
     SHOW USERS;
     OPEN user_cursor;
     LOOP
-        FETCH user_cursor INTO username, dsr;
+        -- Iterate through every user returned by SHOW USERS.
+        FETCH user_cursor INTO username, user_type, dsr_value;
 
         -- exit condition
         IF (username IS NULL) THEN
             BREAK;
         END IF;
 
-        -- loop condition
-        IF (dsr != '[]') THEN
-            LET quoted_username STRING := '"' || :username || '"';
-            ALTER USER IDENTIFIER(:quoted_username) SET DEFAULT_SECONDARY_ROLES=();
-            updated_users := ARRAY_APPEND(updated_users, username);
+        LET quoted_username STRING := '"' || :username || '"';
+        -- Normalize current value so comparisons work across formatting variants.
+        normalized_dsr_value := UPPER(COALESCE(dsr_value, ''));
+        -- Service users are excluded by explicit type and by service-like username.
+        is_service_user := (UPPER(COALESCE(user_type, '')) = 'SERVICE')
+            OR (POSITION('service' IN LOWER(username)) > 0);
+        is_excluded_by_role := FALSE;
+
+        -- Inspect role grants for this user to detect developer/admin exclusions.
+        EXECUTE IMMEDIATE
+            'SHOW GRANTS TO USER IDENTIFIER(''' || :quoted_username || ''')';
+        OPEN role_cursor;
+        LOOP
+            -- Walk granted roles until we find an excluded role or exhaust results.
+            FETCH role_cursor INTO role_name;
+
+            IF (role_name IS NULL) THEN
+                BREAK;
+            END IF;
+
+            IF (role_name IN ('DATA_ENGINEER', 'ACCOUNTADMIN', 'SYSADMIN', 'SECURITYADMIN', 'USERADMIN')) THEN
+                -- Any matching role disqualifies the user from analyst treatment.
+                is_excluded_by_role := TRUE;
+                BREAK;
+            END IF;
+        END LOOP;
+        CLOSE role_cursor;
+
+        -- Only non-service users without excluded roles are treated as analysts.
+        should_enable_all := (NOT is_service_user) AND (NOT is_excluded_by_role);
+
+        IF (should_enable_all) THEN
+            IF (normalized_dsr_value NOT IN ('[\'ALL\']', '["ALL"]')) THEN
+                -- Enable automatic use of all granted secondary roles for analysts.
+                ALTER USER IDENTIFIER(:quoted_username) SET DEFAULT_SECONDARY_ROLES=('ALL');
+                updated_users := ARRAY_APPEND(updated_users, username);
+            END IF;
+        ELSE
+            IF (normalized_dsr_value != '[]') THEN
+                -- Enforce no default secondary roles for excluded users.
+                ALTER USER IDENTIFIER(:quoted_username) SET DEFAULT_SECONDARY_ROLES=();
+                updated_users := ARRAY_APPEND(updated_users, username);
+            END IF;
         END IF;
+
     END LOOP;
     CLOSE user_cursor;
     RETURN updated_users;
