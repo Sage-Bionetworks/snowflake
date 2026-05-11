@@ -253,26 +253,60 @@ BEGIN
 END;
 $$;
 
--- disable users
-ALTER USER DBT_SERVICE SET DISABLED = TRUE;
-ALTER USER AD_SERVICE SET DISABLED = TRUE;
+-- Disable users only when currently enabled.
+EXECUTE IMMEDIATE $$
+DECLARE
+    updated_users ARRAY DEFAULT ARRAY_CONSTRUCT();
+    username STRING;
+    disabled_value STRING;
+    is_disabled BOOLEAN;
+    user_cursor CURSOR FOR
+        SELECT "name", "disabled"
+        FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
+        WHERE LOWER("name") IN (
+            'dbt_service',
+            'ad_service',
+            'thomasyu888',
+            'abby.vanderlinden@sagebase.org',
+            'anna.greenwood@sagebase.org',
+            'arti.singh@sagebase.org',
+            'brad.macdonald@sagebase.org',
+            'christina.conrad@sagebase.org',
+            'drew.duglan@sagebase.org',
+            'hayley.sanchez@sagebase.org',
+            'james.eddy@sagebase.org',
+            'kim.baggett@sagebase.org',
+            'lakaija.johnson@sagebase.org',
+            'lisa.pasquale@sagebase.org',
+            'natosha.edmonds@sagebase.org',
+            'nicholas.lee@sagebase.org',
+            'pranav.anbarasu@sagebase.org',
+            'richard.yaxley@sagebase.org',
+            'sarah.chan@sagebase.org',
+            'meghasyam@sagebase.org'
+        );
+BEGIN
+    SHOW USERS;
+    OPEN user_cursor;
+    LOOP
+        FETCH user_cursor INTO username, disabled_value;
+
+        IF (username IS NULL) THEN
+            BREAK;
+        END IF;
+
+        is_disabled := UPPER(COALESCE(disabled_value, 'FALSE')) = 'TRUE';
+
+        IF (NOT is_disabled) THEN
+            LET quoted_username STRING := '"' || :username || '"';
+            ALTER USER IDENTIFIER(:quoted_username) SET DISABLED = TRUE;
+            updated_users := ARRAY_APPEND(updated_users, username);
+        END IF;
+    END LOOP;
+    CLOSE user_cursor;
+    RETURN updated_users;
+END;
+$$;
+
 -- This user is owned by the Jumpcloud provisioner integration
 -- ALTER USER "JOE.SMITH@SAGEBASE.ORG" SET DISABLED = TRUE;
-ALTER USER THOMASYU888 SET DISABLED = TRUE;
-ALTER USER "abby.vanderlinden@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "anna.greenwood@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "arti.singh@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "brad.macdonald@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "christina.conrad@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "drew.duglan@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "hayley.sanchez@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "james.eddy@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "kim.baggett@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "lakaija.johnson@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "lisa.pasquale@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "natosha.edmonds@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "nicholas.lee@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "pranav.anbarasu@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "richard.yaxley@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "sarah.chan@sagebase.org" SET DISABLED = TRUE;
-ALTER USER "meghasyam@sagebase.org" SET DISABLED = TRUE;
