@@ -45,8 +45,19 @@ From the app directory:
 
 ```bash
 mamba env create -f environment.yml
-eval "$(mamba shell hook --shell zsh)"
+
+# For human/interactive contexts
+## OPTION A: configure mamba hooks for ALL new shells (one-time step)
+mamba shell init
+## OPTION B: configure mamba hook for the active shell only
+## Substitute zsh for zsh shells or equivalent syntax for other shells
+eval "$(mamba shell hook --shell bash)"
+
+## Activate mamba environment
 mamba activate <env-name>
+
+# For agents/production code
+mamba run -n <environment-name> <my-command>
 ```
 
 To update an existing environment after `environment.yml` changes:
