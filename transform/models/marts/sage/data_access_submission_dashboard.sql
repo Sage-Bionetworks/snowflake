@@ -1,11 +1,5 @@
 -- This dynamic table provides a dashboard view of data access submissions
-WITH access_requirements AS (
-    SELECT DISTINCT
-        access_requirement_id,
-        access_requirement_name
-    FROM {{ ref('int_synapse_access_requirement') }}
-),
-base AS (
+WITH base AS (
     SELECT
         data_access_submission_id,
         data_access_request_id,
@@ -23,6 +17,12 @@ base AS (
         accessor_changes,
         data_access_submission_raw
     FROM {{ ref('int_synapse_data_access_submission_enriched') }}
+),
+access_requirements AS (
+    SELECT DISTINCT
+        access_requirement_id,
+        access_requirement_name
+    FROM {{ ref('int_synapse_access_requirement') }}
 ),
 approval_cycles AS (
     SELECT
