@@ -65,9 +65,9 @@ def load_submission_dashboard_data(snowflake_session: Session) -> pd.DataFrame:
         SELECT
             access_requirement_id as "Access Requirement",
             access_requirement_name as "Access Requirement Name",
-            accessor_count as "Number of Requestors",
             data_access_request_id as "Data Access Request ID",
             attempt as "Attempt",
+            accessor_count as "Number of Requestors",
             submitted_by_user_name as "Submitted By",
             submitted_on as "Submitted On",
             reviewed_by_user_name as "Reviewed By",
