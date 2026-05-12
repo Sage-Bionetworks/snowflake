@@ -185,7 +185,11 @@ DECLARE
     user_cursor CURSOR FOR 
         SELECT "name", "type", "default_secondary_roles" 
         FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) 
-        WHERE "name" <> 'SNOWFLAKE'; -- A cursor over our users
+                WHERE "name" <> 'SNOWFLAKE'
+                        AND LOWER("name") NOT IN (
+                            'joe.smith@sagebase.org',
+                            'joni.harker@sagebase.org'
+                    ); -- Jumpcloud-managed users
     role_cursor CURSOR FOR
         SELECT "name"
         FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
