@@ -23,7 +23,7 @@ For more information on how to organize the files which make up a Streamlit app,
 
 Follow the [official installation instructions](https://github.com/conda-forge/miniforge?tab=readme-ov-file#unix-like-platforms-macos-linux--wsl).
 
-Configure a `default` connection in `~/.snowflake/config.toml` with a role that has access to the schemas the dashboard queries. The required role depends on the app — check the app's `snowflake.yml` and the schemas it reads from to determine the right role.
+Configure a `default` connection in `~/.snowflake/config.toml` with a role that has access to the schemas the dashboard queries. The required role depends on the app — check the app's `snowflake.yml` and the schemas it reads from to determine the right role. See the [Snowflake CLI docs on configuring connections](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/configure-cli) for full details.
 
 ```toml
 [connections.default]
