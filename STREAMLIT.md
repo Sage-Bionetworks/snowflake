@@ -21,7 +21,20 @@ For more information on how to organize the files which make up a Streamlit app,
 
 ### Prerequisites
 
-Install [Miniforge](https://github.com/conda-forge/miniforge) and follow the [official installation instructions](https://github.com/conda-forge/miniforge?tab=readme-ov-file#unix-like-platforms-macos-linux--wsl) to initialize your shell.
+Follow the [official installation instructions](https://github.com/conda-forge/miniforge?tab=readme-ov-file#unix-like-platforms-macos-linux--wsl).
+
+Configure a `default` connection in `~/.snowflake/config.toml` with a role that has access to the schemas the dashboard queries. The required role depends on the app — check the app's `snowflake.yml` and the schemas it reads from to determine the right role. See the [Snowflake CLI docs on configuring connections](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/configure-cli) for full details.
+
+```toml
+[connections.default]
+account = "<account>"
+user = "<user>@sagebase.org"
+authenticator = "PROGRAMMATIC_ACCESS_TOKEN"
+token = "<your-programmatic-access-token>"
+role = "<role>"  # e.g. DATA_ENGINEER for dashboards querying SAGE.GOVERNANCE
+```
+
+See the [Snowflake docs on programmatic access tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens#label-pat-generate) for instructions on generating a token.
 
 ### Set Up the Environment
 
@@ -32,7 +45,19 @@ From the app directory:
 
 ```bash
 mamba env create -f environment.yml
+
+# For human/interactive contexts
+## OPTION A: configure mamba hooks for ALL new shells (one-time step)
+mamba shell init
+## OPTION B: configure mamba hook for the active shell only
+## Substitute zsh for bash shells or equivalent syntax for other shells
+eval "$(mamba shell hook --shell bash)"
+
+## Activate mamba environment (env-name is the `name:` field at the top of environment.yml)
 mamba activate <env-name>
+
+# For agents/production code
+mamba run -n <env-name> <my-command>
 ```
 
 To update an existing environment after `environment.yml` changes:
