@@ -18,6 +18,8 @@ Follow the steps below to get access to snowflake: https://mqzfhld-vp00034.snowf
 
 If there is a query you expect to run frequently, lets contribute it to the analytics folder!
 
+
+
 ## Administration
 
 Please refer to the [admin README](admin/README.md) for detailed information.
