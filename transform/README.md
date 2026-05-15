@@ -1,8 +1,8 @@
-# DBT
+# dbt
 
-A dbt project to transform source data ingested into Snowflake into reusable resources.
+A dbt project to transform source data in Snowflake into reusable resources.
 
-dbt works with data that has already been loaded into Snowflake. We can specify transformations of data (see "Models") in a way which align with dbt's source -> staging -> intermediate -> mart paradigm. See the [dbt documentation on project structure](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview) for an overview.
+dbt helps us manage downstream data models derived from existing data in Snowflake. One of the more powerful abstractions of dbt is that it enables us to independently manage how data is modeled from how models are materialized in the data warehouse. To _model our data_, we specify transformations in a way which aligns with dbt's [source -> staging -> intermediate -> mart paradigm](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview). How we _materialize our data models_ as particular object types (tables/views/etc.) in specific databases/schemas is configured separately.
 
 # Use-Cases
 
@@ -36,7 +36,7 @@ transform:
       threads: 1
 ```
 
-# Models
+# Data Models
 
 Models are categorized according to their function in the dbt model paradigm.
 
@@ -52,7 +52,7 @@ Source data is already loaded into Snowflake tables and dbt is not involved in t
 [Intermediate models](https://docs.getdbt.com/best-practices/how-we-structure/3-intermediate) are derived from one or more staging or intermediate models, typically by joining upon their keys. This is the most flexible layer of models, and serves as an intermediary layer between the staging and mart models.
 
 > [!NOTE]
-> DBT recommends organizing intermediate models by business domain, rather than with respect to the data's source system. We stray from this recommendation by consolidating our staging models into a "universal" intermediate model that can be used by multiple business domains. For example, [`int_synapse_acl.sql`](./models/intermediate/synapse/int_synapse_acl.sql) joins ACL-related tables from the staging models to create a single, unified ACL interface -- rather than having multiple business domains duplicate this logic. 
+> dbt recommends organizing intermediate models by business domain, rather than with respect to the data's source system. We stray from this recommendation by consolidating our staging models into a "universal" intermediate model that can be used by multiple business domains. For example, [`int_synapse_acl.sql`](./models/intermediate/synapse/int_synapse_acl.sql) joins ACL-related tables from the staging models to create a single, unified ACL interface -- rather than having multiple business domains duplicate this logic. 
 
 ## Mart Models
 
@@ -62,11 +62,15 @@ Mart models are organized into subdirectories based on their target database:
 - **`marts/synapse_data_warehouse/`**: Models deployed to the `synapse_data_warehouse` database (or corresponding dev database)
 - **`marts/sage/`**: Models deployed to the `sage` database (production only)
 
-# Deployment Environments
+# Model Materialization
 
-This project deploys its models to different environments, each serving a different purpose:
+As mentioned earlier, how a data model is materialized is configured independently of the data model itself. The following sections primarily discuss _where_ we materialize models – since that's most pertinent when deploying models to a development database – although how a model is materialized, whether as a table, view, or something else, is configured in a similar way. See [model properties](https://docs.getdbt.com/reference/model-configs) for all the configuration settings we can make upon data models.
 
-## Synapse Data Warehouse
+## Deployment Environments
+
+This project deploys its models to different environments, each serving a different subset of data models:
+
+### Synapse Data Warehouse
 
 **Database**: `SYNAPSE_DATA_WAREHOUSE` (production) or `SYNAPSE_DATA_WAREHOUSE_DEV` (staging) or `SYNAPSE_DATA_WAREHOUSE_DEV_{my_branch}` (development).
 
@@ -75,27 +79,22 @@ The majority of models deploy here, including:
 - All intermediate models ([`models/intermediate/`](./models/intermediate/))
 - Mart models in [`models/marts/synapse_data_warehouse/`](./models/marts/synapse_data_warehouse/)
 
-These models are available in both production and development environments, making them suitable for iterative development and testing.
-
-## Sage
+### Sage
 
 **Database**: `SAGE` (production only)
 
 Analyst-friendly models that may depend on Synapse data warehouse models. Models in [`models/marts/sage/`](./models/marts/sage/) deploy here.
 
-> [!IMPORTANT]
-> Sage models are configured to deploy **only in production** (`target.name == 'prod'`). They will be automatically skipped in development environments since corresponding test databases may not exist.
+## Deploying dbt models
 
-# Deploying dbt models
-
-There are multiple ways to specify where dbt models are deployed. The following list can be read as a hierarchy, where database/schema configurations in later items supersede any configuration set in preceding items:
+There are multiple ways to configure a data model, and more specify how to configure where these models are deployed. The following list can be read as a hierarchy, where database/schema configurations in later items supersede any configuration set in preceding items:
 
 * In your dbt profile (`~/.dbt/profiles.yml`) 
 * In your dbt project file ([`dbt_project.yml`](./dbt_project.yml)).
 * In the model properties file (e.g., [`_synapse__models.yml`](./models/staging/synapse/_synapse__models.yml)) 
 * In the model file itself (e.g., [`stg_synapse__data_access_submission_status.sql`](./models/staging/synapse/stg_synapse__data_access_submission_status.sql)).
 
-This project uses the database configured for the active target in your `~/.dbt/profiles.yml` file by default. If needed, you can still override the destination database in model properties or model-specific files.
+This project uses the database configured for the active target in your `~/.dbt/profiles.yml` file by default. If needed, you can override the destination database or schema by editing one of the files above.
 
 ```bash
 dbt run --selector synapse_data_warehouse
@@ -105,33 +104,33 @@ dbt run --selector synapse_data_warehouse
 dbt run --target default --selector synapse_data_warehouse
 ```
 
-## Schema configuration
+### Schema configuration
 
-Because we deploy models defined in, for example, [`models/staging/synapse`](./models/staging/synapse/) to a consistent schema, irrespective of the database, we usually hard-code schema names in [`dbt_project.yml`](./dbt_project.yml) based on the subdirectory.
+Because we deploy models defined in, for example, [`models/staging/synapse`](./models/staging/synapse/) to a consistent schema, irrespective of the database, we usually configure schemas in [`dbt_project.yml`](./dbt_project.yml) based on the model subdirectory.
 
 Since mart models can be surfaced in a variety of different schemas, even when those models live in the same directory, we typically configure their schema in the model properties file (e.g., [`models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml`](./models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml)) on a per-model basis.
 
-## Deploy by Environment
+### Deploy by Environment
 
-While only the Synapse data warehouse environment is relevant for deploying to our developer database, we have other environments, too. Use selectors to deploy models to a specific environment:
+While only the Synapse data warehouse environment is relevant for deploying to our development database, we have other environments, too. Use selectors to deploy models to a specific environment:
 
 ```bash
-# Deploy synapse_data_warehouse models to the database configured for the `dev` target in profiles.yml
-dbt run --target dev --selector synapse_data_warehouse
+# Deploy `synapse_data_warehouse` models
+dbt run --selector synapse_data_warehouse
 
-# Deploy only `SAGE` database models (production only)
-dbt run --target prod --selector sage
+# Deploy only `sage` models
+dbt run --selector sage
 ```
 
 For detailed selector configurations, refer to the [selectors.yml](./selectors.yml) file.
 
 ### Deploying non-`synapse_data_warehouse` models to a development database
 
-Whereas the selector can control _which_ model set is deployed, the model config controls _where_ those models are deployed.
+Whereas selectors can control _which_ model set is deployed, the model config controls _where_ a model is deployed.
 
-To change the destination database, update the appropriate section in [`dbt_project.yml`](./dbt_project.yml).
+To change the destination database, either update the appropriate section in [`dbt_project.yml`](./dbt_project.yml) or comment out `+database` for that section so that the database is inherited via your dbt profile database setting.
 
-For example:
+For example, to change the database where we deploy `sage` models to:
 ```
 models:
   transform:
@@ -140,9 +139,9 @@ models:
         +database: SYNAPSE_DATA_WAREHOUSE_DEV_MY_FEATURE 
 ```
 
-To change the destination schema, edit the model properties file for the relevant model (for example, [`models/marts/sage/_sage__models.yml`](./models/marts/sage/_sage__models.yml)) and update the model's `config.schema` value.
+To change the destination schema, edit either the dbt project file or the model properties file containing the relevant model (for example, [`models/marts/sage/_sage__models.yml`](./models/marts/sage/_sage__models.yml)) and update the model's `config.schema` value.
 
-For example, a model can be redirected to a schema which actually exists in your development database:
+For example, you can edit the model property file so that a model is materialized in a schema which actually exists in your development database:
 
 ```yaml
 models:
@@ -153,7 +152,7 @@ models:
 
 ## Deploy Specific Models
 
-We can specify a specific model to be deployed, as well. dbt will handle the model dependencies:
+We can specify a specific model to be deployed, as well. dbt will also deploy the model dependencies if you prefix the model name with a `+`:
 ```bash
 # Deploy just this model
 dbt run --select stg_synapse__data_access_submission_status
@@ -176,7 +175,7 @@ Check out the dbt [docs](https://docs.getdbt.com/reference/node-selection/syntax
 
 For dbt developer guidelines, including structure and style conventions, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-### DBT Resources:
+### dbt Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
 - Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support

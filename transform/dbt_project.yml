@@ -38,4 +38,3 @@ models:
       +snowflake_warehouse: compute_xsmall
       sage:
         +database: "SAGE"
-        +enabled: "{{ target.name == 'prod' }}"
