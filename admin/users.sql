@@ -185,11 +185,11 @@ DECLARE
     user_cursor CURSOR FOR 
         SELECT "name", "type", "default_secondary_roles" 
         FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) 
-                WHERE "name" <> 'SNOWFLAKE'
-                        AND LOWER("name") NOT IN (
-                            'joe.smith@sagebase.org',
-                            'joni.harker@sagebase.org'
-                    ); -- Jumpcloud-managed users
+        WHERE "name" <> 'SNOWFLAKE'
+            AND LOWER("name") NOT IN (
+                'joe.smith@sagebase.org',
+                'joni.harker@sagebase.org'
+            ); -- Jumpcloud-managed users
     role_cursor CURSOR FOR
         SELECT "name"
         FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
@@ -214,31 +214,34 @@ BEGIN
             OR (POSITION('service' IN LOWER(username)) > 0);
         is_excluded_by_role := FALSE;
 
-        -- Inspect role grants for this user to detect developer/admin exclusions.
-        EXECUTE IMMEDIATE
-            'SHOW GRANTS TO USER IDENTIFIER(''' || :quoted_username || ''')';
-        OPEN role_cursor;
-        LOOP
-            -- Walk granted roles until we find an excluded role or exhaust results.
-            FETCH role_cursor INTO role_name;
+        IF (NOT is_service_user) THEN
+            -- Inspect role grants for this user to detect developer/admin exclusions.
+            EXECUTE IMMEDIATE
+                'SHOW GRANTS TO USER IDENTIFIER(''' || :quoted_username || ''')';
+            -- role_cursor must be opened immediately after each SHOW GRANTS call.
+            OPEN role_cursor;
+            LOOP
+                -- Walk granted roles until we find an excluded role or exhaust results.
+                FETCH role_cursor INTO role_name;
 
-            IF (role_name IS NULL) THEN
-                BREAK;
-            END IF;
+                IF (role_name IS NULL) THEN
+                    BREAK;
+                END IF;
 
-            IF (role_name IN ('DATA_ENGINEER', 'ACCOUNTADMIN', 'SYSADMIN', 'SECURITYADMIN', 'USERADMIN')) THEN
-                -- Any matching role disqualifies the user from analyst treatment.
-                is_excluded_by_role := TRUE;
-                BREAK;
-            END IF;
-        END LOOP;
-        CLOSE role_cursor;
+                IF (role_name IN ('DATA_ENGINEER', 'ACCOUNTADMIN', 'SYSADMIN', 'SECURITYADMIN', 'USERADMIN')) THEN
+                    -- Any matching role disqualifies the user from analyst treatment.
+                    is_excluded_by_role := TRUE;
+                    BREAK;
+                END IF;
+            END LOOP;
+            CLOSE role_cursor;
+        END IF;
 
         -- Only non-service users without excluded roles are treated as analysts.
         should_enable_all := (NOT is_service_user) AND (NOT is_excluded_by_role);
 
         IF (should_enable_all) THEN
-            IF (normalized_dsr_value NOT IN ('[\'ALL\']', '["ALL"]')) THEN
+            IF (normalized_dsr_value NOT IN ('[''ALL'']', '["ALL"]')) THEN
                 -- Enable automatic use of all granted secondary roles for analysts.
                 ALTER USER IDENTIFIER(:quoted_username) SET DEFAULT_SECONDARY_ROLES=('ALL');
                 updated_users := ARRAY_APPEND(updated_users, username);
