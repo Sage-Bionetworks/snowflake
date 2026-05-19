@@ -1,6 +1,6 @@
 # dbt
 
-A dbt project to transform source data in Snowflake into reusable resources.
+[TLDR](#tldr): A dbt project to transform source data in Snowflake into reusable resources.
 
 dbt helps us manage downstream data models derived from existing data in Snowflake. One of the more powerful abstractions of dbt is that it enables us to independently manage how data is modeled from how models are materialized in the data warehouse. To _model our data_, we specify transformations in a way which aligns with dbt's [source -> staging -> intermediate -> mart paradigm](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview). How we _materialize our data models_ as particular object types (tables/views/etc.) in specific databases/schemas is configured separately.
 
@@ -17,7 +17,9 @@ After installing, configure your `~/.dbt/profiles.yml` by following the instruct
 > [!IMPORTANT]
 > The profile name in `~/.dbt/profiles.yml` must match the `profile` field in `dbt_project.yml`. This project uses `profile: 'transform'`, so your `profiles.yml` must have a top-level key named `transform`.
 >
-> **Additionally**, you need to specify the `database` you will deploy dbt models to in this file. A `schema` must also be set, but we override this value in more specific configurations, so it can be any value.
+> **Additionally**, for each output (see below example project file), you need to specify the `database` you will be deploying dbt models to. A `schema` must also be set, but we override this value in more specific configurations, so it can be any value.
+>
+> You can configure multiple outputs with varying database, schema, and other configuration settings and specify which output you would like to use at runtime (e.g., `dbt run --target prod ...`). We recommend configuring a default output which works well with setting up a developer environment, like in the example below. 
 
 An example `~/.dbt/profiles.yml` file:
 ```
@@ -34,6 +36,10 @@ transform:
       database: SYNAPSE_DATA_WAREHOUSE_DEV_MY_FEATURE
       schema: DUMMY
       threads: 1
+    prod:
+      type: snowflake
+      database: SYNAPSE_DATA_WAREHOUSE
+      ...
 ```
 
 # Data Models
@@ -41,7 +47,7 @@ transform:
 Models are categorized according to their function in the dbt model paradigm.
 
 ## Source 
-Source data is already loaded into Snowflake tables and dbt is not involved in their deployment. Downstream models are precedented on these tables, which are specified in sources files (e.g., [`_synapse__sources.yml`](./models/staging/synapse/_synapse__sources.yml)).
+Source data is already loaded into Snowflake tables and dbt is not involved in their deployment. Downstream models are predicated on these tables, which are specified in sources files (e.g., [`_synapse__sources.yml`](./models/staging/synapse/_synapse__sources.yml)).
 
 ## Staging Models
 
@@ -87,7 +93,7 @@ Analyst-friendly models that may depend on Synapse data warehouse models. Models
 
 ## Deploying dbt models
 
-There are multiple ways to configure a data model, and more specify how to configure where these models are deployed. The following list can be read as a hierarchy, where database/schema configurations in later items supersede any configuration set in preceding items:
+There are multiple ways to configure where a model is deployed to. The following list can be read as a hierarchy, where database/schema configurations in later items supersede any configuration set in preceding items:
 
 * In your dbt profile (`~/.dbt/profiles.yml`) 
 * In your dbt project file ([`dbt_project.yml`](./dbt_project.yml)).
@@ -170,3 +176,13 @@ models:
 # Developer Guidelines
 
 For dbt developer guidelines, including structure and style conventions, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+# TLDR
+
+- **dbt**: This project uses dbt to model transformations independently from materialization strategy, following dbt's [source -> staging -> intermediate -> mart paradigm](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview).
+- **Use-Cases**: Today, dbt in this repository is focused on Synapse RDS snapshot data.
+- **Installing and Configuring dbt**: Install dbt Core with the Snowflake adapter using the official setup guide and configure your profile/targets for development and production workflows: [Snowflake setup](https://docs.getdbt.com/docs/core/connect-data-platform/snowflake-setup).
+- **Data Models**: Model layers follow dbt conventions, with [sources](https://docs.getdbt.com/docs/build/sources?version=1.12#selecting-from-a-source) and transformation guidance from the dbt docs on [staging models](https://docs.getdbt.com/best-practices/how-we-structure/2-staging), [intermediate models](https://docs.getdbt.com/best-practices/how-we-structure/3-intermediate), and [mart models](https://docs.getdbt.com/best-practices/how-we-structure/4-marts).
+- **Model Materialization**: Deployment behavior is controlled hierarchically through [model properties](https://docs.getdbt.com/reference/model-configs), which can be configured at the user level in the [dbt profiles](https://docs.getdbt.com/docs/local/profiles.yml) file, at the project level in the [dbt project](./dbt_project.yml) file, at the model subdirectory level in a [model property](https://docs.getdbt.com/reference/model-properties) file, or at [the model level](https://docs.getdbt.com/reference/model-configs?version=1.12#apply-configurations-to-one-model-only) using an inline jinja macro. We can define subsets of models to deploy in [`selectors.yml`](./selectors.yml) in conjunction with [selection syntax](https://docs.getdbt.com/reference/node-selection/syntax).
+- **Developer Guidelines**: Follow local dbt structure and style conventions in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
