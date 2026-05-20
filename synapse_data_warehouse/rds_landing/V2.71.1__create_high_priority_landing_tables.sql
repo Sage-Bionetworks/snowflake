@@ -57,11 +57,11 @@ BEGIN
         || 'LOCATION => ''' || loc_pfx || 'DATA_ACCESS_SUBMISSION/1/'', FILE_FORMAT => ''' || ff || ''''
         || ')))';
 
-    -- data_access_submission_accessor_change
+    -- data_access_submission_accessor_changes
     EXECUTE IMMEDIATE
-        'CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_accessor_change'
+        'CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_accessor_changes'
         || ' USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE(INFER_SCHEMA('
-        || 'LOCATION => ''' || loc_pfx || 'DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGE/1/'', FILE_FORMAT => ''' || ff || ''''
+        || 'LOCATION => ''' || loc_pfx || 'DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGES/1/'', FILE_FORMAT => ''' || ff || ''''
         || ')))';
 
     -- data_access_submission_status
