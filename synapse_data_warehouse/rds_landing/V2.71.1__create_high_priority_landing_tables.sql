@@ -1,5 +1,6 @@
 USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 
+EXECUTE IMMEDIATE $$
 DECLARE
     snapshot_folder STRING;
     prefix_base STRING;
@@ -119,3 +120,4 @@ BEGIN
         || 'LOCATION => ''' || loc_pfx || 'PRINCIPAL_ALIAS/1/'', FILE_FORMAT => ''' || ff || ''''
         || ')))';
 END;
+$$;
