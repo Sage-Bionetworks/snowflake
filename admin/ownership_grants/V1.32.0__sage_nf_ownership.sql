@@ -1,0 +1,5 @@
+-- Transfer ownership of the SAGE.NF schema to SAGE_NF_ADMIN
+GRANT OWNERSHIP
+    ON SCHEMA SAGE.NF
+    TO ROLE SAGE_NF_ADMIN
+    REVOKE CURRENT GRANTS;
