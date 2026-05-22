@@ -68,7 +68,6 @@ uv sync --group schemachange # local schemachange runs
 uv sync --group snowflake    # connector, Snowpark, boto3
 uv sync --group finance      # finance/ ELT pipeline
 uv sync --group streamlit    # Streamlit apps
-uv sync --group google-analytics  # sage/google_analytics_aggregate/
 ```
 
 Run commands via `uv run <cmd>` or activate the environment with `source .venv/bin/activate`.

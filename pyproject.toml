@@ -38,9 +38,3 @@ finance = [
     "synapseclient[pandas]>=4.7,<5",
 ]
 
-
-# Google Analytics 4 data pull for sage/google_analytics_aggregate/.
-google-analytics = [
-    "google-analytics-data>=0.19",
-    "google-auth>=2.43,<3",
-]
