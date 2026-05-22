@@ -6,13 +6,11 @@ dependencies = []
 
 [dependency-groups]
 
-# Core Snowflake tooling: connector, Snowpark, snow CLI, boto3 for S3 access.
-# Used by ad-hoc scripts and CI deployments.
+# Core Snowflake tooling: connector, Snowpark, boto3 for S3 access.
+# Install the snow CLI separately: uv tool install snowflake-cli
 snowflake = [
     "boto3>=1.42,<2",
-    "snowflake-cli>=3.16,<4",
     "snowflake-connector-python>=3.18,<4",
-    "snowflake-core>=1.10,<2",
     "snowflake-snowpark-python>=1.41,<2",
 ]
 
@@ -23,8 +21,7 @@ schemachange = [
 
 # dbt Snowflake adapter and SQL linter for the transform/ project.
 dbt = [
-    "dbt-snowflake>=1.10,<2",
-    "sqlfluff>=3.0.6,<4",
+    "dbt-snowflake>=1.10.3,<2",
 ]
 
 # Streamlit dashboards in **/streamlit/ directories.

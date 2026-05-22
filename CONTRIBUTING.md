@@ -63,15 +63,17 @@ Skip this step if your changes are SQL-only.
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then sync the group(s) relevant to your work:
 
 ```bash
-uv sync --group dbt          # transform/ — dbt + SQLFluff
+uv sync --group dbt          # transform/ — dbt
 uv sync --group schemachange # local schemachange runs
-uv sync --group snowflake    # connector, Snowpark, snow CLI, boto3
+uv sync --group snowflake    # connector, Snowpark, boto3
 uv sync --group finance      # finance/ ELT pipeline
 uv sync --group streamlit    # Streamlit apps
 uv sync --group google-analytics  # sage/google_analytics_aggregate/
 ```
 
 Run commands via `uv run <cmd>` or activate the environment with `source .venv/bin/activate`.
+
+Install the `snow` CLI separately (incompatible with `dbt` in the same venv due to a `protobuf` conflict): `uv tool install snowflake-cli`.
 
 ----
 
