@@ -1510,7 +1510,7 @@ google-analytics = [
     { name = "google-analytics-data", specifier = ">=0.19" },
     { name = "google-auth", specifier = ">=2.43,<3" },
 ]
-schemachange = [{ name = "schemachange", specifier = ">=4.0,<5" }]
+schemachange = [{ name = "schemachange", specifier = "==4.0.1" }]
 snowflake = [
     { name = "boto3", specifier = ">=1.42,<2" },
     { name = "snowflake-connector-python", specifier = ">=3.18,<4" },
@@ -1524,18 +1524,19 @@ streamlit = [
 
 [[package]]
 name = "schemachange"
-version = "4.3.3"
+version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "cryptography" },
     { name = "jinja2" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "snowflake-connector-python" },
     { name = "structlog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/13/1b/2ef4f844c8e4c625acd298b3ca21f43e972a8e9d7b70a00fa704c116ec36/schemachange-4.3.3.tar.gz", hash = "sha256:e61982bd01ecd686e3302ac82ebb5e4171fc940770cba374bd36826c198a3716", size = 96428, upload-time = "2026-04-20T16:39:51.564Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7f/ac/ebd898cdaa46b5dda0d3010da79af6db151e4fd8a2f50d64cd9249c307ec/schemachange-4.0.1.tar.gz", hash = "sha256:f72b48ae3761035a2b27adafa013cba878acc730525ccf7b1b35530fbf806db0", size = 54091, upload-time = "2025-02-17T22:42:47.095Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/a9/d5992125b662bff1fecbaa88654f56bcfcabe0ed022492014af54bc3ea47/schemachange-4.3.3-py3-none-any.whl", hash = "sha256:ba2392ea73b06858f45b91bbee337b207c812338886af0c6b1cf3ac9a1c4ad12", size = 85755, upload-time = "2026-04-20T16:39:50.369Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/74/0d0064e8bf3f7492c70d4747e4a318fb9586cce1f698fbf7cbb60c1d65b5/schemachange-4.0.1-py3-none-any.whl", hash = "sha256:213f4246277c85d78282437b01431f97a104ab5677e026f09bd01d9e98ffc296", size = 36054, upload-time = "2025-02-17T22:42:45.805Z" },
 ]
 
 [[package]]
@@ -1717,11 +1718,11 @@ wheels = [
 
 [[package]]
 name = "structlog"
-version = "25.5.0"
+version = "24.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ef/52/9ba0f43b686e7f3ddfeaa78ac3af750292662284b3661e91ad5494f21dbc/structlog-25.5.0.tar.gz", hash = "sha256:098522a3bebed9153d4570c6d0288abf80a031dfdb2048d59a49e9dc2190fc98", size = 1460830, upload-time = "2025-10-27T08:28:23.028Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/ac/87aedb7a9ba52f645b9d29a7f48bb12a5c6b7e204b8137549fbe4754b563/structlog-24.1.0.tar.gz", hash = "sha256:41a09886e4d55df25bdcb9b5c9674bccfab723ff43e0a86a1b7b236be8e57b16", size = 1340948, upload-time = "2024-01-08T09:52:54.24Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/45/a132b9074aa18e799b891b91ad72133c98d8042c70f6240e4c5f9dabee2f/structlog-25.5.0-py3-none-any.whl", hash = "sha256:a8453e9b9e636ec59bd9e79bbd4a72f025981b3ba0f5837aebf48f02f37a7f9f", size = 72510, upload-time = "2025-10-27T08:28:21.535Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/5c/c22ca8b8715dd625bbdd6bc7ec87395e29940642d8dff213fad1aa8ce84d/structlog-24.1.0-py3-none-any.whl", hash = "sha256:3f6efe7d25fab6e86f277713c218044669906537bb717c1807a09d46bca0714d", size = 65692, upload-time = "2024-01-08T09:52:50.99Z" },
 ]
 
 [[package]]

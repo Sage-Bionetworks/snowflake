@@ -16,7 +16,7 @@ snowflake = [
 
 # Schema migration runner for synapse_data_warehouse/, sage/, and admin/.
 schemachange = [
-    "schemachange>=4.0,<5",
+    "schemachange==4.0.1",
 ]
 
 # dbt Snowflake adapter and SQL linter for the transform/ project.
