@@ -56,7 +56,26 @@ Your branch will now be tracking `origin/dev` which you will merge into once you
 
 ----
 
-### 4. Script Versioning
+### 4. Set Up the Python Environment
+
+Skip this step if your changes are SQL-only.
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then sync the group(s) relevant to your work:
+
+```bash
+uv sync --group dbt          # transform/ — dbt + SQLFluff
+uv sync --group schemachange # local schemachange runs
+uv sync --group snowflake    # connector, Snowpark, snow CLI, boto3
+uv sync --group finance      # finance/ ELT pipeline
+uv sync --group streamlit    # Streamlit apps
+uv sync --group google-analytics  # sage/google_analytics_aggregate/
+```
+
+Run commands via `uv run <cmd>` or activate the environment with `source .venv/bin/activate`.
+
+----
+
+### 5. Script Versioning
 
 Before creating a new versioned script, always verify the latest applied version in the appropriate `change_history` table:
 
@@ -84,7 +103,7 @@ Name your new admin script accordingly (e.g. `V{latest_admin_version+0.1}__admin
 
 ----
 
-### 5. Push to The Remote Branch
+### 6. Push to The Remote Branch
 
 Once you've made your changes and committed them locally, push your branch to the remote repository:
 
@@ -94,9 +113,9 @@ git push origin snow-123-new-feature
 
 ----
 
-### 6. Open a Draft Pull Request
+### 7. Open a Draft Pull Request
 
-After pushing your commits in Step 4 to your remote branch, open a pull request (PR) against the dev branch using the GitHub UI. Start your PR in draft mode, and mark it as ready for review after you've implemented all your necessary changes.
+After pushing your commits in Step 6 to your remote branch, open a pull request (PR) against the dev branch using the GitHub UI. Start your PR in draft mode, and mark it as ready for review after you've implemented all your necessary changes.
 
 Opening your PR (whether in draft or not) will trigger the automated test workflows described in the next section. We recommend reading that section to understand how to further test your changes, OR if you are not introducing changes to the actual Snowflake data repository and want a way to opt-out of these workflow runs.
 

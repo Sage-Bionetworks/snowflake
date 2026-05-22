@@ -1,0 +1,49 @@
+[project]
+name = "sage-snowflake"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+
+# Core Snowflake tooling: connector, Snowpark, snow CLI, boto3 for S3 access.
+# Used by ad-hoc scripts and CI deployments.
+snowflake = [
+    "boto3>=1.42,<2",
+    "snowflake-cli>=3.16,<4",
+    "snowflake-connector-python>=3.18,<4",
+    "snowflake-core>=1.10,<2",
+    "snowflake-snowpark-python>=1.41,<2",
+]
+
+# Schema migration runner for synapse_data_warehouse/, sage/, and admin/.
+schemachange = [
+    "schemachange>=4.0,<5",
+]
+
+# dbt Snowflake adapter and SQL linter for the transform/ project.
+dbt = [
+    "dbt-snowflake>=1.10,<2",
+    "sqlfluff>=3.0.6,<4",
+]
+
+# Streamlit dashboards in **/streamlit/ directories.
+streamlit = [
+    "pandas>=2.0",
+    "snowflake-snowpark-python>=1.41,<2",
+    "streamlit>=1.0,<2",
+]
+
+# MIP financial ELT pipeline (finance/mip_raw_elt_batch.py).
+finance = [
+    "backoff>=2.2,<3",
+    "snowflake-connector-python>=3.18,<4",
+    "synapseclient[pandas]>=4.7,<5",
+]
+
+
+# Google Analytics 4 data pull for sage/google_analytics_aggregate/.
+google-analytics = [
+    "google-analytics-data>=0.19",
+    "google-auth>=2.43,<3",
+]

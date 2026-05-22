@@ -4,4 +4,5 @@ terraform.tfstate*
 *.csv
 .DS_Store
 venv/*
+.venv/
 

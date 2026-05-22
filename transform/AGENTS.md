@@ -10,6 +10,14 @@ dbt project that transforms raw Synapse RDS snapshot data into analyst-ready mod
 - Snowflake dynamic tables (mart materialization)
 - SQLFluff: 3.0.6
 
+## Setup
+
+Prefix all `dbt` invocations with `uv run --group dbt`:
+
+```bash
+uv run --group dbt dbt run --selector synapse_data_warehouse
+```
+
 ## Commands
 
 ```bash
