@@ -98,7 +98,7 @@ runs:
 
     - name: Install schemachange
       shell: bash
-      run: uv tool install "schemachange>=4.0,<5"
+      run: uv tool install "schemachange==4.0.1"
 
     - name: Test Snowflake connection
       id: connection-test
