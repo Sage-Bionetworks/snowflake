@@ -24,13 +24,6 @@ dbt = [
     "dbt-snowflake>=1.10.3,<2",
 ]
 
-# Streamlit dashboards in **/streamlit/ directories.
-streamlit = [
-    "pandas>=2.0",
-    "snowflake-snowpark-python>=1.41,<2",
-    "streamlit>=1.0,<2",
-]
-
 # MIP financial ELT pipeline (finance/mip_raw_elt_batch.py).
 finance = [
     "backoff>=2.2,<3",

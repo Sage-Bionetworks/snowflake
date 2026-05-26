@@ -67,7 +67,6 @@ uv sync --group dbt          # transform/ — dbt
 uv sync --group schemachange # local schemachange runs
 uv sync --group snowflake    # connector, Snowpark, boto3
 uv sync --group finance      # finance/ ELT pipeline
-uv sync --group streamlit    # Streamlit apps
 ```
 
 Run commands via `uv run <cmd>` or activate the environment with `source .venv/bin/activate`.

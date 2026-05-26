@@ -38,6 +38,9 @@ See the [Snowflake docs on programmatic access tokens](https://docs.snowflake.co
 
 ### Set Up the Environment
 
+> [!NOTE]
+> Streamlit app dependencies are managed per-app via `environment.yml` (conda/mamba), **not** via the repo-level `pyproject.toml`/uv. SiS resolves packages from the Snowflake Anaconda channel at deploy time, so `environment.yml` is the authoritative spec for both local dev and runtime.
+
 > [!WARNING]
 > Do not activate this environment while another Python virtual environment is active (for example `venv`, `virtualenv`, or another conda/mamba env). Deactivate any currently active Python environment first.
 

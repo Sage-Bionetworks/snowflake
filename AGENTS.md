@@ -60,7 +60,7 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 **`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`). If the `dev` based changes are dependent on changes in `admin/`, then the description of the associated PR should indicate that this PR "depends on" the PR associated with the `admin/` changes.
 
-**Python environment:** Dependencies are managed with [uv](https://docs.astral.sh/uv/). Run tools via `uv run --group <name> <cmd>` — no separate sync step needed. Available groups: `snowflake`, `schemachange`, `dbt`, `finance`, `streamlit`. See `pyproject.toml` for the full definitions. Install the `snow` CLI separately: `uv tool install snowflake-cli`.
+**Python environment:** Dependencies are managed with [uv](https://docs.astral.sh/uv/). Run tools via `uv run --group <name> <cmd>` — no separate sync step needed. Available groups: `snowflake`, `schemachange`, `dbt`, `finance`. See `pyproject.toml` for the full definitions. Install the `snow` CLI separately: `uv tool install snowflake-cli`. Streamlit app dependencies are managed per-app via `environment.yml` (conda/mamba) — see [STREAMLIT.md](./STREAMLIT.md).
 
 **CONTRIBUTING.md** Additional contribution guidelines are contained in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
