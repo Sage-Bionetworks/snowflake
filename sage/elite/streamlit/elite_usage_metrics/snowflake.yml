@@ -2,6 +2,11 @@ definition_version: 2
 entities:
   streamlit_app:
     type: streamlit
+    identifier:
+      name: elite_usage_metrics
+      database: SAGE
+      schema: ELITE
+    query_warehouse: STREAMLIT_XSMALL
     main_file: streamlit_app.py
     title: "ELITE Usage Metrics"
     artifacts:
