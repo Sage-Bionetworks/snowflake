@@ -1,6 +1,6 @@
 ---
 name: update-streamlit-dashboard-conversion
-description: "Fetch and start working on a Snowflake Streamlit app in this repository. Use when user provides a Streamlit database/schema and optionally an identifier, title, or slug. Uses a bundled fetch script asset directly (no runtime copy into sage), maps Snowflake object names to human-friendly title slugs, and mirrors files into sage/<schema>/streamlit/<slug>/."
+description: "Fetch and start working on a Snowflake Streamlit app in this repository. Use when user provides a Streamlit database/schema and optionally an identifier, title, or slug. Uses a bundled fetch script asset directly (no runtime copy into sage), maps Snowflake object names to human-friendly title slugs, mirrors files into sage/<schema>/streamlit/<slug>/, and always converts fetched apps to warehouse-runtime artifacts."
 argument-hint: "DATABASE SCHEMA [IDENTIFIER_OR_SLUG]"
 ---
 
@@ -27,12 +27,13 @@ Example: `Phil's testing dashboard` -> `phils_testing_dashboard`
 - Required: database
 - Required: schema
 - Optional: identifier (may be Snowflake object name, title, or slug)
+- Optional: role (use `SAGE_ADMIN` when object ownership privileges are required)
 
 ## Script Execution (Default Configuration)
 
 The fetch script source of truth is the bundled skill asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`
 
 Before any fetch action, run this asset script directly with `bash`.
 
@@ -40,21 +41,23 @@ Before any fetch action, run this asset script directly with `bash`.
 
 Always do this step before making any app code edits:
 
-1. Use the bundled asset script directly from `.claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`.
+1. Use the bundled asset script directly from `.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh`.
 2. Resolve which Streamlit object to fetch (details below).
 3. Run:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh`
 
 ```bash
 source venv/snowflake/bin/activate
-DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" ROLE="<ROLE_OR_EMPTY>" \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh
 ```
 
 This script writes files into the title-based slug directory.
+
+If the object does not expose a live version URI, the fetch script automatically falls back to default and then last version URIs.
 
 ## Object Resolution Rules
 
@@ -70,14 +73,14 @@ Use JSON output from Snowflake CLI:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh`
 
 Run it with `DATABASE` and `SCHEMA` exported in the environment:
 
 ```bash
 source venv/snowflake/bin/activate
-DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" ROLE="<ROLE_OR_EMPTY>" \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh
 ```
 
 For each object, derive slug from the `title` using:
@@ -111,19 +114,49 @@ If the chat surface supports interactive choices, use them. If not, provide a nu
 After running the fetch script:
 
 1. Confirm destination directory exists under `sage/<schema_lower>/streamlit/<slug>/`.
-2. Confirm key files exist when present in source (typically `streamlit_app.py`, `environment.yml`).
+2. Confirm `streamlit_app.py` exists.
 3. Report the selected slug and local path to the user.
+
+## Runtime Detection And Mandatory Warehouse Conversion
+
+This skill must always produce warehouse-runtime app artifacts, even when the source app was created with container runtime.
+
+### Detect source runtime
+
+Run:
+
+```bash
+source venv/snowflake/bin/activate
+snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE_OR_EMPTY>" --format JSON
+```
+
+If `runtime_name` is `SYSTEM$ST_CONTAINER_RUNTIME_PY3_11` (or any container runtime), conversion is required.
+
+### Mandatory conversion rules
+
+Before SQL/chart/session edits, normalize to warehouse runtime:
+
+1. Ensure an `environment.yml` exists with Snowflake conda dependencies:
+   - `python=3.11.*`
+   - `snowflake-snowpark-python`
+   - `streamlit=1.*` (or user-requested major)
+2. If source includes `pyproject.toml` or `requirements.txt`, migrate needed non-Streamlit dependencies into `environment.yml`.
+3. Treat `environment.yml` as the deployment dependency source of truth.
+4. Remove container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts after migration.
+5. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, optional `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
+
+Do not skip this conversion. The workflow is complete only when the local app is warehouse-runtime compatible.
 
 ## Pin Streamlit Major Version
 
-After fetch validation, ensure each app `environment.yml` pins the Streamlit dependency to a major version.
+After warehouse conversion, ensure each app `environment.yml` pins the Streamlit dependency to a major version.
 
 1. Open the app's `environment.yml`.
 2. Ensure dependencies include a pinned major version entry in this format:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/streamlit_major_pin.yml`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/streamlit_major_pin.yml`
 
 3. If `streamlit` is missing, add `- streamlit=1.*` under `dependencies`.
 4. If `streamlit` is present but unpinned (or pinned differently), update it to `- streamlit=1.*` unless the user explicitly requests another major version.
@@ -138,14 +171,14 @@ After fetching the app, inspect all SQL queries in the app code for unqualified 
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh`
 
 Run it with `TABLE_NAMES` set to a comma-separated list of uppercase names:
 
 ```bash
 source venv/snowflake/bin/activate
 TABLE_NAMES="FILE_LATEST,OBJECTDOWNLOAD_EVENT" \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/lookup_unqualified_tables.sh
 ```
 
 2. For each match found, replace the unqualified reference with the fully qualified lowercase identifier: `synapse_data_warehouse.<schema_lower>.<table_lower>`.
@@ -166,9 +199,10 @@ When a generated query string contains multiple SQL statements, retain only the 
 
 1. Inspect each SQL string assigned to a query function.
 2. If multiple statements are present, keep content from the start through the first statement terminator.
-3. Remove trailing statements entirely rather than commenting them out.
-4. Clean up any now-unused parameter transform variables created only for removed statements.
-5. Validate the remaining first statement executes successfully and returns a non-empty result set where expected.
+3. Ensure SQL comments in query strings use Snowflake-compatible syntax (`--` or `/* ... */`), and replace unsupported `//` comment markers when found.
+4. Remove trailing statements entirely rather than commenting them out.
+5. Clean up any now-unused parameter transform variables created only for removed statements.
+6. Validate the remaining first statement executes successfully and returns a non-empty result set where expected.
 
 ## Clean Up Deprecated Streamlit Width Arguments
 
@@ -193,7 +227,7 @@ Log-based smoke scans only catch startup-level errors. Streamlit chart rendering
 
 ### Process
 
-For each `st.bar_chart`, `st.line_chart`, or `st.area_chart` call in the app:
+For each `st.bar_chart`, `st.line_chart`, `st.area_chart`, or any other `st.*chart` call in the app:
 
 1. Identify the query function that feeds data to the chart cell.
 2. Run the query with representative default parameters via `snow sql --format JSON`.
@@ -201,19 +235,20 @@ For each `st.bar_chart`, `st.line_chart`, or `st.area_chart` call in the app:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py`
 
 ```bash
 source venv/snowflake/bin/activate
 snow sql -q "<QUERY>" --format JSON | \
   mamba run -n <ENV_NAME> python \
-    .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py \
+    .github/skills/update-streamlit-dashboard-conversion/assets/snippets/validate_chart_inputs.py \
     --index-col <INDEX_COLUMN>
 ```
 
-4. A `FAIL` result means the chart will raise a mixed-type rendering error at runtime. Apply the appropriate remediation before proceeding:
+4. A `FAIL` result means the chart will raise a render error at runtime. Apply the appropriate remediation before proceeding:
    - Categorical/string column in chart input → pivot to columns (`df.pivot_table(...)`)
    - Duplicate columns → deduplicate before charting
+   - Non-1D index input (for example duplicated column selection used as index) → build a dedicated index column (for example `row_number`) and chart a single numeric y-column or explicit x/y pair
 5. Re-run the validation script after each fix to confirm `PASS`.
 6. Repeat for every chart call site in the app.
 
@@ -234,7 +269,7 @@ Generated apps should support both local development and Streamlit in Snowflake 
 
 Use the canonical snippet asset instead of inlining code in this skill:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/local_sis_session_pattern.py`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/local_sis_session_pattern.py`
 
 When applying the snippet, preserve existing query-tag behavior in the app when present.
 
@@ -253,28 +288,28 @@ To avoid disrupting the user during validation, enforce the following:
 
 If the app is started without headless mode and opens a local browser tab/window, stop it and re-run headless before continuing validation.
 
-For each app directory:
+For each app directory (after warehouse conversion):
 
-1. Bootstrap a conda environment from that app's `environment.yml` using non-interactive flags to avoid prompts:
+1. Bootstrap a local environment from that app's manifests using non-interactive flags to avoid prompts:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh`
 
 ```bash
 APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/bootstrap_local_env.sh
 ```
 
 2. Run locally with `--local-dev` from the app directory in headless mode:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh`
 
 ```bash
 APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/run_local_dev.sh
 ```
 
 3. Validate startup output and capture the app URL:
@@ -282,7 +317,11 @@ APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
    - Confirm a `Local URL:` line is present.
    - **Parse and record the exact URL** from the `Local URL:` line — do not assume the port. Streamlit increments the port when a previous process still holds it, so a restarted app may be on a different port than the prior run. Extract it with:
      ```bash
-     APP_URL=$(grep "Local URL:" /tmp/app.log | awk '{print $NF}')
+       APP_URL=$(awk '/Local URL:/{print $NF; exit}' /tmp/app.log)
+       if [[ -z "$APP_URL" || ! "$APP_URL" =~ ^http://localhost:[0-9]+$ ]]; then
+          echo "Failed to parse valid Local URL from /tmp/app.log" >&2
+          exit 1
+       fi
      ```
    - Use `$APP_URL` for all subsequent browser, curl, and smoke-test steps.
    - Confirm there is no immediate traceback in startup logs.
@@ -317,6 +356,7 @@ Startup log scans are necessary but not sufficient. Many Streamlit rendering fai
    - UI alert blocks containing `Error:` messages.
    - Console `error` events.
    - Known warning/error signatures tied to broken charts/tables (for example mixed-type chart errors).
+   - Exception: if failures are transport-only (for example `ERR_CONNECTION_REFUSED`), first verify the app process is still running, then reconnect by reopening the parsed `APP_URL`; fail only if app-level errors persist after reconnect.
 5. If no failure is visible initially, interact with critical controls to force render paths:
    - refresh buttons for each query-backed panel
    - key filters/parameters (date bucket/date range)
@@ -343,6 +383,7 @@ When an in-browser error is found, follow this loop until resolved or blocked:
 ### Common Streamlit chart/dataframe remediation patterns
 
 - Mixed type chart columns: reshape data so chart inputs are numeric-only series (for example pivot category -> columns, aggregate numeric values).
+- Non-1D index/data errors (for example `Index data must be 1-dimensional`): avoid duplicated-column index construction; create an explicit 1D index column and pass a single-value series or explicit x/y frame.
 - Ambiguous chart encoding: specify explicit chart inputs rather than relying on automatic inference.
 - Datetime axis issues: normalize to a consistent datetime type before plotting.
 - Duplicate columns from query output: deduplicate column names before rendering.
@@ -356,11 +397,11 @@ When an in-browser error is found, follow this loop until resolved or blocked:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh`
 
 ```bash
 LOG_FILE=/tmp/app.log \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs.sh
 ```
 
 4. Treat any script-reported error pattern match as a failed validation step.
@@ -377,11 +418,11 @@ When warning cleanup is in scope, run:
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh`
 
 ```bash
 LOG_FILE=/tmp/app.log \
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/smoke_scan_logs_fail_on_warning.sh
 ```
 
 ## Final User Review And Commit Flow (Required)
@@ -404,7 +445,7 @@ After validation is complete and before ending the workflow, run a final user-fa
 
 Use snippet asset:
 
-- `.claude/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
 
 7. If the user declines commit, do not update `ci.yaml` and do not create a commit.
 
