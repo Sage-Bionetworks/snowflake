@@ -482,6 +482,7 @@ After validation is complete and before ending the workflow, run a final user-fa
 3. If the user requests changes, apply them and repeat validation before re-requesting approval.
 4. Once approved, ask whether the user wants to commit the Streamlit app changes.
 5. Only if the user agrees to commit:
+    - Add a grant to `admin/grants.sql` so that the `sage_<schema_lower>_analyst` role has the USAGE privilege upon the Streamlit object.
     - Update `.github/workflows/ci.yaml` so the app is included in the `deploy_streamlit` job matrix (`strategy.matrix.app`).
     - Add one matrix entry with:
        - `name`: human-readable Streamlit app title (not slug)
@@ -495,7 +496,7 @@ Use snippet asset:
 
 - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
 
-7. If the user declines commit, do not update `ci.yaml` and do not create a commit.
+7. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
 
