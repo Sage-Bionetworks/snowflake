@@ -159,7 +159,39 @@ Confirm `runtime_name` is exactly `SYSTEM$WAREHOUSE_RUNTIME`. If not, stop and r
 4. If source includes `pyproject.toml` or `requirements.txt`, migrate needed non-Streamlit dependencies into `environment.yml`.
 5. Treat `environment.yml` as the deployment dependency source of truth.
 6. Remove container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts after migration.
-7. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, optional `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
+7. Ensure `.streamlit/config.toml` exists and sets a 5-minute sleep timeout:
+
+```toml
+[snowflake.sleep]
+streamlitSleepTimeoutMinutes = 5
+```
+
+8. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
+9. In `snowflake.yml`, set Streamlit project definition fields explicitly for deploy targeting:
+    - Set `query_warehouse: STREAMLIT_XSMALL`.
+    - Set `identifier` using object form with:
+         - `name`: `<slug>`
+         - `database`: `<DATABASE>`
+         - `schema`: `<SCHEMA>`
+
+Use this shape under the Streamlit entity:
+
+```yaml
+definition_version: 2
+entities:
+   streamlit_app:
+      type: streamlit
+      identifier:
+         name: <slug>
+         database: <DATABASE>
+         schema: <SCHEMA>
+      query_warehouse: STREAMLIT_XSMALL
+      main_file: streamlit_app.py
+      artifacts:
+         - environment.yml
+         - streamlit_app.py
+         - .streamlit/config.toml
+```
 
 Do not skip this conversion. The workflow is complete only when the local app is warehouse-runtime compatible.
 
