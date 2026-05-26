@@ -136,14 +136,30 @@ If `runtime_name` is `SYSTEM$ST_CONTAINER_RUNTIME_PY3_11` (or any container runt
 
 Before SQL/chart/session edits, normalize to warehouse runtime:
 
-1. Ensure an `environment.yml` exists with Snowflake conda dependencies:
+1. If source runtime is container runtime, run the runtime switch on the Streamlit object:
+
+```bash
+source venv/snowflake/bin/activate
+snow sql -q "ALTER STREAMLIT <DATABASE>.<SCHEMA>.<OBJECT_NAME> SET RUNTIME_NAME = 'SYSTEM\$WAREHOUSE_RUNTIME';" --role "<ROLE_OR_EMPTY>"
+```
+
+2. Verify the runtime switch succeeded before continuing:
+
+```bash
+source venv/snowflake/bin/activate
+snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE_OR_EMPTY>" --format JSON
+```
+
+Confirm `runtime_name` is exactly `SYSTEM$WAREHOUSE_RUNTIME`. If not, stop and resolve permissions/object issues before proceeding.
+
+3. Ensure an `environment.yml` exists with Snowflake conda dependencies:
    - `python=3.11.*`
    - `snowflake-snowpark-python`
    - `streamlit=1.*` (or user-requested major)
-2. If source includes `pyproject.toml` or `requirements.txt`, migrate needed non-Streamlit dependencies into `environment.yml`.
-3. Treat `environment.yml` as the deployment dependency source of truth.
-4. Remove container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts after migration.
-5. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, optional `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
+4. If source includes `pyproject.toml` or `requirements.txt`, migrate needed non-Streamlit dependencies into `environment.yml`.
+5. Treat `environment.yml` as the deployment dependency source of truth.
+6. Remove container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts after migration.
+7. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, optional `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
 
 Do not skip this conversion. The workflow is complete only when the local app is warehouse-runtime compatible.
 
@@ -448,6 +464,26 @@ Use snippet asset:
 - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
 
 7. If the user declines commit, do not update `ci.yaml` and do not create a commit.
+
+## Optional Production Deploy Prompt (Required)
+
+After the Final User Review And Commit Flow completes, always ask the user:
+
+- "Do you want to deploy these Streamlit app changes to production now?"
+
+If the user says yes, deploy using the same command shape used in `.github/workflows/ci.yaml` for `deploy_streamlit`:
+
+```bash
+cd sage/<schema_lower>/streamlit/<slug>
+snow streamlit deploy --role sage_<schema_lower>_admin --replace --prune
+```
+
+Execution rules:
+
+1. Run deploy only after explicit user approval.
+2. Use the app path and admin role that match the `deploy_streamlit` matrix entry for that app.
+3. Report deploy success/failure to the user with relevant command output.
+4. If the user says no, skip deploy and end after confirming no production deploy was performed.
 
 ## Notes
 
