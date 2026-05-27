@@ -26,8 +26,8 @@ Example: `Phil's testing dashboard` -> `phils_testing_dashboard`
 
 - Required: database
 - Required: schema
+- Required: role (use `SAGE_ADMIN`)
 - Optional: identifier (may be Snowflake object name, title, or slug)
-- Optional: role (use `SAGE_ADMIN` when object ownership privileges are required)
 
 ## Script Execution (Default Configuration)
 
@@ -51,7 +51,7 @@ Use snippet asset:
 
 ```bash
 source venv/snowflake/bin/activate
-DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" ROLE="<ROLE_OR_EMPTY>" \
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" ROLE="<ROLE>" \
   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/fetch_first_step.sh
 ```
 
@@ -79,7 +79,7 @@ Run it with `DATABASE` and `SCHEMA` exported in the environment:
 
 ```bash
 source venv/snowflake/bin/activate
-DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" ROLE="<ROLE_OR_EMPTY>" \
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" ROLE="<ROLE>" \
   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/list_streamlit_json.sh
 ```
 
@@ -127,7 +127,7 @@ Run:
 
 ```bash
 source venv/snowflake/bin/activate
-snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE_OR_EMPTY>" --format JSON
+snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE>" --format JSON
 ```
 
 If `runtime_name` is `SYSTEM$ST_CONTAINER_RUNTIME_PY3_11` (or any container runtime), conversion is required.
@@ -140,14 +140,14 @@ Before SQL/chart/session edits, normalize to warehouse runtime:
 
 ```bash
 source venv/snowflake/bin/activate
-snow sql -q "ALTER STREAMLIT <DATABASE>.<SCHEMA>.<OBJECT_NAME> SET RUNTIME_NAME = 'SYSTEM\$WAREHOUSE_RUNTIME';" --role "<ROLE_OR_EMPTY>"
+snow sql -q "ALTER STREAMLIT <DATABASE>.<SCHEMA>.<OBJECT_NAME> SET RUNTIME_NAME = 'SYSTEM\$WAREHOUSE_RUNTIME';" --role "<ROLE>"
 ```
 
 2. Verify the runtime switch succeeded before continuing:
 
 ```bash
 source venv/snowflake/bin/activate
-snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE_OR_EMPTY>" --format JSON
+snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE>" --format JSON
 ```
 
 Confirm `runtime_name` is exactly `SYSTEM$WAREHOUSE_RUNTIME`. If not, stop and resolve permissions/object issues before proceeding.
@@ -482,6 +482,10 @@ After validation is complete and before ending the workflow, run a final user-fa
 3. If the user requests changes, apply them and repeat validation before re-requesting approval.
 4. Once approved, ask whether the user wants to commit the Streamlit app changes.
 5. Only if the user agrees to commit:
+   - Confirm the feature branch name and base branch before committing.
+   - To discover the branch name we should commit to, search Jira for a subtask of SNOW-428 whose title contains the Streamlit's title (e.g., the human readable identifier, not the slug) and create/switch to a branch with name formatted like `<jira-ticket-identifier_lower>-<slug_lower>` before commit. For example, the "Synapse Performance Metrics" Streamlit corresponds to SNOW-452 and should have its changes commited to `snow-452-synapse-performance-metrics`.
+   - Default branch base and PR target to `dev` unless the user explicitly requests another base.
+   - Ensure the feature branch is based on the same branch that will be used as PR base.
     - Add a grant to `admin/grants.sql` so that the `sage_<schema_lower>_analyst` role has the USAGE privilege upon the Streamlit object.
     - Update `.github/workflows/ci.yaml` so the app is included in the `deploy_streamlit` job matrix (`strategy.matrix.app`).
     - Add one matrix entry with:
@@ -496,7 +500,10 @@ Use snippet asset:
 
 - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/commit_message.txt`
 
-7. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
+7. Push the feature branch to origin.
+8. Open a pull request against the confirmed base branch (default `dev`).
+9. The PR title and description ought to follow the same templating used with PR 337. 
+10. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
 
