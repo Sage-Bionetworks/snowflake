@@ -50,7 +50,7 @@ jobs:
             ############################ ENVIRONMENT SETUP AND CONNECTION CONFIGURATION ############################
             ########################################################################################################
             ########################################################################################################
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Configure Snowflake
               uses: ./.github/actions/configure-snowflake-cli
@@ -203,7 +203,7 @@ jobs:
 
       steps:
 
-          - uses: actions/checkout@v4
+          - uses: actions/checkout@v6
 
           - name: Configure Snowflake
             uses: ./.github/actions/configure-snowflake-cli
