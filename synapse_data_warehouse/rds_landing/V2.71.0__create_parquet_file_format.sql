@@ -1,4 +1,0 @@
-USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
-
-CREATE OR REPLACE FILE FORMAT parquet_ff
-    TYPE = PARQUET;
