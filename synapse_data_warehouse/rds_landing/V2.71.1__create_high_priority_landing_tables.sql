@@ -1,7 +1,7 @@
 USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 
 -- access_approval
-CREATE TABLE IF NOT EXISTS lan_synapse_access_approval (
+CREATE TABLE IF NOT EXISTS access_approval (
     id                  BIGINT    COMMENT 'Unique identifier for the access approval record',
     requirement_id      BIGINT    COMMENT 'Which requirement this approval satisfies',
     requirement_version BIGINT    COMMENT 'Version number of the access requirement at the time of approval',
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_access_approval (
 );
 
 -- acl
-CREATE TABLE IF NOT EXISTS lan_synapse_acl (
+CREATE TABLE IF NOT EXISTS acl (
     id         BIGINT  COMMENT 'Unique identifier for the ACL (Access Control List)',
     owner_id   BIGINT  COMMENT 'ID of the entity or object that this ACL grants access to',
     owner_type VARCHAR COMMENT 'Type of entity or object that owns this ACL',
@@ -26,21 +26,21 @@ CREATE TABLE IF NOT EXISTS lan_synapse_acl (
 );
 
 -- acl_resource_access
-CREATE TABLE IF NOT EXISTS lan_synapse_acl_resource_access (
+CREATE TABLE IF NOT EXISTS acl_resource_access (
     id       BIGINT COMMENT 'Unique identifier for this ACL resource access',
     owner_id BIGINT COMMENT 'The ACL identifier',
     group_id BIGINT COMMENT 'The user or team being granted access'
 );
 
 -- acl_resource_access_type
-CREATE TABLE IF NOT EXISTS lan_synapse_acl_resource_access_type (
+CREATE TABLE IF NOT EXISTS acl_resource_access_type (
     id_oid     BIGINT  COMMENT 'The ACL resource access identifier',
     string_ele VARCHAR COMMENT 'The permission type (e.g., READ, UPDATE, DELETE, CHANGE_PERMISSIONS, DOWNLOAD, CREATE)',
     owner_id   BIGINT  COMMENT 'The ACL identifier'
 );
 
 -- data_access_submission
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission (
+CREATE TABLE IF NOT EXISTS data_access_submission (
     id                         BIGINT  COMMENT 'Unique identifier for the data access submission',
     access_requirement_id      BIGINT  COMMENT 'The access requirement identifier',
     data_access_request_id     BIGINT  COMMENT 'The data access request identifier',
@@ -53,14 +53,14 @@ CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission (
 );
 
 -- data_access_submission_accessor_changes
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_accessor_changes (
+CREATE TABLE IF NOT EXISTS data_access_submission_accessor_changes (
     submission_id BIGINT  COMMENT 'The data access submission identifier',
     accessor_id   BIGINT  COMMENT 'Identifier of the user whose access is being changed',
     access_type   VARCHAR COMMENT 'Type of access change. One of: GAIN_ACCESS, RENEW_ACCESS, REVOKE_ACCESS'
 );
 
 -- data_access_submission_status
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_status (
+CREATE TABLE IF NOT EXISTS data_access_submission_status (
     submission_id BIGINT  COMMENT 'The data access submission identifier',
     created_by    BIGINT  COMMENT 'Identifier of the user who created this status record',
     created_on    BIGINT  COMMENT 'Epoch milliseconds when the status was created',
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_status (
 );
 
 -- data_access_submission_submitter
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_submitter (
+CREATE TABLE IF NOT EXISTS data_access_submission_submitter (
     id                    BIGINT  COMMENT 'Unique identifier for this submitter record',
     access_requirement_id BIGINT  COMMENT 'The access requirement identifier',
     submitter_id          BIGINT  COMMENT 'User ID of the submitter',
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_data_access_submission_submitter (
 );
 
 -- data_access_request
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_request (
+CREATE TABLE IF NOT EXISTS data_access_request (
     id                    BIGINT  COMMENT 'Unique identifier for the data access request',
     access_requirement_id BIGINT  COMMENT 'Which access requirement this request is for',
     research_project_id   BIGINT  COMMENT 'The identifier of the research project which this data access request associates with',
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_data_access_request (
 );
 
 -- access_requirement
-CREATE TABLE IF NOT EXISTS lan_synapse_access_requirement (
+CREATE TABLE IF NOT EXISTS access_requirement (
     id                 BIGINT  COMMENT 'Unique identifier for the access requirement',
     name               VARCHAR COMMENT 'Unique human-readable name for the access requirement',
     concrete_type      VARCHAR COMMENT 'Fully qualified class name for the access requirement type',
@@ -106,13 +106,13 @@ CREATE TABLE IF NOT EXISTS lan_synapse_access_requirement (
 );
 
 -- access_requirement_project
-CREATE TABLE IF NOT EXISTS lan_synapse_access_requirement_project (
+CREATE TABLE IF NOT EXISTS access_requirement_project (
     ar_id      BIGINT COMMENT 'The access requirement identifier',
     project_id BIGINT COMMENT 'The identifier of the project entity which this access requirement associates with'
 );
 
 -- access_requirement_revision
-CREATE TABLE IF NOT EXISTS lan_synapse_access_requirement_revision (
+CREATE TABLE IF NOT EXISTS access_requirement_revision (
     owner_id          BIGINT COMMENT 'The access requirement identifier',
     number            BIGINT COMMENT 'Revision number for this version of the access requirement. Revision numbers begin from 0.',
     modified_by       BIGINT COMMENT 'Identifier of the user who created this revision (i.e., modified the access requirement)',
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_access_requirement_revision (
 );
 
 -- data_access_notification
-CREATE TABLE IF NOT EXISTS lan_synapse_data_access_notification (
+CREATE TABLE IF NOT EXISTS data_access_notification (
     id                 BIGINT  COMMENT 'Unique identifier for the notification record',
     notification_type  VARCHAR COMMENT 'Type of notification sent. One of: FIRST_RENEWAL_REMINDER, SECOND_RENEWAL_REMINDER, REVOCATION',
     requirement_id     BIGINT  COMMENT 'The access requirement identifier',
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS lan_synapse_data_access_notification (
 );
 
 -- principal_alias
-CREATE TABLE IF NOT EXISTS lan_synapse_principal_alias (
+CREATE TABLE IF NOT EXISTS principal_alias (
     id            BIGINT  COMMENT 'Unique identifier for the principal alias record',
     principal_id  BIGINT  COMMENT 'The globally unique identifier of the principal (user ID or team ID)',
     alias_unique  VARCHAR COMMENT 'Unique normalized alias value used for lookups. Guaranteed to be globally unique across all principals.',
