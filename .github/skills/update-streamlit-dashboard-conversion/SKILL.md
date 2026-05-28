@@ -239,6 +239,39 @@ TABLE_NAMES="FILE_LATEST,OBJECTDOWNLOAD_EVENT" \
 
 5. Format all fully qualified identifiers as **lowercase**.
 
+## Replace Deprecated Tables With Event-Based Replacements
+
+After qualifying SQL identifiers, scan all SQL queries in the app code for references to deprecated tables and replace them with their event-based replacements.
+
+### Deprecated table mappings
+
+| Deprecated Table | Replacement Table | Notes |
+|-----------------|-------------------|-------|
+| `synapse.fileupload` | `synapse_event.fileupload_event` | File upload events |
+| `synapse.filedownload` | `synapse_event.objectdownload_event` | File download events (note: table renamed from filedownload to objectdownload) |
+| `synapse.processedaccess` | `synapse_event.access_event` | Access/API request events |
+
+### Resolution process
+
+1. Search the app code for any of these deprecated table references (case-insensitive):
+   - `fileupload` (when referencing `synapse.fileupload` or `synapse_data_warehouse.synapse.fileupload`)
+   - `filedownload` (when referencing `synapse.filedownload` or `synapse_data_warehouse.synapse.filedownload`)
+   - `processedaccess` (when referencing `synapse.processedaccess` or `synapse_data_warehouse.synapse.processedaccess`)
+
+2. For each match found, replace with the fully qualified lowercase event table reference:
+   - `synapse.fileupload` → `synapse_event.fileupload_event`
+   - `synapse_data_warehouse.synapse.fileupload` → `synapse_data_warehouse.synapse_event.fileupload_event`
+   - `synapse.filedownload` → `synapse_event.objectdownload_event`
+   - `synapse_data_warehouse.synapse.filedownload` → `synapse_data_warehouse.synapse_event.objectdownload_event`
+   - `synapse.processedaccess` → `synapse_event.access_event`
+   - `synapse_data_warehouse.synapse.processedaccess` → `synapse_data_warehouse.synapse_event.access_event`
+
+3. The replacement tables are clones of the raw tables with the same column names and types, so no query logic changes are needed beyond the table reference.
+
+4. After all replacements, validate each updated query by running a lightweight test query (e.g., `SELECT * FROM <table> LIMIT 3`) and confirming the result set is non-empty.
+
+5. If a deprecated table reference appears in a comment or documentation string (not an active query), update the comment to reference the new table for accuracy.
+
 ## Keep Single SQL Statement Per Query
 
 When a generated query string contains multiple SQL statements, retain only the first statement and remove all subsequent statements.
