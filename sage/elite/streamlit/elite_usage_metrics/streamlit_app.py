@@ -1081,13 +1081,13 @@ with node_annotations as (
         )
 ), dedup_downloads as (
     select
-        distinct filedownload.user_id, filedownload.record_date, filedownload.file_handle_id, node_annotations.study
+        distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.study
     from
-        synapse_data_warehouse.synapse.filedownload
+        synapse_data_warehouse.synapse_event.objectdownload_event
     inner join
         node_annotations
     on
-        filedownload.file_handle_id = node_annotations.file_handle_id
+        objectdownload_event.file_handle_id = node_annotations.file_handle_id
 ), external_users as (
     select id as user_id
     from
