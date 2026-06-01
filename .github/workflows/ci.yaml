@@ -117,6 +117,9 @@ jobs:
           - name: Governance dashboard
             path: sage/governance/streamlit/data_access_dashboard
             role: sage_governance_admin
+          - name: ELITE Usage Metrics
+            path: sage/elite/streamlit/elite_usage_metrics
+            role: sage_elite_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
