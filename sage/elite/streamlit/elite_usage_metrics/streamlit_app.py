@@ -10,6 +10,24 @@ st.set_page_config(page_title="ELITE Usage Metrics (Main)", layout="wide")
 
 # Title
 st.title("ELITE Usage Metrics (Main)")
+st.markdown(
+    '<p style="color: #cc0000; font-size: 0.85rem; margin-top: -0.4rem;">'
+    "This app is "
+    '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on Github</a>. '
+    "Any local edits will not be retained."
+    "</p>",
+    unsafe_allow_html=True,
+)
+
+ELITE_PROJECT_IDS = (
+    27229419,
+    52072575,
+    52072939,
+    52237024,
+    52642213,
+    53124793,
+)
+ELITE_PROJECT_IDS_SQL = ", ".join(str(project_id) for project_id in ELITE_PROJECT_IDS)
 
 
 # Initialize session configured for generated Streamlit apps
@@ -44,7 +62,7 @@ def execute_query(query: str) -> str:
 
 
 def query_1_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- get latest projects https://www.synapse.org/#!Synapse:syn51489960/tables/query/eyJzcWwiOiJTRUxFQ1QgZGlzdGluY3QocHJvamVjdElkKSBGUk9NIHN5bjUxNDg5OTYwIiwgImluY2x1ZGVFbnRpdHlFdGFnIjp0cnVlLCAibGltaXQiOjI1fQ==
 
 select
@@ -53,14 +71,7 @@ select
 from
     synapse_data_warehouse.synapse_event.objectdownload_event
 where
-    project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793
-    )
+    project_id in ({ELITE_PROJECT_IDS_SQL})
 ;
   """
 
@@ -116,7 +127,7 @@ def cell_1_1():
 
 
 def query_1_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- Data volume across all node types in ELITE projects by project and total
 
 --!! This is potentially an underestimate !!--
@@ -130,14 +141,7 @@ WITH elite_node AS (
     file_handle_id,
     project_id
   FROM synapse_data_warehouse.synapse.node_latest
-  WHERE project_id IN (
-    27229419,
-    52072575,
-    52072939,
-    52237024,
-    52642213,
-    53124793
-  )
+  WHERE project_id IN ({ELITE_PROJECT_IDS_SQL})
 ),
 
 file_size AS (
@@ -152,14 +156,7 @@ project_name AS (
     id,
     name
   FROM synapse_data_warehouse.synapse.node_latest
-  WHERE id IN (
-    27229419,
-    52072575,
-    52072939,
-    52237024,
-    52642213,
-    53124793
-  )
+  WHERE id IN ({ELITE_PROJECT_IDS_SQL})
 ),
 
 per_project AS (
@@ -256,7 +253,7 @@ with col1_2:
 
 
 def query_2_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 
 select
     count(distinct user_id) as number_of_unique_users,
@@ -264,14 +261,7 @@ select
 from
     synapse_data_warehouse.synapse_event.objectdownload_event
 where
-    project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793    
-    )  """
+    project_id in ({ELITE_PROJECT_IDS_SQL})  """
 
     return sql_query
 
@@ -325,7 +315,7 @@ def cell_2_1():
 
 
 def query_2_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 
 select
     count(distinct user_id) as number_of_unique_users,
@@ -334,14 +324,7 @@ from
     synapse_data_warehouse.synapse_event.objectdownload_event
 where
     association_object_type = 'FileEntity' and 
-    project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793    
-    )  """
+    project_id in ({ELITE_PROJECT_IDS_SQL})  """
 
     return sql_query
 
@@ -395,7 +378,7 @@ def cell_2_2():
 
 
 def query_2_3() -> str:
-    sql_query = r"""
+    sql_query = f"""
 WITH USER AS (
     SELECT ID AS PROFILE_ID
     FROM
@@ -410,13 +393,7 @@ select
 from
     synapse_data_warehouse.synapse_event.objectdownload_event
 where
-    project_id in ( 
-    27229419,
-    52072575,
-    52072939,
-    52237024,
-    52642213,
-    53124793)
+    project_id in ({ELITE_PROJECT_IDS_SQL})
     and
     USER_ID IN (SELECT PROFILE_ID FROM USER);  """
 
@@ -472,7 +449,7 @@ def cell_2_3():
 
 
 def query_2_4() -> str:
-    sql_query = r"""
+    sql_query = f"""
 WITH USER AS (
     SELECT ID AS PROFILE_ID
     FROM
@@ -489,13 +466,7 @@ from
 where
     association_object_type = 'FileEntity' 
     and 
-    project_id in ( 
-    27229419,
-    52072575,
-    52072939,
-    52237024,
-    52642213,
-    53124793)
+    project_id in ({ELITE_PROJECT_IDS_SQL})
     and
     USER_ID IN (SELECT PROFILE_ID FROM USER)
 ;  """
@@ -564,7 +535,7 @@ with col2_4:
 
 
 def query_3_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 --- ELITE Portal file/table download statistics
 --- limit to non-Sage users
 -- note: since file size data is derived from `synapse.file_latest`,
@@ -575,14 +546,7 @@ with dedup_downloads as (
     from
         synapse_data_warehouse.synapse_event.objectdownload_event
     where 
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), external_users as (
     select id as user_id
     from
@@ -667,7 +631,7 @@ def cell_3_1():
 
 
 def query_3_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 --- ELITE Portal file/table download statistics
 --- limit to non-Sage users
 -- note: since file size data is derived from `synapse.file_latest`,
@@ -678,14 +642,7 @@ with dedup_downloads as (
     from
         synapse_data_warehouse.synapse_event.objectdownload_event
     where 
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), external_users as (
     select id as user_id
     from
@@ -787,7 +744,7 @@ with col3_2:
 
 
 def query_4_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 --- ELITE Portal monthly downloads by study 
 --- limit to non-Sage users
 --- limit to file entities only (exclude tables)
@@ -800,14 +757,7 @@ with dedup_downloads as (
     where 
         association_object_type = 'FileEntity'
         and
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), external_users as (
     select id as user_id
     from
@@ -900,7 +850,7 @@ cell_4_1()
 
 
 def query_5_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 with node_annotations as (
     select
         file_handle_id,
@@ -908,14 +858,7 @@ with node_annotations as (
     from
         synapse_data_warehouse.synapse_event.node_event
     where
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), dedup_downloads as (
     select
         objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.study
@@ -1031,7 +974,7 @@ cell_5_1()
 
 
 def query_6_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 --- Downloads from ELITE Portal Aug 1 2023 - June 10 2024
 --- Excludes users with sagebase or sagebionetwork email domains
 --- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
@@ -1071,23 +1014,16 @@ with node_annotations as (
     from
         synapse_data_warehouse.synapse_event.node_event
     where
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), dedup_downloads as (
     select
-        distinct filedownload.user_id, filedownload.record_date, filedownload.file_handle_id, node_annotations.study
+        distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.study
     from
-        synapse_data_warehouse.synapse.filedownload
+        synapse_data_warehouse.synapse_event.objectdownload_event
     inner join
         node_annotations
     on
-        filedownload.file_handle_id = node_annotations.file_handle_id
+        objectdownload_event.file_handle_id = node_annotations.file_handle_id
 ), external_users as (
     select id as user_id
     from
@@ -1178,21 +1114,14 @@ cell_6_1()
 
 
 def query_7_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 with specimens as (
     select
         annotations:annotations:specimenID:value as specimenID,
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 )
 select
     count(distinct specimenID)
@@ -1251,21 +1180,14 @@ def cell_7_1():
 
 
 def query_7_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 with specimens as (
     select
         annotations:annotations:specimenID:value as specimenID,
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 )
 select
     count(distinct specimenID)
@@ -1341,7 +1263,7 @@ with col7_2:
 
 
 def query_8_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- why do we have so many non-sage downloads and so few external downloads?
 
 select
@@ -1350,14 +1272,7 @@ select
 from
     synapse_data_warehouse.synapse_event.objectdownload_event
 where
-    project_id in (
-    27229419,
-    52072575,
-    52072939,
-    52237024,
-    52642213,
-    53124793
-)
+    project_id in ({ELITE_PROJECT_IDS_SQL})
 group by user_id
 order by downloads_per_user desc
 ;
@@ -1416,21 +1331,14 @@ def cell_8_1():
 
 
 def query_8_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 select
     file_handle_id,
     annotations,
 from
     synapse_data_warehouse.synapse.node_latest
 where
-    project_id in (
-        27229419,
-        52072575,
-        52072939,
-        52237024,
-        52642213,
-        53124793
-    )  """
+    project_id in ({ELITE_PROJECT_IDS_SQL})  """
 
     return sql_query
 
@@ -1492,7 +1400,7 @@ with col8_2:
 
 
 def query_9_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 
 with node_annotations as (
     select
@@ -1501,14 +1409,7 @@ with node_annotations as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        project_id in (
-            27229419,
-            52072575,
-            52072939,
-            52237024,
-            52642213,
-            53124793
-        )
+        project_id in ({ELITE_PROJECT_IDS_SQL})
 ), dedup_downloads as (
     select
         objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.study
