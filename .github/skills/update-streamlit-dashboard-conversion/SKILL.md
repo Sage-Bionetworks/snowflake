@@ -268,9 +268,24 @@ After qualifying SQL identifiers, scan all SQL queries in the app code for refer
 
 3. The replacement tables are clones of the raw tables with the same column names and types, so no query logic changes are needed beyond the table reference.
 
-4. After all replacements, validate each updated query by running a lightweight test query (e.g., `SELECT * FROM <table> LIMIT 3`) and confirming the result set is non-empty.
+4. Run a replacement guard to catch common replacement mistakes before query execution checks:
 
-5. If a deprecated table reference appears in a comment or documentation string (not an active query), update the comment to reference the new table for accuracy.
+Use snippet asset:
+
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/sql_replacement_guard.sh`
+
+```bash
+APP_FILE="sage/<schema_lower>/streamlit/<slug>/streamlit_app.py" \
+UNQUALIFIED_NAMES_CSV="fileupload,filedownload,processedaccess" \
+DEPRECATED_FQ_CSV="synapse_data_warehouse.synapse.fileupload,synapse_data_warehouse.synapse.filedownload,synapse_data_warehouse.synapse.processedaccess" \
+   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/sql_replacement_guard.sh
+```
+
+The guard must return `PASS: sql replacement guard`. If it fails, fix the reported references and re-run.
+
+5. After all replacements, validate each updated query by running a lightweight test query (e.g., `SELECT * FROM <table> LIMIT 3`) and confirming the result set is non-empty.
+
+6. If a deprecated table reference appears in a comment or documentation string (not an active query), update the comment to reference the new table for accuracy.
 
 ## Keep Single SQL Statement Per Query
 
