@@ -374,6 +374,25 @@ When applying the snippet, preserve existing query-tag behavior in the app when 
 
 Do not use `st.connection("snowflake").session()` for generated apps.
 
+## Add Managed-On-GitHub Disclaimer Under Title (Required)
+
+After session wiring and before local validation, ensure each generated app includes the managed-on-GitHub disclaimer directly under the page title in `streamlit_app.py`.
+
+### Required placement and content
+
+1. Keep the app title call (for example `st.title(...)` or `streamlit.title(...)`).
+2. Insert the disclaimer markdown immediately after the title call.
+3. Use the exact disclaimer message and link target from the snippet asset.
+4. Keep `unsafe_allow_html=True` enabled for this block.
+
+Use snippet asset:
+
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/managed_on_github_disclaimer.py`
+
+If the app uses `streamlit` instead of `st`, adapt only the module prefix (`st` vs `streamlit`) and keep the disclaimer text unchanged.
+
+If the disclaimer already exists with identical text/link, do not duplicate it.
+
 ### Local debug workflow
 
 ### Browser Behavior During Validation (Required)
