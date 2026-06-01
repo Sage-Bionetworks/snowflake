@@ -8,7 +8,14 @@ if [[ -z "${TABLE_NAMES:-}" ]]; then
   exit 1
 fi
 
-IN_LIST=$(echo "${TABLE_NAMES}" | tr ',' '\n' | sed "s/^[[:space:]]*/'/;s/[[:space:]]*$/'/" | paste -sd ',')
+IN_LIST="$(
+  printf '%s' "${TABLE_NAMES}" \
+    | tr ',' '\n' \
+    | sed "s/^[[:space:]]*//;s/[[:space:]]*$//" \
+    | sed "/^$/d" \
+    | sed "s/^/'/;s/$/'/" \
+    | awk 'BEGIN{first=1} {if (!first) printf ","; printf "%s", $0; first=0}'
+)"
 
 snow sql -q "SELECT table_schema, table_name, table_type
 FROM SYNAPSE_DATA_WAREHOUSE.information_schema.tables

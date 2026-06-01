@@ -58,6 +58,7 @@ DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" ROLE="<ROLE>
 This script writes files into the title-based slug directory.
 
 If the object does not expose a live version URI, the fetch script automatically falls back to default and then last version URIs.
+The script now accepts `ROLE` and forwards it to all `snow` commands.
 
 ## Object Resolution Rules
 
@@ -136,38 +137,37 @@ If `runtime_name` is `SYSTEM$ST_CONTAINER_RUNTIME_PY3_11` (or any container runt
 
 Before SQL/chart/session edits, normalize to warehouse runtime:
 
-1. If source runtime is container runtime, run the runtime switch on the Streamlit object:
+Use snippet asset:
+
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/ensure_warehouse_runtime_and_artifacts.sh`
 
 ```bash
 source venv/snowflake/bin/activate
-snow sql -q "ALTER STREAMLIT <DATABASE>.<SCHEMA>.<OBJECT_NAME> SET RUNTIME_NAME = 'SYSTEM\$WAREHOUSE_RUNTIME';" --role "<ROLE>"
+DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" OBJECT_NAME="<OBJECT_NAME>" ROLE="<ROLE>" \
+  TARGET_ROOT="sage" STREAMLIT_MAJOR="1" \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/ensure_warehouse_runtime_and_artifacts.sh
 ```
 
-2. Verify the runtime switch succeeded before continuing:
+This script is rerunnable and performs all of the following consistently:
 
-```bash
-source venv/snowflake/bin/activate
-snow streamlit describe "<OBJECT_NAME>" --database "<DATABASE>" --schema "<SCHEMA>" --role "<ROLE>" --format JSON
-```
-
-Confirm `runtime_name` is exactly `SYSTEM$WAREHOUSE_RUNTIME`. If not, stop and resolve permissions/object issues before proceeding.
-
-3. Ensure an `environment.yml` exists with Snowflake conda dependencies:
+1. Detects current runtime and switches to `SYSTEM$WAREHOUSE_RUNTIME` when needed.
+2. Verifies runtime after switch and fails fast if not exactly `SYSTEM$WAREHOUSE_RUNTIME`.
+3. Creates/normalizes `environment.yml` with:
    - `python=3.11.*`
    - `snowflake-snowpark-python`
-   - `streamlit=1.*` (or user-requested major)
-4. If source includes `pyproject.toml` or `requirements.txt`, migrate needed non-Streamlit dependencies into `environment.yml`.
-5. Treat `environment.yml` as the deployment dependency source of truth.
-6. Remove container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts after migration.
-7. Ensure `.streamlit/config.toml` exists and sets a 5-minute sleep timeout:
+   - `streamlit=1.*` (or `STREAMLIT_MAJOR`)
+4. Migrates non-Streamlit dependencies from `pyproject.toml` and/or `requirements.txt` into `environment.yml`.
+5. Treats `environment.yml` as the deploy dependency source of truth.
+6. Removes container-runtime dependency manifests (`pyproject.toml`, `requirements.txt`) from deploy artifacts.
+7. Ensures `.streamlit/config.toml` contains the required sleep timeout block:
 
 ```toml
 [snowflake.sleep]
 streamlitSleepTimeoutMinutes = 5
 ```
 
-8. Ensure `snowflake.yml` (when present) references warehouse artifacts (`streamlit_app.py`, `environment.yml`, `.streamlit/config.toml`) and does not depend on container-runtime-only packaging.
-9. In `snowflake.yml`, set Streamlit project definition fields explicitly for deploy targeting:
+8. Rewrites `snowflake.yml` to warehouse-compatible artifacts (`streamlit_app.py`, `environment.yml`, `.streamlit/config.toml`) and removes container-runtime-only packaging references.
+9. Sets Streamlit project definition fields explicitly for deploy targeting:
     - Set `query_warehouse: STREAMLIT_XSMALL`.
     - Set `identifier` using object form with:
          - `name`: `<slug>`
@@ -206,8 +206,9 @@ Use snippet asset:
 
 - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/streamlit_major_pin.yml`
 
-3. If `streamlit` is missing, add `- streamlit=1.*` under `dependencies`.
-4. If `streamlit` is present but unpinned (or pinned differently), update it to `- streamlit=1.*` unless the user explicitly requests another major version.
+3. If you ran `ensure_warehouse_runtime_and_artifacts.sh` above, this pin is already enforced.
+4. If not using that script, if `streamlit` is missing, add `- streamlit=1.*` under `dependencies`.
+5. If `streamlit` is present but unpinned (or pinned differently), update it to `- streamlit=1.*` unless the user explicitly requests another major version.
 
 ## Qualify Unqualified SQL Identifiers
 
@@ -280,6 +281,8 @@ UNQUALIFIED_NAMES_CSV="fileupload,filedownload,processedaccess" \
 DEPRECATED_FQ_CSV="synapse_data_warehouse.synapse.fileupload,synapse_data_warehouse.synapse.filedownload,synapse_data_warehouse.synapse.processedaccess" \
    bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/sql_replacement_guard.sh
 ```
+
+The guard snippet now supports both environment-variable and positional argument input and is safe to rerun.
 
 The guard must return `PASS: sql replacement guard`. If it fails, fix the reported references and re-run.
 
@@ -411,14 +414,17 @@ APP_DIR="sage/<schema_lower>/streamlit/<slug>" \
 3. Validate startup output and capture the app URL:
    - Confirm Streamlit prints `You can now view your Streamlit app in your browser.`
    - Confirm a `Local URL:` line is present.
-   - **Parse and record the exact URL** from the `Local URL:` line — do not assume the port. Streamlit increments the port when a previous process still holds it, so a restarted app may be on a different port than the prior run. Extract it with:
+    - **Parse and record the exact URL** from the `Local URL:` line — do not assume the port. Streamlit increments the port when a previous process still holds it, so a restarted app may be on a different port than the prior run. Use snippet asset:
+       - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/parse_local_url.sh`
+       Extract it with:
      ```bash
-       APP_URL=$(awk '/Local URL:/{print $NF; exit}' /tmp/app.log)
-       if [[ -z "$APP_URL" || ! "$APP_URL" =~ ^http://localhost:[0-9]+$ ]]; then
-          echo "Failed to parse valid Local URL from /tmp/app.log" >&2
-          exit 1
-       fi
+          LOG_FILE=/tmp/app.log \
+             bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/parse_local_url.sh
      ```
+       Or assign directly:
+       ```bash
+          APP_URL=$(LOG_FILE=/tmp/app.log bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/parse_local_url.sh)
+       ```
    - Use `$APP_URL` for all subsequent browser, curl, and smoke-test steps.
    - Confirm there is no immediate traceback in startup logs.
 
@@ -530,18 +536,36 @@ After validation is complete and before ending the workflow, run a final user-fa
 3. If the user requests changes, apply them and repeat validation before re-requesting approval.
 4. Once approved, ask whether the user wants to commit the Streamlit app changes.
 5. Only if the user agrees to commit:
-   - Confirm the feature branch name and base branch before committing.
-   - To discover the branch name we should commit to, search Jira for a subtask of SNOW-428 whose title contains the Streamlit's title (e.g., the human readable identifier, not the slug) and create/switch to a branch with name formatted like `<jira-ticket-identifier_lower>-<slug_lower>` before commit. For example, the "Synapse Performance Metrics" Streamlit corresponds to SNOW-452 and should have its changes commited to `snow-452-synapse-performance-metrics`.
-   - Default branch base and PR target to `dev` unless the user explicitly requests another base.
+    - Confirm the feature branch name and base branch before committing.
+    - Resolve the Jira key for branch naming with this exact JQL query shape:
+       - `parent = SNOW-428 AND summary ~ "<Streamlit title>"`
+    - If exactly one issue matches, use that key.
+    - If zero or multiple issues match, stop and ask the user to choose the ticket key before proceeding.
+   - Create/switch to branch `<jira-ticket-identifier_lower>-<slug_lower>` before commit, and default branch base and PR target to `dev` unless the user explicitly requests another base. For example, the "Synapse Performance Metrics" Streamlit corresponds to SNOW-452 and should have its changes committed to `snow-452-synapse-performance-metrics`.
    - Ensure the feature branch is based on the same branch that will be used as PR base.
-    - Add a grant to `admin/grants.sql` so that the `sage_<schema_lower>_analyst` role has the USAGE privilege upon the Streamlit object.
-    - Update `.github/workflows/ci.yaml` so the app is included in the `deploy_streamlit` job matrix (`strategy.matrix.app`).
-    - Add one matrix entry with:
-       - `name`: human-readable Streamlit app title (not slug)
-       - `path`: `sage/<schema_lower>/streamlit/<slug>`
-       - `role`: `sage_<schema_lower>_admin`
-    - Use the same `<schema_lower>` value in both `path` and `role`.
-    - Avoid duplicate matrix entries for the same app path/title.
+      - Upsert release entries (grant + CI matrix) with this snippet asset:
+         - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh`
+
+         ```bash
+         APP_TITLE="<Streamlit title>" \
+         SCHEMA_LOWER="<schema_lower>" \
+         SLUG="<slug>" \
+         OBJECT_NAME="<OBJECT_NAME>" \
+            bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh
+         ```
+
+         This script is rerunnable and idempotent for:
+         - `admin/grants.sql`: `GRANT USAGE ON STREAMLIT SAGE.<SCHEMA_UPPER>.<OBJECT_NAME_UPPER> TO ROLE SAGE_<SCHEMA_UPPER>_ANALYST;`
+         - `.github/workflows/ci.yaml`: one `deploy_streamlit` matrix entry with:
+            - `name`: `<Streamlit title>`
+            - `path`: `sage/<schema_lower>/streamlit/<slug>`
+            - `role`: `sage_<schema_lower>_admin`
+
+         If the path already exists in the matrix, no duplicate is added.
+   - Before committing, run the VS Code default formatter on the app file:
+      - File: `sage/<schema_lower>/streamlit/<slug>/streamlit_app.py`
+      - Action: `Format Document` (default formatter)
+      - Requirement: format only this app file in this step (do not run workspace-wide formatting).
 6. Create one non-amended commit containing all workflow/app/CI changes with message:
 
 Use snippet asset:
@@ -550,7 +574,9 @@ Use snippet asset:
 
 7. Push the feature branch to origin.
 8. Open a pull request against the confirmed base branch (default `dev`).
-9. The PR title and description ought to follow the same templating used with PR 337. 
+9. The PR title and description ought to follow the same templating used with PR 337.
+   - Title format: `[<JIRA-KEY>] <brief action-oriented summary>`
+   - Include required template sections: Problem, Solution, Testing
 10. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
@@ -562,8 +588,8 @@ After the Final User Review And Commit Flow completes, always ask the user:
 If the user says yes, deploy using the same command shape used in `.github/workflows/ci.yaml` for `deploy_streamlit`:
 
 ```bash
-cd sage/<schema_lower>/streamlit/<slug>
-snow streamlit deploy --role sage_<schema_lower>_admin --replace --prune
+APP_DIR="sage/<schema_lower>/streamlit/<slug>" ROLE="sage_<schema_lower>_admin" \
+   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/deploy_streamlit_prod.sh
 ```
 
 Execution rules:
