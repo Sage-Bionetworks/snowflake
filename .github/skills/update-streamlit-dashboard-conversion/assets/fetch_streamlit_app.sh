@@ -6,24 +6,26 @@ usage() {
 Fetch a Streamlit app's staged source files from Snowflake into this repository.
 
 Usage:
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database <database> \
     --schema <schema> \
     --name <streamlit_name> \
+    [--role <role_name>] \
     [--version <live|last|default|VERSION$N>] \
     [--connection <connection_name>] \
     [--target-root <relative_or_absolute_path>]
 
 Examples:
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_451_STREAMLIT_CONVERSION_SKILL \
     --schema SYNAPSE \
     --name OWTYLBMJ_4CXKQGK
 
-  bash .claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh \
     --database SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_451_STREAMLIT_CONVERSION_SKILL \
     --schema SYNAPSE \
     --name OWTYLBMJ_4CXKQGK \
+    --role SAGE_ADMIN \
     --version VERSION\$1 \
     --connection default
 
@@ -42,6 +44,7 @@ database=""
 schema=""
 streamlit_name=""
 version="live"
+role_name=""
 connection_name=""
 target_root="sage"
 
@@ -61,6 +64,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --version)
       version="$2"
+      shift 2
+      ;;
+    --role)
+      role_name="$2"
       shift 2
       ;;
     --connection)
@@ -98,6 +105,9 @@ fi
 schema_dir="$(printf '%s' "${schema}" | tr '[:upper:]' '[:lower:]')"
 
 describe_cmd=(snow streamlit describe "${streamlit_name}" --database "${database}" --schema "${schema}" --format JSON)
+if [[ -n "${role_name}" ]]; then
+  describe_cmd+=(--role "${role_name}")
+fi
 if [[ -n "${connection_name}" ]]; then
   describe_cmd+=(--connection "${connection_name}")
 fi
@@ -154,13 +164,44 @@ else:
         raise SystemExit("Unable to determine streamlit version URI from description output.")
     uri = re.sub(r"/versions/[^/]+/$", f"/versions/{version}/", base)
 
-if not uri:
-    raise SystemExit(f"Unable to determine URI for version={version!r}.")
-
-print(uri)
+print(uri or "")
 ' "${version}")"
 
+if [[ -z "${streamlit_uri}" && "${version}" == "live" ]]; then
+  streamlit_uri="$(printf '%s' "${describe_json}" | python3 -c '
+import json
+import sys
+
+doc = json.load(sys.stdin)
+if not doc:
+    raise SystemExit("No streamlit description returned.")
+item = doc[0]
+print(item.get("default_version_location_uri") or item.get("last_version_location_uri") or "")
+')"
+fi
+
+if [[ -z "${streamlit_uri}" && "${version}" == "default" ]]; then
+  streamlit_uri="$(printf '%s' "${describe_json}" | python3 -c '
+import json
+import sys
+
+doc = json.load(sys.stdin)
+if not doc:
+    raise SystemExit("No streamlit description returned.")
+item = doc[0]
+print(item.get("last_version_location_uri") or "")
+')"
+fi
+
+if [[ -z "${streamlit_uri}" ]]; then
+  echo "Unable to determine URI for version='${version}'." >&2
+  exit 1
+fi
+
 copy_cmd=(snow stage copy "${streamlit_uri}" "${local_dir}/" --recursive --overwrite)
+if [[ -n "${role_name}" ]]; then
+  copy_cmd+=(--role "${role_name}")
+fi
 if [[ -n "${connection_name}" ]]; then
   copy_cmd+=(--connection "${connection_name}")
 fi

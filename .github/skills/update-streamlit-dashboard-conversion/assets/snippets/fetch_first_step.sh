@@ -9,4 +9,15 @@ if [[ -z "${DATABASE:-}" || -z "${SCHEMA:-}" || -z "${OBJECT_NAME:-}" ]]; then
 fi
 
 source "${REPO_ROOT}/venv/snowflake/bin/activate"
-bash "${REPO_ROOT}/.claude/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh" --database "${DATABASE}" --schema "${SCHEMA}" --name "${OBJECT_NAME}"
+cmd=(
+  bash "${REPO_ROOT}/.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh"
+  --database "${DATABASE}"
+  --schema "${SCHEMA}"
+  --name "${OBJECT_NAME}"
+)
+
+if [[ -n "${ROLE:-}" ]]; then
+  cmd+=(--role "${ROLE}")
+fi
+
+"${cmd[@]}"
