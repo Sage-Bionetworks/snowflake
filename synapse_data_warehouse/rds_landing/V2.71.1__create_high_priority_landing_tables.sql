@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS data_access_notification (
     requirement_id     BIGINT  COMMENT 'The access requirement identifier',
     recipient_id       BIGINT  COMMENT 'User ID of the notification recipient',
     access_approval_id BIGINT  COMMENT 'The identifier of the associated access approval',
-    sent_on            BIGINT  COMMENT 'Epoch milliseconds when the notification was sent',
+    sent_on            TIMESTAMP_NTZ(9)  COMMENT 'Timestamp when the notification was sent',
     message_id         BIGINT  COMMENT 'Unique identifier of the message',
     etag               VARCHAR COMMENT 'Entity tag for optimistic concurrency control (36-character UUID)'
 );
