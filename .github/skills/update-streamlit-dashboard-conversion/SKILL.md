@@ -590,10 +590,18 @@ After validation is complete and before ending the workflow, run a final user-fa
          - `role`: `sage_<schema_lower>_admin`
 
       If the path already exists in the matrix, no duplicate is added.
-   - Before committing, run the VS Code default formatter on the app file:
-      - File: `sage/<schema_lower>/streamlit/<slug>/streamlit_app.py`
-      - Action: `Format Document` (default formatter)
-      - Requirement: format only this app file in this step (do not run workspace-wide formatting).
+   - Before committing, format the app file with `black` using the bundled snippet:
+
+      Use snippet asset:
+
+      - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/format_app.sh`
+
+      ```bash
+      APP_FILE="sage/<schema_lower>/streamlit/<slug>/streamlit_app.py" \
+        bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/format_app.sh
+      ```
+
+      Format only this app file in this step (do not format the entire workspace).
    - Commit scope guard (required): stage **only** the files below for the feature branch PR.
       - Required staged files list:
          - `admin/grants.sql`
