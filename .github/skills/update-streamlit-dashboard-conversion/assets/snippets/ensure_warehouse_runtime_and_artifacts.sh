@@ -20,12 +20,12 @@ source "${REPO_ROOT}/venv/snowflake/bin/activate"
 
 describe_json="$(snow streamlit describe "${OBJECT_NAME}" --database "${DATABASE}" --schema "${SCHEMA}" --role "${ROLE}" --format JSON)"
 
-meta_tsv="$(printf '%s' "${describe_json}" | python3 - <<'PY'
+meta_tsv="$(python3 - "${describe_json}" <<'PY'
 import json
 import re
 import sys
 
-doc = json.load(sys.stdin)
+doc = json.loads(sys.argv[1])
 if not doc:
     raise SystemExit("No streamlit description returned")
 item = doc[0]
@@ -51,11 +51,11 @@ if [[ "${runtime_name}" != "SYSTEM\$WAREHOUSE_RUNTIME" ]]; then
   snow sql -q "ALTER STREAMLIT ${DATABASE}.${SCHEMA}.${OBJECT_NAME} SET RUNTIME_NAME = 'SYSTEM\$WAREHOUSE_RUNTIME';" --role "${ROLE}"
 fi
 
-verified_runtime="$(snow streamlit describe "${OBJECT_NAME}" --database "${DATABASE}" --schema "${SCHEMA}" --role "${ROLE}" --format JSON | python3 - <<'PY'
+verified_runtime="$(python3 - "$(snow streamlit describe "${OBJECT_NAME}" --database "${DATABASE}" --schema "${SCHEMA}" --role "${ROLE}" --format JSON)" <<'PY'
 import json
 import sys
 
-doc = json.load(sys.stdin)
+doc = json.loads(sys.argv[1])
 if not doc:
     raise SystemExit("No streamlit description returned")
 print(doc[0].get("runtime_name") or "")

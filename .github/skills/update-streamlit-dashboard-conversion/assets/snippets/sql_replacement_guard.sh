@@ -17,8 +17,16 @@ import sys
 app_file, unqualified_csv, deprecated_csv = sys.argv[1:4]
 text = open(app_file, encoding='utf-8').read()
 
+# Restrict checks to SQL payloads assigned to sql_query = r"""...""" or rf"""...""".
+sql_blocks = re.findall(r'sql_query\s*=\s*r?f?"""(.*?)"""', text, flags=re.IGNORECASE | re.DOTALL)
+sql_text = "\n".join(sql_blocks) if sql_blocks else text
+
+# Strip SQL comments before structural checks to reduce false positives.
+sql_wo_comments = re.sub(r'--.*$', '', sql_text, flags=re.MULTILINE)
+sql_wo_comments = re.sub(r'/\*.*?\*/', '', sql_wo_comments, flags=re.DOTALL)
+
 # Guard against accidental duplicate FROM/JOIN lines introduced by naive replacement.
-dupe_from = re.findall(r'\b(FROM|JOIN)\b\s+[^\n]+\n\s*\b\1\b\s+', text, flags=re.IGNORECASE)
+dupe_from = re.findall(r'\b(FROM|JOIN)\b\s+[^\n]+\n\s*\b\1\b\s+', sql_wo_comments, flags=re.IGNORECASE)
 if dupe_from:
     print('FAIL: duplicate FROM/JOIN chain detected after replacement')
     sys.exit(1)
@@ -27,7 +35,7 @@ if dupe_from:
 remaining_unqualified = []
 for raw in [x.strip() for x in unqualified_csv.split(',') if x.strip()]:
     pat = re.compile(rf'\b(?:FROM|JOIN)\s+{re.escape(raw)}\b', re.IGNORECASE)
-    if pat.search(text):
+    if pat.search(sql_wo_comments):
         remaining_unqualified.append(raw)
 if remaining_unqualified:
     print('FAIL: unqualified references remain: ' + ','.join(sorted(set(remaining_unqualified))))
@@ -36,7 +44,7 @@ if remaining_unqualified:
 # Ensure deprecated fully-qualified identifiers are gone.
 remaining_deprecated = []
 for raw in [x.strip() for x in deprecated_csv.split(',') if x.strip()]:
-    if re.search(re.escape(raw), text, flags=re.IGNORECASE):
+    if re.search(re.escape(raw), sql_wo_comments, flags=re.IGNORECASE):
         remaining_deprecated.append(raw)
 if remaining_deprecated:
     print('FAIL: deprecated fully-qualified identifiers remain: ' + ','.join(sorted(set(remaining_deprecated))))
