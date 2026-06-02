@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS access_approval (
     created_on          BIGINT    COMMENT 'Epoch milliseconds when the access approval was created',
     modified_by         BIGINT    COMMENT 'Identifier of the user who last modified this access approval',
     modified_on         BIGINT    COMMENT 'Epoch milliseconds when the access approval was last modified',
-    submitter_id        BIGINT    COMMENT 'User ID of the person who submitted the approval request',
+    submitter_id        BIGINT    COMMENT 'User ID of the person who created the data access request associated with this approval',
     accessor_id         BIGINT    COMMENT 'User ID of the person being granted access',
     expired_on          BIGINT    COMMENT 'Epoch milliseconds when the approval expires. 0 means no expiration.',
     state               VARCHAR   COMMENT 'State of the access approval. Valid values are APPROVED or REVOKED.',
