@@ -17,10 +17,14 @@ The app must be fetched into:
 where `slug` is derived from the Streamlit title and formatted as:
 
 - lowercase
-- punctuation/special characters removed
-- spaces collapsed to `_`
+- remove apostrophes used in contractions (for example `Phil's` -> `phils`)
+- replace all other non-alphanumeric characters (including spaces/hyphens/punctuation) with `_`
+- collapse consecutive `_` into a single `_`
+- trim leading/trailing `_`
 
-Example: `Phil's testing dashboard` -> `phils_testing_dashboard`
+Examples:
+- `Phil's testing dashboard` -> `phils_testing_dashboard`
+- `AMP-ALS Usage Metrics` -> `amp_als_usage_metrics`
 
 ## Inputs
 
@@ -87,8 +91,9 @@ DATABASE="<DATABASE>" SCHEMA="<SCHEMA>" ROLE="<ROLE>" \
 For each object, derive slug from the `title` using:
 
 - lowercase
-- remove `[^a-z0-9\s_]`
-- collapse `[\s_]+` to `_`
+- remove apostrophes (`'`) used in contractions
+- replace remaining `[^a-z0-9]` with `_`
+- collapse `[_]+` to `_`
 - trim `_`
 
 If no unique match, show candidate slugs and ask user to choose.
@@ -607,6 +612,7 @@ After validation is complete and before ending the workflow, run a final user-fa
         sage/<schema_lower>/streamlit/<slug>/snowflake.yml \
         sage/<schema_lower>/streamlit/<slug>/environment.yml \
         sage/<schema_lower>/streamlit/<slug>/.streamlit/config.toml
+      ```
 
       - Verify the staged set contains only those paths:
 
