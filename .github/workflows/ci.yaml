@@ -120,6 +120,10 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: ARK Usage Metrics
+            path: sage/ark/streamlit/ark_usage_metrics
+            role: sage_ark_admin
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
