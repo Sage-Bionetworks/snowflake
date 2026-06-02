@@ -635,9 +635,24 @@ After validation is complete and before ending the workflow, run a final user-fa
 Transition <Streamlit title> from dashboard to Streamlit
 ```
 
-7. Push the feature branch to origin.
-8. Open a pull request against the confirmed base branch (default `dev`).
-9. Add the `skip_cloning` label to the PR (required for this workflow).
+7. Re-root the feature branch onto the PR base branch (`dev` by default) using the bundled snippet asset. This is required to prevent unrelated history/files from the skill branch from leaking into app PRs.
+
+Use snippet asset:
+
+- `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/re_root_feature_branch_to_base.sh`
+
+```bash
+FEATURE_BRANCH="<jira-ticket-identifier_lower>-<slug_lower>" \
+BASE_BRANCH="dev" \
+COMMIT_SHA="HEAD" \
+   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/re_root_feature_branch_to_base.sh
+```
+
+The snippet rewrites the feature branch pointer so it contains only the app commit on top of `origin/<base_branch>`.
+
+8. Push the feature branch to origin. If the branch already exists remotely, use `--force-with-lease`.
+9. Open a pull request against the confirmed base branch (default `dev`).
+10. Add the `skip_cloning` label to the PR (required for this workflow).
    - If using GitHub CLI:
 
    ```bash
@@ -646,10 +661,10 @@ Transition <Streamlit title> from dashboard to Streamlit
 
    - If creating the PR through API/tooling, include `skip_cloning` in the initial label set.
    - Verify the PR shows the `skip_cloning` label before ending the workflow.
-10. The PR title and description ought to follow the same templating used with PR 337.
+11. The PR title and description ought to follow the same templating used with PR 337.
    - Title format: `[<JIRA-KEY>] <brief action-oriented summary>`
    - Include required template sections: Problem, Solution, Testing
-11. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
+12. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
 

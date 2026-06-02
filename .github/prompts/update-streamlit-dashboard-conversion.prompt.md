@@ -18,3 +18,4 @@ Requirements:
 1. First step must run `.github/skills/update-streamlit-dashboard-conversion/assets/fetch_streamlit_app.sh` directly (via `bash`) to fetch app files.
 2. If identifier is missing, list objects, show slug-based choices, and ask user which slug to work on.
 3. Communicate app choices and selection by slug (derived from title), not random Snowflake object identifiers.
+4. In commit flow, before push/PR, run `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/re_root_feature_branch_to_base.sh` so the app branch is rooted on `origin/dev` and includes only the intended app commit.
