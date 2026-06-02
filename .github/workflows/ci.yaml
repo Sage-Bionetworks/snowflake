@@ -120,6 +120,9 @@ jobs:
           - name: ADKP Metrics
             path: sage/ad/streamlit/adkp_metrics
             role: sage_ad_admin
+          - name: Audit
+            path: sage/governance/streamlit/audit
+            role: sage_governance_admin
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
