@@ -695,7 +695,7 @@ CREATE TABLE IF NOT EXISTS message_to_user (
     with_profile_setting_link      BOOLEAN COMMENT 'Whether to include a profile settings link in the message',
     is_notification_message        BOOLEAN COMMENT 'Whether this message is a system notification',
     override_notification_settings BOOLEAN COMMENT 'Whether to send regardless of the recipient notification settings',
-    to                             BINARY  COMMENT 'Serialized list of primary recipients',
+    "to"                           BINARY  COMMENT 'Serialized list of primary recipients',
     cc                             BINARY  COMMENT 'Serialized list of CC recipients',
     bcc                            BINARY  COMMENT 'Serialized list of BCC recipients',
     sent                           BOOLEAN COMMENT 'Whether this message has been sent'
