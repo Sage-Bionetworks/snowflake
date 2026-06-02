@@ -561,117 +561,60 @@ After validation is complete and before ending the workflow, run a final user-fa
     - If exactly one issue matches, use that key.
     - If zero or multiple issues match, stop and ask the user to choose the ticket key before proceeding.
    - Create/switch to branch `<jira-ticket-identifier_lower>-<slug_lower>` before commit, and default branch base and PR target to `dev` unless the user explicitly requests another base. For example, the "Synapse Performance Metrics" Streamlit corresponds to SNOW-452 and should have its changes committed to `snow-452-synapse-performance-metrics`.
-      - Ensure the feature branch is based on the same branch that will be used as PR base.
-        - Upsert release entries (grant + CI matrix) using the inline script below (copy to a temp file and run, or execute line-by-line):
+   - Ensure the feature branch is based on the same branch that will be used as PR base.
+   - Upsert release entries (grant + CI matrix) using the bundled snippet asset:
+      - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh`
 
-          ```bash
-          #!/usr/bin/env bash
-          set -euo pipefail
+      Run it with:
 
-          # Required:
-          #   APP_TITLE, SCHEMA_LOWER, SLUG, OBJECT_NAME
-          # Optional:
-          #   REPO_ROOT (auto-detected)
+      ```bash
+      APP_TITLE="<Streamlit title>" \
+      SCHEMA_LOWER="<schema_lower>" \
+      SLUG="<slug>" \
+      OBJECT_NAME="<OBJECT_NAME>" \
+      bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh
+      ```
 
-          if [[ -z "${APP_TITLE:-}" || -z "${SCHEMA_LOWER:-}" || -z "${SLUG:-}" || -z "${OBJECT_NAME:-}" ]]; then
-            echo "Usage: APP_TITLE=<title> SCHEMA_LOWER=<schema_lower> SLUG=<slug> OBJECT_NAME=<snowflake_object_name> bash upsert_streamlit_release_entries.sh" >&2
-            exit 1
-          fi
+      The bundled snippet is rerunnable and handles CI matrix insertion safely.
 
-          REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel)}"
-          GRANTS_FILE="${REPO_ROOT}/admin/grants.sql"
-          CI_FILE="${REPO_ROOT}/.github/workflows/ci.yaml"
+      This script is rerunnable and idempotent for:
+      - `admin/grants.sql`: `GRANT USAGE ON STREAMLIT SAGE.<SCHEMA_UPPER>.<OBJECT_NAME_UPPER> TO ROLE SAGE_<SCHEMA_UPPER>_ANALYST;`
+      - `.github/workflows/ci.yaml`: one `deploy_streamlit` matrix entry with:
+         - `name`: `<Streamlit title>`
+         - `path`: `sage/<schema_lower>/streamlit/<slug>`
+         - `role`: `sage_<schema_lower>_admin`
 
-          if [[ ! -f "${GRANTS_FILE}" ]]; then
-            echo "Missing file: ${GRANTS_FILE}" >&2
-            exit 1
-          fi
-
-          if [[ ! -f "${CI_FILE}" ]]; then
-            echo "Missing file: ${CI_FILE}" >&2
-            exit 1
-          fi
-
-          SCHEMA_UPPER="$(printf '%s' "${SCHEMA_LOWER}" | tr '[:lower:]' '[:upper:]')"
-          OBJECT_UPPER="$(printf '%s' "${OBJECT_NAME}" | tr '[:lower:]' '[:upper:]')"
-          ANALYST_ROLE_UPPER="SAGE_${SCHEMA_UPPER}_ANALYST"
-          ADMIN_ROLE_LOWER="sage_${SCHEMA_LOWER}_admin"
-          APP_PATH="sage/${SCHEMA_LOWER}/streamlit/${SLUG}"
-
-          python3 - <<'PY' "${GRANTS_FILE}" "${CI_FILE}" "${APP_TITLE}" "${SCHEMA_UPPER}" "${OBJECT_UPPER}" "${ANALYST_ROLE_UPPER}" "${APP_PATH}" "${ADMIN_ROLE_LOWER}"
-          import sys
-          from pathlib import Path
-
-          grants_file, ci_file, app_title, schema_upper, object_upper, analyst_role_upper, app_path, admin_role_lower = sys.argv[1:9]
-
-          # 1) Upsert grants.sql entry
-          p = Path(grants_file)
-          text = p.read_text(encoding="utf-8")
-          grant_stmt = f"GRANT USAGE ON STREAMLIT SAGE.{schema_upper}.{object_upper}"
-          role_stmt = f"\tTO ROLE {analyst_role_upper};"
-          block = f"{grant_stmt}\n{role_stmt}\n"
-
-          if grant_stmt not in text:
-             anchor = "-- Streamlit app grants"
-             if anchor in text:
-                idx = text.index(anchor)
-                after = text.index("\n", idx) + 1
-                text = text[:after] + block + text[after:]
-             else:
-                if not text.endswith("\n"):
-                   text += "\n"
-                text += "\n-- Streamlit app grants\n" + block
-             p.write_text(text, encoding="utf-8")
-
-          # 2) Upsert CI matrix entry under deploy_streamlit
-          p = Path(ci_file)
-          text = p.read_text(encoding="utf-8")
-          if app_path in text:
-             sys.exit(0)
-
-          start = text.find("\n  deploy_streamlit:\n")
-          if start == -1:
-             raise SystemExit("Could not locate deploy_streamlit job in ci.yaml")
-
-          steps_idx = text.find("\n    steps:\n", start)
-          if steps_idx == -1:
-             raise SystemExit("Could not locate deploy_streamlit steps block in ci.yaml")
-
-          entry = (
-             f"          - name: {app_title}\n"
-             f"            path: {app_path}\n"
-             f"            role: {admin_role_lower}\n"
-          )
-
-          text = text[:steps_idx] + entry + text[steps_idx:]
-          p.write_text(text, encoding="utf-8")
-          PY
-
-          echo "Updated ${GRANTS_FILE} and ${CI_FILE}"
-          ```
-
-          Run it with (after saving the inline script block above to a local file, for example `./upsert_streamlit_release_entries.sh`):
-
-          ```bash
-          APP_TITLE="<Streamlit title>" \
-          SCHEMA_LOWER="<schema_lower>" \
-          SLUG="<slug>" \
-          OBJECT_NAME="<OBJECT_NAME>" \
-          bash ./upsert_streamlit_release_entries.sh
-          ```
-
-         This script is rerunnable and idempotent for:
-         - `admin/grants.sql`: `GRANT USAGE ON STREAMLIT SAGE.<SCHEMA_UPPER>.<OBJECT_NAME_UPPER> TO ROLE SAGE_<SCHEMA_UPPER>_ANALYST;`
-         - `.github/workflows/ci.yaml`: one `deploy_streamlit` matrix entry with:
-            - `name`: `<Streamlit title>`
-            - `path`: `sage/<schema_lower>/streamlit/<slug>`
-            - `role`: `sage_<schema_lower>_admin`
-
-         If the path already exists in the matrix, no duplicate is added.
+      If the path already exists in the matrix, no duplicate is added.
    - Before committing, run the VS Code default formatter on the app file:
       - File: `sage/<schema_lower>/streamlit/<slug>/streamlit_app.py`
       - Action: `Format Document` (default formatter)
       - Requirement: format only this app file in this step (do not run workspace-wide formatting).
+   - Commit scope guard (required): stage **only** the files below for the feature branch PR.
+      - Required staged files list:
+         - `admin/grants.sql`
+         - `.github/workflows/ci.yaml`
+         - `sage/<schema_lower>/streamlit/<slug>/streamlit_app.py`
+         - `sage/<schema_lower>/streamlit/<slug>/snowflake.yml`
+         - `sage/<schema_lower>/streamlit/<slug>/environment.yml`
+         - `sage/<schema_lower>/streamlit/<slug>/.streamlit/config.toml`
+      - Use explicit staging (do not use `git add .`):
+
+      ```bash
+      git add \
+        admin/grants.sql \
+        .github/workflows/ci.yaml \
+        sage/<schema_lower>/streamlit/<slug>/streamlit_app.py \
+        sage/<schema_lower>/streamlit/<slug>/snowflake.yml \
+        sage/<schema_lower>/streamlit/<slug>/environment.yml \
+        sage/<schema_lower>/streamlit/<slug>/.streamlit/config.toml
+
+      - Verify the staged set contains only those paths:
+
+      ```bash
+      git diff --cached --name-only
+      ```
+
+      - If any staged path is outside the list above, unstage it before commit.
 6. Create one non-amended commit containing all workflow/app/CI changes with message:
 
 ```text
@@ -680,10 +623,19 @@ Transition <Streamlit title> from dashboard to Streamlit
 
 7. Push the feature branch to origin.
 8. Open a pull request against the confirmed base branch (default `dev`).
-9. The PR title and description ought to follow the same templating used with PR 337.
+9. Add the `skip_cloning` label to the PR (required for this workflow).
+   - If using GitHub CLI:
+
+   ```bash
+   gh pr edit --add-label skip_cloning
+   ```
+
+   - If creating the PR through API/tooling, include `skip_cloning` in the initial label set.
+   - Verify the PR shows the `skip_cloning` label before ending the workflow.
+10. The PR title and description ought to follow the same templating used with PR 337.
    - Title format: `[<JIRA-KEY>] <brief action-oriented summary>`
    - Include required template sections: Problem, Solution, Testing
-10. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
+11. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
 
@@ -709,6 +661,18 @@ fi
 
 if [[ ! -d "${APP_DIR}" ]]; then
    echo "Missing app directory: ${APP_DIR}" >&2
+   exit 1
+fi
+
+if ! command -v snow >/dev/null 2>&1; then
+   REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+   if [[ -f "${REPO_ROOT}/venv/snowflake/bin/activate" ]]; then
+      source "${REPO_ROOT}/venv/snowflake/bin/activate"
+   fi
+fi
+
+if ! command -v snow >/dev/null 2>&1; then
+   echo "snow CLI not found. Activate venv/snowflake/bin/activate or install Snowflake CLI." >&2
    exit 1
 fi
 
@@ -741,7 +705,7 @@ Execution rules:
 
 ## Session Cleanup In `sage` (Required)
 
-Before final branch reset, discard untracked session artifacts in `sage/` that were generated during local Streamlit work and are not intended to remain on this branch.
+After final branch reset (after switching back to `snow-451-streamlit-conversion-skill`), discard untracked session artifacts in `sage/` that were generated during local Streamlit work and are not intended to remain on this branch.
 
 Use:
 
@@ -756,6 +720,7 @@ Rules:
 1. Clean only untracked content in `sage/`.
 2. Do not remove tracked changes.
 3. If any tracked `sage/` changes remain, report them to the user instead of discarding them automatically.
+4. Do not run these cleanup commands on the feature branch created for the app PR.
 
 ## Final Branch Reset (Required)
 
@@ -770,7 +735,12 @@ git switch snow-451-streamlit-conversion-skill
 git branch --show-current
 ```
 
-Only end the workflow after confirming the current branch is `snow-451-streamlit-conversion-skill`.
+Then run the required `sage/` cleanup commands from the section above while on `snow-451-streamlit-conversion-skill`.
+
+Only end the workflow after:
+
+1. confirming the current branch is `snow-451-streamlit-conversion-skill`, and
+2. completing the `sage/` cleanup step on that branch.
 
 ## Notes
 

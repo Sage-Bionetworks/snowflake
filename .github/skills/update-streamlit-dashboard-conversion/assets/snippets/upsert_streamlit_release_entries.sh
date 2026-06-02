@@ -32,7 +32,6 @@ ADMIN_ROLE_LOWER="sage_${SCHEMA_LOWER}_admin"
 APP_PATH="sage/${SCHEMA_LOWER}/streamlit/${SLUG}"
 
 python3 - <<'PY' "${GRANTS_FILE}" "${CI_FILE}" "${APP_TITLE}" "${SCHEMA_UPPER}" "${OBJECT_UPPER}" "${ANALYST_ROLE_UPPER}" "${APP_PATH}" "${ADMIN_ROLE_LOWER}"
-import re
 import sys
 from pathlib import Path
 
@@ -63,22 +62,36 @@ text = p.read_text(encoding="utf-8")
 if app_path in text:
     sys.exit(0)
 
-start = text.find("\n  deploy_streamlit:\n")
-if start == -1:
+lines = text.splitlines(keepends=True)
+
+deploy_idx = None
+for i, line in enumerate(lines):
+    if line.strip() == "deploy_streamlit:":
+        deploy_idx = i
+        break
+
+if deploy_idx is None:
     raise SystemExit("Could not locate deploy_streamlit job in ci.yaml")
 
-steps_idx = text.find("\n    steps:\n", start)
-if steps_idx == -1:
+steps_idx = None
+for i in range(deploy_idx + 1, len(lines)):
+    if lines[i].startswith("  ") and lines[i].strip().endswith(":") and not lines[i].startswith("    "):
+        break
+    if lines[i].strip() == "steps:":
+        steps_idx = i
+        break
+
+if steps_idx is None:
     raise SystemExit("Could not locate deploy_streamlit steps block in ci.yaml")
 
-entry = (
-    f"          - name: {app_title}\n"
-    f"            path: {app_path}\n"
-    f"            role: {admin_role_lower}\n"
-)
+entry_lines = [
+    f"          - name: {app_title}\n",
+    f"            path: {app_path}\n",
+    f"            role: {admin_role_lower}\n",
+]
 
-text = text[:steps_idx] + entry + text[steps_idx:]
-p.write_text(text, encoding="utf-8")
+lines[steps_idx:steps_idx] = entry_lines
+p.write_text("".join(lines), encoding="utf-8")
 PY
 
 echo "Updated ${GRANTS_FILE} and ${CI_FILE}"
