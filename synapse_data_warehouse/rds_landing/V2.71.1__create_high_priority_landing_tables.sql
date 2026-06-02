@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS acl (
 
 -- acl_resource_access
 CREATE TABLE IF NOT EXISTS acl_resource_access (
-    id       BIGINT COMMENT 'Unique identifier for this ACL resource access',
+    id       BIGINT COMMENT 'Unique identifier for this ACL resource access record',
     owner_id BIGINT COMMENT 'The ACL identifier',
     group_id BIGINT COMMENT 'The user or team being granted access'
 );
