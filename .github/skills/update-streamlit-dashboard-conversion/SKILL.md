@@ -739,6 +739,39 @@ Execution rules:
 3. Report deploy success/failure to the user with relevant command output.
 4. If the user says no, skip deploy and end after confirming no production deploy was performed.
 
+## Session Cleanup In `sage` (Required)
+
+Before final branch reset, discard untracked session artifacts in `sage/` that were generated during local Streamlit work and are not intended to remain on this branch.
+
+Use:
+
+```bash
+git status --short --untracked-files=all sage
+git clean -fd sage
+git status --short --untracked-files=all sage
+```
+
+Rules:
+
+1. Clean only untracked content in `sage/`.
+2. Do not remove tracked changes.
+3. If any tracked `sage/` changes remain, report them to the user instead of discarding them automatically.
+
+## Final Branch Reset (Required)
+
+Once the normal skill flow is complete (including optional production deploy handling), switch back to:
+
+- `snow-451-streamlit-conversion-skill`
+
+Use:
+
+```bash
+git switch snow-451-streamlit-conversion-skill
+git branch --show-current
+```
+
+Only end the workflow after confirming the current branch is `snow-451-streamlit-conversion-skill`.
+
 ## Notes
 
 - Prefer `--format JSON` for all `snow` inspection/list/describe commands.
