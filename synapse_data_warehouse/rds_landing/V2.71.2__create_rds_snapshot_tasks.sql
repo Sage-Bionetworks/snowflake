@@ -6,8 +6,8 @@ USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 -- ============================================================
 CREATE OR REPLACE TASK {{database_name}}.RDS_LANDING.REFRESH_STAGE_TASK
     WAREHOUSE = compute_xsmall
-    -- TODO: Finalize schedule with Platform. Current cron runs at 8am daily, PT.
-    SCHEDULE = 'USING CRON 0 8 * * * America/Los_Angeles'
+    -- TEMPORARY: every minute for testing; revert before production rollout.
+    SCHEDULE = 'USING CRON * * * * * America/Los_Angeles'
 AS
     ALTER STAGE IF EXISTS {{database_name}}.RDS_LANDING.RDS_SNAPSHOTS_STAGE REFRESH;
 
