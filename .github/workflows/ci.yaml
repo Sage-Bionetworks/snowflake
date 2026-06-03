@@ -122,7 +122,7 @@ jobs:
             role: sage_elite_admin
           - name: Snowflake Usage
             path: sage/dpe/streamlit/snowflake_usage
-            role: sage_dpe_admin
+            role: data_engineer
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
