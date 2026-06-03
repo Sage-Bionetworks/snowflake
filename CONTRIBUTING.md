@@ -151,12 +151,12 @@ You can go on Snowsight to perform manual inspection of the changes to your sche
 > [!IMPORTANT]
 > If your changes include DDL or task behavior that depends on stage metadata refresh (for example, workflows that run `ALTER STAGE ... REFRESH`), verify that DIRECTORY is enabled on the cloned stage before testing.
 >
-> In clone environments, if DIRECTORY is not enabled on `RDS_SNAPSHOTS_STAGE`, refresh-dependent behavior may fail.
+> In clone environments, if DIRECTORY is not enabled in your stage, refresh-dependent behavior may fail.
 >
 > Run the following in Snowsight against your cloned database before validation:
 >
-> ALTER STAGE IF EXISTS <your_clone_database>.RDS_LANDING.RDS_SNAPSHOTS_STAGE SET DIRECTORY = (ENABLE = TRUE);
-> ALTER STAGE IF EXISTS <your_clone_database>.RDS_LANDING.RDS_SNAPSHOTS_STAGE REFRESH;
+> ALTER STAGE IF EXISTS <your_clone_database>.<your_schema>.<your_stage> SET DIRECTORY = (ENABLE = TRUE);
+> ALTER STAGE IF EXISTS <your_clone_database>.<your_schema>.<your_stage> REFRESH;
 
 ----
 
