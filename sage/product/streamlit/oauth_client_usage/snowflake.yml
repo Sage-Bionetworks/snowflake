@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    identifier:
+      name: oauth_client_usage
+      database: SAGE
+      schema: PRODUCT
+    query_warehouse: STREAMLIT_XSMALL
+    main_file: streamlit_app.py
+    title: "Oauth Client Usage"
+    artifacts:
+      - environment.yml
+      - streamlit_app.py
+      - .streamlit/config.toml

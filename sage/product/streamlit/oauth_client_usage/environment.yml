@@ -1,0 +1,7 @@
+name: oauth_client_usage
+channels:
+  - snowflake
+dependencies:
+  - python=3.11.*
+  - snowflake-snowpark-python
+  - streamlit=1.*
