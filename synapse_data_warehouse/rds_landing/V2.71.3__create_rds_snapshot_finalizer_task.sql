@@ -1,13 +1,14 @@
 use schema {{database_name}}.rds_landing; --noqa: JJ01,PRS,TMP
 
 -- Suspend root before modifying the graph.
-alter task refresh_stage_task suspend; --noqa: TMP
+alter task refresh_stage_task suspend;
 
 -- Create the finalizer task.
 create or replace task rds_snapshot_finalizer_task --noqa: TMP
     warehouse = 'COMPUTE_XSMALL'
     finalize = 'refresh_stage_task' --noqa: TMP
 as
+$$
 declare
     v_graph_status  varchar;
     v_root_task_id  varchar;
@@ -76,8 +77,9 @@ begin
 
     return :v_message;
 end;
+$$;
 
-alter task rds_snapshot_finalizer_task resume; --noqa: TMP
+alter task rds_snapshot_finalizer_task resume;
 
 -- Re-enable the full RDS snapshot task graph from the root.
-select system$task_dependents_enable('refresh_stage_task'); --noqa: JJ01,PRS,TMP
+select system$task_dependents_enable('refresh_stage_task');
