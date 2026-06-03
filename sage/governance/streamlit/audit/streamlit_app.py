@@ -926,7 +926,7 @@ countries_of_origin as (
         na.x_forwarded_for,
         ip.country_name
     from new_accounts_verified as na,
-    lateral ip_details(na.x_forwarded_for) AS ip
+    lateral ip_info.public.ip_details(na.x_forwarded_for) AS ip
 
 ),
 country_counts AS (
@@ -1079,7 +1079,7 @@ ip_info AS (
     ip.country_name
   FROM
     distinct_ips dip,
-    LATERAL ip_details(dip.x_forwarded_for) AS ip
+    LATERAL ip_info.public.ip_details(dip.x_forwarded_for) AS ip
   WHERE
     ip.country_name IN (
       'China','Hong Kong','Macau',
@@ -1228,7 +1228,7 @@ ip_info AS (
         ipd.country_name
     FROM distinct_ips
     CROSS JOIN LATERAL
-        ip_details(distinct_ips.ip) AS ipd
+        ip_info.public.ip_details(distinct_ips.ip) AS ipd
 ),
 countries_of_origin AS (
     -- 5️⃣ Re-join to bring country_name back onto each event
