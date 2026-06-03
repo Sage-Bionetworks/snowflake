@@ -32,7 +32,7 @@ Examples:
 Notes:
   - Requires Snowflake CLI (`snow`) authenticated and available on PATH.
   - Files are mirrored to: <target-root>/<schema_lower>/streamlit/<title_identifier>/
-  - title_identifier is derived from app title: lowercase, punctuation removed, spaces collapsed to underscores.
+  - title_identifier is derived from app title: lowercase, apostrophes removed, remaining non-alphanumeric replaced with underscores, repeated underscores collapsed.
   - Default target-root is "sage".
 EOF
 }
@@ -129,8 +129,10 @@ fallback_name = item.get("name") or "streamlit_app"
 
 base = title.strip() if isinstance(title, str) and title.strip() else fallback_name
 normalized = base.lower()
-normalized = re.sub(r"[^a-z0-9\s_]", "", normalized)
-normalized = re.sub(r"[\s_]+", "_", normalized).strip("_")
+# Remove apostrophes used in contractions, then map all remaining non-alphanumerics to underscores.
+normalized = normalized.replace(chr(39), "")
+normalized = re.sub(r"[^a-z0-9]", "_", normalized)
+normalized = re.sub(r"_+", "_", normalized).strip("_")
 
 if not normalized:
   normalized = "streamlit_app"

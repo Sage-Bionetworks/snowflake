@@ -65,6 +65,7 @@ fi
 
 error_regex='traceback|exception|streamlitapiexception|snowparksqlexception|error:'
 warning_regex='deprecation|use_container_width'
+benign_error_regex='reentrant call inside <_io\.BufferedWriter name='"'"'<stdout>'"'"'>|asyncio\.exceptions\.CancelledError|Exception in ASGI application|ERR_CONNECTION_REFUSED|Client Error in reaching server endpoint|Is Streamlit still running\?'
 
 log_input=""
 if [[ "$log_source" == "-" ]]; then
@@ -75,6 +76,12 @@ fi
 
 echo "$log_input" | grep -E -i "$error_regex" >/tmp/streamlit_scan_errors.$$ || true
 echo "$log_input" | grep -E -i "$warning_regex" >/tmp/streamlit_scan_warnings.$$ || true
+
+# Filter out known benign shutdown and local transport noise so scans focus on app/runtime faults.
+if [[ -s /tmp/streamlit_scan_errors.$$ ]]; then
+  grep -E -i -v "$benign_error_regex" /tmp/streamlit_scan_errors.$$ >/tmp/streamlit_scan_errors_filtered.$$ || true
+  mv /tmp/streamlit_scan_errors_filtered.$$ /tmp/streamlit_scan_errors.$$
+fi
 
 if [[ -s /tmp/streamlit_scan_errors.$$ ]]; then
   echo "FAIL: matched error patterns:" >&2

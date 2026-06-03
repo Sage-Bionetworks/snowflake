@@ -33,8 +33,10 @@ name = item.get("name", "")
 title = item.get("title") or name or "streamlit_app"
 runtime = item.get("runtime_name") or ""
 slug = title.strip().lower()
-slug = re.sub(r"[^a-z0-9\s_]", "", slug)
-slug = re.sub(r"[\s_]+", "_", slug).strip("_")
+# Remove apostrophes used in contractions, then map all remaining non-alphanumerics to underscores.
+slug = slug.replace("'", "")
+slug = re.sub(r"[^a-z0-9]", "_", slug)
+slug = re.sub(r"_+", "_", slug).strip("_")
 if not slug:
     slug = "streamlit_app"
 print(f"{slug}\t{title}\t{runtime}")
