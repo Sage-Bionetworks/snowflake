@@ -120,6 +120,9 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: NF Usage Metrics
+            path: sage/nf/streamlit/nf_usage_metrics
+            role: sage_nf_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
