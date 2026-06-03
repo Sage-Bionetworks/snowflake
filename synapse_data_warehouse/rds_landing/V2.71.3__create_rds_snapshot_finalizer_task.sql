@@ -25,7 +25,7 @@ begin
 
     if (v_graph_status != 'succeeded') then
         v_message := '🔴 RDS snapshot ingestion FAILED — graph state: ' || v_graph_status
-            || ' · Run date: ' || v_run_date || ' — @team-dpe';
+            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
     else
         select
             coalesce(sum(case when status = 'Loaded' then 1 else 0 end), 0),
@@ -46,7 +46,7 @@ begin
             v_message := '⚠️ RDS snapshot ingestion completed with errors — '
                 || v_loaded || '/157 loaded · '
                 || v_failed || ' failed: ' || v_failed_names
-                || ' · Run date: ' || v_run_date || ' — @team-dpe';
+                || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
         end if;
     end if;
 
