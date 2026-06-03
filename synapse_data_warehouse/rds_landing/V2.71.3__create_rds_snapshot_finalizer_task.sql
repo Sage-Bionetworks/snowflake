@@ -8,7 +8,7 @@ create or replace task rds_snapshot_finalizer_task --noqa: TMP
     warehouse = 'COMPUTE_XSMALL'
     finalize = 'refresh_stage_task' --noqa: TMP
 as
-$$
+execute immediate $$
 declare
     v_graph_status  varchar;
     v_root_task_id  varchar;
