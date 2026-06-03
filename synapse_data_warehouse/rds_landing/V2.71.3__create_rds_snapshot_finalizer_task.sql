@@ -72,7 +72,8 @@ begin
 
     call system$send_snowflake_notification(
         snowflake.notification.text_plain(:v_message),
-        snowflake.notification.integration('SLACK_INGEST_UPDATES')
+        -- TODO: point to prod integration when ready
+        snowflake.notification.integration('DEV_SLACK_INGEST_UPDATES')
     );
 
     return :v_message;
