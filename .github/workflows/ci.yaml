@@ -156,6 +156,9 @@ jobs:
           - name: GENIE Usage Metrics
             path: sage/genie/streamlit/genie_usage_metrics
             role: sage_genie_admin
+          - name: NF Usage Metrics
+            path: sage/nf/streamlit/nf_usage_metrics
+            role: sage_nf_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
