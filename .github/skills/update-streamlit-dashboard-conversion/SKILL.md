@@ -560,15 +560,24 @@ After validation is complete and before ending the workflow, run a final user-fa
 3. If the user requests changes, apply them and repeat validation before re-requesting approval.
 4. Once approved, ask whether the user wants to commit the Streamlit app changes.
 5. Only if the user agrees to commit:
-    - Confirm the feature branch name and base branch before committing.
+    - Confirm the base branch (`dev` by default; only change if the user explicitly requests a different base).
     - Resolve the Jira key for branch naming with this exact JQL query shape:
        - `parent = SNOW-428 AND summary ~ "<Streamlit title>"`
     - If exactly one issue matches, use that key.
     - If zero or multiple issues match, stop and ask the user to choose the ticket key before proceeding.
-   - Create/switch to branch `<jira-ticket-identifier_lower>-<slug_lower>` before commit, and default branch base and PR target to `dev` unless the user explicitly requests another base. For example, the "Synapse Performance Metrics" Streamlit corresponds to SNOW-452 and should have its changes committed to `snow-452-synapse-performance-metrics`.
-   - Ensure the feature branch is based on the same branch that will be used as PR base.
-   - Upsert release entries (grant + CI matrix) using the bundled snippet asset:
-      - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh`
+    - Use the single helper snippet below to perform all commit-prep actions in one run:
+      - create a temporary commit from current app changes
+      - create/reset the feature branch from `origin/<base_branch>`
+      - cherry-pick only the app commit onto that feature branch
+      - upsert release entries (grant + CI matrix)
+      - format only `streamlit_app.py`
+      - stage only the allowed files
+      - enforce commit-scope guard
+      - create the required commit message
+
+      Use snippet asset:
+
+      - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/prepare_app_feature_branch_commit.sh`
 
       Run it with:
 
@@ -577,65 +586,22 @@ After validation is complete and before ending the workflow, run a final user-fa
       SCHEMA_LOWER="<schema_lower>" \
       SLUG="<slug>" \
       OBJECT_NAME="<OBJECT_NAME>" \
-      bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/upsert_streamlit_release_entries.sh
+      JIRA_KEY="<JIRA-KEY>" \
+      BASE_BRANCH="dev" \
+      bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/prepare_app_feature_branch_commit.sh
       ```
 
-      The bundled snippet is rerunnable and handles CI matrix insertion safely.
+      Notes:
+      - Default feature branch naming is `<jira-ticket-identifier_lower>-<slug_lower>`.
+      - The helper prints `next_push=...` with the correct push command.
+      - Commit message is always:
 
-      This script is rerunnable and idempotent for:
-      - `admin/grants.sql`: `GRANT USAGE ON STREAMLIT SAGE.<SCHEMA_UPPER>.<OBJECT_NAME_UPPER> TO ROLE SAGE_<SCHEMA_UPPER>_ANALYST;`
-      - `.github/workflows/ci.yaml`: one `deploy_streamlit` matrix entry with:
-         - `name`: `<Streamlit title>`
-         - `path`: `sage/<schema_lower>/streamlit/<slug>`
-         - `role`: `sage_<schema_lower>_admin`
-
-      If the path already exists in the matrix, no duplicate is added.
-   - Before committing, format the app file with `black` using the bundled snippet:
-
-      Use snippet asset:
-
-      - `.github/skills/update-streamlit-dashboard-conversion/assets/snippets/format_app.sh`
-
-      ```bash
-      APP_FILE="sage/<schema_lower>/streamlit/<slug>/streamlit_app.py" \
-        bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/format_app.sh
+      ```text
+      Transition <Streamlit title> from dashboard to Streamlit
       ```
 
-      Format only this app file in this step (do not format the entire workspace).
-   - Commit scope guard (required): stage **only** the files below for the feature branch PR.
-      - Required staged files list:
-         - `admin/grants.sql`
-         - `.github/workflows/ci.yaml`
-         - `sage/<schema_lower>/streamlit/<slug>/streamlit_app.py`
-         - `sage/<schema_lower>/streamlit/<slug>/snowflake.yml`
-         - `sage/<schema_lower>/streamlit/<slug>/environment.yml`
-         - `sage/<schema_lower>/streamlit/<slug>/.streamlit/config.toml`
-      - Use explicit staging (do not use `git add .`):
-
-      ```bash
-      git add \
-        admin/grants.sql \
-        .github/workflows/ci.yaml \
-        sage/<schema_lower>/streamlit/<slug>/streamlit_app.py \
-        sage/<schema_lower>/streamlit/<slug>/snowflake.yml \
-        sage/<schema_lower>/streamlit/<slug>/environment.yml \
-        sage/<schema_lower>/streamlit/<slug>/.streamlit/config.toml
-      ```
-
-      - Verify the staged set contains only those paths:
-
-      ```bash
-      git diff --cached --name-only
-      ```
-
-      - If any staged path is outside the list above, unstage it before commit.
-6. Create one non-amended commit containing all workflow/app/CI changes with message:
-
-```text
-Transition <Streamlit title> from dashboard to Streamlit
-```
-
-7. Re-root the feature branch onto the PR base branch (`dev` by default) using the bundled snippet asset. This is required to prevent unrelated history/files from the skill branch from leaking into app PRs.
+6. Push the feature branch to origin using the helper output command (`next_push=...`).
+7. Re-root fallback (only when needed): if you did not use the helper snippet above, or if branch history still includes unrelated commits, run:
 
 Use snippet asset:
 
@@ -645,14 +611,12 @@ Use snippet asset:
 FEATURE_BRANCH="<jira-ticket-identifier_lower>-<slug_lower>" \
 BASE_BRANCH="dev" \
 COMMIT_SHA="HEAD" \
-   bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/re_root_feature_branch_to_base.sh
+  bash .github/skills/update-streamlit-dashboard-conversion/assets/snippets/re_root_feature_branch_to_base.sh
 ```
 
-The snippet rewrites the feature branch pointer so it contains only the app commit on top of `origin/<base_branch>`.
-
-8. Push the feature branch to origin. If the branch already exists remotely, use `--force-with-lease`.
-9. Open a pull request against the confirmed base branch (default `dev`).
-10. Add the `skip_cloning` label to the PR (required for this workflow).
+Then push with `--force-with-lease`.
+8. Open a pull request against the confirmed base branch (default `dev`).
+9. Add the `skip_cloning` label to the PR (required for this workflow).
    - If using GitHub CLI:
 
    ```bash
@@ -661,10 +625,10 @@ The snippet rewrites the feature branch pointer so it contains only the app comm
 
    - If creating the PR through API/tooling, include `skip_cloning` in the initial label set.
    - Verify the PR shows the `skip_cloning` label before ending the workflow.
-11. The PR title and description ought to follow the same templating used with PR 337.
+10. The PR title and description ought to follow the same templating used with PR 337.
    - Title format: `[<JIRA-KEY>] <brief action-oriented summary>`
    - Include required template sections: Problem, Solution, Testing
-12. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
+11. If the user declines commit, do not update `admin/grants.sql` or `ci.yaml` and do not create a commit.
 
 ## Optional Production Deploy Prompt (Required)
 
