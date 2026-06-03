@@ -46,7 +46,7 @@ begin
             v_message := '⚠️ RDS snapshot ingestion completed with errors — '
                 || v_loaded || '/157 loaded · '
                 || v_failed || ' failed: ' || v_failed_names
-                || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
+                || ' - Run date: ' || v_run_date || ' — [TODO: tag team]';
         end if;
     end if;
 
