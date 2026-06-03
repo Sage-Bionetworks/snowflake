@@ -39,9 +39,33 @@ if ! git diff --cached --quiet; then
   exit 1
 fi
 
+start_ref="$(git symbolic-ref --quiet --short HEAD || git rev-parse --short HEAD)"
 tmp_branch="__tmp_streamlit_app_commit_${SLUG}_$$"
+tmp_branch_created=0
+switched_feature_branch=0
+completed=0
+
+cleanup_on_error() {
+  local exit_code=$?
+  if [[ ${completed} -eq 1 ]]; then
+    return
+  fi
+
+  if [[ ${switched_feature_branch} -eq 1 ]]; then
+    git switch "${start_ref}" >/dev/null 2>&1 || true
+  fi
+
+  if [[ ${tmp_branch_created} -eq 1 ]]; then
+    git branch -D "${tmp_branch}" >/dev/null 2>&1 || true
+  fi
+
+  exit "${exit_code}"
+}
+
+trap cleanup_on_error EXIT
 
 git switch -c "${tmp_branch}" >/dev/null
+tmp_branch_created=1
 
 APP_TITLE="${APP_TITLE}" \
 SCHEMA_LOWER="${SCHEMA_LOWER}" \
@@ -71,14 +95,19 @@ app_commit_sha="$(git rev-parse HEAD)"
 
 git fetch "${REMOTE}" "${BASE_BRANCH}" >/dev/null
 git switch -C "${FEATURE_BRANCH}" "${REMOTE}/${BASE_BRANCH}" >/dev/null
+switched_feature_branch=1
 git cherry-pick "${app_commit_sha}" >/dev/null
 git branch -D "${tmp_branch}" >/dev/null
+tmp_branch_created=0
 
 if git ls-remote --exit-code --heads "${REMOTE}" "${FEATURE_BRANCH}" >/dev/null 2>&1; then
   next_push_cmd="git push --force-with-lease -u ${REMOTE} ${FEATURE_BRANCH}"
 else
   next_push_cmd="git push -u ${REMOTE} ${FEATURE_BRANCH}"
 fi
+
+completed=1
+trap - EXIT
 
 echo "feature_branch=${FEATURE_BRANCH}"
 echo "base_branch=${BASE_BRANCH}"
