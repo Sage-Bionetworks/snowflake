@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    identifier:
+      name: org_metrics_2025_okrs
+      database: sage
+      schema: product
+    query_warehouse: STREAMLIT_XSMALL
+    main_file: streamlit_app.py
+    title: "Org metrics (2025 OKRs)"
+    artifacts:
+      - environment.yml
+      - streamlit_app.py
+      - .streamlit/config.toml
