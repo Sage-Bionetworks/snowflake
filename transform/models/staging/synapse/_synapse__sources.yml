@@ -1,6 +1,5 @@
 sources:
   - name: rds
-    database: "{{ 'SYNAPSE_DATA_WAREHOUSE' if target.name == 'prod' else 'SYNAPSE_DATA_WAREHOUSE_DEV' }}"  
     schema: RDS_RAW
     description: "Synapse RDS snapshot source tables from MySQL database, containing access control, data access management,and approval workflows."
     tables:

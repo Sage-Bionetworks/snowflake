@@ -25,6 +25,12 @@ models:
       relation: true
       columns: true
     +contract: {enforced: true}
+    staging:
+      synapse:
+        +schema: rds_raw
+    intermediate:
+      synapse:
+        +schema: rds_raw
     marts:
       +materialized: dynamic_table
       +on_configuration_change: apply
@@ -32,4 +38,3 @@ models:
       +snowflake_warehouse: compute_xsmall
       sage:
         +database: "SAGE"
-        +enabled: "{{ target.name == 'prod' }}"
