@@ -120,6 +120,9 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: Snowflake Workshop Dashboard Demo
+            path: sage/governance/streamlit/snowflake_workshop_dashboard_demo
+            role: sage_governance_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
