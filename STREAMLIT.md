@@ -30,6 +30,7 @@ user = "<user>@sagebase.org"
 authenticator = "PROGRAMMATIC_ACCESS_TOKEN"
 token = "<your-programmatic-access-token>"
 role = "<role>"  # e.g. DATA_ENGINEER for dashboards querying SAGE.GOVERNANCE
+warehouse = "STREAMLIT_XSMALL"
 ```
 
 See the [Snowflake docs on programmatic access tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens#label-pat-generate) for instructions on generating a token.
