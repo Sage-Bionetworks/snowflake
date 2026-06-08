@@ -22,19 +22,26 @@ declare
     v_message       varchar;
 begin
     v_root_task_id := (
-        select system$task_runtime_info('CURRENT_ROOT_TASK_UUID')
+                select root_task_id
+                from snowflake.account_usage.task_history
+                where upper(name) = upper('refresh_stage_task')
+                    and scheduled_time >= dateadd(hour, -25, current_timestamp())
+                qualify row_number() over (order by scheduled_time desc) = 1
     );
     v_start_time := (
-        select system$task_runtime_info('CURRENT_TASK_GRAPH_ORIGINAL_SCHEDULED_TIMESTAMP')::timestamp_ltz
+        select scheduled_time
+        from snowflake.account_usage.task_history
+        where upper(name) = upper('refresh_stage_task')
+        qualify row_number() over (order by scheduled_time desc) = 1
     );
 
-        select graph_run_group_id
-        into :v_graph_run_group_id
-        from snowflake.account_usage.task_history
-        where root_task_id = :v_root_task_id
-            and scheduled_time >= :v_start_time
-            and scheduled_time <= current_timestamp()
-        qualify row_number() over (order by scheduled_time desc) = 1;
+    select graph_run_group_id
+    into :v_graph_run_group_id
+    from snowflake.account_usage.task_history
+    where root_task_id = :v_root_task_id
+        and scheduled_time >= :v_start_time
+        and scheduled_time <= current_timestamp()
+    qualify row_number() over (order by scheduled_time desc) = 1;
 
     select
         case
@@ -45,10 +52,7 @@ begin
         end
     into :v_graph_status
     from snowflake.account_usage.task_history
-        where graph_run_group_id = :v_graph_run_group_id
-            and root_task_id = :v_root_task_id
-      and scheduled_time >= :v_start_time
-      and scheduled_time <= current_timestamp();
+    where graph_run_group_id = :v_graph_run_group_id;
 
     v_run_date     := to_varchar(current_date(), 'MM/DD/YYYY');
 
@@ -59,7 +63,7 @@ begin
         into :v_loaded, :v_total_rows
         from snowflake.account_usage.load_history
         where schema_name = 'RDS_LANDING'
-          and last_load_time >= dateadd('hour', -25, current_timestamp());
+          and last_load_time >= :v_start_time;
 
         select
             coalesce(count_if(upper(state) = 'FAILED'), 0),
@@ -68,9 +72,6 @@ begin
         into :v_failed, :v_failed_names
         from snowflake.account_usage.task_history
         where graph_run_group_id = :v_graph_run_group_id
-          and root_task_id = :v_root_task_id
-          and scheduled_time >= :v_start_time
-          and scheduled_time <= current_timestamp()
           and upper(name) != 'RDS_SNAPSHOT_FINALIZER_TASK';
 
         if (v_failed = 0) then
