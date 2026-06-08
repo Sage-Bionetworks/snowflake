@@ -12,6 +12,7 @@ execute immediate $$
 declare
     v_graph_status  varchar;
     v_root_task_id  varchar;
+    v_graph_run_group_id varchar;
     v_start_time    timestamp_ltz;
     v_loaded        integer default 0;
     v_failed        integer default 0;
@@ -27,36 +28,50 @@ begin
         select system$task_runtime_info('CURRENT_TASK_GRAPH_ORIGINAL_SCHEDULED_TIMESTAMP')::timestamp_ltz
     );
 
+        select graph_run_group_id
+        into :v_graph_run_group_id
+        from snowflake.account_usage.task_history
+        where root_task_id = :v_root_task_id
+            and scheduled_time >= :v_start_time
+            and scheduled_time <= current_timestamp()
+        qualify row_number() over (order by scheduled_time desc) = 1;
+
     select
         case
-            when count_if(upper(state) like 'FAIL%') > 0 then 'failed'
-            when count_if(upper(state) like 'CANCEL%') > 0 then 'cancelled'
-            when count_if(upper(state) like 'SUCCEED%') > 0 then 'succeeded'
+                        when count_if(upper(status) = 'FAILED') > 0 then 'failed'
+                        when count_if(upper(status) = 'CANCELED') > 0 then 'cancelled'
+                        when count_if(upper(status) = 'SUCCEEDED') > 0 then 'succeeded'
             else 'unknown'
         end
     into :v_graph_status
-    from table(information_schema.task_history(
-        root_task_id => :v_root_task_id,
-        scheduled_time_range_start => :v_start_time,
-        scheduled_time_range_end => current_timestamp()
-    ));
+    from snowflake.account_usage.task_history
+        where graph_run_group_id = :v_graph_run_group_id
+            and root_task_id = :v_root_task_id
+      and scheduled_time >= :v_start_time
+      and scheduled_time <= current_timestamp();
 
     v_run_date     := to_varchar(current_date(), 'MM/DD/YYYY');
 
-    if (v_graph_status != 'succeeded') then
-        v_message := '🔴 RDS snapshot ingestion FAILED — graph state: ' || v_graph_status
-            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
-    else
+    if (v_graph_status = 'succeeded') then
         select
-            coalesce(sum(case when status = 'Loaded' then 1 else 0 end), 0),
-            coalesce(sum(case when status != 'Loaded' then 1 else 0 end), 0),
-            coalesce(sum(row_count), 0),
-            listagg(case when status != 'Loaded' then table_name end, ', ')
-                within group (order by table_name)
-        into :v_loaded, :v_failed, :v_total_rows, :v_failed_names
-        from information_schema.copy_history
+            coalesce(count(*), 0),
+            coalesce(sum(row_count), 0)
+        into :v_loaded, :v_total_rows
+        from snowflake.account_usage.load_history
         where schema_name = 'RDS_LANDING'
           and last_load_time >= dateadd('hour', -25, current_timestamp());
+
+        select
+            coalesce(count_if(upper(status) = 'FAILED'), 0),
+            listagg(case when upper(status) = 'FAILED' then name end, ', ')
+                within group (order by name)
+        into :v_failed, :v_failed_names
+        from snowflake.account_usage.task_history
+        where graph_run_group_id = :v_graph_run_group_id
+          and root_task_id = :v_root_task_id
+          and scheduled_time >= :v_start_time
+          and scheduled_time <= current_timestamp()
+          and upper(name) != 'RDS_SNAPSHOT_FINALIZER_TASK';
 
         if (v_failed = 0) then
             v_message := '✅ RDS snapshot ingestion complete — '
@@ -68,6 +83,13 @@ begin
                 || v_failed || ' failed: ' || v_failed_names
                 || ' - Run date: ' || v_run_date || ' — [TODO: tag team]';
         end if;
+    elseif (v_graph_status = 'failed') then
+        v_message := '🔴 RDS snapshot ingestion FAILED — graph state: ' || v_graph_status
+            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
+    else
+        v_message := '⚠️ No graph status retrieved. DPE team please view task statuses in '
+            || 'snowflake.account_usage.task_history'
+            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
     end if;
 
     call system$send_snowflake_notification(
