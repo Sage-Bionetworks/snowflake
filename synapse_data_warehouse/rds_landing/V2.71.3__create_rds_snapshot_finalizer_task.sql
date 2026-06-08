@@ -38,9 +38,9 @@ begin
 
     select
         case
-                        when count_if(upper(status) = 'FAILED') > 0 then 'failed'
-                        when count_if(upper(status) = 'CANCELED') > 0 then 'cancelled'
-                        when count_if(upper(status) = 'SUCCEEDED') > 0 then 'succeeded'
+                        when count_if(upper(state) = 'FAILED') > 0 then 'failed'
+                        when count_if(upper(state) = 'CANCELED') > 0 then 'cancelled'
+                        when count_if(upper(state) = 'SUCCEEDED') > 0 then 'succeeded'
             else 'unknown'
         end
     into :v_graph_status
@@ -62,8 +62,8 @@ begin
           and last_load_time >= dateadd('hour', -25, current_timestamp());
 
         select
-            coalesce(count_if(upper(status) = 'FAILED'), 0),
-            listagg(case when upper(status) = 'FAILED' then name end, ', ')
+            coalesce(count_if(upper(state) = 'FAILED'), 0),
+            listagg(case when upper(state) = 'FAILED' then name end, ', ')
                 within group (order by name)
         into :v_failed, :v_failed_names
         from snowflake.account_usage.task_history
