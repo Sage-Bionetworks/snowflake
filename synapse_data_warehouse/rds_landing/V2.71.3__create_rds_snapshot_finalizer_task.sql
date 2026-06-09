@@ -60,8 +60,7 @@ begin
             coalesce(count(*), 0),
             coalesce(sum(row_count), 0)
         into :v_loaded, :v_total_rows
-        from snowflake.account_usage.load_history
-        where catalog_name = '{{database_name}}'
+        from {{database_name}}.information_schema.load_history
         and schema_name = 'RDS_LANDING'
         -- TODO: This filter makes sure we're only counting rows for tasks that loaded stuff after the root task was run,
         --       but it doesn't guarantee that the loads were all part of the same graph run. Find a way to set an upper
