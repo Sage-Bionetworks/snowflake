@@ -13,9 +13,9 @@ declare
     v_root_task_id       varchar;
     v_root_task_state    varchar;
     v_graph_run_group_id varchar;
-    v_scheduled_time     timestamp_ltz;
-    v_query_start_time   timestamp_ltz;
-    v_completed_time     timestamp_ltz;
+    v_root_task_scheduled_time   timestamp_ltz;
+    v_root_task_query_start_time timestamp_ltz;
+    v_root_task_completed_time   timestamp_ltz;
     v_loaded        integer default 0;
     v_failed        integer default 0;
     v_total_rows    integer default 0;
@@ -34,7 +34,7 @@ begin
         scheduled_time,
         query_start_time,
         completed_time
-    into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_scheduled_time, :v_query_start_time, :v_completed_time
+    into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
     from snowflake.account_usage.task_history
     where upper(name) = 'REFRESH_STAGE_TASK'
     and upper(database_name) = upper('{{database_name}}')
@@ -50,9 +50,9 @@ begin
         v_message := '🔴 RDS snapshot ingestion FAILED — root task failed'
             || ' · *Root Task ID*: ' || :v_root_task_id
             || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
-            || ' · *Scheduled Time*: ' || to_varchar(:v_scheduled_time)
-            || ' · *Query Start Time*: ' || to_varchar(:v_query_start_time)
-            || ' · *Completed Time*: ' || to_varchar(:v_completed_time)
+            || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
+            || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
+            || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
             || ' · *Run date*: ' || v_run_date || ' — @team-dpe';
     elseif (v_root_task_state = 'SUCCEEDED') then
         -- Get the count of loaded record types and total rows loaded.
@@ -66,7 +66,7 @@ begin
         -- TODO: This filter makes sure we're only counting rows for tasks that loaded stuff after the root task was run,
         --       but it doesn't guarantee that the loads were all part of the same graph run. Find a way to set an upper
         --       bound to ensure all loads are from the same graph run.
-        and last_load_time >= :v_scheduled_time;
+        and last_load_time >= :v_root_task_scheduled_time;
 
         -- Get the failed child tasks, if any.
         select
@@ -85,12 +85,19 @@ begin
                 || '*' || v_failed || '*' || ' failed: ' || v_failed_names
                 || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
                 || ' · ' || '*' || v_total_rows || '*' || ' rows total'
+                || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
+                || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
+                || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
                 || ' · *Run date*: ' || v_run_date || ' — @team-dpe';
         else
             -- Root task succeeded and all child tasks passed — full success.
             v_message := '✅ RDS snapshot ingestion complete — '
                 || '*' || v_loaded || '*' || '/157 record types loaded · '
-                || '*' || v_total_rows || '*' || ' rows total · *Run date*: ' || v_run_date;
+                || '*' || v_total_rows || '*' || ' rows total'
+                || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
+                || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
+                || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
+                || ' · *Run date*: ' || v_run_date;
         end if;
     else
         v_message := '⚠️ No graph status retrieved. DPE team please view task statuses in '
