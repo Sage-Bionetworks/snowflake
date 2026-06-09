@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    identifier:
+      name: strides_covered_buckets
+      database: SAGE
+      schema: PRODUCT
+    query_warehouse: STREAMLIT_XSMALL
+    main_file: streamlit_app.py
+    title: "STRIDES covered buckets"
+    artifacts:
+      - environment.yml
+      - streamlit_app.py
+      - .streamlit/config.toml
