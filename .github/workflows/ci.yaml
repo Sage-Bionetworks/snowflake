@@ -23,7 +23,7 @@ jobs:
     environment: dev
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
@@ -55,7 +55,7 @@ jobs:
     environment: prod
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
@@ -87,7 +87,7 @@ jobs:
     environment: prod
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
@@ -117,15 +117,30 @@ jobs:
           - name: Governance dashboard
             path: sage/governance/streamlit/data_access_dashboard
             role: sage_governance_admin
+          - name: ADKP Metrics
+            path: sage/ad/streamlit/adkp_metrics
+            role: sage_ad_admin
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
           - name: AMP-ALS Usage Metrics
             path: sage/amp_als/streamlit/amp_als_usage_metrics
             role: sage_amp_als_admin
+          - name: Synapse MCP usage
+            path: sage/product/streamlit/synapse_mcp_usage
+            role: sage_product_admin
+          - name: STRIDES covered buckets
+            path: sage/product/streamlit/strides_covered_buckets
+            role: sage_product_admin
+          - name: Python and Command Line Client Usage
+            path: sage/product/streamlit/python_and_command_line_client_usage
+            role: sage_product_admin
+          - name: GENIE Usage Metrics
+            path: sage/genie/streamlit/genie_usage_metrics
+            role: sage_genie_admin
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
@@ -147,7 +162,7 @@ jobs:
     if: github.ref_name == 'main'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
@@ -200,7 +215,7 @@ jobs:
       PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Snowflake
         uses: ./.github/actions/configure-snowflake-cli
