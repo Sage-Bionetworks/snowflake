@@ -123,6 +123,9 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: Synapse Usage Metrics
+            path: sage/product/streamlit/synapse_usage_metrics
+            role: sage_product_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
