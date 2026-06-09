@@ -35,7 +35,7 @@ begin
         query_start_time,
         completed_time
     into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
-    from snowflake.account_usage.task_history
+    from table(snowflake.information_schema.task_history())
     where upper(name) = 'REFRESH_STAGE_TASK'
     and upper(database_name) = upper('{{database_name}}')
     qualify row_number() over (order by scheduled_time desc, query_start_time desc) = 1;
@@ -74,7 +74,7 @@ begin
             listagg(case when upper(state) = 'FAILED' then name end, ', ')
                 within group (order by name)
         into :v_failed, :v_failed_names
-        from snowflake.account_usage.task_history
+        from table(snowflake.information_schema.task_history())
         where graph_run_group_id = :v_graph_run_group_id
           and upper(name) != 'RDS_SNAPSHOT_FINALIZER_TASK';
 
