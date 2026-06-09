@@ -18,7 +18,6 @@ declare
     v_root_task_completed_time   timestamp_ltz;
     v_loaded        integer default 0;
     v_failed        integer default 0;
-    v_total_rows    integer default 0;
     v_failed_names  varchar default '';
     v_run_date      varchar;
     v_message       varchar;
@@ -57,9 +56,8 @@ begin
     elseif (v_root_task_state = 'SUCCEEDED') then
         -- Get the count of loaded record types and total rows loaded.
         select
-            coalesce(count(distinct table_name), 0),
-            coalesce(sum(row_count), 0)
-        into :v_loaded, :v_total_rows
+            coalesce(count(distinct table_name), 0)
+        into :v_loaded
         from {{database_name}}.information_schema.load_history
         where schema_name = 'RDS_LANDING'
         -- TODO: This filter makes sure we're only counting rows for tasks that loaded stuff after the root task was run,
@@ -83,7 +81,6 @@ begin
                 || '*' || v_loaded || '*' || '/157 record types loaded · '
                 || '*' || v_failed || '*' || ' failed: ' || v_failed_names
                 || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
-                || ' · ' || '*' || v_total_rows || '*' || ' rows total'
                 || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
                 || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
                 || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
@@ -92,7 +89,6 @@ begin
             -- Root task succeeded and all child tasks passed — full success.
             v_message := '✅ RDS snapshot ingestion complete — '
                 || '*' || v_loaded || '*' || '/157 record types loaded · '
-                || '*' || v_total_rows || '*' || ' rows total'
                 || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
                 || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
                 || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
