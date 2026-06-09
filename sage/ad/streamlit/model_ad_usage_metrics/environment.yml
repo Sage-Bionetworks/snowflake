@@ -1,0 +1,8 @@
+name: model_ad_usage_metrics
+channels:
+  - snowflake
+dependencies:
+  - python=3.11.*
+  - snowflake-snowpark-python
+  - streamlit=1.*
+  - pandas

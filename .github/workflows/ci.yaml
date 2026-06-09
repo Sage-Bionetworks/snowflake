@@ -123,6 +123,10 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: model-AD Usage Metrics
+            path: sage/ad/streamlit/model_ad_usage_metrics
+            role: sage_ad_admin
+
           - name: ARK Usage Metrics
             path: sage/ark/streamlit/ark_usage_metrics
             role: sage_ark_admin
