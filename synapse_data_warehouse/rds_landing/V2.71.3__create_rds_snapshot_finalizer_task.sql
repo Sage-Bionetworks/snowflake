@@ -81,16 +81,16 @@ begin
         if (v_failed > 0) then
             -- Root task succeeded but some child tasks failed — partial success.
             v_message := '⚠️ RDS snapshot ingestion completed with errors — '
-                || *v_loaded* || '/157 loaded · '
-                || *v_failed* || ' failed: ' || v_failed_names
+                || '*' || v_loaded || '*' || '/157 loaded · '
+                || '*' || v_failed || '*' || ' failed: ' || v_failed_names
                 || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
-                || ' · ' || *v_total_rows* || ' rows total'
+                || ' · ' || '*' || v_total_rows || '*' || ' rows total'
                 || ' · *Run date*: ' || v_run_date || ' — @team-dpe';
         else
             -- Root task succeeded and all child tasks passed — full success.
             v_message := '✅ RDS snapshot ingestion complete — '
-                || *v_loaded* || '/157 record types loaded · '
-                || *v_total_rows* || ' rows total · *Run date*: ' || v_run_date;
+                || '*' || v_loaded || '*' || '/157 record types loaded · '
+                || '*' || v_total_rows || '*' || ' rows total · *Run date*: ' || v_run_date;
         end if;
     else
         v_message := '⚠️ No graph status retrieved. DPE team please view task statuses in '
