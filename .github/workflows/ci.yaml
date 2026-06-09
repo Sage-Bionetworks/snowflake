@@ -123,6 +123,9 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: STRIDES covered buckets
+            path: sage/product/streamlit/strides_covered_buckets
+            role: sage_product_admin
           - name: Python and Command Line Client Usage
             path: sage/product/streamlit/python_and_command_line_client_usage
             role: sage_product_admin
