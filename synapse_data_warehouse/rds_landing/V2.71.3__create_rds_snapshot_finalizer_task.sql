@@ -57,7 +57,7 @@ begin
     elseif (v_root_task_state = 'SUCCEEDED') then
         -- Get the count of loaded record types and total rows loaded.
         select
-            coalesce(count(*), 0),
+            coalesce(count(distinct table_name), 0),
             coalesce(sum(row_count), 0)
         into :v_loaded, :v_total_rows
         from {{database_name}}.information_schema.load_history
@@ -80,7 +80,7 @@ begin
         if (v_failed > 0) then
             -- Root task succeeded but some child tasks failed — partial success.
             v_message := '⚠️ RDS snapshot ingestion completed with errors — '
-                || '*' || v_loaded || '*' || '/157 loaded · '
+                || '*' || v_loaded || '*' || '/157 record types loaded · '
                 || '*' || v_failed || '*' || ' failed: ' || v_failed_names
                 || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
                 || ' · ' || '*' || v_total_rows || '*' || ' rows total'
