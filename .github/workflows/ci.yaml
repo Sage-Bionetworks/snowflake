@@ -126,11 +126,9 @@ jobs:
           - name: model-AD Usage Metrics
             path: sage/ad/streamlit/model_ad_usage_metrics
             role: sage_ad_admin
-
           - name: ARK Usage Metrics
             path: sage/ark/streamlit/ark_usage_metrics
             role: sage_ark_admin
-
           - name: AMP-ALS Usage Metrics
             path: sage/amp_als/streamlit/amp_als_usage_metrics
             role: sage_amp_als_admin
@@ -162,7 +160,7 @@ jobs:
         working-directory: ${{ matrix.app.path }}
         env:
           PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-        run: snow streamlit deploy --role ${{ matrix.app.role }} --replace --prune 
+        run: snow streamlit deploy --role ${{ matrix.app.role }} --replace --prune
 
   schemachange_admin:
     runs-on: ubuntu-22.04
@@ -196,7 +194,7 @@ jobs:
             --root-folder admin/policies \
             --snowflake-role ACCOUNTADMIN
 
-      - name: Deploy ownership grants 
+      - name: Deploy ownership grants
         shell: bash
         run: |
           schemachange \
@@ -204,7 +202,7 @@ jobs:
             --root-folder admin/ownership_grants \
             --snowflake-role SECURITYADMIN
 
-      - name: Deploy future grants 
+      - name: Deploy future grants
         shell: bash
         run: |
           schemachange \
