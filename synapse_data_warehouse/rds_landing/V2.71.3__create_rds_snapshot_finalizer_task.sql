@@ -10,10 +10,12 @@ create or replace task rds_snapshot_finalizer_task --noqa: TMP
 as
 execute immediate $$
 declare
-    v_graph_status  varchar;
-    v_root_task_id  varchar;
+    v_root_task_id       varchar;
+    v_root_task_state    varchar;
     v_graph_run_group_id varchar;
-    v_start_time    timestamp_ltz;
+    v_scheduled_time     timestamp_ltz;
+    v_query_start_time   timestamp_ltz;
+    v_completed_time     timestamp_ltz;
     v_loaded        integer default 0;
     v_failed        integer default 0;
     v_total_rows    integer default 0;
@@ -21,50 +23,51 @@ declare
     v_run_date      varchar;
     v_message       varchar;
 begin
-    v_root_task_id := (
-                select root_task_id
-                from snowflake.account_usage.task_history
-                where upper(name) = upper('refresh_stage_task')
-                    and scheduled_time >= dateadd(hour, -25, current_timestamp())
-                qualify row_number() over (order by scheduled_time desc) = 1
-    );
-    v_start_time := (
-        select scheduled_time
-        from snowflake.account_usage.task_history
-        where upper(name) = upper('refresh_stage_task')
-        qualify row_number() over (order by scheduled_time desc) = 1
-    );
 
-    select graph_run_group_id
-    into :v_graph_run_group_id
-    from snowflake.account_usage.task_history
-    where root_task_id = :v_root_task_id
-        and scheduled_time >= :v_start_time
-        and scheduled_time <= current_timestamp()
-    qualify row_number() over (order by scheduled_time desc) = 1;
-
+    -----------------------------------------------------------------------------------------------------------------------
+    -- Step 1) Get the latest run of the root task for the graph, and other useful metadata on the graph run such as status.
+    -----------------------------------------------------------------------------------------------------------------------
     select
-        case
-                        when count_if(upper(state) = 'FAILED') > 0 then 'failed'
-                        when count_if(upper(state) = 'CANCELED') > 0 then 'cancelled'
-                        when count_if(upper(state) = 'SUCCEEDED') > 0 then 'succeeded'
-            else 'unknown'
-        end
-    into :v_graph_status
+        root_task_id,
+        graph_run_group_id,
+        state,
+        scheduled_time,
+        query_start_time,
+        completed_time
+    into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_scheduled_time, :v_query_start_time, :v_completed_time
     from snowflake.account_usage.task_history
-    where graph_run_group_id = :v_graph_run_group_id;
+    where upper(name) = 'REFRESH_STAGE_TASK'
+    and upper(database_name) = upper('{{database_name}}')
+    qualify row_number() over (order by scheduled_time desc, query_start_time desc) = 1;
 
-    v_run_date     := to_varchar(current_date(), 'MM/DD/YYYY');
+    -----------------------------------------------------------------------------------------------------------------------
+    -- Step 2) Build and send a Slack notification based on root task state and graph state.
+    -----------------------------------------------------------------------------------------------------------------------
+    v_run_date := to_varchar(current_date(), 'MM/DD/YYYY');
 
-    if (v_graph_status = 'succeeded') then
+    if (v_root_task_state = 'FAILED') then
+        -- Root task itself failed — graph could not run.
+        v_message := '🔴 RDS snapshot ingestion FAILED — root task failed'
+            || ' · Root Task ID: ' || :v_root_task_id
+            || ' · Graph Run Group ID: ' || :v_graph_run_group_id
+            || ' · Scheduled Time: ' || to_varchar(:v_scheduled_time)
+            || ' · Query Start Time: ' || to_varchar(:v_query_start_time)
+            || ' · Completed Time: ' || to_varchar(:v_completed_time)
+            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
+    elseif (v_root_task_state = 'SUCCEEDED') then
+        -- Get the count of loaded record types and total rows loaded.
         select
             coalesce(count(*), 0),
             coalesce(sum(row_count), 0)
         into :v_loaded, :v_total_rows
         from snowflake.account_usage.load_history
         where schema_name = 'RDS_LANDING'
-          and last_load_time >= :v_start_time;
+          -- TODO: This filter makes sure we're only counting rows for tasks that loaded stuff after the root task was run,
+          --       but it doesn't guarantee that the loads were all part of the same graph run. Find a way to set an upper
+          --       bound to ensure all loads are from the same graph run.
+          and last_load_time >= :v_scheduled_time;
 
+        -- Get the failed child tasks, if any.
         select
             coalesce(count_if(upper(state) = 'FAILED'), 0),
             listagg(case when upper(state) = 'FAILED' then name end, ', ')
@@ -74,19 +77,20 @@ begin
         where graph_run_group_id = :v_graph_run_group_id
           and upper(name) != 'RDS_SNAPSHOT_FINALIZER_TASK';
 
-        if (v_failed = 0) then
-            v_message := '✅ RDS snapshot ingestion complete — '
-                || v_loaded || '/157 record types loaded · '
-                || v_total_rows || ' rows total · Run date: ' || v_run_date;
-        else
+        if (v_failed > 0) then
+            -- Root task succeeded but some child tasks failed — partial success.
             v_message := '⚠️ RDS snapshot ingestion completed with errors — '
                 || v_loaded || '/157 loaded · '
                 || v_failed || ' failed: ' || v_failed_names
-                || ' - Run date: ' || v_run_date || ' — [TODO: tag team]';
+                || ' · Graph Run Group ID: ' || :v_graph_run_group_id
+                || ' · ' || v_total_rows || ' rows total'
+                || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
+        else
+            -- Root task succeeded and all child tasks passed — full success.
+            v_message := '✅ RDS snapshot ingestion complete — '
+                || v_loaded || '/157 record types loaded · '
+                || v_total_rows || ' rows total · Run date: ' || v_run_date;
         end if;
-    elseif (v_graph_status = 'failed') then
-        v_message := '🔴 RDS snapshot ingestion FAILED — graph state: ' || v_graph_status
-            || ' · Run date: ' || v_run_date || ' — [TODO: tag team]';
     else
         v_message := '⚠️ No graph status retrieved. DPE team please view task statuses in '
             || 'snowflake.account_usage.task_history'
