@@ -25,17 +25,12 @@ jobs:
             SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
             SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
             PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-            
-            # Establish the account roles to be used
-            SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
-            SNOWFLAKE_PROXY_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_PROXY_ADMIN"
-            SNOWFLAKE_CLONE_ADMIN_ROLE: DATA_ENGINEER
 
-            # Establish the domains
+            # Source database to clone (SYNAPSE_DATA_WAREHOUSE_DEV in the dev environment)
             SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-            SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
 
-            # Establish other miscellaneous variables
+            # Stage/integration variables consumed by synapse_data_warehouse/schemachange-config.yml
+            # during the deploy phase of the procurement script.
             SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
             SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
@@ -44,12 +39,6 @@ jobs:
             STACK: ${{ vars.STACK }}
 
         steps:
-
-            ########################################################################################################
-            ########################################################################################################
-            ############################ ENVIRONMENT SETUP AND CONNECTION CONFIGURATION ############################
-            ########################################################################################################
-            ########################################################################################################
             - uses: actions/checkout@v6
 
             - name: Configure Snowflake
@@ -60,149 +49,30 @@ jobs:
                   ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
                   USER: ${{ vars.ADMIN_SERVICE_USER }}
 
-            ########################################################################################################
-            ########################################################################################################
-            ############################## SETTING UP AND CREATING THE CLONE DATABASE ##############################
-            ########################################################################################################
-            ########################################################################################################
-            - name: Sanitize Clone Name
-              run: |
-                # Sanitize the clone name. That is, replace all non-alphanumeric characters with an underscore.
-                # Then append the sanitized clone name to the $GITHUB_ENV to use in subsequent steps.
-                SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
-                echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
-                echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
-
-                # Next, create the environment variable: SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
-                # which schemachange uses to deploy changes to the right database (this is used in the schemachange step)
-                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
-
-            - name: Zero-copy clone the database as ADMIN
+            # Procure an RBAC-configured zero-copy clone and deploy schemachange to it.
+            # The script discovers the ownership hierarchy at runtime, so it auto-adapts
+            # when schemas are added — no per-schema maintenance of this workflow is needed.
+            # `uv run` syncs the workspace (installs the snowclone package + its connector).
+            - name: Procure clone and deploy
               shell: bash
               run: |
-                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "CREATE OR REPLACE DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} CLONE ${SNOWFLAKE_DOMAIN_ORIGINAL};"
-
-
-            ########################################################################################################
-            ########################################################################################################
-            ####################### SETTING UP AND CREATING <CLONE>_PROXY_ADMIN ACCOUNT ROLE #######################
-            ########################################################################################################
-            ########################################################################################################
-            - name: Establish full account role name for <CLONE>_PROXY_ADMIN
-              shell: bash
-              run: |
-                # The <CLONE>_PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
-                # within the cloned database. First let's create the <CLONE>_PROXY_ADMIN account role name and export for immediate use:
-                echo "SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
-
-            - name: Create account role <CLONE>_PROXY_ADMIN
-              shell: bash
-              run: |
-                # Briefly switch roles and create the <CLONE>_PROXY_ADMIN role
-                snow sql --role USERADMIN -q "CREATE OR REPLACE ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-
-            ########################################################################################################
-            ########################################################################################################
-            ########################################## MANAGING GRANTS #############################################
-            ########################################################################################################
-            ########################################################################################################
-
-            - name: Transfer ownership of current and future tasks and dynamic tables to <CLONE>_PROXY_ADMIN
-              shell: bash
-              run: |
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                
-                # We need to revoke OWNERSHIP on future objects from ${SNOWFLAKE_PROXY_ADMIN_ROLE} first, because only one role can have the OWNERSHIP privilege on an object.
-                # There's no "transferring of ownership" involved because these objects don't exist yet.
-                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-            - name: Give <CLONE>_PROXY_ADMIN ownership of all objects in synapse, synapse_raw, schemachange, synapse_aggregate, synapse_event, rds_landing, rds_raw schemas
-              shell: bash
-              run: |
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.schemachange_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_aggregate_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_aggregate_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_event_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.synapse_event_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_landing_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_landing_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} REVOKE CURRENT GRANTS;"
-                snow sql --role SECURITYADMIN -q "GRANT DATABASE ROLE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.rds_raw_all_admin TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
-
-            - name: Grant USAGE on <CLONE>_PROXY_ADMIN to SNOWFLAKE_CLONE_ADMIN_ROLE
-              shell: bash
-              run: |
-                # This step will give SNOWFLAKE_CLONE_ADMIN_ROLE the ability to inherit the privileges of <CLONE>_PROXY_ADMIN (that is, ownership of all objects in all schemas)
-                snow sql --role SECURITYADMIN -q "GRANT ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-
-            - name: Grant database-level privileges to SNOWFLAKE_CLONE_ADMIN_ROLE
-              shell: bash
-              run: |
-                # Grant database privileges to the clone admin. These are privileges that would have otherwise come with the ownership of the clone,
-                # but since the clone admin is acting as a pseudo-admin and does not directly own the clone, these need to be granted explicitly.
-                snow sql --role SECURITYADMIN -q "GRANT MODIFY ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT MONITOR ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT CREATE SCHEMA ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-                snow sql --role SECURITYADMIN -q "GRANT CREATE DATABASE ROLE ON DATABASE ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED} TO ROLE ${SNOWFLAKE_CLONE_ADMIN_ROLE};"
-
-
-            ########################################################################################################
-            ########################################################################################################
-            ##################################### RUNNING SCHEMACHANGE #############################################
-            ########################################################################################################
-            ########################################################################################################
-            - name: Run schemachange on the clone as SNOWFLAKE_CLONE_ADMIN_ROLE
-              shell: bash
-              run: |
-                schemachange \
-                --connection-name default \
-                --root-folder synapse_data_warehouse \
-                --config-folder synapse_data_warehouse \
-                --snowflake-role $SNOWFLAKE_CLONE_ADMIN_ROLE
+                uv run snowclone freeze \
+                  --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
+                  --clone-suffix "${{ github.head_ref }}" \
+                  --deploy-folder synapse_data_warehouse
 
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
       environment: dev
       env:
-          # Establish the snowflake account credentials
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
           PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-
-          # Establish the account roles to be used
-          SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
-
-          # Establish the domains
-          SNOWFLAKE_DOMAIN_CLONE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_${{ github.head_ref }}"
-
-          # Establish the warehouse
+          SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
 
       steps:
-
           - uses: actions/checkout@v6
 
           - name: Configure Snowflake
@@ -213,25 +83,9 @@ jobs:
                 ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
                 USER: ${{ vars.ADMIN_SERVICE_USER }}
 
-          - name: Sanitize Clone Name
-            run: |
-              SNOWFLAKE_DOMAIN_CLONE_SANITIZED="${SNOWFLAKE_DOMAIN_CLONE//[^a-zA-Z0-9_]/_}"
-              echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
-              echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
-
-          - name: Drop the clone (if it exists)
+          - name: Drop the clone and its proxy admin role
             shell: bash
             run: |
-              snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "DROP DATABASE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED};"
-
-          - name: Establish full account role name for <CLONE>_PROXY_ADMIN
-            shell: bash
-            run: |
-              # The <CLONE>_PROXY_ADMIN account role will be used to manage interschema objects (e.g. tasks, dynamic tables)
-              # within the cloned database. First let's create the <CLONE>_PROXY_ADMIN account role name and export for immediate use:
-              echo "SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}_PROXY_ADMIN" >> $GITHUB_ENV
-
-          - name: Drop <CLONE>_PROXY_ADMIN (if it exists)
-            shell: bash
-            run: |
-              snow sql --role USERADMIN -q "DROP ROLE IF EXISTS ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+              uv run snowclone melt \
+                --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
+                --clone-suffix "${{ github.head_ref }}"
