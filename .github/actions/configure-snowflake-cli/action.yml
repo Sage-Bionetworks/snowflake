@@ -91,12 +91,12 @@ runs:
         cat $CONNECTION_FILE
         
     - name: Configure Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.11'
+        python-version: '3.13'
 
     - name: Install Snowflake CLI
-      uses: Snowflake-Labs/snowflake-cli-action@v1.5
+      uses: Snowflake-Labs/snowflake-cli-action@18d88e589d4df312334083e08cc408b68641fd5a  # v1.5
 
     - name: install-schemachange
       shell: bash

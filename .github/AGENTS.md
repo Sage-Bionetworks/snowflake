@@ -33,7 +33,7 @@ Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label i
 
 **Branch naming requirement:** Feature branches must start with `snow-` (e.g., `snow-407-feature`) for the `test_with_clone.yaml` workflow to trigger.
 
-**Python version:** `test_with_clone.yaml` uses Python 3.10; the `configure-snowflake-cli` action uses Python 3.11.
+**Python version:** The `configure-snowflake-cli` action, which is used by this workflow, uses Python 3.13.
 
 ## Shared actions
 
