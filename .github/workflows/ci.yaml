@@ -117,6 +117,9 @@ jobs:
           - name: Governance dashboard
             path: sage/governance/streamlit/data_access_dashboard
             role: sage_governance_admin
+          - name: Synapse Performance Metrics
+            path: sage/product/streamlit/synapse_performance_metrics
+            role: sage_product_admin
           - name: ADKP Metrics
             path: sage/ad/streamlit/adkp_metrics
             role: sage_ad_admin
