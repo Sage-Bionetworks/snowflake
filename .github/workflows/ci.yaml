@@ -117,12 +117,36 @@ jobs:
           - name: Governance dashboard
             path: sage/governance/streamlit/data_access_dashboard
             role: sage_governance_admin
+          - name: ADKP Metrics
+            path: sage/ad/streamlit/adkp_metrics
+            role: sage_ad_admin
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
           - name: Snowflake Usage
             path: sage/dpe/streamlit/snowflake_usage
             role: data_engineer
+          - name: model-AD Usage Metrics
+            path: sage/ad/streamlit/model_ad_usage_metrics
+            role: sage_ad_admin
+          - name: ARK Usage Metrics
+            path: sage/ark/streamlit/ark_usage_metrics
+            role: sage_ark_admin
+          - name: AMP-ALS Usage Metrics
+            path: sage/amp_als/streamlit/amp_als_usage_metrics
+            role: sage_amp_als_admin
+          - name: Synapse MCP usage
+            path: sage/product/streamlit/synapse_mcp_usage
+            role: sage_product_admin
+          - name: STRIDES covered buckets
+            path: sage/product/streamlit/strides_covered_buckets
+            role: sage_product_admin
+          - name: Python and Command Line Client Usage
+            path: sage/product/streamlit/python_and_command_line_client_usage
+            role: sage_product_admin
+          - name: GENIE Usage Metrics
+            path: sage/genie/streamlit/genie_usage_metrics
+            role: sage_genie_admin
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -139,7 +163,7 @@ jobs:
         working-directory: ${{ matrix.app.path }}
         env:
           PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
-        run: snow streamlit deploy --role ${{ matrix.app.role }} --replace --prune 
+        run: snow streamlit deploy --role ${{ matrix.app.role }} --replace --prune
 
   schemachange_admin:
     runs-on: ubuntu-22.04
@@ -173,7 +197,7 @@ jobs:
             --root-folder admin/policies \
             --snowflake-role ACCOUNTADMIN
 
-      - name: Deploy ownership grants 
+      - name: Deploy ownership grants
         shell: bash
         run: |
           schemachange \
@@ -181,7 +205,7 @@ jobs:
             --root-folder admin/ownership_grants \
             --snowflake-role SECURITYADMIN
 
-      - name: Deploy future grants 
+      - name: Deploy future grants
         shell: bash
         run: |
           schemachange \
