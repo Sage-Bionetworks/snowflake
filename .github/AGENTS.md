@@ -25,15 +25,26 @@ The `schemachange_admin` → `snowsql_admin` dependency means all DDL migrations
 Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label is present.
 
 1. Zero-copy clones `SYNAPSE_DATA_WAREHOUSE_DEV` → `SYNAPSE_DATA_WAREHOUSE_DEV_{branch}` (branch name sanitized to alphanumeric + underscores)
-2. Creates a `<CLONE>_PROXY_ADMIN` account role, transfers ownership of all inter-schema objects (tasks, dynamic tables) and database roles in the clone to it, then grants it to `DATA_ENGINEER` so the clone admin can act through the proxy
-3. Applies `synapse_data_warehouse/` schemachange migrations to the clone
-4. Tears down the clone when the PR is closed
+2. Reconfigures RBAC on the clone and deploys `synapse_data_warehouse/` schemachange — all via `uv run snowclone freeze` (see `packages/snowclone/`)
+3. Tears down the clone via `uv run snowclone melt` when the PR is closed
 
-**Maintenance:** When a new schema is added to `synapse_data_warehouse/`, the ownership-transfer and database-role grant steps in `test_with_clone.yml` must be updated to cover it (see `RDS_RAW` as a recent example).
+The procurement logic lives in **`packages/snowclone/`** (a uv-workspace member),
+which discovers the clone's ownership hierarchy at runtime (`SHOW` introspection)
+and mirrors it under a single `<CLONE>_PROXY_ADMIN` account role granted to
+`DATA_ENGINEER`. **No per-schema maintenance of this workflow is needed** when a
+schema is added — the old hardcoded ownership-transfer steps have been replaced by
+the package.
+
+### `procure_clone.yaml` — on-demand provisioning
+
+`workflow_dispatch` wrapper around the same `packages/snowclone/` package for ad-hoc
+clones of any database (free-form `database` input — not a fixed list). Inputs:
+`database`, `environment`, `clone_suffix`, `developer_role`, `deploy_folder`
+(blank skips the deploy), `action` (procure/teardown), `dry_run`.
 
 **Branch naming requirement:** Feature branches must start with `snow-` (e.g., `snow-407-feature`) for the `test_with_clone.yaml` workflow to trigger.
 
-**Python version:** The `configure-snowflake-cli` action, which is used by this workflow, uses Python 3.13.
+**Python version:** The `configure-snowflake-cli` action, used by both workflows, sets up Python 3.13 and installs `uv`. The clone workflows invoke `uv run snowclone freeze` / `uv run snowclone melt`, which syncs the workspace and installs the `snowclone` package (and its Snowflake connector dependency) on the fly — no separate install step.
 
 ## Shared actions
 
@@ -45,7 +56,7 @@ Sets up the Snowflake CLI (`snow`) with private key authentication. Accepts:
 - `ACCOUNT`
 - `USER`
 
-Used by all jobs in both workflows.
+Used by jobs across `ci.yaml`, `test_with_clone.yaml`, and `procure_clone.yaml`.
 
 ## Secrets and variables
 
@@ -54,7 +65,13 @@ All credentials are stored as GitHub Actions secrets/vars under the `dev` and `p
 - `SNOWSQL_ACCOUNT` — Snowflake account identifier
 - `ADMIN_SERVICE_USER` — service account username
 - `ADMIN_SERVICE_PRIVATE_KEY` / `ADMIN_SERVICE_PASS_PHRASE` — key pair auth
-- `SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE` — database name (differs per environment)
+- `SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE` — GitHub variable holding the warehouse database name (differs per environment); workflows feed it into the deploy env var below
 - `SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SYNAPSE_STAGE_URL`
 - `SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SNAPSHOTS_STAGE_URL`
+
+**Deploy target env var:** every `schemachange-config.yml` reads a single standardized
+env var, `SNOWFLAKE_DEPLOY_DATABASE`, for its target database (and change-history
+table). `ci.yaml` sets it per environment; `snowclone` sets it to the clone.
+The `synapse_data_warehouse/` config has no default (fails fast — it has dev and prod
+deployments); the `sage/` config defaults to `SAGE` (prod-only).
 - `SAML2_ISSUER`, `SAML2_SSO_URL`, `SAML2_X509_CERT` — SAML integration secrets (prod only)

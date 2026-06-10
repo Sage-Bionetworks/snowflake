@@ -16,6 +16,7 @@ Each major subsystem is self-contained with its own `CLAUDE.md`:
 - `analytics/` — ad-hoc SQL and one-off Python ETL scripts. Not deployed by CI.
 - `genie/` — GENIE cancer genomics queries and Snowpark scripts. Query-focused, minimal DDL.
 - `data_validation/` — Great Expectations checkpoints on raw + portal tables.
+- `packages/snowclone/` — Python tooling (a uv-workspace member, invoked by CI) that procures RBAC-configured zero-copy clone environments for development/PR testing.
 - `.github/` — CI/CD workflows and shared actions.
 
 ## Data flow
