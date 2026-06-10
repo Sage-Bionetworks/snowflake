@@ -1,0 +1,105 @@
+---
+name: Procure Clone Environment
+
+# On-demand provisioning of an RBAC-configured zero-copy clone for any database
+# (see packages/snowclone/). Use for SYNAPSE_DATA_WAREHOUSE and SAGE dev environments,
+# or any ad-hoc clone. PR-triggered testing of SYNAPSE_DATA_WAREHOUSE_DEV is handled
+# separately by test_with_clone.yaml.
+
+on:
+    workflow_dispatch:
+        inputs:
+            database:
+                description: Source database to clone (e.g. SYNAPSE_DATA_WAREHOUSE, SAGE)
+                required: true
+                type: string
+            environment:
+                description: GitHub environment whose Snowflake credentials to use
+                required: true
+                default: prod
+                type: choice
+                options:
+                    - prod
+                    - dev
+            clone_suffix:
+                description: Suffix appended to the source name (e.g. snow-417 or your handle)
+                required: true
+                type: string
+            developer_role:
+                description: Account role to provision the clone for
+                required: false
+                default: DATA_ENGINEER
+                type: string
+            deploy_folder:
+                description: schemachange folder to deploy (e.g. synapse_data_warehouse, sage). Leave blank to skip the deploy.
+                required: false
+                default: ""
+                type: string
+            action:
+                description: Procure a new clone or tear an existing one down
+                required: true
+                default: procure
+                type: choice
+                options:
+                    - procure
+                    - teardown
+            dry_run:
+                description: Log mutating SQL without executing it
+                required: false
+                default: false
+                type: boolean
+
+permissions:
+    contents: read
+
+jobs:
+
+    procure_clone:
+        runs-on: ubuntu-latest
+        environment: ${{ inputs.environment }}
+        env:
+            SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+            SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
+            PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+
+            # Stage/integration variables consumed by synapse_data_warehouse/schemachange-config.yml
+            # during the deploy phase. Harmless for non-SYNAPSE_DATA_WAREHOUSE[_DEV] deploys.
+            SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
+            SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
+            SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
+            SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION }}
+            SNOWFLAKE_SNAPSHOTS_STAGE_URL: ${{ vars.SNOWFLAKE_SNAPSHOTS_STAGE_URL }}
+            STACK: ${{ vars.STACK }}
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Configure Snowflake
+              uses: ./.github/actions/configure-snowflake-cli
+              with:
+                  PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                  PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                  ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                  USER: ${{ vars.ADMIN_SERVICE_USER }}
+
+            - name: Procure clone
+              if: ${{ inputs.action == 'procure' }}
+              shell: bash
+              run: |
+                ARGS=(--database "${{ inputs.database }}"
+                      --clone-suffix "${{ inputs.clone_suffix }}"
+                      --developer-role "${{ inputs.developer_role }}")
+                # A non-empty deploy folder enables the schemachange deploy; blank skips it.
+                [ -n "${{ inputs.deploy_folder }}" ] && ARGS+=(--deploy-folder "${{ inputs.deploy_folder }}")
+                [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
+                # `uv run` syncs the workspace (installs the snowclone package + its connector).
+                uv run snowclone freeze "${ARGS[@]}"
+
+            - name: Tear down clone
+              if: ${{ inputs.action == 'teardown' }}
+              shell: bash
+              run: |
+                ARGS=(--database "${{ inputs.database }}"
+                      --clone-suffix "${{ inputs.clone_suffix }}")
+                [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
+                uv run snowclone melt "${ARGS[@]}"
