@@ -126,6 +126,9 @@ jobs:
           - name: ELITE Usage Metrics
             path: sage/elite/streamlit/elite_usage_metrics
             role: sage_elite_admin
+          - name: ACL audit
+            path: sage/product/streamlit/acl_audit
+            role: sage_product_admin
           - name: model-AD Usage Metrics
             path: sage/ad/streamlit/model_ad_usage_metrics
             role: sage_ad_admin
