@@ -148,16 +148,6 @@ You can go on Snowsight to perform manual inspection of the changes to your sche
 > * Your database will be named after your feature branch so it's easy to find on Snowsight. For example, if your feature branch is called
 > `snow-123-new-feature`, your database will be called `SYNAPSE_DATA_WAREHOUSE_DEV_snow_123_new_feature`.
 
-> [!IMPORTANT]
-> If your changes include DDL or task behavior that depends on stage metadata refresh (for example, workflows that run `ALTER STAGE ... REFRESH`), verify that DIRECTORY is enabled on the cloned stage before testing.
->
-> In clone environments, if DIRECTORY is not enabled in your stage, refresh-dependent behavior may fail.
->
-> Run the following in Snowsight against your cloned database before validation:
->
-> ALTER STAGE IF EXISTS <your_clone_database>.<your_schema>.<your_stage> SET DIRECTORY = (ENABLE = TRUE);
-> ALTER STAGE IF EXISTS <your_clone_database>.<your_schema>.<your_stage> REFRESH;
-
 ----
 
 ### 4. Dropping the Cloned Database
