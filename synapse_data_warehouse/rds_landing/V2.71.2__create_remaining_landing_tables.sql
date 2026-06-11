@@ -528,7 +528,7 @@ CREATE TABLE IF NOT EXISTS grid_session (
     created_by         BIGINT           COMMENT 'Identifier of the user who created this session',
     created_on         TIMESTAMP_NTZ(9) COMMENT 'Timestamp when the session was created',
     modified_on        TIMESTAMP_NTZ(9) COMMENT 'Timestamp when the session was last modified',
-    session_id         VARCHAR          COMMENT 'Unique session identifier (36-character UUID)',
+    session_id         VARCHAR          COMMENT 'Base64-encoded session identifier',
     rep_id_client      BIGINT           COMMENT 'Replica ID assigned to the client',
     rep_id_service     BIGINT           COMMENT 'Replica ID assigned to the service',
     source_id          BIGINT           COMMENT 'Identifier of the source Synapse node for this session',
@@ -935,7 +935,7 @@ CREATE TABLE IF NOT EXISTS project_stat (
     project_id    BIGINT  COMMENT 'Identifier of the project',
     user_id       BIGINT  COMMENT 'Identifier of the user this stat is for',
     last_accessed BIGINT  COMMENT 'Epoch milliseconds when this user last accessed this project',
-    etag          VARCHAR COMMENT 'Entity tag for optimistic concurrency control (36-character UUID)'
+    etag          VARCHAR COMMENT 'Entity tag for optimistic concurrency control (36-character UUID); populated as ''GeneratedByScript'' for rows created by a migration script rather than the application'
 );
 
 -- project_storage_data
@@ -1330,7 +1330,7 @@ CREATE TABLE IF NOT EXISTS trash_can (
 CREATE TABLE IF NOT EXISTS unsuccessful_login_lockout (
     user_id                  BIGINT COMMENT 'Identifier of the user being tracked for failed logins',
     unsuccessful_login_count BIGINT COMMENT 'Number of consecutive failed login attempts',
-    lockout_expiration       BIGINT COMMENT 'Epoch milliseconds when the lockout expires'
+    lockout_expiration       BIGINT COMMENT 'Epoch milliseconds when the lockout expires; 0 indicates no active lockout'
 );
 
 -- user_group
@@ -1391,7 +1391,7 @@ CREATE TABLE IF NOT EXISTS v2_wiki_owners (
     owner_object_type VARCHAR COMMENT 'Type of object that owns this wiki. One of: ENTITY, EVALUATION, ACCESS_REQUIREMENT',
     root_wiki_id      BIGINT  COMMENT 'Identifier of the root wiki page for this owner',
     order_hint        BINARY  COMMENT 'Serialized ordering hint for wiki sub-pages',
-    etag              VARCHAR COMMENT 'Entity tag for optimistic concurrency control (36-character UUID)'
+    etag              VARCHAR COMMENT 'Entity tag for optimistic concurrency control (36-character UUID); empty string for legacy rows created before etag enforcement'
 );
 
 -- v2_wiki_page
