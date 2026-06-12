@@ -4,7 +4,7 @@ use schema {{database_name}}.rds_landing; --noqa: JJ01,PRS,TMP
 alter task refresh_rds_snapshots_stage_task suspend;
 
 -- Create the finalizer task.
-create or replace task refresh_stage_finalizer_task
+create or replace task refresh_rds_snapshots_stage_finalizer_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
     finalize = 'refresh_rds_snapshots_stage_task'
 as
@@ -74,7 +74,7 @@ begin
         into :v_failed, :v_failed_names
         from table(snowflake.information_schema.task_history())
         where graph_run_group_id = :v_graph_run_group_id
-          and upper(name) != 'REFRESH_STAGE_FINALIZER_TASK';
+          and upper(name) != 'REFRESH_RDS_SNAPSHOTS_STAGE_FINALIZER_TASK';
 
         if (v_failed > 0) then
             -- Root task succeeded but some child tasks failed — partial success.
@@ -112,7 +112,7 @@ begin
 end;
 $$;
 
-alter task refresh_stage_finalizer_task resume;
+alter task refresh_rds_snapshots_stage_finalizer_task resume;
 
 -- Re-enable the full RDS snapshot task graph from the root.
 select system$task_dependents_enable('refresh_rds_snapshots_stage_task');
