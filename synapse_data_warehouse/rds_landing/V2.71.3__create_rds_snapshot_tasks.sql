@@ -48,7 +48,7 @@ AS
             $1:ETAG::VARCHAR               AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACCESS_APPROVAL
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACL_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -62,7 +62,7 @@ AS
             $1:ETAG::VARCHAR       AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACL
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACL_RESOURCE_ACCESS_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -74,7 +74,7 @@ AS
             $1:GROUP_ID::BIGINT AS group_id
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACL_RESOURCE_ACCESS
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACL_RESOURCE_ACCESS_TYPE_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -86,7 +86,7 @@ AS
             $1:OWNER_ID::BIGINT    AS owner_id
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACL_RESOURCE_ACCESS_TYPE
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -104,7 +104,7 @@ AS
             $1:SUBMISSION_SERIALIZED::BINARY      AS submission_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_SUBMISSION
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGES_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -116,7 +116,7 @@ AS
             $1:ACCESS_TYPE::VARCHAR  AS access_type
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGES
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_STATUS_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -132,7 +132,7 @@ AS
             $1:REASON::BINARY        AS reason
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_SUBMISSION_STATUS
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_SUBMITTER_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -146,7 +146,7 @@ AS
             $1:ETAG::VARCHAR                 AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_SUBMISSION_SUBMITTER
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_REQUEST_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -164,7 +164,7 @@ AS
             $1:REQUEST_SERIALIZED::BINARY    AS request_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_REQUEST
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACCESS_REQUIREMENT_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -182,7 +182,7 @@ AS
             $1:ETAG::VARCHAR               AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACCESS_REQUIREMENT
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACCESS_REQUIREMENT_PROJECT_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -193,7 +193,7 @@ AS
             $1:PROJECT_ID::BIGINT AS project_id
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACCESS_REQUIREMENT_PROJECT
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACCESS_REQUIREMENT_REVISION_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -207,7 +207,7 @@ AS
             $1:SERIALIZED_ENTITY::BINARY AS serialized_entity
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/ACCESS_REQUIREMENT_REVISION
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_NOTIFICATION_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -224,7 +224,7 @@ AS
             $1:ETAG::VARCHAR              AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/DATA_ACCESS_NOTIFICATION
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_PRINCIPAL_ALIAS_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
@@ -239,7 +239,7 @@ AS
             $1:ETAG::VARCHAR          AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot-lambda/PRINCIPAL_ALIAS
     )
-    PATTERN = '.*/[0-9]+/[0-9]{4}-[0-9]{2}-[0-9]{2}/.*\.gz\.parquet';
+    PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 
 -- ============================================================
 -- Resume tasks: children must be resumed before the root task.
