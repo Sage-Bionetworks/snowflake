@@ -97,6 +97,7 @@ begin
     else
         v_message := '⚠️ No graph status retrieved, or received an unexpected status. DPE team please view task statuses in '
             || 'snowflake.account_usage.task_history'
+            || ' · *Root Task State*: ' || coalesce(:v_root_task_state, 'NULL')
             || ' · *Run date*: ' || v_run_date || ' — @team-dpe';
     end if;
 
