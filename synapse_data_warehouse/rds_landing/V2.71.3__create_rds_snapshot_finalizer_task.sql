@@ -44,9 +44,9 @@ begin
     -----------------------------------------------------------------------------------------------------------------------
     v_run_date := to_varchar(current_date(), 'MM/DD/YYYY');
 
-    if (v_root_task_state = 'FAILED') then
-        -- Root task itself failed — graph could not run.
-        v_message := '🔴 RDS snapshot ingestion FAILED — root task failed'
+    if (v_root_task_state in ('FAILED', 'FAILED_AND_AUTO_SUSPENDED', 'CANCELLED')) then
+        -- Root task itself failed or was cancelled — graph could not run.
+        v_message := '🔴 RDS snapshot ingestion FAILED — root task failed or was cancelled'
             || ' · *Root Task ID*: ' || :v_root_task_id
             || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
             || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
@@ -95,7 +95,7 @@ begin
                 || ' · *Run date*: ' || v_run_date;
         end if;
     else
-        v_message := '⚠️ No graph status retrieved. DPE team please view task statuses in '
+        v_message := '⚠️ No graph status retrieved, or received an unexpected status. DPE team please view task statuses in '
             || 'snowflake.account_usage.task_history'
             || ' · *Run date*: ' || v_run_date || ' — @team-dpe';
     end if;
