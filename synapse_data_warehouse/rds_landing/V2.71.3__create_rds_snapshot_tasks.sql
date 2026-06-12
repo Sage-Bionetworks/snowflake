@@ -18,7 +18,6 @@ CREATE OR REPLACE TASK REFRESH_RDS_SNAPSHOTS_STAGE_TASK
 -- node exceed 100.
 -- ============================================================
 CREATE OR REPLACE TASK PROXY_TASK_A
-    WAREHOUSE = compute_xsmall
     COMMENT = 'No-op intermediary task. Snowflake limits a single node to 100 child tasks; this proxy fans out to all COPY INTO tasks. Add PROXY_TASK_B when child tasks on this node exceed 100.'
     AFTER REFRESH_RDS_SNAPSHOTS_STAGE_TASK
 AS
