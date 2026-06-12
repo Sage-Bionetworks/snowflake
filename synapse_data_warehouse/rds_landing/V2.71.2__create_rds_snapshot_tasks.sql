@@ -4,7 +4,7 @@ USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 -- Root task: refreshes stage metadata so COPY INTO tasks see
 -- the latest S3 files before any loading begins.
 -- ============================================================
-CREATE OR REPLACE TASK REFRESH_STAGE_TASK
+CREATE OR REPLACE TASK REFRESH_RDS_SNAPSHOTS_STAGE_TASK
     -- TEMPORARY: every minute for testing; revert before production rollout.
     SCHEDULE = 'USING CRON * * * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE='SMALL'
@@ -20,7 +20,7 @@ CREATE OR REPLACE TASK REFRESH_STAGE_TASK
 CREATE OR REPLACE TASK PROXY_TASK_A
     WAREHOUSE = compute_xsmall
     COMMENT = 'No-op intermediary task. Snowflake limits a single node to 100 child tasks; this proxy fans out to all COPY INTO tasks. Add PROXY_TASK_B when child tasks on this node exceed 100.'
-    AFTER REFRESH_STAGE_TASK
+    AFTER REFRESH_RDS_SNAPSHOTS_STAGE_TASK
 AS
     SELECT 1;
 
@@ -261,4 +261,4 @@ ALTER TASK COPY_ACCESS_REQUIREMENT_REVISION_TASK RESUME;
 ALTER TASK COPY_DATA_ACCESS_NOTIFICATION_TASK RESUME;
 ALTER TASK COPY_PRINCIPAL_ALIAS_TASK RESUME;
 ALTER TASK PROXY_TASK_A RESUME;
-ALTER TASK REFRESH_STAGE_TASK RESUME;
+ALTER TASK REFRESH_RDS_SNAPSHOTS_STAGE_TASK RESUME;

@@ -1,12 +1,12 @@
 use schema {{database_name}}.rds_landing; --noqa: JJ01,PRS,TMP
 
 -- Suspend root before modifying the graph.
-alter task refresh_stage_task suspend;
+alter task refresh_rds_snapshots_stage_task suspend;
 
 -- Create the finalizer task.
 create or replace task refresh_stage_finalizer_task
     user_task_managed_initial_warehouse_size = 'XSMALL'
-    finalize = 'refresh_stage_task'
+    finalize = 'refresh_rds_snapshots_stage_task'
 as
 execute immediate $$
 declare
@@ -35,8 +35,9 @@ begin
         completed_time
     into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
     from table(snowflake.information_schema.task_history())
-    where upper(name) = 'REFRESH_STAGE_TASK'
+    where upper(name) = 'REFRESH_RDS_SNAPSHOTS_STAGE_TASK'
     and upper(database_name) = upper('{{database_name}}') --noqa: JJ01,PRS,TMP
+    and upper(schema_name) = 'RDS_LANDING'
     qualify row_number() over (order by scheduled_time desc, query_start_time desc) = 1;
 
     -----------------------------------------------------------------------------------------------------------------------
@@ -114,4 +115,4 @@ $$;
 alter task refresh_stage_finalizer_task resume;
 
 -- Re-enable the full RDS snapshot task graph from the root.
-select system$task_dependents_enable('refresh_stage_task');
+select system$task_dependents_enable('refresh_rds_snapshots_stage_task');
