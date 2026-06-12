@@ -5,7 +5,7 @@ alter task refresh_stage_task suspend;
 
 -- Create the finalizer task.
 create or replace task refresh_stage_finalizer_task
-    warehouse = 'COMPUTE_XSMALL'
+    user_task_managed_initial_warehouse_size = 'XSMALL'
     finalize = 'refresh_stage_task'
 as
 execute immediate $$
@@ -36,7 +36,7 @@ begin
     into :v_root_task_id, :v_graph_run_group_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
     from table(snowflake.information_schema.task_history())
     where upper(name) = 'REFRESH_STAGE_TASK'
-    and upper(database_name) = upper('{{database_name}}')
+    and upper(database_name) = upper('{{database_name}}') --noqa: JJ01,PRS,TMP
     qualify row_number() over (order by scheduled_time desc, query_start_time desc) = 1;
 
     -----------------------------------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ begin
         select
             coalesce(count(distinct table_name), 0)
         into :v_loaded
-        from {{database_name}}.information_schema.load_history
+        from {{database_name}}.information_schema.load_history --noqa: JJ01,PRS,TMP
         where schema_name = 'RDS_LANDING'
         -- TODO: This filter makes sure we're only counting rows for tasks that loaded stuff after the root task was run,
         --       but it doesn't guarantee that the loads were all part of the same graph run. Find a way to set an upper
