@@ -90,6 +90,7 @@ begin
             -- Root task succeeded and all child tasks passed — full success.
             v_message := '✅ RDS snapshot ingestion complete — '
                 || '*' || v_loaded || '*' || '/157 record types loaded · '
+                || ' · *Graph Run Group ID*: ' || :v_graph_run_group_id
                 || ' · *Root Task Scheduled Time*: ' || to_varchar(:v_root_task_scheduled_time)
                 || ' · *Root Task Query Start Time*: ' || to_varchar(:v_root_task_query_start_time)
                 || ' · *Root Task Completed Time*: ' || to_varchar(:v_root_task_completed_time)
