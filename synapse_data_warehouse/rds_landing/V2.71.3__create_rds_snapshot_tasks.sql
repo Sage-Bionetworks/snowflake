@@ -177,7 +177,7 @@ AS
             $1:CREATED_BY::BIGINT          AS created_by,
             $1:CREATED_ON::BIGINT          AS created_on,
             $1:CURRENT_REV_NUM::BIGINT     AS current_rev_num,
-            $1:IS_TWO_FA_REQUIRED::BOOLEAN AS is_two_fa_required,
+            $1:IS_TWO_FA_REQUIRED::BIGINT AS is_two_fa_required,
             $1:ACCESS_TYPE::VARCHAR        AS access_type,
             $1:ETAG::VARCHAR               AS etag
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/ACCESS_REQUIREMENT
