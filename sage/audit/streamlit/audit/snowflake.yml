@@ -5,7 +5,7 @@ entities:
     identifier:
       name: audit
       database: SAGE
-      schema: GOVERNANCE
+      schema: AUDIT
     query_warehouse: STREAMLIT_XSMALL
     main_file: streamlit_app.py
     title: "Audit"
