@@ -180,12 +180,81 @@ def cell_1_2():
             st.error(f"Error: {str(e)}")
 
 
+def query_2_1() -> str:
+    sql_query = r"""
+SELECT u.NAME AS USER_NAME,
+       h.FUNCTION_NAME,
+       h.MODEL_NAME,
+       SUM(h.CREDITS) AS TOTAL_CREDITS,
+       COUNT(DISTINCT h.QUERY_ID) AS QUERY_COUNT
+  FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY h
+  JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS u
+    ON h.USER_ID = u.USER_ID
+ WHERE h.START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+   AND u.DELETED_ON IS NULL
+ GROUP BY u.NAME, h.FUNCTION_NAME, h.MODEL_NAME
+ ORDER BY TOTAL_CREDITS DESC;"""
+
+    return sql_query
+
+
+execute_query(query_2_1())
+
+
+@st.fragment
+def cell_2_1():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### AI function usage")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key=f"refresh_button_cell_2_1",
+                help="Refresh AI function usage data",
+            ):
+                execute_query.clear(query_2_1())
+
+        try:
+            with st.spinner("Executing query", show_time=True):
+                df = session.create_async_job(execute_query(query_2_1())).result(
+                    "pandas"
+                )
+
+            if any(df.columns.duplicated()):
+                new_names = []
+                name_indexes = {}
+                for name in df.columns:
+                    name_index = name_indexes.get(name, 0) + 1
+                    name_indexes[name] = name_index
+                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
+                df.columns = new_names
+
+            if len(df) == 1 and len(df.columns) == 1:
+                st.metric(
+                    label=df.columns[0],
+                    value=str(df.iloc[0, 0]),
+                    label_visibility="collapsed",
+                )
+            else:
+                st.dataframe(df, width="stretch", hide_index=True, height=400)
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
 # Row 1: 2 Cells
 col1_1, col1_2 = st.columns(2)
 with col1_1:
     cell_1_1()
 with col1_2:
     cell_1_2()
+
+# Row 2: AI Function usage
+cell_2_1()
 
 
 # Footer
