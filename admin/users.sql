@@ -11,6 +11,7 @@ CREATE USER IF NOT EXISTS "sandhra.sokhal@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.hindman@sagebase.org";
 CREATE USER IF NOT EXISTS "jay.hodgson@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
+CREATE USER IF NOT EXISTS "hallie.swan@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
 -- This user is managed by Jumpcloud, thus they exist outside
