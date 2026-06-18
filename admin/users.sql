@@ -13,7 +13,6 @@ CREATE USER IF NOT EXISTS "jay.hodgson@sagebase.org";
 CREATE USER IF NOT EXISTS "nick.grosenbacher@sagebase.org";
 CREATE USER IF NOT EXISTS "hallie.swan@sagebase.org";
 CREATE USER IF NOT EXISTS "khai.do@sagebase.org";
-CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
 -- This user is managed by Jumpcloud, thus they exist outside
 -- the usual user creation process.
 -- CREATE USER IF NOT EXISTS "joni.harker@sagebase.org";
@@ -22,13 +21,11 @@ CREATE USER IF NOT EXISTS "thomas.schaffter@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.taylor@sagebase.org";
 CREATE USER IF NOT EXISTS "chelsea.nayan@sagebase.org";
 CREATE USER IF NOT EXISTS "xindi.guo@sagebase.org";
-CREATE USER IF NOT EXISTS "alexander.paynter@sagebase.org";
 CREATE USER IF NOT EXISTS "aditi.gopalan@sagebase.org";
 CREATE USER IF NOT EXISTS "amber.nelson@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.vera@sagebase.org";
 
 // ADTR
-CREATE USER IF NOT EXISTS "victor.baham@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.malenfant@sagebase.org";
 CREATE USER IF NOT EXISTS "jessica.britton@sagebase.org";
 CREATE USER IF NOT EXISTS "zoe.leanza@sagebase.org";
@@ -43,7 +40,6 @@ CREATE USER IF NOT EXISTS "karina.leal@sagebase.org";
 CREATE USER IF NOT EXISTS "ann.campton@sagebase.org";
 CREATE USER IF NOT EXISTS "melissa.klein@sagebase.org";
 CREATE USER IF NOT EXISTS "beatriz.saldana@sagebase.org";
-CREATE USER IF NOT EXISTS "andree-anne.berthiaume@sagebase.org";
 CREATE USER IF NOT EXISTS "jordan.driscoll@sagebase.org";
 CREATE USER IF NOT EXISTS "laura.heath@sagebase.org";
 CREATE USER IF NOT EXISTS "tiara.adams@sagebase.org";
@@ -73,7 +69,6 @@ CREATE USER IF NOT EXISTS "aditya.nath@sagebase.org";
 // Digital Health
 CREATE USER IF NOT EXISTS "solly.sieberts@sagebase.org";
 CREATE USER IF NOT EXISTS "elias.chaibub.neto@sagebase.org";
--- CREATE USER IF NOT EXISTS "arti.singh@sagebase.org";
 CREATE USER IF NOT EXISTS "sonia.carlson@sagebase.org";
 
 // Governance
@@ -82,22 +77,13 @@ CREATE USER IF NOT EXISTS "anthony.pena@sagebase.org";
 CREATE USER IF NOT EXISTS "jonathan.liaw-gray@sagebase.org";
 CREATE USER IF NOT EXISTS "samuel.cason@sagebase.org";
 CREATE USER IF NOT EXISTS "amelia.weixler@sagebase.org";
--- CREATE USER IF NOT EXISTS "natosha.edmonds@sagebase.org";
--- CREATE USER IF NOT EXISTS "lisa.pasquale@sagebase.org";
--- CREATE USER IF NOT EXISTS "hayley.sanchez@sagebase.org";
--- The above two users have departed Sage and should be disabled in a separate PR
 
 // CNB
 CREATE USER IF NOT EXISTS "verena.chung@sagebase.org";
 CREATE USER IF NOT EXISTS "rchai@sagebase.org";
-CREATE USER IF NOT EXISTS "maria.diaz@sagebase.org";
 CREATE USER IF NOT EXISTS "gaia.andreoletti@sagebase.org";
-CREATE USER IF NOT EXISTS "serghei.mangul@sagebase.org";
-
 // TECH
 CREATE USER IF NOT EXISTS "anthony.williams@sagebase.org";
-CREATE USER IF NOT EXISTS "loren.wolfe@sagebase.org";
-CREATE USER IF NOT EXISTS "mieko.hashimoto@sagebase.org";
 CREATE USER IF NOT EXISTS "milen.nikolov@sagebase.org";
 CREATE USER IF NOT EXISTS "amy.heiser@sagebase.org";
 CREATE USER IF NOT EXISTS "christina.parry@sagebase.org";
@@ -115,7 +101,6 @@ CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
 CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
 CREATE USER IF NOT EXISTS "lingling.peng@sagebase.org";
-CREATE USER IF NOT EXISTS "gianna.jordan@sagebase.org";
 CREATE USER IF NOT EXISTS "andrew.lamb@sagebase.org";
 
 // LT
@@ -143,13 +128,7 @@ CREATE USER IF NOT EXISTS "laurielle.roberson@sagebase.org";
 
 
 // SERVICE users
-CREATE USER IF NOT EXISTS DBT_SERVICE
-    PASSWORD = 'placeholder'
-    MUST_CHANGE_PASSWORD = TRUE;
 CREATE USER IF NOT EXISTS DPE_SERVICE
-    PASSWORD = 'placeholder'
-    MUST_CHANGE_PASSWORD = TRUE;
-CREATE USER IF NOT EXISTS AD_SERVICE
     PASSWORD = 'placeholder'
     MUST_CHANGE_PASSWORD = TRUE;
 
@@ -291,7 +270,16 @@ DECLARE
             'pranav.anbarasu@sagebase.org',
             'richard.yaxley@sagebase.org',
             'sarah.chan@sagebase.org',
-            'meghasyam@sagebase.org'
+            'meghasyam@sagebase.org',
+            'thomas.schaffter@sagebase.org',
+            'alexander.paynter@sagebase.org',
+            'victor.baham@sagebase.org',
+            'andree-anne.berthiaume@sagebase.org',
+            'maria.diaz@sagebase.org',
+            'serghei.mangul@sagebase.org',
+            'loren.wolfe@sagebase.org',
+            'mieko.hashimoto@sagebase.org',
+            'gianna.jordan@sagebase.org'
         );
 BEGIN
     SHOW USERS;
