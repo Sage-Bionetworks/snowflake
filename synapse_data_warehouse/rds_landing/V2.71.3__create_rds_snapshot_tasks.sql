@@ -104,7 +104,8 @@ AS
             $1:SUBMISSION_SERIALIZED::BINARY      AS submission_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_SUBMISSION/
     )
-    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    -- The parquet files for this data type will contain one or more binary columns
+    -- that cannot be UTF-8 decoded, so BINARY_AS_TEXT must be set to FALSE
     FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGES_TASK
@@ -134,7 +135,8 @@ AS
             $1:REASON::BINARY        AS reason
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_SUBMISSION_STATUS/
     )
-    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    -- The parquet files for this data type will contain one or more binary columns
+    -- that cannot be UTF-8 decoded, so BINARY_AS_TEXT must be set to FALSE
     FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_SUBMITTER_TASK
@@ -168,7 +170,8 @@ AS
             $1:REQUEST_SERIALIZED::BINARY    AS request_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_REQUEST/
     )
-    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    -- The parquet files for this data type will contain one or more binary columns
+    -- that cannot be UTF-8 decoded, so BINARY_AS_TEXT must be set to FALSE
     FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACCESS_REQUIREMENT_TASK
@@ -213,7 +216,8 @@ AS
             $1:SERIALIZED_ENTITY::BINARY AS serialized_entity
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/ACCESS_REQUIREMENT_REVISION/
     )
-    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    -- The parquet files for this data type will contain one or more binary columns
+    -- that cannot be UTF-8 decoded, so BINARY_AS_TEXT must be set to FALSE
     FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_NOTIFICATION_TASK
