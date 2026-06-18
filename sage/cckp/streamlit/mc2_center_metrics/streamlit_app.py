@@ -91,13 +91,13 @@ SELECT
 FROM 
     synapse_data_warehouse.synapse_event.objectdownload_event AS dl
 INNER JOIN 
-    data_analytics.mc2_center.mc2_projects AS mc2 
+    sage.cckp.mc2_projects AS mc2 
       ON dl.project_id = mc2.project_id
 INNER JOIN 
     synapse_users 
       ON dl.user_id = synapse_users.id
 WHERE 
-    dl.file_handle_id IN (SELECT file_handle_id FROM data_analytics.mc2_center.mc2_nodes WHERE node_type = 'file')
+    dl.file_handle_id IN (SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file')
 GROUP BY
     1
 ORDER BY 
@@ -169,7 +169,7 @@ WITH
             file_handle_id,
             project_name
         FROM 
-            data_analytics.mc2_center.mc2_nodes
+            sage.cckp.mc2_nodes
         WHERE 
             node_type = 'file'
             AND filename NOT ILIKE 'synapse_storage_manifest_%view.csv'
@@ -305,8 +305,8 @@ INNER JOIN
     synapse_users 
       ON dl.user_id = synapse_users.id
 WHERE 
-    dl.project_id IN (SELECT project_id FROM data_analytics.mc2_center.mc2_projects)
-    AND dl.file_handle_id IN (SELECT file_handle_id FROM data_analytics.mc2_center.mc2_nodes WHERE node_type = 'file')
+    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+    AND dl.file_handle_id IN (SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file')
 GROUP BY
     1
 ORDER BY
@@ -415,8 +415,8 @@ INNER JOIN
     synapse_users 
       ON dl.user_id = synapse_users.id
 WHERE 
-    dl.project_id IN (SELECT project_id FROM data_analytics.mc2_center.mc2_projects)
-    AND dl.file_handle_id IN (SELECT file_handle_id FROM data_analytics.mc2_center.mc2_nodes WHERE node_type = 'file')
+    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+    AND dl.file_handle_id IN (SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file')
 GROUP BY
     1
 ORDER BY
@@ -510,8 +510,8 @@ INNER JOIN
     non_sagers
       ON dl.user_id = non_sagers.id
 WHERE 
-    dl.project_id IN (SELECT project_id FROM data_analytics.mc2_center.mc2_projects)
-    AND dl.file_handle_id IN (SELECT file_handle_id FROM data_analytics.mc2_center.mc2_nodes WHERE node_type = 'file')
+    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+    AND dl.file_handle_id IN (SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file')
 GROUP BY
     1, 2
 ORDER BY
@@ -613,7 +613,7 @@ WITH
             project_id,
             project_name
         FROM
-            data_analytics.mc2_center.mc2_nodes
+            sage.cckp.mc2_nodes
         WHERE
             annotations:annotations:portal.value[0]::string = 'CCKP'
             AND annotations:annotations:entityType.value[0]::string = 'dataset'
@@ -645,7 +645,7 @@ WITH
             parent.project_id,
             parent.project_name
         FROM
-            data_analytics.mc2_center.mc2_nodes child
+            sage.cckp.mc2_nodes child
         INNER JOIN
             mc2_dataset_nodes parent 
                 ON child.parent_id = parent.id
@@ -753,13 +753,13 @@ SELECT
 FROM 
     synapse_data_warehouse.synapse_event.objectdownload_event AS dl
 INNER JOIN 
-    data_analytics.mc2_center.mc2_projects AS mc2 
+    sage.cckp.mc2_projects AS mc2 
       ON dl.project_id = mc2.project_id
 INNER JOIN 
     synapse_users 
       ON dl.user_id = synapse_users.id
 WHERE 
-    dl.file_handle_id IN (SELECT file_handle_id FROM data_analytics.mc2_center.mc2_nodes WHERE node_type = 'file')
+    dl.file_handle_id IN (SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file')
 GROUP BY
     1
 ORDER BY 
@@ -884,7 +884,7 @@ WITH
             file_handle_id,
             project_name
         FROM 
-            data_analytics.mc2_center.mc2_nodes
+            sage.cckp.mc2_nodes
         WHERE 
             node_type = 'file'
             AND filename NOT ILIKE 'synapse_storage_manifest_%view.csv'
