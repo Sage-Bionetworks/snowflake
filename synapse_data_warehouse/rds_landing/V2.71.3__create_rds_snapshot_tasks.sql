@@ -5,7 +5,7 @@ USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 -- the latest S3 files before any loading begins.
 -- ============================================================
 CREATE OR REPLACE TASK REFRESH_RDS_SNAPSHOTS_STAGE_TASK
-    -- TODO: every minute for testing; revert before production rollout.
+    -- TODO: every minute for testing; change to 3AM ET // 7AM UTC before production rollout.
     SCHEDULE = 'USING CRON * * * * * America/Los_Angeles'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE='SMALL'
     AS ALTER STAGE IF EXISTS RDS_SNAPSHOTS_STAGE REFRESH;
@@ -104,6 +104,8 @@ AS
             $1:SUBMISSION_SERIALIZED::BINARY      AS submission_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_SUBMISSION/
     )
+    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_ACCESSOR_CHANGES_TASK
     WAREHOUSE = compute_xsmall
@@ -132,6 +134,8 @@ AS
             $1:REASON::BINARY        AS reason
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_SUBMISSION_STATUS/
     )
+    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_SUBMISSION_SUBMITTER_TASK
     WAREHOUSE = compute_xsmall
@@ -164,6 +168,8 @@ AS
             $1:REQUEST_SERIALIZED::BINARY    AS request_serialized
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/DATA_ACCESS_REQUEST/
     )
+    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_ACCESS_REQUIREMENT_TASK
     WAREHOUSE = compute_xsmall
@@ -207,6 +213,8 @@ AS
             $1:SERIALIZED_ENTITY::BINARY AS serialized_entity
         FROM @RDS_SNAPSHOTS_STAGE/rds-snapshot/ACCESS_REQUIREMENT_REVISION/
     )
+    -- This parquet file contains a binary column, so BINARY_AS_TEXT must be set to FALSE
+    FILE_FORMAT = (TYPE = PARQUET BINARY_AS_TEXT = FALSE)
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 CREATE OR REPLACE TASK COPY_DATA_ACCESS_NOTIFICATION_TASK
     WAREHOUSE = compute_xsmall
