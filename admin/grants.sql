@@ -201,6 +201,9 @@ GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "luisa.chekrygin@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "laurielle.roberson@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jon.long@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jessica.lundin@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "pranita.atri@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "amelia.kallaher@sagebase.org";
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
@@ -1213,6 +1216,33 @@ GRANT ROLE SAGE_GENIE_ANALYST TO USER "ashley.clayton@sagebase.org";
 -- SAGE.ELITE analyst user grants
 GRANT ROLE SAGE_ELITE_ANALYST TO USER "milan.vu@sagebase.org";
 GRANT ROLE SAGE_ELITE_ANALYST TO USER "melissa.klein@sagebase.org";
+
+-- SAGE.CCKP user grants
+GRANT ROLE SAGE_CCKP_ADMIN TO USER "verena.chung@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "ashley.clayton@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "savitha.sangameswaran@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "jineta.banerjee@sagebase.org";
+
+-- SAGE.AD user grants
+GRANT ROLE SAGE_AD_ANALYST TO USER "samia.ahmed@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "jo.scanlan@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "karina.leal@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "jessica.britton@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "zoe.leanza@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "milan.vu@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "jessica.malenfant@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "laura.heath@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "emma.costa@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "ann.campton@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "jessica.lundin@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "tiara.adams@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "trisha.zintel@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "tera.derita@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "pranita.atri@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "jordan.driscoll@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "amelia.kallaher@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "melissa.klein@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "ram.ayyala@sagebase.org";
 
 -- Restrict DATA_ACCESS_SUBMISSION_EVENT to SYNAPSE_EVENT_GOVERNANCE_READ only
 -- SYNAPSE_DATA_WAREHOUSE
