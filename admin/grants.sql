@@ -1214,6 +1214,13 @@ GRANT ROLE SAGE_GENIE_ANALYST TO USER "ashley.clayton@sagebase.org";
 GRANT ROLE SAGE_ELITE_ANALYST TO USER "milan.vu@sagebase.org";
 GRANT ROLE SAGE_ELITE_ANALYST TO USER "melissa.klein@sagebase.org";
 
+-- SAGE.CCKP user grants
+GRANT ROLE SAGE_CCKP_ADMIN TO USER "verena.chung@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "ashley.clayton@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "savitha.sangameswaran@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "jineta.banerjee@sagebase.org";
+
+
 -- Restrict DATA_ACCESS_SUBMISSION_EVENT to SYNAPSE_EVENT_GOVERNANCE_READ only
 -- SYNAPSE_DATA_WAREHOUSE
 REVOKE SELECT, MONITOR
