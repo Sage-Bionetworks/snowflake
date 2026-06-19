@@ -201,6 +201,9 @@ GRANT ROLE DATA_ANALYTICS TO USER "julia.gray@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "luisa.chekrygin@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "laurielle.roberson@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jon.long@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "jessica.lundin@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "pranita.atri@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "amelia.kallaher@sagebase.org";
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
