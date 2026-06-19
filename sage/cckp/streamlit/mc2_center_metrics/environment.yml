@@ -1,0 +1,8 @@
+name: mc2_center_metrics
+channels:
+  - snowflake
+dependencies:
+  - python=3.11.*
+  - snowflake-snowpark-python
+  - streamlit=1.*
+  - pandas
