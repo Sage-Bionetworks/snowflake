@@ -1160,7 +1160,6 @@ GRANT ROLE TECH_PRODUCT TO USER "shaun.kalweit@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "thomas.yu@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "phil.snyder@sagebase.org";
 GRANT ROLE TECH_PRODUCT TO USER "jenny.medina@sagebase.org";
-GRANT ROLE TECH_PRODUCT TO USER "bruce.hoff@sagebase.org";
 
 -- Warehouse access for Streamlit apps in SAGE.GOVERNANCE
 GRANT USAGE ON WAREHOUSE STREAMLIT_XSMALL
