@@ -16,6 +16,7 @@ Each major subsystem is self-contained with its own `CLAUDE.md`:
 - `analytics/` — ad-hoc SQL and one-off Python ETL scripts. Not deployed by CI.
 - `genie/` — GENIE cancer genomics queries and Snowpark scripts. Query-focused, minimal DDL.
 - `data_validation/` — Great Expectations checkpoints on raw + portal tables.
+- `packages/snowclone/` — Python tooling (a uv-workspace member, invoked by CI) that procures RBAC-configured zero-copy clone environments for development/PR testing.
 - `.github/` — CI/CD workflows and shared actions.
 
 ## Data flow
@@ -59,6 +60,8 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 **Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
 
 **`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`). If the `dev` based changes are dependent on changes in `admin/`, then the description of the associated PR should indicate that this PR "depends on" the PR associated with the `admin/` changes.
+
+**Python environment:** Dependencies are managed with [uv](https://docs.astral.sh/uv/). Run tools via `uv run --group <name> <cmd>` — no separate sync step needed. Available groups: `snowflake`, `schemachange`, `dbt`, `finance`. See `pyproject.toml` for the full definitions. Install the `snow` CLI separately: `uv tool install snowflake-cli`. Streamlit app dependencies are managed per-app via `environment.yml` (conda/mamba) — see [STREAMLIT.md](./STREAMLIT.md).
 
 **CONTRIBUTING.md** Additional contribution guidelines are contained in [CONTRIBUTING.md](./CONTRIBUTING.md).
 

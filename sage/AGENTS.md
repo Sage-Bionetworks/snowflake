@@ -37,5 +37,10 @@ The version sequence in `sage/` is independent of both `synapse_data_warehouse/`
 
 ## Constraints
 
-- **Prod only** — never attempt to deploy `sage/` to a dev or PR-clone database. There is no `SAGE_DEV`.
-- **Do NOT run `dbt run --selector sage` without `--target prod`** — sage dbt models are disabled for non-prod targets.
+- **No standing `SAGE_DEV`** — `sage/` deploys to the `SAGE` prod database via CI. The
+  only non-prod targets are ephemeral zero-copy clones procured by `packages/snowclone/`
+  (e.g. `SAGE_{suffix}`), which deploy via **schemachange only**.
+  `schemachange-config.yml` reads the standardized `SNOWFLAKE_DEPLOY_DATABASE` env var
+  (default `SAGE`) so a clone is targeted without touching prod. Do not otherwise
+  deploy `sage/` to a hand-rolled dev database.
+- **Do NOT run `dbt run --selector sage` without `--target prod`** — sage dbt models are disabled for non-prod targets, including clones.

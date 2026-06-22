@@ -3,13 +3,17 @@ config-version: 1
 root-folder: synapse_raw
 # modules-folder: modules
 # The name of the default database to use. Can be overridden in the change scripts.
-snowflake-database: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE')}}
+# SNOWFLAKE_DEPLOY_DATABASE is the standardized target-database env var across all
+# schemachange configs; CI sets it per environment, and snowclone sets it to
+# the clone. No default here: an unset var fails fast rather than risking the wrong
+# database (unlike SAGE, this database has both a dev and a prod deployment).
+snowflake-database: {{env_var('SNOWFLAKE_DEPLOY_DATABASE')}}
 # Create the change history schema and table, if they do not exist (the default is False)
 create-change-history-table: True
 # Used to override the default name of the change history table (the default is METADATA.SCHEMACHANGE.CHANGE_HISTORY)
-change-history-table: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE')}}.SCHEMACHANGE.CHANGE_HISTORY
+change-history-table: {{env_var('SNOWFLAKE_DEPLOY_DATABASE')}}.SCHEMACHANGE.CHANGE_HISTORY
 vars:
-  database_name: {{env_var('SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE')}}
+  database_name: {{env_var('SNOWFLAKE_DEPLOY_DATABASE')}}
   stage_storage_integration: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION')}}
   stage_url: {{env_var('SNOWFLAKE_SYNAPSE_STAGE_URL')}}
   snapshots_stage_storage_integration: {{env_var('SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION')}}
