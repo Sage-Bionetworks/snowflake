@@ -5,8 +5,7 @@ USE SCHEMA {{database_name}}.RDS_LANDING; --noqa: JJ01,PRS,TMP
 -- the latest S3 files before any loading begins.
 -- ============================================================
 CREATE OR REPLACE TASK REFRESH_RDS_SNAPSHOTS_STAGE_TASK
-    -- TODO: every minute for testing; change to 3AM ET // 7AM UTC before production rollout.
-    SCHEDULE = 'USING CRON * * * * * America/Los_Angeles'
+    SCHEDULE = 'USING CRON 0 7 * * * UTC'
     USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE='SMALL'
     AS ALTER STAGE IF EXISTS RDS_SNAPSHOTS_STAGE REFRESH;
 
