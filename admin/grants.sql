@@ -1255,6 +1255,7 @@ GRANT ROLE SAGE_AD_ANALYST TO USER "jordan.driscoll@sagebase.org";
 GRANT ROLE SAGE_AD_ANALYST TO USER "amelia.kallaher@sagebase.org";
 GRANT ROLE SAGE_AD_ANALYST TO USER "melissa.klein@sagebase.org";
 GRANT ROLE SAGE_AD_ANALYST TO USER "ram.ayyala@sagebase.org";
+GRANT ROLE SAGE_AD_ANALYST TO USER "julia.gray@sagebase.org";
 
 -- Restrict DATA_ACCESS_SUBMISSION_EVENT to SYNAPSE_EVENT_GOVERNANCE_READ only
 -- SYNAPSE_DATA_WAREHOUSE
