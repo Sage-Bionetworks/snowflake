@@ -1,1990 +1,582 @@
 import argparse
-import datetime as dt
+import numpy as np
 import pandas as pd
 import streamlit as st
-from snowflake.snowpark import Session
-from snowflake.snowpark.context import get_active_session
-
-
-def read_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--local-dev",
-        action="store_true",
-        help=(
-            "Run in local development mode. Creates a Snowflake session using the "
-            "'default' connection from ~/.snowflake/connections.toml instead of "
-            "the active Streamlit in Snowflake (SiS) session. "
-            "Usage: streamlit run streamlit_app.py -- --local-dev"
-        ),
-    )
-    return parser.parse_args()
-
-
-def get_session(local_dev: bool) -> Session:
-    if local_dev:
-        return Session.builder.config("connection_name", "default").create()
-
-    return get_active_session()
-
-
-# Set page config
-st.set_page_config(page_title="NF Usage Metrics", layout="wide")
-
-# Title
-st.title("NF Usage Metrics")
-st.markdown(
-    '<p style="color: #cc0000; font-size: 0.85rem; margin-top: -0.4rem;">'
-    "This app is "
-    '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on Github</a>. '
-    "Any local edits will not be retained."
-    "</p>",
-    unsafe_allow_html=True,
+import graphviz
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from toolkit.queries import (
+    query_project_meta,
+    query_project_meta_other_funders,
+    query_project_meta_with_initiative,
+    query_all_initiatives,
+    query_entity_distribution,
+    query_project_downloads,
+    query_monthly_file_egress,
+    query_downloaded_file_meta,
+    query_project_sizes,
+    query_unique_users,
+    query_file_metadata_for_growth,
+    query_total_data_size_by_initiative,
+    query_top_data_types_by_size,
+    query_released_data_by_type
 )
-
-# Initialize session configured for generated Streamlit apps
-args = read_args()
-session = get_session(args.local_dev)
-try:
-    session.query_tag = "__generated_streamlit"
-except Exception:
-    pass
-
-# Parameter input widgets arranged in a row
-(param_col_1,) = st.columns(1)
-
-with param_col_1:
-    # Parameter: daterange (relative)
-    st.markdown("**Date range**")
-    default_start = dt.datetime.now().date() - dt.timedelta(days=30 * 6)
-    default_end = dt.datetime.now().date()
-    input_daterange = st.date_input(
-        "Date range",
-        value=(default_start, default_end),
-        label_visibility="collapsed",
-        key="daterange_param",
-    )
-
-st.markdown("---")
-
-
-@st.cache_data(ttl="23h50m")
-def execute_query(query: str) -> str:
-    return session.sql(query).collect_nowait().query_id
-
-
-def query_1_1() -> str:
-    sql_query = r"""
-
--- get latest projects https://www.synapse.org/#!Synapse:syn51489960/tables/query/eyJzcWwiOiJTRUxFQ1QgZGlzdGluY3QocHJvamVjdElkKSBGUk9NIHN5bjUxNDg5OTYwIiwgImluY2x1ZGVFbnRpdHlFdGFnIjp0cnVlLCAibGltaXQiOjI1fQ==
-with nf_projects as (
-    -- select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.NF
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
+from toolkit.utils import get_data_from_snowflake
+from toolkit.widgets import (
+    plot_stacked_bar_chart,
+    graphviz_status,
+    plot_download_sizes,
+    plot_monthly_egress,
+    plot_download_scatter,
+    plot_unique_users_monthly,
+    plot_resource_downloads,
+    plot_download_sizes_lollipop,
+    network_legend,
+    plot_network,
+    plot_project_pageviews,
+    plot_cumulative_data_growth,
+    plot_data_type_bar_chart,
+    create_data_type_table,
+    format_size_metric,
+    # TRANSFORMS
+    merge_size_and_downloads,
+    # PALETTE
+    PORTAL_BLUE, PORTAL_DARK, PINK, PURPLE, BEIGE, TEAL, ORANGE,
+    LIGHT_BLUE, MAGENTA, PALE_BLUE, OFF_WHITE, LAVENDER, GREEN, NAVY, GRAY
 )
-select
-    min(record_date) as min_dl_date,
-    max(record_date) as max_dl_date
-from
-  synapse_data_warehouse.synapse_event.objectdownload_event
-inner join
-    nf_projects
-  on objectdownload_event.project_id = nf_projects.project_id
+# from toolkit.ga4 import get_total_page_views
+from datetime import datetime, timedelta
 
-  """
 
-    return sql_query
+# Configure the layout of the Streamlit app page
+st.set_page_config(layout="wide",
+                   page_title="NF Analytics",
+                   page_icon=":bar_chart:",
+                   initial_sidebar_state="expanded")
 
+# Custom CSS for styling
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-execute_query(query_1_1())
+# Storage only -- approximate intelligent tiering, see aws.amazon.com/s3/pricing/
+def calculate_annual_cost(total_data_size_gb):
+    monthly_cost_per_gb = 0.021
+    months_in_year = 12
+    return total_data_size_gb * monthly_cost_per_gb * months_in_year
 
+def main():
 
-@st.fragment
-def cell_1_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Download times")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_1_1",
-                help="Refresh download_times data",
-            ):
-                execute_query.clear(query_1_1())
+    # SIDE BAR --------------------------------------------------------------------------------#
 
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_1_1())).result(
-                    "pandas"
-                )
+    # Update Mode Selection (Dynamic vs Manual)
+    st.sidebar.header("Update Mode")
+    update_mode = st.sidebar.radio("Select Update Mode", options=["Dynamic Updates", "Manual Updates (Press Go)"], key="update_mode")
 
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
+    # Funder Selection
+    st.sidebar.header("Funder")
+    funders = st.sidebar.multiselect("Select Funders", options=["NTAP", "CTF", "GFF", "Other"], default=["NTAP", "CTF", "GFF"], key="funders")
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_1_2() -> str:
-    sql_query = r"""
-
-with nf_projects as (
-  -- select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.NF
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where id = 16858331
-)    
-select
-    count(*) as number_of_files,
-    sum(file_latest.content_size) / power(2, 40) AS TOTAL_SIZE_IN_TiB,
-    sum(file_latest.content_size) / power(2, 30) * 0.023 * 12 AS annual_price_estimate
-from
-    synapse_data_warehouse.synapse.node_latest
-inner join
-    nf_projects
-    on node_latest.project_id = nf_projects.project_id
-inner join
-    synapse_data_warehouse.synapse.file_latest
-    on node_latest.file_handle_id = file_latest.id;
-
-  """
-
-    return sql_query
-
-
-execute_query(query_1_2())
-
-
-@st.fragment
-def cell_1_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Storage summary")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_1_2",
-                help="Refresh storage_summary data",
-            ):
-                execute_query.clear(query_1_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_1_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_1_3() -> str:
-    sql_query = r"""
-
-with nf_projects as (
-  -- select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.NF
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where id = 16858331
-)    
-select
-    node_latest.annotations:annotations:dataType:value[0] as datatype,
-    count(*) as number_of_files,
-    sum(file_latest.content_size) / power(2, 30) as size_in_gib
-from
-    synapse_data_warehouse.synapse.node_latest
-inner join
-    nf_projects
-    on node_latest.project_id = nf_projects.project_id
-inner join
-    synapse_data_warehouse.synapse.file_latest
-    on node_latest.file_handle_id = file_latest.id
-group by
-    datatype
-  """
-
-    return sql_query
-
-
-execute_query(query_1_3())
-
-
-@st.fragment
-def cell_1_3():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Datatype storage summary")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_1_3",
-                help="Refresh datatype_storage_summary data",
-            ):
-                execute_query.clear(query_1_3())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_1_3())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 1: 3 Cells
-col1_1, col1_2, col1_3 = st.columns(3)
-with col1_1:
-    cell_1_1()
-with col1_2:
-    cell_1_2()
-with col1_3:
-    cell_1_3()
-
-
-def query_2_1() -> str:
-    sql_query = r"""
-
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where id = 16858331
-)    
-select
-    count(distinct record_date, user_id, file_handle_id) as number_of_downloads,
-    count(distinct user_id) as number_of_unique_users_downloaded
-from
-  synapse_data_warehouse.synapse_event.objectdownload_event
-inner join
-    nf_projects
-  on objectdownload_event.project_id = nf_projects.project_id;  """
-
-    return sql_query
-
-
-execute_query(query_2_1())
-
-
-@st.fragment
-def cell_2_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All time downloads")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_2_1",
-                help="Refresh all_time_downloads data",
-            ):
-                execute_query.clear(query_2_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_2_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_2_2() -> str:
-    sql_query = r"""
-
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), nonsage_users AS (
-    SELECT
-        ID
-    FROM
-        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
-    WHERE
-        EMAIL NOT LIKE '%@sagebase.org'
-), dedup_downloads as (
-    select
-        distinct record_date, user_id, file_handle_id
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        nonsage_users
-    on
-      objectdownload_event.user_id = nonsage_users.id
-    inner join
-        nf_projects
-      on objectdownload_event.project_id = nf_projects.project_id
-)
-select
-    count(RECORD_DATE) as number_of_downloads,
-    count(DISTINCT USER_ID) as number_of_unique_users_downloaded
-from
-    dedup_downloads;  """
-
-    return sql_query
-
-
-execute_query(query_2_2())
-
-
-@st.fragment
-def cell_2_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All time non-sage downloads")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_2_2",
-                help="Refresh all_time_non-sage_downloads data",
-            ):
-                execute_query.clear(query_2_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_2_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_2_3() -> str:
-    sql_query = r"""
-WITH nf_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest nl,
-        LATERAL FLATTEN(input => nl.scope_ids) scopes
-    WHERE
-        nl.id = 16858331
-), nonsage_users AS (
-    SELECT
-        ID
-    FROM
-        SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
-    WHERE
-        EMAIL NOT LIKE '%@sagebase.org'
-), dedup_downloads AS (
-    SELECT
-        DISTINCT fd.record_date,
-        fd.user_id,
-        fd.file_handle_id
-    FROM
-      synapse_data_warehouse.synapse_event.objectdownload_event AS fd
-        INNER JOIN nonsage_users nu
-            ON fd.user_id = nu.id
-        INNER JOIN nf_projects np
-            ON fd.project_id = np.project_id
-    WHERE
-        fd.record_date BETWEEN DATEADD(year, -1, CURRENT_DATE) AND CURRENT_DATE
-)
-SELECT
-    COUNT(record_date) AS number_of_downloads,
-    COUNT(DISTINCT user_id) AS number_of_unique_users_downloaded
-FROM
-    dedup_downloads;
-  """
-
-    return sql_query
-
-
-execute_query(query_2_3())
-
-
-@st.fragment
-def cell_2_3():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Downloads last 12 months")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_2_3",
-                help="Refresh downloads_last_12_months data",
-            ):
-                execute_query.clear(query_2_3())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_2_3())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 2: 3 Cells
-col2_1, col2_2, col2_3 = st.columns(3)
-with col2_1:
-    cell_2_1()
-with col2_2:
-    cell_2_2()
-with col2_3:
-    cell_2_3()
-
-
-def query_3_1() -> str:
-    sql_query = r"""
-WITH nf_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 16858331
-), node_annotations AS (
-    SELECT
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] AS fundingAgency
-    FROM
-        synapse_data_warehouse.synapse.node_latest
-    INNER JOIN
-        nf_projects ON node_latest.project_id = nf_projects.project_id
-), dedup_downloads AS (
-    SELECT
-    DISTINCT objectdownload_event.record_date,
-    objectdownload_event.user_id,
-    objectdownload_event.file_handle_id,
-        node_annotations.fundingAgency
-    FROM
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    INNER JOIN
-      node_annotations ON objectdownload_event.file_handle_id = node_annotations.file_handle_id
-    INNER JOIN
-      nf_projects ON objectdownload_event.project_id = nf_projects.project_id
-    WHERE
-      objectdownload_event.user_id NOT IN (
-            3421893, 3389310, 3342573, 3434950, 3459953, 
-            3514384, 3510065, 3324230, 3460442, 3458117, 
-            3434599, 3440247, 3342492, 3481671, 3489628
-        ) -- Exclude specific user IDs
-)
-SELECT
-    DATE_TRUNC('MONTH', record_date) AS month_of_download,
-    COUNT(record_date) AS number_of_downloads,
-    COUNT(DISTINCT user_id) AS number_of_unique_users
-FROM
-    dedup_downloads
-WHERE
-    fundingAgency LIKE '%NTAP%'  -- Filter for NTAP in fundingAgency
-GROUP BY
-  month_of_download
-ORDER BY
-  month_of_download DESC;
-  """
-
-    return sql_query
-
-
-execute_query(query_3_1())
-
-
-@st.fragment
-def cell_3_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Downloads Per Month - NTAP")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_1",
-                help="Refresh downloads_per_month_-_ntap data",
-            ):
-                execute_query.clear(query_3_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_3_2() -> str:
-    sql_query = r"""
-WITH nf_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 16858331
-), node_annotations AS (
-    SELECT
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] AS fundingAgency
-    FROM
-        synapse_data_warehouse.synapse.node_latest
-    INNER JOIN
-        nf_projects ON node_latest.project_id = nf_projects.project_id
-), dedup_downloads AS (
-    SELECT
-    DISTINCT objectdownload_event.record_date,
-    objectdownload_event.user_id,
-    objectdownload_event.file_handle_id,
-        node_annotations.fundingAgency
-    FROM
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    INNER JOIN
-      node_annotations ON objectdownload_event.file_handle_id = node_annotations.file_handle_id
-    INNER JOIN
-      nf_projects ON objectdownload_event.project_id = nf_projects.project_id
-    WHERE
-      objectdownload_event.user_id NOT IN (
-            3421893, 3389310, 3342573, 3434950, 3459953, 
-            3514384, 3510065, 3324230, 3460442, 3458117, 
-            3434599, 3440247, 3342492, 3481671, 3489628
-        ) -- Exclude specific user IDs
-)
-SELECT
-    DATE_TRUNC('MONTH', record_date) AS month_of_download,
-    COUNT(record_date) AS number_of_downloads,
-    COUNT(DISTINCT user_id) AS number_of_unique_users
-FROM
-    dedup_downloads
-WHERE
-    fundingAgency LIKE '%NTAP%'  -- Filter for NTAP in fundingAgency
-GROUP BY
-  month_of_download
-ORDER BY
-  month_of_download DESC;
-  """
-
-    return sql_query
-
-
-execute_query(query_3_2())
-
-
-@st.fragment
-def cell_3_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Downloads Per Month - NTAP")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_2",
-                help="Refresh downloads_per_month_-_ntap data",
-            ):
-                execute_query.clear(query_3_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for line chart with aggregation
-            if len(df) > 0:
-                df["MONTH_OF_DOWNLOAD"] = (
-                    pd.to_datetime(df["MONTH_OF_DOWNLOAD"])
-                    .dt.to_period("M")
-                    .dt.start_time
-                )
-
-                df = (
-                    df.groupby(by="MONTH_OF_DOWNLOAD", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                st.line_chart(
-                    df.set_index("MONTH_OF_DOWNLOAD"),
-                    width="stretch",
-                    height=400,
-                    y_label="Number of Downloads",
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_3_3() -> str:
-    sql_query = r"""
-WITH nf_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 16858331
-), node_annotations AS (
-    SELECT
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] AS fundingAgency,
-        nf_projects.project_id AS project_id  -- Ensure project_id is included here if needed
-    FROM
-        synapse_data_warehouse.synapse.node_latest
-    INNER JOIN
-        nf_projects ON node_latest.project_id = nf_projects.project_id
-), dedup_downloads AS (
-    SELECT
-    DISTINCT objectdownload_event.record_date,
-    objectdownload_event.user_id,
-    objectdownload_event.file_handle_id,
-        node_annotations.fundingAgency,
-        node_annotations.project_id  -- Include project_id in the selection
-    FROM
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    INNER JOIN
-      node_annotations ON objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    DATE_TRUNC('YEAR', record_date) AS year_of_download,
-  COUNT(*) AS number_of_downloads,
-  COUNT(DISTINCT user_id) AS number_of_unique_users,
-  COUNT(DISTINCT project_id) AS number_of_unique_projects  -- Corrected field name
-FROM
-    dedup_downloads
-WHERE
-    fundingAgency LIKE '%CTF%'  -- Filter for CTF in fundingAgency
-GROUP BY
-  year_of_download
-ORDER BY
-  year_of_download DESC;
-  """
-
-    return sql_query
-
-
-execute_query(query_3_3())
-
-
-@st.fragment
-def cell_3_3():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Downloads Per Month - CTF")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_3",
-                help="Refresh downloads_per_month_-_ctf data",
-            ):
-                execute_query.clear(query_3_3())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_3())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for line chart with aggregation
-            if len(df) > 0:
-                df = (
-                    df.groupby(by="YEAR_OF_DOWNLOAD", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                st.line_chart(
-                    df.set_index("YEAR_OF_DOWNLOAD"),
-                    width="stretch",
-                    height=400,
-                    y_label="Number of Downloads",
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 3: 3 Cells
-col3_1, col3_2, col3_3 = st.columns(3)
-with col3_1:
-    cell_3_1()
-with col3_2:
-    cell_3_2()
-with col3_3:
-    cell_3_3()
-
-
-def query_4_1() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] as fundingAgency
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.fundingAgency
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-      objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    fundingAgency,
-    YEAR(record_date) as year_of_download,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    year_of_download, fundingAgency
-ORDER BY
-    year_of_download DESC, fundingAgency DESC NULLS LAST;
+    # Initiative Filter
+    st.sidebar.header("Initiative Filter")
     
+    # Fetch all initiatives for the dropdown
+    try:
+        all_initiatives_df = get_data_from_snowflake(query_all_initiatives())
+        if not all_initiatives_df.empty:
+            # Extract values and clean them (remove quotes)
+            initiative_values = [str(val).strip('"') for val in all_initiatives_df['INITIATIVE_VALUE'].tolist()]
+            initiative_values = sorted(initiative_values)
+        else:
+            initiative_values = []
+    except Exception as e:
+        st.sidebar.warning(f"Could not load initiatives: {e}")
+        initiative_values = []
+    
+    # Multi-select for initiatives with help text
+    selected_initiatives = st.sidebar.multiselect(
+        "Select Initiatives",
+        options=initiative_values,
+        default=[],
+        key="initiatives",
+        help="Filter projects by initiative. Leave empty to include all initiatives."
+    )
 
-  """
+    # Open Proposal Filter
+    st.sidebar.header("Open Proposal Scope")
+    open_proposal_only = st.sidebar.checkbox(
+        "Open Proposal Projects Only",
+        value=False,
+        key="open_proposal",
+        help="When checked, only shows projects from the 'Open Proposal Program' initiative."
+    )
+    
+    # If Open Proposal is checked, override selected_initiatives
+    if open_proposal_only:
+        selected_initiatives = ["Open Proposal Program"]
 
-    return sql_query
-
-
-execute_query(query_4_1())
-
-
-@st.fragment
-def cell_4_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Annual downloads per funding agency")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_4_1",
-                help="Refresh annual_downloads_per_funding_agency data",
-            ):
-                execute_query.clear(query_4_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_4_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
+    # Fetch Project Metadata for Selected Funders
+    if funders:
+        project_meta_dfs = []
+        for funder in funders:
+            if funder == "Other":
+                # Get projects from all other funders (not NTAP, CTF, or GFF)
+                df = get_data_from_snowflake(query_project_meta_other_funders())
             else:
-                st.dataframe(df, width="stretch", hide_index=True)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 4: Single Cell
-cell_4_1()
-
-
-def query_5_1() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] as fundingAgency
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.fundingAgency
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-      objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    fundingAgency,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    fundingAgency
-ORDER BY
-  NUMBER_OF_DOWNLOADS DESC
-  NULLS LAST;
-  """
-
-    return sql_query
-
-
-execute_query(query_5_1())
-
-
-@st.fragment
-def cell_5_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per funding agency")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_5_1",
-                help="Refresh number_of_downloads_per_funding_agency data",
-            ):
-                execute_query.clear(query_5_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_5_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
+                # Get projects from the specific funder, optionally filtered by initiative
+                if selected_initiatives:
+                    df = get_data_from_snowflake(query_project_meta_with_initiative(funder, selected_initiatives))
+                else:
+                    df = get_data_from_snowflake(query_project_meta(funder))
+            project_meta_dfs.append(df)
+        
+        project_meta = pd.concat(project_meta_dfs, ignore_index=True)
+        # Remove duplicates in case of overlapping selections
+        project_meta = project_meta.drop_duplicates(subset=['PROJECT_ID'], keep='first')
+        
+        if project_meta.empty:
+            st.warning("No project metadata available for the selected funders.")
+            return
+
+        project_names = project_meta['PROJECT_NAME'].unique().tolist()
+
+        # Initialize `project_sizes` to avoid `UnboundLocalError`
+        project_sizes = pd.DataFrame()  # Empty DataFrame to avoid referencing before assignment
+        project_ids = []  # Initialize project_ids to avoid UnboundLocalError
+
+        # Project Selection Filter (dependent on Funder selection)
+        st.sidebar.header("Projects")
+        select_all_projects = st.sidebar.checkbox("Select All Projects", value=True, key="select_all_projects")
+
+        # If "Select All Projects" is unchecked, show a list of projects to choose from
+        if not select_all_projects:
+            selected_projects = st.sidebar.multiselect(
+                "Select Projects", options=project_names, key="projects"
+            )
+        else:
+            selected_projects = project_names
+
+        # Date Range Filters
+        st.sidebar.header("Date Range")
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=365)  # Default start date is one year ago
+
+        # Date range buttons for quick selection
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            st.button("Year to Date", on_click=lambda: st.session_state.update({'start_date': datetime(end_date.year, 1, 1).date(), 'end_date': end_date}))
+        with col2:
+            st.button("Last 30 Days", on_click=lambda: st.session_state.update({'start_date': end_date - timedelta(days=30), 'end_date': end_date}))
+
+        start_date = st.sidebar.date_input("Start Date", value=start_date, key="start_date")
+        end_date = st.sidebar.date_input("End Date", value=end_date, key="end_date")
+
+        # Data Status Filters
+        data_status_filters = []
+        if select_all_projects:
+            # Data Status Filters
+            st.sidebar.header("Data Status")
+            available = st.sidebar.checkbox("Available", value=True, key="available")
+            partially_available = st.sidebar.checkbox("Partially Available", value=True, key="partially_available")
+            rolling_release = st.sidebar.checkbox("Rolling Release", value=True, key="rolling_release")
+            under_embargo = st.sidebar.checkbox("Under Embargo", key="under_embargo")
+            data_pending = st.sidebar.checkbox("Data Pending", key="data_pending")
+            data_not_expected = st.sidebar.checkbox("Data Not Expected", key="data_not_expected")
+            none = st.sidebar.checkbox("None", key="none")
+
+            # Append selected data statuses to filter list
+            if available:
+                data_status_filters.append("Available")
+            if partially_available:
+                data_status_filters.append("Partially Available")
+            if rolling_release:
+                data_status_filters.append("Rolling Release")
+            if under_embargo:
+                data_status_filters.append("Under Embargo")
+            if data_pending:
+                data_status_filters.append("Data Pending")
+            if data_not_expected:
+                data_status_filters.append("Data Not Expected")
+            if none:
+                data_status_filters.append("None")
+
+            # Convenience buttons for selecting "Released" categories or "All"
+            def select_released():
+                st.session_state.available = True
+                st.session_state.partially_available = True
+                st.session_state.rolling_release = True
+                st.session_state.under_embargo = False
+                st.session_state.data_pending = False
+                st.session_state.data_not_expected = False
+                st.session_state.none = False
+
+            def select_all():
+                st.session_state.available = True
+                st.session_state.partially_available = True
+                st.session_state.rolling_release = True
+                st.session_state.under_embargo = True
+                st.session_state.data_pending = True
+                st.session_state.data_not_expected = True
+                st.session_state.none = True
+
+            def clear_selection():
+                st.session_state.available = False
+                st.session_state.partially_available = False
+                st.session_state.rolling_release = False
+                st.session_state.under_embargo = False
+                st.session_state.data_pending = False
+                st.session_state.data_not_expected = False
+                st.session_state.none = False
+
+            # Convenience button for selecting "Released" categories
+            col1, col2, col3 = st.sidebar.columns([1.5, 1, 1])
+
+            with col1:
+                st.button("Projects Released", on_click=select_released, type="primary")
+            with col2:
+                st.button("✅ Select All", on_click=select_all)
+            with col3:
+                st.button("❌ Clear", on_click=clear_selection)
+
+        else:
+            # If individual projects are selected, do not apply data status filters
+            data_status_filters = project_meta['DATA_STATUS'].unique().tolist()
+
+        # Show the "Go" button if the user selected Manual Updates
+        if update_mode == "Manual Updates (Press Go)":
+            filter_applied = st.sidebar.button("🚀**Go**!", key="apply_filters")
+        else:
+            filter_applied = True  # Automatically apply filters if in Dynamic mode
+
+        if filter_applied:
+            # Temporary solution -- these should be set up via queries
+            st.sidebar.header("Deltas")
+            comp_user_count = st.sidebar.number_input("Comp User Count", value=0, step=1)
+            comp_assay_count = st.sidebar.number_input("Comp Assay Count", value=0, step=1)
+
+            # Plot Width Slider
+            plot_width = st.sidebar.slider("Plot Width", min_value=800, max_value=1800, value=1400)
+
+            # Utils
+            convert_to_gib = 1024 * 1024 * 1024
+            def convert_to_gb(bytes):
+                return bytes / (1024 * 1024 * 1024)
+            def convert_to_tb(bytes):
+                return bytes / (1024 * 1024 * 1024 * 1024)
+
+            # Reference -------------------------------------------------------------------------#
+
+            # Filter projects based on selected funder and projects
+            filtered_project_meta = project_meta[project_meta['PROJECT_NAME'].isin(selected_projects)]
+            if filtered_project_meta.empty:
+                st.warning("No projects match the selected filters.")
+                return
+
+            if 'DATA_STATUS' not in filtered_project_meta.columns:
+                st.error("The column 'DATA_STATUS' is missing in the project metadata.")
+                return
+
+            project_ids = filtered_project_meta[filtered_project_meta['DATA_STATUS'].isin(data_status_filters)]['PROJECT_ID'].tolist()
+
+            if not project_ids:
+                st.warning("No projects match the selected data status filters.")
+                return
+
+            st.header("Reference Overview")
+
+            with st.expander("Glossary"):
+                st.markdown(
+                    """
+                    #### Project Status
+
+                    - **Active**: The project is in the performance period (between grant start and grant end dates).
+                    - **Completed**: The project has reached the grant end date and gone through a closeout process as requested by NTAP.
+                    - **Withdrawn**: The project was planned/started but not completed (withdrawn).
+
+                    #### Data Status
+
+                    - **None**: There is no available data for the project.
+                    - **Data Not Expected**: There is no available data for the project because data is not expected to be stored for this project.
+                    - **Data Pending**: Data is pending for the project, either still being generated or has not yet been uploaded to Synapse yet, so there are no files in the project.
+                    - **Under Embargo**: Data is present in the project but not accessible to anyone outside the project admins. When data is first uploaded, the status will change from "Data Pending" to "Under Embargo".
+                    - **Rolling Release**: Some data is available for download for the project via rolling release.
+                    - **Partially Available**: Some data is available for download for the project.
+                    - **Available**: Data is fully available for download for the project.
+                    """)
+
+            # Project Reference Table ----------------------------------------------------------#
+            with st.expander("Projects included in reporting"):
+                reference_df = filtered_project_meta.reset_index(drop=True)
+                st.table(reference_df)
+
+            # What does overall project portfolio look like when grouped solely by data status ontology
+            st.subheader("Data Status Distribution")
+            data_status_flow = graphviz_status(filtered_project_meta['DATA_STATUS'].tolist())
+            with st.container():
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    st.graphviz_chart(data_status_flow, use_container_width=True)
+                st.markdown('<div style="padding-bottom: 40px;"></div>', unsafe_allow_html=True)
+
+            # How many active vs completed projects, and how many projects are in each data status
+            st.subheader("Data Status Distribution, Comparing Active vs. Completed Projects")
+            col1, col2, col3 = st.columns([1, 1, 4])
+            with col1:
+                st.metric(label="Active Projects", value=len(filtered_project_meta[filtered_project_meta['STUDY_STATUS'] == 'Active']))
+            with col2:
+                st.metric(label="Completed Projects", value=len(filtered_project_meta[filtered_project_meta['STUDY_STATUS'] == 'Completed']))
+            st.plotly_chart(plot_stacked_bar_chart(filtered_project_meta))
+
+            # Data Release Report ---------------------------------------------------------------#
+            st.header("Data Release")
+
+            # DF with grouped data
+            grouped_df = filtered_project_meta.groupby(['STUDY_STATUS', 'DATA_STATUS']).size().reset_index(name='COUNT')
+
+            project_sizes = get_data_from_snowflake(query_project_sizes(project_ids))
+            if project_sizes.empty:
+                st.warning("No data sizes available for the selected projects.")
+                return
+
+            total_data_size_gib = project_sizes["TOTAL_CONTENT_SIZE"].sum()
+            total_data_size_tb = convert_to_tb(project_sizes["TOTAL_CONTENT_SIZE"].sum())
+            average_project_size = round(convert_to_gb(
+                np.mean(project_sizes["TOTAL_CONTENT_SIZE"])), 2
+            )
+            annual_cost = calculate_annual_cost(total_data_size_gib)
+
+            # Metrics
+            col1, col2, col3 = st.columns([1, 1, 1])
+            col1.metric(f"{', '.join(funders)} Projects With Target Data Status", f"{len(project_ids)}")
+            col2.metric("Total Data in These Projects", f"{total_data_size_tb:,.2f} TB")
+            col3.metric("Avg. Project Size", f"{average_project_size} GB")
+
+            # Data Usage Report ---------------------------------------------------------------#
+            st.header("Data Usage")
+            st.subheader("General Overview")
+            if project_ids:
+                project_downloads_df = get_data_from_snowflake(query_project_downloads(project_ids, start_date, end_date))
+                if project_downloads_df.empty:
+                    st.warning("No download data available for the selected projects.")
+                else:
+                    total_downloads_gb = convert_to_gb(project_downloads_df["TOTAL_DOWNLOADS"].sum())
+                    total_unique_files = project_downloads_df["TOTAL_UNIQUE_FILEHANDLEIDS"].sum()
+
+                    # Metrics
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    col1.metric("Number of Unique Files Requested", total_unique_files)
+                    col2.metric("Total Egressed Data", f"{total_downloads_gb:,.2f} GB")
+                    col3.metric("Avg Downloads for Downloaded File", f"{(total_downloads_gb / total_unique_files) if total_unique_files else 0:,.2f} GB")
+
+                    # What does egress look like over selected timeframe?
+                    monthly_file_egress_df = get_data_from_snowflake(query_monthly_file_egress(project_ids, start_date, end_date))
+                    if not monthly_file_egress_df.empty:
+                        monthly_file_egress_df = monthly_file_egress_df.merge(filtered_project_meta[['PROJECT_ID', 'PROJECT_NAME']], on='PROJECT_ID', how='left')
+                        st.plotly_chart(plot_monthly_egress(monthly_file_egress_df))
+
+                    st.subheader("Dissemination By Project")
+
+                    # Add project names
+                    project_sizes = project_sizes.merge(filtered_project_meta[['PROJECT_ID', 'PROJECT_NAME']], on='PROJECT_ID', how='left')
+
+                    merged_df = merge_size_and_downloads(project_sizes, project_downloads_df)
+                    merged_df = merged_df.dropna(subset=['TOTAL_CONTENT_SIZE', 'TOTAL_DOWNLOADS'])
+
+                    # Two way display mean for downloads
+                    mean_downloads = convert_to_gb(merged_df["TOTAL_DOWNLOADS"].mean())
+                    nonzero_downloads = merged_df[merged_df['TOTAL_DOWNLOADS'] > 0]
+                    mean_filtered_download = convert_to_gb(nonzero_downloads['TOTAL_DOWNLOADS'].mean())
+
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    col1.metric("Number of projects that see downloads", f"{len(project_downloads_df)} out of {len(project_ids)}")
+                    col2.metric("Mean download size for downloaded projects", f"{mean_filtered_download:,.2f} GB")
+
+                    st.plotly_chart(plot_download_scatter(merged_df))
+
+                    st.subheader("Characteristics of Disseminated Data")
+
+                    data_meta_df = get_data_from_snowflake(query_downloaded_file_meta(project_ids, start_date, end_date))
+                    if data_meta_df.empty:
+                        st.warning("No data available for the selected criteria.")
+                    else:
+                        # Metrics
+                        col1, col2, col3 = st.columns([1, 1, 1])
+                        unique_assays = len(data_meta_df['ASSAY'].unique())
+                        delta_assays = unique_assays - comp_assay_count if comp_assay_count is not None else None
+                        col1.metric("Number of Unique Assays", unique_assays, delta=delta_assays)
+                        col2.metric("", "")
+                        col3.metric("Avg. ", 3)
+
+                        # What are assays being downloaded?
+                        st.plotly_chart(plot_resource_downloads(data_meta_df, resource_column="ASSAY", color=ORANGE, title="Assays Being Downloaded"))
+
+                        # What are resources being downloaded?
+                        st.plotly_chart(plot_resource_downloads(data_meta_df, resource_column="RESOURCE_TYPE", color=PURPLE, title="Resources Being Downloaded"))
+
+            # User Network -----------------------------------------------------------------------#
+            st.header("Users Network")
+            if project_ids:
+                unique_users_df = get_data_from_snowflake(query_unique_users(project_ids, start_date, end_date))
+                if unique_users_df.empty:
+                    st.warning("No unique user data available for the selected projects.")
+                else:
+                    unique_users_count = unique_users_df['USER_ID'].nunique()
+                    avg_users_per_project = unique_users_count / len(project_downloads_df) if len(project_downloads_df) > 0 else 0
+
+                    # Metrics
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    delta_users = unique_users_count - comp_user_count if comp_user_count is not None else None
+                    col1.metric("Total Unique Users", unique_users_count, delta=delta_users)
+                    col2.metric("Average Downloaders Per Project", f"{avg_users_per_project:.1f}")
+                    col3.metric("Avg. Download Size Per User", f"{(total_downloads_gb / unique_users_count) if unique_users_count else 0:,.2f} GB")
+
+                    # Plot of user network
+                    col1, col2, col3 = st.columns([4, 1, 1])
+                    with col1:
+                        plot_network(unique_users_df)
+                    with col2:
+                        network_legend()
+
+                    # How many unique users are downloading data for each project monthly?
+                    st.plotly_chart(plot_unique_users_monthly(unique_users_df))
+
+                # Cumulative Data Growth ---------------------------------------------------------------#
+                st.header("Cumulative Data Growth")
+                st.subheader("Data Portal Growth Over Time")
+                cumulative_growth_df = get_data_from_snowflake(query_file_metadata_for_growth(project_ids))
+                if cumulative_growth_df.empty:
+                    st.warning("No cumulative data growth data available for the selected projects.")
+                else:
+                    st.plotly_chart(plot_cumulative_data_growth(cumulative_growth_df, width=plot_width))
+
+                # Google Analytics ---------------------------------------------------------------#
+                # Google analytics measurements go here for now
+                # 1. Web views -- 
+                # a) Mostly corresponds with top projects by numbers of unique downloaders, but interesting when it doesn't
+                # b) Can suggest projects that still have influence/value for non-downloader users such as patients / patient advocates   
+                # c) Potentially a leading indicator of interest and collaboration for *un-released* projects
+                # st.header("Google Analytics")
+                # st.subheader("Total Page Views for synapse.org project pages")
+                # pageviews_df = get_total_page_views(project_ids, start_date, end_date)
+                # pageviews_df = pageviews_df.merge(filtered_project_meta[['PROJECT_ID', 'PROJECT_NAME']], on='PROJECT_ID', how='left')
+                # st.table(pageviews_df)
+                # st.plotly_chart(plot_project_pageviews(pageviews_df))
+
+                # Initiative Data Metrics ---------------------------------------------------------------#
+                st.header("Initiative Data Metrics")
+                
+                # Show info box about scope
+                scope_description = "Open Proposal Program only" if open_proposal_only else f"{len(selected_initiatives)} initiative(s)" if selected_initiatives else "All initiatives"
+                st.info(f"📊 **Current Scope:** {scope_description} | **Projects:** {len(project_ids)}")
+                
+                # Total Data Size
+                st.subheader("Total Data Size")
+                with st.expander("ℹ️ Metric Definition"):
+                    st.markdown("""
+                    **Total Data Size** aggregates the content size of all files across the scoped projects.
+                    - **Size aggregation**: Sum of all file content_size values
+                    - **Units**: Displayed in TB (terabytes) with 1 decimal place
+                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                    """)
+                
+                total_size_df = get_data_from_snowflake(query_total_data_size_by_initiative(project_ids))
+                if not total_size_df.empty and total_size_df['TOTAL_CONTENT_SIZE'].iloc[0] is not None:
+                    total_size_bytes = total_size_df['TOTAL_CONTENT_SIZE'].iloc[0]
+                    total_file_count = total_size_df['TOTAL_FILE_COUNT'].iloc[0]
+                    size_value, size_unit = format_size_metric(total_size_bytes)
+                    
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    with col1:
+                        st.metric(
+                            label="Total Data Size",
+                            value=f"{size_value:.1f} {size_unit}",
+                            help=f"Exact size: {total_size_bytes:,} bytes"
+                        )
+                    with col2:
+                        st.metric(
+                            label="Total Files",
+                            value=f"{total_file_count:,}",
+                            help="Number of unique files across all scoped projects"
+                        )
+                    with col3:
+                        avg_file_size_mb = (total_size_bytes / total_file_count / (1024**2)) if total_file_count > 0 else 0
+                        st.metric(
+                            label="Avg File Size",
+                            value=f"{avg_file_size_mb:.1f} MB",
+                            help="Average size per file"
+                        )
+                else:
+                    st.warning("No data size information available for the selected projects.")
+                
+                # Top 5 Data Types by Size
+                st.subheader("Top 5 Data Types by Size")
+                with st.expander("ℹ️ Metric Definition"):
+                    st.markdown("""
+                    **Top Data Types** shows the 5 largest data types (by total size) across scoped projects.
+                    - **Data type**: Derived from file 'assay' annotation
+                    - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
+                    - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
+                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                    """)
+                
+                top_data_types_df = get_data_from_snowflake(query_top_data_types_by_size(project_ids, limit=5))
+                if not top_data_types_df.empty:
+                    st.plotly_chart(plot_data_type_bar_chart(
+                        top_data_types_df,
+                        title="Top 5 Data Types by Size",
+                        width=plot_width,
+                        color=TEAL
+                    ))
+                    
+                    # Display table
+                    st.markdown("**Detailed Breakdown:**")
+                    display_table = create_data_type_table(top_data_types_df)
+                    st.table(display_table)
+                else:
+                    st.warning("No data type information available for the selected projects.")
+                
+                # Released Data Only - Data Size by Type
+                st.subheader("Released Data Only - Data Size by Type")
+                with st.expander("ℹ️ Metric Definition"):
+                    st.markdown("""
+                    **Released Data** filters to only projects with released data status before grouping by data type.
+                    - **Released statuses**: 'Available', 'Partially Available', 'Rolling Release'
+                    - **Data type**: Derived from file 'assay' annotation
+                    - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
+                    - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
+                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                    """)
+                
+                released_statuses = ['Available', 'Partially Available', 'Rolling Release']
+                released_data_df = get_data_from_snowflake(query_released_data_by_type(project_ids, released_statuses, limit=5))
+                if not released_data_df.empty:
+                    st.plotly_chart(plot_data_type_bar_chart(
+                        released_data_df,
+                        title="Top 5 Data Types (Released Projects Only)",
+                        width=plot_width,
+                        color=GREEN
+                    ))
+                    
+                    # Display table
+                    st.markdown("**Detailed Breakdown:**")
+                    display_table = create_data_type_table(released_data_df)
+                    st.table(display_table)
+                else:
+                    st.warning("No released data available for the selected projects, or no data type information available.")
 
-def query_5_2() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:fundingAgency:value[0] as fundingAgency
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.fundingAgency
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-      objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    fundingAgency,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    fundingAgency
-ORDER BY
-  NUMBER_OF_DOWNLOADS DESC
-  NULLS LAST;
-  """
-
-    return sql_query
-
-
-execute_query(query_5_2())
-
-
-@st.fragment
-def cell_5_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per funding agency")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_5_2",
-                help="Refresh number_of_downloads_per_funding_agency data",
-            ):
-                execute_query.clear(query_5_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_5_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for bar chart
-            if len(df) > 0:
-                df = (
-                    df.groupby(by="FUNDINGAGENCY", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                df["/* Order Key (Generated by Snowflake) */"] = df["FUNDINGAGENCY"]
-
-                datetime_primary_column = None
-                if pd.api.types.is_datetime64_dtype(df["FUNDINGAGENCY"]):
-                    datetime_primary_column = df["FUNDINGAGENCY"]
-                elif df["FUNDINGAGENCY"].dtype == "object" and isinstance(
-                    df["FUNDINGAGENCY"].get(df["FUNDINGAGENCY"].first_valid_index()),
-                    dt.date,
-                ):
-                    datetime_primary_column = pd.to_datetime(
-                        df["FUNDINGAGENCY"], errors="coerce"
-                    )
-                if (
-                    datetime_primary_column is not None
-                    and (
-                        datetime_primary_column.max() - datetime_primary_column.min()
-                    ).days
-                    > len(df) * 2
-                ):
-                    # Use string type for sparse date range
-                    df["FUNDINGAGENCY"] = df["FUNDINGAGENCY"].astype("string")
-
-                st.bar_chart(
-                    df,
-                    x="FUNDINGAGENCY",
-                    y=[
-                        c
-                        for c in df.columns
-                        if c != "FUNDINGAGENCY"
-                        and c != "/* Order Key (Generated by Snowflake) */"
-                    ],
-                    sort="-/* Order Key (Generated by Snowflake) */",
-                    width="stretch",
-                    height=400,
-                    horizontal=True,
-                    stack=False,
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 5: 2 Cells
-col5_1, col5_2 = st.columns(2)
-with col5_1:
-    cell_5_1()
-with col5_2:
-    cell_5_2()
-
-
-def query_6_1() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:assay:value[0] as assay,
-        annotations:annotations:type:value[0] as filetype
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.assay
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-      objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    assay,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    assay
-ORDER BY
-    number_of_downloads DESC
-    NULLS LAST;
-
-  """
-
-    return sql_query
-
-
-execute_query(query_6_1())
-
-
-@st.fragment
-def cell_6_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per assay")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_6_1",
-                help="Refresh number_of_downloads_per_assay data",
-            ):
-                execute_query.clear(query_6_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_6_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_6_2() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:assay:value[0] as assay,
-        annotations:annotations:type:value[0] as filetype
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.assay
-    from
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-      objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    assay,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    assay
-ORDER BY
-    number_of_downloads DESC
-    NULLS LAST;
-
-  """
-
-    return sql_query
-
-
-execute_query(query_6_2())
-
-
-@st.fragment
-def cell_6_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per assay")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_6_2",
-                help="Refresh number_of_downloads_per_assay data",
-            ):
-                execute_query.clear(query_6_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_6_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for bar chart
-            if len(df) > 0:
-                df = (
-                    df.groupby(by="ASSAY", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                df["/* Order Key (Generated by Snowflake) */"] = df.drop(
-                    columns="ASSAY"
-                ).sum(axis=1)
-
-                datetime_primary_column = None
-                if pd.api.types.is_datetime64_dtype(df["ASSAY"]):
-                    datetime_primary_column = df["ASSAY"]
-                elif df["ASSAY"].dtype == "object" and isinstance(
-                    df["ASSAY"].get(df["ASSAY"].first_valid_index()), dt.date
-                ):
-                    datetime_primary_column = pd.to_datetime(
-                        df["ASSAY"], errors="coerce"
-                    )
-                if (
-                    datetime_primary_column is not None
-                    and (
-                        datetime_primary_column.max() - datetime_primary_column.min()
-                    ).days
-                    > len(df) * 2
-                ):
-                    # Use string type for sparse date range
-                    df["ASSAY"] = df["ASSAY"].astype("string")
-
-                st.bar_chart(
-                    df,
-                    x="ASSAY",
-                    y=[
-                        c
-                        for c in df.columns
-                        if c != "ASSAY"
-                        and c != "/* Order Key (Generated by Snowflake) */"
-                    ],
-                    sort="-/* Order Key (Generated by Snowflake) */",
-                    width="stretch",
-                    height=400,
-                    stack=False,
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 6: 2 Cells
-col6_1, col6_2 = st.columns(2)
-with col6_1:
-    cell_6_1()
-with col6_2:
-    cell_6_2()
-
-
-def query_7_1() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:specimenID:value[0] as specimenID
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.specimenID
-    from
-    synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-    objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    specimenID,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    specimenID
-ORDER BY
-    number_of_downloads DESC
-    NULLS LAST;
-
-  """
-
-    return sql_query
-
-
-execute_query(query_7_1())
-
-
-@st.fragment
-def cell_7_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per specimen")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_7_1",
-                help="Refresh number_of_downloads_per_specimen data",
-            ):
-                execute_query.clear(query_7_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_7_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_7_2() -> str:
-    sql_query = r"""
-with nf_projects as (
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), dedup_downloads as (
-    select
-    distinct objectdownload_event.user_id, objectdownload_event.record_date, objectdownload_event.file_handle_id, node_annotations.dataType
-    from
-    synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-    objectdownload_event.file_handle_id = node_annotations.file_handle_id
-)
-SELECT
-    dataType,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct user_id) as number_of_unique_users
-FROM
-    dedup_downloads
-GROUP BY
-    dataType
-ORDER BY
-    number_of_downloads DESC
-    NULLS LAST;
-
-  """
-
-    return sql_query
-
-
-execute_query(query_7_2())
-
-
-@st.fragment
-def cell_7_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Number of downloads per datatype")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_7_2",
-                help="Refresh number_of_downloads_per_datatype data",
-            ):
-                execute_query.clear(query_7_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_7_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 7: 2 Cells
-col7_1, col7_2 = st.columns(2)
-with col7_1:
-    cell_7_1()
-with col7_2:
-    cell_7_2()
-
-
-def query_8_1() -> str:
-    # Transform :daterange parameter - convert to range comparison
-    if isinstance(input_daterange, tuple) and len(input_daterange) == 2:
-        start_date, end_date = input_daterange
-        expr_daterange = (
-            f"access_event.record_date BETWEEN '{start_date}' AND '{end_date}'"
-        )
-    elif isinstance(input_daterange, tuple) and len(input_daterange) == 1:
-        start_date = input_daterange[0]
-        expr_daterange = f"access_event.record_date >= '{start_date}'"
     else:
-        expr_daterange = "TRUE"
+        st.write("No projects match filters.")
 
-    sql_query = rf"""
+    # col4, col5, col6 = st.columns([1, 1, 1])
+    # col4.metric("Avg. Project Size", f"{average_project_size} GB")
+    # col5.metric("Annual Storage Cost", f"${annual_cost:,.2f} USD", delta = "10,000 USD")
+    # col6.metric("Annual Egress Cost", f"${annual_cost:,.2f} USD", delta = "10,000 USD")
 
--- get latest projects https://www.synapse.org/#!Synapse:syn51489960/tables/query/eyJzcWwiOiJTRUxFQ1QgZGlzdGluY3QocHJvamVjdElkKSBGUk9NIHN5bjUxNDg5OTYwIiwgImluY2x1ZGVFbnRpdHlFdGFnIjp0cnVlLCAibGltaXQiOjI1fQ==
-with nf_projects as (
-    -- select distinct cast(replace(NF.projectid, 'syn', '') as INTEGER) as project_id from sage.portal_raw.NF
-    select
-        cast(scopes.value as integer) as project_id
-    from
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    where
-        id = 16858331
-), nodes as (
-    select
-        node_latest.id
-    from
-        synapse_data_warehouse.synapse.node_latest
-    inner join
-        nf_projects
-        on node_latest.project_id = nf_projects.project_id
-), emails as (
-    select
-    distinct access_event.user_id
-    from
-    synapse_data_warehouse.synapse_event.access_event
-    inner join
-        nodes
-    on access_event.entity_id = nodes.id
-    where
-        {expr_daterange}
-)
-select
-    userprofile_latest.id,
-    userprofile_latest.email,
-    'NF' as portal
-from
-    emails
-inner join
-    synapse_data_warehouse.synapse.userprofile_latest
-    on emails.user_id = userprofile_latest.id
-  """
+    # plot of downloads over time
 
-    return sql_query
+    # Row 5 -----------------------------------------------------------------------------#
+
+    # Misc
 
 
-execute_query(query_8_1())
-
-
-@st.fragment
-def cell_8_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Users that viewed portal")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_8_1",
-                help="Refresh users_that_viewed_portal data",
-            ):
-                execute_query.clear(query_8_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_8_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 8: Single Cell
-cell_8_1()
-
-
-def query_9_1() -> str:
-    sql_query = r"""
-
-
-WITH nf_projects as (
-    SELECT
-        cast(scopes.value as integer) as project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        lateral flatten(input => node_latest.scope_ids) scopes
-    WHERE 
-        id = 16858331
-), 
-annotation_type_count_synapse as (
-    SELECT 
-        NODE_TYPE,
-        COUNT(CASE WHEN annotations:annotations != {} THEN 1 END) AS annotated_count,
-        COUNT(CASE WHEN annotations is NULL or annotations:annotations = {} THEN 1 END) AS non_annotated_count,
-        COUNT(*) as total_type_count,
-    FROM 
-        synapse_data_warehouse.synapse.node_latest
-    WHERE
-        project_id NOT IN (SELECT project_id FROM nf_projects)
-    GROUP BY 
-        NODE_TYPE
-), 
-annotation_type_count_nf as (
-    SELECT 
-        NODE_TYPE,
-        COUNT(CASE WHEN annotations:annotations != {} THEN 1 END) AS annotated_count,
-        COUNT(CASE WHEN annotations is NULL or annotations:annotations = {} THEN 1 END) AS non_annotated_count,
-        COUNT(*) as total_type_count,
-    FROM 
-        synapse_data_warehouse.synapse.node_latest
-    WHERE
-        project_id IN (SELECT project_id FROM nf_projects)
-    GROUP BY 
-        NODE_TYPE
-)
-SELECT 
-    annotation_type_count_synapse.NODE_TYPE,
-    (annotation_type_count_nf.annotated_count / annotation_type_count_nf.total_type_count) * 100 as percent_annotated_nf,
-    (annotation_type_count_nf.non_annotated_count / annotation_type_count_nf.total_type_count) * 100 as percent_not_annotated_nf,
-    annotation_type_count_nf.total_type_count as count_nf,
-    (annotation_type_count_synapse.annotated_count / annotation_type_count_synapse.total_type_count) * 100 as percent_annotated_synapse,
-    (annotation_type_count_synapse.non_annotated_count / annotation_type_count_synapse.total_type_count) * 100 as percent_not_annotated_synapse,
-    annotation_type_count_synapse.total_type_count as count_synapse
-FROM
-    annotation_type_count_synapse
-LEFT JOIN
-    annotation_type_count_nf
-ON
-    annotation_type_count_nf.NODE_TYPE = annotation_type_count_synapse.NODE_TYPE  """
-
-    return sql_query
-
-
-execute_query(query_9_1())
-
-
-@st.fragment
-def cell_9_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All time entity annotation percentage")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_9_1",
-                help="Refresh all_time_entity_annotation_percentage data",
-            ):
-                execute_query.clear(query_9_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_9_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_9_2() -> str:
-    sql_query = r"""
-WITH nf_projects AS (
-    SELECT
-        CAST(scopes.value AS INTEGER) AS project_id
-    FROM
-        synapse_data_warehouse.synapse.node_latest,
-        LATERAL FLATTEN(input => node_latest.scope_ids) scopes
-    WHERE
-        id = 16858331
-),
-ytd_downloads AS (
-    SELECT
-        record_date,
-        user_id,
-        file_handle_id,
-        project_id -- Include project_id in the selection
-    FROM
-      synapse_data_warehouse.synapse_event.objectdownload_event
-    WHERE
-        EXTRACT(YEAR FROM record_date) = EXTRACT(YEAR FROM CURRENT_DATE)
-)
-SELECT
-    COUNT(DISTINCT record_date || user_id || file_handle_id) AS number_of_downloads,
-    COUNT(DISTINCT user_id) AS number_of_unique_users_downloaded
-FROM
-    ytd_downloads
-INNER JOIN
-    nf_projects
-    ON
-        ytd_downloads.project_id = nf_projects.project_id;
-  """
-
-    return sql_query
-
-
-execute_query(query_9_2())
-
-
-@st.fragment
-def cell_9_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Year to Date Downloads")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_9_2",
-                help="Refresh year_to_date_downloads data",
-            ):
-                execute_query.clear(query_9_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_9_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 9: 2 Cells
-col9_1, col9_2 = st.columns(2)
-with col9_1:
-    cell_9_1()
-with col9_2:
-    cell_9_2()
-
-
-# Footer
-st.markdown("---")
-st.markdown(
-    "*Dashboard loaded: {}*".format(dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-)
+if __name__ == "__main__":
+    main()
