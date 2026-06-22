@@ -6,3 +6,7 @@ dependencies:
   - snowflake-snowpark-python
   - streamlit=1.*
   - pandas
+  - plotly=6.7.0
+  - python-graphviz=0.21
+  - pyvis=0.3.2
+  - scikit-learn=1.8.0
