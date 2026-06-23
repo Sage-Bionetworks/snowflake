@@ -29,7 +29,7 @@ Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label i
 3. Applies `synapse_data_warehouse/` schemachange migrations to the clone
 4. Tears down the clone when the PR is closed
 
-**Maintenance:** When a new schema is added to `synapse_data_warehouse/`, the ownership-transfer and database-role grant steps in `test_with_clone.yml` must be updated to cover it (see `RDS_RAW` as a recent example).
+**Maintenance:** When a new schema is added to `synapse_data_warehouse/`, or RBAC is updated for an existing schema, ensure the `test_with_clone.yml` grant management steps are updated to reflect the new RBAC. This is especially important for schemas that contain tasks or dynamic tables, as ownership must be transferred to the clone proxy admin role for grants (for example, MONITOR on tasks) to be applied correctly in the cloned environment. See RDS_RAW and RDS_LANDING in test_with_clone.yml for recent examples of the required grant management updates for proper clone setup.
 
 **Branch naming requirement:** Feature branches must start with `snow-` (e.g., `snow-407-feature`) for the `test_with_clone.yaml` workflow to trigger.
 
