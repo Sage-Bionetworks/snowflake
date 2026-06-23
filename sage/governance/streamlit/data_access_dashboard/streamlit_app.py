@@ -63,7 +63,6 @@ def load_submission_dashboard_data(snowflake_session: Session) -> pd.DataFrame:
     """
     query = """
         SELECT
-            access_requirement_id as "Access Requirement",
             access_requirement_name as "Access Requirement Name",
             data_access_request_id as "Data Access Request ID",
             submitted_by_user_name as "Submitted By",
@@ -103,7 +102,7 @@ def get_dashboard_column_name(
     """
     lowered_to_actual = {name.lower(): name for name in column_names}
     candidate_names_by_requested_name = {
-        "access_requirement_id": ["access_requirement_id", "access requirement"],
+        "access_requirement_name": ["access_requirement_name", "access requirement name"],
         "submitted_by_user_name": [
             "submitted_by_user_name",
             "submitted by user name",
@@ -243,11 +242,11 @@ def render_submission_dashboard_filters(
     Returns:
         A dict mapping each resolved column name to the selected filter value.
     """
-    access_requirement_id_filter = FilterSpec(
-        column_key="access_requirement_id",
+    access_requirement_name_filter = FilterSpec(
+        column_key="access_requirement_name",
         label="Access Requirement",
         placeholder="Select access requirement",
-        key="access_requirement_id_filter",
+        key="access_requirement_name_filter",
     )
     submitted_by_user_name_filter = FilterSpec(
         column_key="submitted_by_user_name",
@@ -264,7 +263,7 @@ def render_submission_dashboard_filters(
     return render_dashboard_filters(
         submission_dashboard_data,
         [
-            access_requirement_id_filter,
+            access_requirement_name_filter,
             submitted_by_user_name_filter,
             submission_status_filter,
         ],

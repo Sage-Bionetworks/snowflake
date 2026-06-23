@@ -179,7 +179,9 @@ jobs:
 
   schemachange_admin:
     runs-on: ubuntu-22.04
-    needs: schemachange_synapse_data_warehouse_prod
+    needs:
+      - schemachange_synapse_data_warehouse_prod
+      - deploy_streamlit
     if: github.ref_name == 'main'
     steps:
       - name: Checkout repository
@@ -229,8 +231,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - schemachange_admin
-      - schemachange_sage
-      - deploy_streamlit
     if: github.ref_name == 'main'
     env:
       PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
