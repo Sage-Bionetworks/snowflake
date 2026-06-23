@@ -38,7 +38,7 @@ Note: this table updates weekly'
 	WHERE
 		nodes2.node_type = 'project';
 
--- 2. Dynamic table: MC2 Center nodes (downstream; refreshes daily against MC2_PROJECTS)
+-- 2. Dynamic table: MC2 Center nodes (downstream; refreshes against MC2_PROJECTS)
 CREATE DYNAMIC TABLE IF NOT EXISTS MC2_NODES (
 	ID               COMMENT 'Unique ID for the entity (like synID without the "syn" prefix)',
 	NAME             COMMENT 'Name of the entity on Synapse',
@@ -56,13 +56,13 @@ CREATE DYNAMIC TABLE IF NOT EXISTS MC2_NODES (
 	IS_RESTRICTED    COMMENT 'boolean: TRUE if the file has specific Terms of Use or clickwrap restrictions',
 	ANNOTATIONS      COMMENT 'JSON object containing custom metadata for the entity'
 )
-	TARGET_LAG   = '1 day'
+	TARGET_LAG   = '7 days'
 	REFRESH_MODE = AUTO
 	INITIALIZE   = ON_SCHEDULE
 	WAREHOUSE    = COMPUTE_XSMALL
 	COMMENT      = 'This dynamic table derives from `synapse_data_warehouse.synapse.node_latest` and contains the latest snapshot of Synapse nodes across the MC2 Center projects.
 
-Note: this table updates daily'
+Note: this table updates in sync with its upstream table'
 	AS
 		SELECT
 			nodes.id,
