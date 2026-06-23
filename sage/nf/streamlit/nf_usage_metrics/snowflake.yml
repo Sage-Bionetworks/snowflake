@@ -1,0 +1,21 @@
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    identifier:
+      name: nf_usage_metrics
+      database: SAGE
+      schema: NF
+    query_warehouse: STREAMLIT_XSMALL
+    main_file: streamlit_app.py
+    title: "NF Usage Metrics"
+    artifacts:
+      - environment.yml
+      - streamlit_app.py
+      - .streamlit/config.toml
+      - toolkit/utils.py
+      - toolkit/queries.py
+      - toolkit/ga4.py
+      - toolkit/widgets.py
+      - toolkit/__init__.pyu
+      - style.css
