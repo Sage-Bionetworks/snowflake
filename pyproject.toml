@@ -24,10 +24,3 @@ dbt = [
     "dbt-snowflake>=1.10.3,<2",
 ]
 
-# MIP financial ELT pipeline (finance/mip_raw_elt_batch.py).
-finance = [
-    "backoff>=2.2,<3",
-    "snowflake-connector-python>=3.18,<4",
-    "synapseclient[pandas]>=4.7,<5",
-]
-
