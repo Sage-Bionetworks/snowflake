@@ -645,6 +645,10 @@ def main():
                     )
 
                     # Plot of user network
+                    st.info(
+                        "The interactive network chart can be slow in Snowflake for broad filters. "
+                        "If it stalls, reduce the date range or selected projects."
+                    )
                     col1, col2, col3 = st.columns([4, 1, 1])
                     with col1:
                         plot_network(unique_users_df)

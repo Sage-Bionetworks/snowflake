@@ -27,6 +27,21 @@ NAVY = "#303C50"
 GRAY = "#636E83"
 DARK_RED = "#941E24"
 
+
+def _create_pyvis_network(height: str, width: str) -> Network:
+    """Create a PyVis network with inline assets when supported."""
+    try:
+        return Network(
+            height=height,
+            width=width,
+            bgcolor="white",
+            font_color="black",
+            cdn_resources="in_line",
+        )
+    except TypeError:
+        # Older pyvis versions do not support cdn_resources.
+        return Network(height=height, width=width, bgcolor="white", font_color="black")
+
 # Visualzing the project porfolio ---------------------------#
 
 
@@ -334,6 +349,14 @@ def plot_monthly_egress(df, key="FILE_COUNT", width=2200):
         width=width,
         bargap=0.6,
         barmode="stack",
+        legend=dict(
+            orientation="h",
+            x=0.5,
+            xanchor="center",
+            y=-0.22,
+            yanchor="top",
+        ),
+        margin=dict(b=140),
     )
 
     return fig
@@ -515,8 +538,24 @@ def plot_unique_users_monthly(unique_users_data, width=2000, height=600):
 
 
 def plot_network(df):
+    MAX_EDGE_COUNT = 2500
+
+    if df.empty:
+        st.warning("No user-project interactions are available for network visualization.")
+        return
+
+    df = df.copy()
     df["WEIGHT"] = 1  # Assign a weight of 1 for each interaction
     df_weights = df.groupby(["USER_ID", "PROJECT_ID"])["WEIGHT"].sum().reset_index()
+
+    original_edge_count = len(df_weights)
+    if original_edge_count > MAX_EDGE_COUNT:
+        st.warning(
+            "The network graph is large and can stall in Snowflake. "
+            f"Rendering the top {MAX_EDGE_COUNT:,} user-project links out of {original_edge_count:,}. "
+            "Filter projects or shorten the date range for a complete view."
+        )
+        df_weights = df_weights.sort_values("WEIGHT", ascending=False).head(MAX_EDGE_COUNT)
 
     G = nx.Graph()
 
@@ -527,32 +566,50 @@ def plot_network(df):
 
         if not G.has_node(user):
             G.add_node(
-                user, label="", color=MAGENTA, size=150
+                user, label="", color=MAGENTA, size=12
             )  # IMPORTANT -- hide user_ids
         if not G.has_node(project):
-            G.add_node(project, label=project, color=TEAL, size=250)
+            G.add_node(project, label=project, color=TEAL, size=20)
 
         # Add edges with weights
         G.add_edge(
             user, project, color="gray", weight=weight, title=f"Interactions: {weight}"
         )
 
-    net = Network(height="750px", width="100%", bgcolor="white", font_color="black")
+    try:
+        net = _create_pyvis_network(height="750px", width="100%")
 
-    net.barnes_hut()
-    net.from_nx(G)
-    # Generate and embed the network graph in Streamlit
-    html_content = net.generate_html()
-    components.html(html_content, height=800)
+        net.barnes_hut()
+        net.from_nx(G)
+        # Faster stabilization helps avoid long 0% loading states in Snowflake.
+        net.set_options(
+            """
+            {
+              "physics": {
+                "stabilization": {
+                  "enabled": true,
+                  "iterations": 150
+                }
+              }
+            }
+            """
+        )
+        html_content = net.generate_html()
+        components.html(html_content, height=800, scrolling=True)
+    except (RuntimeError, ValueError, TypeError) as e:
+        st.warning(
+            "Interactive network rendering failed in this environment. "
+            f"Details: {e}. Try narrowing filters or using local Streamlit for this chart."
+        )
 
 
 def network_legend():
-    net = Network(height="100px", width="100%", bgcolor="white", font_color="black")
+    net = _create_pyvis_network(height="100px", width="100%")
     net.add_node(
         "legend_user",
         label="Users",
         color=MAGENTA,
-        size=5,
+        size=12,
         x=-100,
         y=0,
         fixed=True,
@@ -562,7 +619,7 @@ def network_legend():
         "legend_project",
         label="Projects",
         color=TEAL,
-        size=10,
+        size=20,
         x=0,
         y=0,
         fixed=True,
