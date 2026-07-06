@@ -17,5 +17,5 @@ entities:
       - toolkit/queries.py
       - toolkit/ga4.py
       - toolkit/widgets.py
-      - toolkit/__init__.pyu
+      - toolkit/__init__.py
       - style.css
