@@ -132,6 +132,9 @@ jobs:
           - name: MC2 Center Metrics
             path: sage/cckp/streamlit/mc2_center_metrics
             role: sage_cckp_admin
+          - name: NF Usage Metrics
+            path: sage/nf/streamlit/nf_usage_metrics
+            role: sage_nf_admin
           - name: ACL audit
             path: sage/product/streamlit/acl_audit
             role: sage_product_admin
