@@ -1,0 +1,15 @@
+definition_version: 2
+entities:
+  streamlit_app:
+    type: streamlit
+    identifier:
+      name: amp_als_usage_metrics
+      database: sage
+      schema: amp_als
+    query_warehouse: STREAMLIT_XSMALL
+    main_file: streamlit_app.py
+    title: "AMP-ALS Usage Metrics"
+    artifacts:
+      - environment.yml
+      - streamlit_app.py
+      - .streamlit/config.toml

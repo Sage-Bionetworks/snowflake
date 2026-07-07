@@ -50,10 +50,7 @@ jobs:
             ############################ ENVIRONMENT SETUP AND CONNECTION CONFIGURATION ############################
             ########################################################################################################
             ########################################################################################################
-            - uses: actions/checkout@v4
-            - uses: actions/setup-python@v4
-              with:
-                python-version: '3.10'
+            - uses: actions/checkout@v6
 
             - name: Configure Snowflake
               uses: ./.github/actions/configure-snowflake-cli
@@ -118,6 +115,7 @@ jobs:
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 
                 # We need to revoke OWNERSHIP on future objects from ${SNOWFLAKE_PROXY_ADMIN_ROLE} first, because only one role can have the OWNERSHIP privilege on an object.
                 # There's no "transferring of ownership" involved because these objects don't exist yet.
@@ -125,10 +123,12 @@ jobs:
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
             - name: Give <CLONE>_PROXY_ADMIN ownership of all objects in synapse, synapse_raw, schemachange, synapse_aggregate, synapse_event, rds_landing, rds_raw schemas
               shell: bash
@@ -206,10 +206,7 @@ jobs:
 
       steps:
 
-          - uses: actions/checkout@v4
-          - uses: actions/setup-python@v4
-            with:
-              python-version: '3.10'
+          - uses: actions/checkout@v6
 
           - name: Configure Snowflake
             uses: ./.github/actions/configure-snowflake-cli

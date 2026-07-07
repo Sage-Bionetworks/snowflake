@@ -1,0 +1,5 @@
+-- Future usage of Streamlit objects in SAGE.PRODUCT for the DATA_ANALYTICS role.
+GRANT USAGE
+    ON FUTURE STREAMLITS
+    IN SCHEMA SAGE.PRODUCT
+    TO ROLE DATA_ANALYTICS;

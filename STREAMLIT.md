@@ -21,8 +21,6 @@ For more information on how to organize the files which make up a Streamlit app,
 
 ### Prerequisites
 
-Follow the [official installation instructions](https://github.com/conda-forge/miniforge?tab=readme-ov-file#unix-like-platforms-macos-linux--wsl).
-
 Configure a `default` connection in `~/.snowflake/config.toml` with a role that has access to the schemas the dashboard queries. The required role depends on the app — check the app's `snowflake.yml` and the schemas it reads from to determine the right role. See the [Snowflake CLI docs on configuring connections](https://docs.snowflake.com/en/developer-guide/snowflake-cli/connecting/configure-cli) for full details.
 
 ```toml
@@ -32,6 +30,7 @@ user = "<user>@sagebase.org"
 authenticator = "PROGRAMMATIC_ACCESS_TOKEN"
 token = "<your-programmatic-access-token>"
 role = "<role>"  # e.g. DATA_ENGINEER for dashboards querying SAGE.GOVERNANCE
+warehouse = "STREAMLIT_XSMALL"
 ```
 
 See the [Snowflake docs on programmatic access tokens](https://docs.snowflake.com/en/user-guide/programmatic-access-tokens#label-pat-generate) for instructions on generating a token.
@@ -83,6 +82,7 @@ dependencies:
 ### Run the App Locally
 
 ```bash
+# Ensure that you are in the same working directory as the Streamlit app
 streamlit run streamlit_app.py -- --local-dev
 ```
 
@@ -90,7 +90,7 @@ The `--local-dev` flag switches the Snowflake session from `get_active_session()
 
 See [sage/governance/streamlit/data_access_dashboard/streamlit_app.py](sage/governance/streamlit/data_access_dashboard/streamlit_app.py) for a working example of `--local-dev` argument parsing and local-vs-SiS session selection.
 
-The app can be configured to auto-refresh on file save — no restart needed for code changes. Restart only when:
+The app can be configured to auto-refresh on file save — no restart needed for code changes. A full restart is only necessary when:
 - `environment.yml` changes
 - launch-level settings change
 - the process enters a bad state
