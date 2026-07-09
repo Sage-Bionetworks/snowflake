@@ -87,7 +87,5 @@ Keep comments short (one line max). Avoid step-numbered banners and ASCII decora
 
 ## Constraints
 
-See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers).
-
-Schema subdirectories (e.g. `rds_landing/`, `synapse_raw/`) must contain only DDL that creates or modifies objects. RBAC belongs elsewhere: role creation in `database_roles/`, grants in `admin/` (see `admin/AGENTS.md` for the full bootstrap split across `ownership_grants/`, `future_grants/`, and `grants.sql`).
+See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers, RBAC placement).
 
