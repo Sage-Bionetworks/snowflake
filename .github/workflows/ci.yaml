@@ -60,7 +60,7 @@ jobs:
           DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           TARGET_NAME: dev
 
-      - name: Run dbt models (synapse_data_warehouse)
+      - name: Run dbt models
         working-directory: transform
         shell: bash
         run: dbt run --selector synapse_data_warehouse --target dev
@@ -108,7 +108,7 @@ jobs:
           DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           TARGET_NAME: prod
 
-      - name: Run dbt models (synapse_data_warehouse)
+      - name: Run dbt models
         working-directory: transform
         shell: bash
         run: dbt run --selector synapse_data_warehouse --target prod
@@ -149,7 +149,7 @@ jobs:
           DATABASE: SAGE
           TARGET_NAME: prod
 
-      - name: Run dbt models (sage)
+      - name: Run dbt models
         working-directory: transform
         shell: bash
         run: dbt run --selector sage --target prod

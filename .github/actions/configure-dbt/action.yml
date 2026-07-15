@@ -20,7 +20,7 @@ inputs:
     description: "Database dbt should deploy to"
     required: true
   TARGET_NAME:
-    description: "Name of the dbt target/output to generate. Must be exactly 'prod' for sage models (gated on target.name == 'prod') to be eligible to run"
+    description: "Name of the dbt target/output to generate."
     required: true
   WAREHOUSE:
     description: "Snowflake warehouse"
@@ -72,7 +72,7 @@ runs:
               role: "${SNOWFLAKE_ROLE}"
               warehouse: "${SNOWFLAKE_WAREHOUSE}"
               database: "${SNOWFLAKE_DATABASE}"
-              schema: DBT_CI
+              schema: RDS_RAW
               private_key_path: "${PRIVATE_KEY_FILE}"
               private_key_passphrase: "${SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}"
               threads: 4

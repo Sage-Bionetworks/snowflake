@@ -199,12 +199,12 @@ jobs:
                   USER: ${{ vars.ADMIN_SERVICE_USER }}
                   ROLE: ${{ env.SNOWFLAKE_CLONE_ADMIN_ROLE }}
                   DATABASE: ${{ env.SNOWFLAKE_DOMAIN_CLONE_SANITIZED }}
-                  TARGET_NAME: pr_clone
+                  TARGET_NAME: clone 
 
-            - name: Run dbt models (synapse_data_warehouse) on the clone
+            - name: Run dbt models on the clone
               working-directory: transform
               shell: bash
-              run: dbt run --selector synapse_data_warehouse --target pr_clone
+              run: dbt run --selector synapse_data_warehouse --target clone
 
     drop_clone:
       runs-on: ubuntu-latest
