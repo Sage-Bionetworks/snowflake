@@ -1,0 +1,82 @@
+name: "Configure dbt"
+description: "Installs dbt-snowflake and writes a ~/.dbt/profiles.yml for the transform project"
+inputs:
+  PRIVATE_KEY_PASSPHRASE:
+    description: "The pass phrase used to decrypt the private key"
+    required: true
+  PRIVATE_KEY:
+    description: "The private key"
+    required: true
+  ACCOUNT:
+    description: "Snowflake account identifier"
+    required: true
+  USER:
+    description: "Snowflake user identifier"
+    required: true
+  ROLE:
+    description: "Snowflake role dbt should assume (must match the deployment context, e.g. SYNAPSE_DATA_WAREHOUSE_ADMIN, SYNAPSE_DATA_WAREHOUSE_DEV_ADMIN, SAGE_ADMIN, or DATA_ENGINEER)"
+    required: true
+  DATABASE:
+    description: "Database dbt should deploy to"
+    required: true
+  TARGET_NAME:
+    description: "Name of the dbt target/output to generate. Must be exactly 'prod' for sage models (gated on target.name == 'prod') to be eligible to run"
+    required: true
+  WAREHOUSE:
+    description: "Snowflake warehouse"
+    required: false
+    default: "compute_xsmall"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13'
+
+    - name: Install dbt-snowflake
+      shell: bash
+      run: pip install dbt-snowflake==1.11.6
+
+    - name: Write private key file and dbt profiles.yml
+      shell: bash
+      env:
+        SNOWFLAKE_ACCOUNT: ${{ inputs.ACCOUNT }}
+        SNOWFLAKE_USER: ${{ inputs.USER }}
+        SNOWFLAKE_ROLE: ${{ inputs.ROLE }}
+        SNOWFLAKE_WAREHOUSE: ${{ inputs.WAREHOUSE }}
+        SNOWFLAKE_DATABASE: ${{ inputs.DATABASE }}
+        DBT_TARGET_NAME: ${{ inputs.TARGET_NAME }}
+        SNOWFLAKE_PRIVATE_KEY: ${{ inputs.PRIVATE_KEY }}
+        SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
+      run: |
+        # Specify paths for the private key file and profiles.yml
+        mkdir -p $HOME/.dbt
+        PRIVATE_KEY_FILE=$HOME/.dbt/rsa_key.p8
+        PROFILES_FILE=$HOME/.dbt/profiles.yml
+
+        # Write the private key file
+        printf "%s" "$SNOWFLAKE_PRIVATE_KEY" > $PRIVATE_KEY_FILE
+        chmod 0600 $PRIVATE_KEY_FILE
+
+        # Write profiles.yml with a single output matching DBT_TARGET_NAME
+        cat > $PROFILES_FILE <<EOF
+        transform:
+          target: ${DBT_TARGET_NAME}
+          outputs:
+            ${DBT_TARGET_NAME}:
+              type: snowflake
+              account: "${SNOWFLAKE_ACCOUNT}"
+              user: "${SNOWFLAKE_USER}"
+              role: "${SNOWFLAKE_ROLE}"
+              warehouse: "${SNOWFLAKE_WAREHOUSE}"
+              database: "${SNOWFLAKE_DATABASE}"
+              schema: DBT_CI
+              private_key_path: "${PRIVATE_KEY_FILE}"
+              private_key_passphrase: "${SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}"
+              threads: 4
+        EOF
+
+        # Restrict file owner read/write only (contains the private key passphrase)
+        chmod 0600 $PROFILES_FILE
