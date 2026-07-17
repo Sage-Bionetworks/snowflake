@@ -46,6 +46,7 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 - Use for: `CREATE TABLE`, `CREATE STREAM`, new objects that other objects depend on
 - Applied exactly once; version numbers are permanent
 - Current sequence is in the V2.x range; check `CHANGE_HISTORY` before picking a new version
+- **The version sequence is shared across every subdirectory of `synapse_data_warehouse/`** — `synapse/`, `synapse_raw/`, `synapse_aggregate/`, `rds_raw/`, `rds_landing/`, `database_roles/`, etc. all draw from the same V2.x sequence (CI deploys the whole tree with one `schemachange --root-folder synapse_data_warehouse` call writing to one `CHANGE_HISTORY` table). A new script's version must be higher than the highest version already used *anywhere* in the tree, not just within its own subdirectory. This sequence is independent of `sage/` (own sequence) and `admin/` (own sequence).
 
 **Repeatable (`R__{description}.sql`):**
 - Repeatable scripts run whenever the file contents change. It is strongly discouraged to use R scripts unless they provide a workaround for something that cannot be accomplished via a versioned script.
