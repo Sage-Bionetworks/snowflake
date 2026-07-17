@@ -1,12 +1,8 @@
--- PII masking policies for the RDS_RAW schema, modeled on the ad hoc pattern in
--- root apply_pii_masking.py: the real value is returned only when the querying
--- session holds RDS_RAW_TABLE_READ (the existing full/uncensored read role);
--- every other database role (including RDS_RAW_TABLE_READ_MASKED) sees NULL.
+-- PII masking policies for the RDS_RAW schema
 --
--- No columns are attached to these policies yet: none of the sensitive tables
--- (CREDENTIAL, OAUTH_*, OTP_*, PERSONAL_ACCESS_TOKEN, etc.) exist in RDS_RAW as
--- of this writing. Attachment happens in a follow-up migration once those
--- tables are added to RDS_RAW.
+-- The real value is returned only when the querying
+-- session holds the database role RDS_RAW_TABLE_READ (the uncensored read role);
+-- otherwise all values are returned as NULL.
 
 CREATE MASKING POLICY IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE.RDS_RAW.PII_MASK_TEXT
     AS (val VARCHAR) RETURNS VARCHAR ->
@@ -35,14 +31,3 @@ CREATE MASKING POLICY IF NOT EXISTS SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW.PII_MASK_
         WHEN IS_DATABASE_ROLE_IN_SESSION('RDS_RAW_TABLE_READ') THEN val
         ELSE NULL
     END;
-
--- Let RDS_RAW_ALL_ADMIN (owner of all RDS_RAW tables) attach these policies to
--- sensitive columns in a future migration, without needing MASKING_ADMIN itself.
-GRANT APPLY ON MASKING POLICY SYNAPSE_DATA_WAREHOUSE.RDS_RAW.PII_MASK_TEXT
-    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.RDS_RAW_ALL_ADMIN;
-GRANT APPLY ON MASKING POLICY SYNAPSE_DATA_WAREHOUSE.RDS_RAW.PII_MASK_BINARY
-    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.RDS_RAW_ALL_ADMIN;
-GRANT APPLY ON MASKING POLICY SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW.PII_MASK_TEXT
-    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_ALL_ADMIN;
-GRANT APPLY ON MASKING POLICY SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW.PII_MASK_BINARY
-    TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_ALL_ADMIN;
