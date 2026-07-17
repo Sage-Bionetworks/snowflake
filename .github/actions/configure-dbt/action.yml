@@ -71,6 +71,8 @@ runs:
               user: "${SNOWFLAKE_USER}"
               role: "${SNOWFLAKE_ROLE}"
               warehouse: "${SNOWFLAKE_WAREHOUSE}"
+              # dbt requires us to set database/schema in the profile
+              # They can be overridden at the project, directory, or model levels
               database: "${SNOWFLAKE_DATABASE}"
               schema: RDS_RAW
               private_key_path: "${PRIVATE_KEY_FILE}"
