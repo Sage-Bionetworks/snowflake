@@ -36,126 +36,154 @@ ALTER TABLE IF EXISTS principal_alias RENAME TO principal_alias_backup;
 
 -- access_approval
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_approval --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.access_approval with no transformations applied. Serves as the dbt source table for the stg_synapse__access_approval staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.access_approval; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.access_approval --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- acl
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.acl with no transformations applied. Serves as the dbt source table for the stg_synapse__acl staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.acl; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.acl --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- acl_resource_access
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.acl_resource_access with no transformations applied. Serves as the dbt source table for the stg_synapse__acl_resource_access staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.acl_resource_access; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.acl_resource_access --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- acl_resource_access_type
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access_type --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.acl_resource_access_type with no transformations applied. Serves as the dbt source table for the stg_synapse__acl_resource_access_type staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.acl_resource_access_type; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.acl_resource_access_type --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_submission
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_submission with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_submission staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_submission; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_submission --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_submission_accessor_changes
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_accessor_changes --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_submission_accessor_changes with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_submission_accessor_changes staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_submission_accessor_changes; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_submission_accessor_changes --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_submission_status
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_status --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_submission_status with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_submission_status staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_submission_status; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_submission_status --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_submission_submitter
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_submitter --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_submission_submitter with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_submission_submitter staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_submission_submitter; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_submission_submitter --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_request
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_request --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_request with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_request staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_request; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_request --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- access_requirement
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.access_requirement with no transformations applied. Serves as the dbt source table for the stg_synapse__access_requirement staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.access_requirement; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.access_requirement --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- access_requirement_project
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_project --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.access_requirement_project with no transformations applied. Serves as the dbt source table for the stg_synapse__access_requirement_project staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.access_requirement_project; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.access_requirement_project --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- access_requirement_revision
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_revision --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.access_requirement_revision with no transformations applied. Serves as the dbt source table for the stg_synapse__access_requirement_revision staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.access_requirement_revision; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.access_requirement_revision --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- data_access_notification
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_notification --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.data_access_notification with no transformations applied. Serves as the dbt source table for the stg_synapse__data_access_notification staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.data_access_notification; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.data_access_notification --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
 
 -- principal_alias
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.principal_alias --noqa: JJ01,PRS,TMP
-    TARGET_LAG = '1 hour'
+    TARGET_LAG = '5 hours'
     WAREHOUSE = COMPUTE_XSMALL
     COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.principal_alias with no transformations applied. Serves as the dbt source table for the stg_synapse__principal_alias staging model.'
 AS
 SELECT *
-FROM {{database_name}}.RDS_LANDING.principal_alias; --noqa: JJ01,PRS,TMP
+FROM {{database_name}}.RDS_LANDING.principal_alias --noqa: JJ01,PRS,TMP
+WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
+QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
