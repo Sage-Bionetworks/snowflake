@@ -75,3 +75,251 @@ models:
         data_type: BINARY
         constraints:
           - type: not_null
+
+  - name: node_event
+    config:
+      schema: synapse_event
+      target_lag: "1 day"
+      snowflake_warehouse: compute_medium
+      refresh_mode: AUTO
+    description: "Event-grain snapshot of Synapse nodes: one row per distinct node change event (partitioned by id, version_number, change_type, modified_on), keeping the most recent snapshot of each event. Derived from SYNAPSE_RAW.NODESNAPSHOTS. Rows with change_type = 'DELETE' carry mostly null attribute columns."
+    constraints:
+      - type: primary_key
+        columns: [id, version_number, change_type, modified_on]
+    columns:
+      - name: id
+        description: "The unique identifier of the node."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: version_number
+        description: "The version of the node on which the change occurred, if applicable."
+        data_type: NUMBER
+      - name: change_type
+        description: "The type of change that occurred on the node, e.g., CREATE, UPDATE, DELETE."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: modified_on
+        description: "The most recent change time of the node."
+        data_type: TIMESTAMP_NTZ
+      - name: modified_by
+        description: "The unique identifier of the user who last modified the node."
+        data_type: NUMBER
+      - name: name
+        description: "The name of the node."
+        data_type: VARCHAR
+      - name: node_type
+        description: "The type of the node. Allowed node types are: project, folder, file, table, link, entityview, dockerrepo, submissionview, dataset, datasetcollection, materializedview, virtualtable."
+        data_type: VARCHAR
+      - name: parent_id
+        description: "The unique identifier of the parent in the node hierarchy."
+        data_type: NUMBER
+      - name: benefactor_id
+        description: "The identifier of the (ancestor) node which provides the permissions that apply to this node. Can be the id of the node itself."
+        data_type: NUMBER
+      - name: project_id
+        description: "The project where the node resides. It will be empty for the change type DELETE."
+        data_type: NUMBER
+      - name: created_on
+        description: "The creation time of the node."
+        data_type: TIMESTAMP_NTZ
+      - name: created_by
+        description: "The unique identifier of the user who created the node."
+        data_type: NUMBER
+      - name: file_handle_id
+        description: "The unique identifier of the file handle if the node is a file, null otherwise."
+        data_type: NUMBER
+      - name: is_public
+        description: "If true, READ permission is granted to all the Synapse users, including the anonymous user, at the time of the snapshot."
+        data_type: BOOLEAN
+      - name: is_controlled
+        description: "If true, an access requirement managed by the ACT is set on the node."
+        data_type: BOOLEAN
+      - name: is_restricted
+        description: "If true, a terms-of-use access requirement is set on the node."
+        data_type: BOOLEAN
+      - name: effective_ars
+        description: "The list of access requirement ids that apply to the entity at the time the snapshot was taken."
+        data_type: VARIANT
+      - name: annotations
+        description: "The json representation of the entity annotations assigned by the user."
+        data_type: VARIANT
+      - name: internal_annotations
+        description: "The json representation of the entity internal annotations that are used to store additional data about different types of entity (e.g. dataset checksum, size, count)."
+        data_type: VARIANT
+      - name: derived_annotations
+        description: "The json representation of the entity annotations that were derived by the schema of the entity."
+        data_type: VARIANT
+      - name: version_comment
+        description: "A short description assigned to this node version."
+        data_type: VARCHAR
+      - name: version_label
+        description: "A short label assigned to this node version."
+        data_type: VARCHAR
+      - name: version_history
+        description: "The list of entity versions, at the time of the snapshot."
+        data_type: VARIANT
+      - name: activity_id
+        description: "The reference to the id of an activity assigned to the node."
+        data_type: NUMBER
+      - name: column_model_ids
+        description: "For entities that define a table schema (e.g. table, views etc), the list of column ids assigned to the schema."
+        data_type: VARIANT
+      - name: scope_ids
+        description: "For entities that define a scope (e.g. entity views, submission views etc), the list of entity ids included in the scope."
+        data_type: VARIANT
+      - name: items
+        description: "For entities that define a fixed list of entity references (e.g. dataset, dataset collections), the list of entity references included in the scope."
+        data_type: VARIANT
+      - name: reference
+        description: "For Link entities, the reference to the linked target."
+        data_type: VARIANT
+      - name: is_search_enabled
+        description: "For Table like entities (e.g. EntityView, MaterializedView etc), defines if full text search is enabled on those entities."
+        data_type: BOOLEAN
+      - name: defining_sql
+        description: "For tables that are driven by a synapse SQL query (e.g. MaterializedView, VirtualTable), defines the underlying SQL query."
+        data_type: VARCHAR
+      - name: alias
+        description: "An alias assigned to a project entity if present."
+        data_type: VARCHAR
+      - name: project_storage_usage
+        description: "The storage usage information for the project, including size and count metrics."
+        data_type: VARIANT
+      - name: change_timestamp
+        description: "The time when the change (created/updated/deleted) on the node is pushed to the queue for snapshotting."
+        data_type: TIMESTAMP_NTZ
+      - name: change_user_id
+        description: "The unique identifier of the user who made the change to the node."
+        data_type: NUMBER
+      - name: snapshot_date
+        description: "The snapshot_timestamp converted to a date, used for partitioning; use as a WHERE-clause condition for fast, cost-effective queries."
+        data_type: DATE
+      - name: snapshot_timestamp
+        description: "The time when the snapshot was taken. (It is usually after the change happened)."
+        data_type: TIMESTAMP_NTZ
+
+  - name: node_latest
+    config:
+      schema: synapse
+      target_lag: "1 day"
+      snowflake_warehouse: compute_xsmall
+      refresh_mode: AUTO
+      initialize: on_create
+    description: "Latest state of each Synapse node (project, file, folder, table, etc.), one row per id. Derived from node_event, restricted to snapshots from the last 30 days and excluding deleted or trash-can nodes. Each row represents a node's current state and metadata."
+    constraints:
+      - type: primary_key
+        columns: [id]
+    columns:
+      - name: change_type
+        description: "The type of change that occurred on the node, e.g., CREATE, UPDATE."
+        data_type: VARCHAR
+      - name: change_timestamp
+        description: "The time when the change (created/updated) on the node is pushed to the queue for snapshotting."
+        data_type: TIMESTAMP_NTZ
+      - name: change_user_id
+        description: "The unique identifier of the user who made the change to the node."
+        data_type: NUMBER
+      - name: snapshot_timestamp
+        description: "The time when the snapshot was taken. (It is usually after the change happened)."
+        data_type: TIMESTAMP_NTZ
+      - name: id
+        description: "The unique identifier of the node."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: benefactor_id
+        description: "The identifier of the (ancestor) node which provides the permissions that apply to this node. Can be the id of the node itself."
+        data_type: NUMBER
+      - name: project_id
+        description: "The project where the node resides."
+        data_type: NUMBER
+      - name: parent_id
+        description: "The unique identifier of the parent in the node hierarchy."
+        data_type: NUMBER
+      - name: node_type
+        description: "The type of the node. Allowed node types are: project, folder, file, table, link, entityview, dockerrepo, submissionview, dataset, datasetcollection, materializedview, virtualtable."
+        data_type: VARCHAR
+      - name: created_on
+        description: "The creation time of the node."
+        data_type: TIMESTAMP_NTZ
+      - name: created_by
+        description: "The unique identifier of the user who created the node."
+        data_type: NUMBER
+      - name: modified_on
+        description: "The most recent change time of the node."
+        data_type: TIMESTAMP_NTZ
+      - name: modified_by
+        description: "The unique identifier of the user who last modified the node."
+        data_type: NUMBER
+      - name: version_number
+        description: "The version of the node on which the change occurred, if applicable."
+        data_type: NUMBER
+      - name: file_handle_id
+        description: "The unique identifier of the file handle if the node is a file, null otherwise."
+        data_type: NUMBER
+      - name: name
+        description: "The name of the node."
+        data_type: VARCHAR
+      - name: is_public
+        description: "If true, READ permission is granted to all the Synapse users, including the anonymous user, at the time of the snapshot."
+        data_type: BOOLEAN
+      - name: is_controlled
+        description: "If true, an access requirement managed by the ACT is set on the node."
+        data_type: BOOLEAN
+      - name: is_restricted
+        description: "If true, a terms-of-use access requirement is set on the node."
+        data_type: BOOLEAN
+      - name: snapshot_date
+        description: "The snapshot_timestamp converted to a date, used for partitioning; use as a WHERE-clause condition for fast, cost-effective queries."
+        data_type: DATE
+      - name: effective_ars
+        description: "The list of access requirement ids that apply to the entity at the time the snapshot was taken."
+        data_type: VARIANT
+      - name: annotations
+        description: "The json representation of the entity annotations assigned by the user."
+        data_type: VARIANT
+      - name: derived_annotations
+        description: "The json representation of the entity annotations that were derived by the schema of the entity."
+        data_type: VARIANT
+      - name: version_comment
+        description: "A short description assigned to this node version."
+        data_type: VARCHAR
+      - name: version_label
+        description: "A short label assigned to this node version."
+        data_type: VARCHAR
+      - name: alias
+        description: "An alias assigned to a project entity if present."
+        data_type: VARCHAR
+      - name: activity_id
+        description: "The reference to the id of an activity assigned to the node."
+        data_type: NUMBER
+      - name: column_model_ids
+        description: "For entities that define a table schema (e.g. table, views etc), the list of column ids assigned to the schema."
+        data_type: VARIANT
+      - name: scope_ids
+        description: "For entities that define a scope (e.g. entity views, submission views etc), the list of entity ids included in the scope."
+        data_type: VARIANT
+      - name: items
+        description: "For entities that define a fixed list of entity references (e.g. dataset, dataset collections), the list of entity references included in the scope."
+        data_type: VARIANT
+      - name: reference
+        description: "For Link entities, the reference to the linked target."
+        data_type: VARIANT
+      - name: is_search_enabled
+        description: "For Table like entities (e.g. EntityView, MaterializedView etc), defines if full text search is enabled on those entities."
+        data_type: BOOLEAN
+      - name: defining_sql
+        description: "For tables that are driven by a synapse SQL query (e.g. MaterializedView, VirtualTable), defines the underlying SQL query."
+        data_type: VARCHAR
+      - name: internal_annotations
+        description: "The json representation of the entity internal annotations that are used to store additional data about different types of entity (e.g. dataset checksum, size, count)."
+        data_type: VARIANT
+      - name: version_history
+        description: "The list of entity versions, at the time of the snapshot."
+        data_type: VARIANT
+      - name: project_storage_usage
+        description: "The storage usage information for the project, including size and count metrics."
+        data_type: VARIANT
