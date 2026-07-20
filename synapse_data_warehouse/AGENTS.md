@@ -17,10 +17,6 @@ schemachange-managed DDL for the primary Synapse data warehouse. Contains all ta
 | `DATABASE_ROLES` | Role grant SQL (RBAC setup for this database) | V-scripts |
 | `SCHEMACHANGE` | Version history metadata — never edit manually | Auto-created |
 
-## RBAC
-
-This database follows the structured database-role-based access pattern. See `admin/CLAUDE.md` for the full hierarchy and `admin/future_grants/CLAUDE.md` for adding new object types. The `database_roles/` subdirectory contains the V-scripts that set up database roles and grants for each schema.
-
 ## Template variables
 
 Every schemachange SQL script uses `{{database_name}}` to stay environment-agnostic:
@@ -86,8 +82,11 @@ ALTER TASK {{database_name}}.schema.task_name RESUME;
 - Use `user_task_managed_initial_warehouse_size` — avoids needing a separate warehouse.
 - CRON uses `America/Los_Angeles` timezone.
 
+## Comments in schemachange scripts
+
+Keep comments short (one line max). Avoid step-numbered banners and ASCII decorators — they inflate context for agents reading these files.
 
 ## Constraints
 
-See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers).
+See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers, RBAC placement).
 
