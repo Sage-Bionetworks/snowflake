@@ -42,8 +42,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_approval --noqa
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.access_approval --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- acl
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl --noqa: JJ01,PRS,TMP
@@ -53,8 +52,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl --noqa: JJ01,PRS,T
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.acl --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- acl_resource_access
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access --noqa: JJ01,PRS,TMP
@@ -64,8 +62,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access --
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.acl_resource_access --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- acl_resource_access_type
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access_type --noqa: JJ01,PRS,TMP
@@ -75,8 +72,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.acl_resource_access_ty
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.acl_resource_access_type --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_submission
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission --noqa: JJ01,PRS,TMP
@@ -86,8 +82,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_submission --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_submission_accessor_changes
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_accessor_changes --noqa: JJ01,PRS,TMP
@@ -97,8 +92,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_submission_accessor_changes --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_submission_status
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_status --noqa: JJ01,PRS,TMP
@@ -108,8 +102,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_submission_status --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_submission_submitter
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission_submitter --noqa: JJ01,PRS,TMP
@@ -119,8 +112,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_submission
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_submission_submitter --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_request
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_request --noqa: JJ01,PRS,TMP
@@ -130,8 +122,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_request --
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_request --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- access_requirement
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement --noqa: JJ01,PRS,TMP
@@ -141,8 +132,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement --n
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.access_requirement --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- access_requirement_project
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_project --noqa: JJ01,PRS,TMP
@@ -152,8 +142,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_pro
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.access_requirement_project --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- access_requirement_revision
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_revision --noqa: JJ01,PRS,TMP
@@ -163,8 +152,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.access_requirement_rev
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.access_requirement_revision --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- data_access_notification
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_notification --noqa: JJ01,PRS,TMP
@@ -174,8 +162,7 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.data_access_notificati
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.data_access_notification --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
 
 -- principal_alias
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.principal_alias --noqa: JJ01,PRS,TMP
@@ -185,5 +172,4 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.principal_alias --noqa
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.principal_alias --noqa: JJ01,PRS,TMP
-WHERE snapshot_date >= DATEADD(day, -1, CURRENT_DATE())
-QUALIFY snapshot_date = MAX(snapshot_date) OVER ();
+WHERE snapshot_date = DATEADD(day, -1, CURRENT_DATE());
