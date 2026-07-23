@@ -30,14 +30,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Configure Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.13'
+    - name: Install uv
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
 
     - name: Install dbt-snowflake
       shell: bash
-      run: pip install dbt-snowflake==1.11.6
+      run: uv tool install "dbt-snowflake==1.11.6"
 
     - name: Write private key file and dbt profiles.yml
       shell: bash
@@ -82,3 +80,17 @@ runs:
 
         # Restrict file owner read/write only (contains the private key passphrase)
         chmod 0600 $PROFILES_FILE
+
+        echo "dbt profiles.yml written to $PROFILES_FILE"
+
+    - name: Test dbt connection
+      working-directory: transform
+      shell: bash
+      env:
+        DBT_TARGET_NAME: ${{ inputs.TARGET_NAME }}
+      run: |
+        dbt --version
+
+        # dbt debug exits non-zero on a bad connection, so a misconfigured
+        # profile fails here instead of surfacing later during `dbt run`
+        dbt debug --target "${DBT_TARGET_NAME}"
