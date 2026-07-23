@@ -12,7 +12,6 @@ Each major subsystem is self-contained with its own `CLAUDE.md`:
 - `transform/` — dbt project (staging → intermediate → marts)
 - `admin/` — account-level RBAC and objects, e.g.,  warehouse provisioning, masking policies, ownership transfers, and future grants.
 - `sage/` — schemachange-managed DDL for the `SAGE` analyst database (citations, governance, GA4 aggregates).
-- `finance/` — Python ELT pulling MIP financial data via API into Snowflake.
 - `analytics/` — ad-hoc SQL and one-off Python ETL scripts. Not deployed by CI.
 - `genie/` — GENIE cancer genomics queries and Snowpark scripts. Query-focused, minimal DDL.
 - `data_validation/` — Great Expectations checkpoints on raw + portal tables.
@@ -60,6 +59,8 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 **`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`). If the `dev` based changes are dependent on changes in `admin/`, then the description of the associated PR should indicate that this PR "depends on" the PR associated with the `admin/` changes.
 
+**Python environment:** Dependencies are managed with [uv](https://docs.astral.sh/uv/). Run tools via `uv run --group <name> <cmd>` — no separate sync step needed. Available groups: `snowflake`, `schemachange`, `dbt`. See `pyproject.toml` for the full definitions. To use the Snowflake CLI, use the `snow` tool: `uvx --from snowflake-cli snow ...`. Streamlit app dependencies are managed per-app via `environment.yml` (conda/mamba) — see [STREAMLIT.md](./STREAMLIT.md).
+
 **Code comments:** Comments should be plain, concise, and should add context that is not already obvious from the code itself. Prefer comments that explain intent, assumptions, business logic, or non-obvious implementation details.
 
 **CONTRIBUTING.md** Additional contribution guidelines are contained in [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -92,7 +93,6 @@ Snowflake can be interfaced with via the `snow` CLI tool.
 
 - **Synapse platform** (Sage-Bionetworks/Synapse-Repository-Services): source of all RDS snapshots and S3 event data.
 - **Synapse portals** (NF, AD, HTAN): data loaded via `analytics/portal_elt.py` using `synapseclient`.
-- **MIP financial API**: source for `finance/` ELT pipeline.
 - **DataCite API**: source for `sage/citations/` DOI tracking.
 - **Google Analytics 4**: source for `sage/google_analytics_aggregate/` via service account (`Ga4_service_account.json`).
 - Jira project: SNOW (`https://sagebionetworks.jira.com/browse/SNOW`)

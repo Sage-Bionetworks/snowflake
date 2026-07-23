@@ -1,0 +1,26 @@
+[project]
+name = "sage-snowflake"
+version = "0.1.0"
+requires-python = "~=3.12.0"
+dependencies = []
+
+[dependency-groups]
+
+# Core Snowflake tooling: connector, Snowpark, boto3 for S3 access.
+# Install the snow CLI separately: uv tool install snowflake-cli
+snowflake = [
+    "boto3>=1.42,<2",
+    "snowflake-connector-python>=3.18,<4",
+    "snowflake-snowpark-python>=1.41,<2",
+]
+
+# Schema migration runner for synapse_data_warehouse/, sage/, and admin/.
+schemachange = [
+    "schemachange==4.0.1",
+]
+
+# dbt Snowflake adapter and SQL linter for the transform/ project.
+dbt = [
+    "dbt-snowflake>=1.10.3,<2",
+]
+
