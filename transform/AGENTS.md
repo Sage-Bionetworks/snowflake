@@ -24,14 +24,15 @@ uv run --group dbt dbt run --selector synapse_data_warehouse
 # Run all models for synapse_data_warehouse (dev + prod)
 dbt run --selector synapse_data_warehouse
 
-# Run sage models (prod only — skipped automatically in dev)
+# Run sage models — target name alone does not gate this selector, so only
+# run it from a context intended to deploy to its configured destination
 dbt run --selector sage --target prod
 
 # Run a specific model(s)
 dbt run --select stg_synapse__access_approval
 dbt run --select intermediate.synapse
 
-# Generate docs (prod target required for complete lineage)
+# Generate docs
 dbt docs generate --target prod
 
 # Test
@@ -46,7 +47,7 @@ dbt test
 
 Defined in `selectors.yml`:
 - `synapse_data_warehouse` — staging + intermediate + `marts/synapse_data_warehouse/`; runs against dev and prod
-- `sage` — `marts/sage/` only; prod target required
+- `sage` — `marts/sage/` only; target name alone does not gate it, so only invoke from a context intended to deploy to its configured destination
 
 ## Structure
 
@@ -56,7 +57,7 @@ models/
   intermediate/         ← int_synapse_* views
   marts/
     synapse_data_warehouse/  ← dynamic tables → SYNAPSE_DATA_WAREHOUSE
-    sage/                    ← dynamic tables → SAGE (prod only)
+    sage/                    ← dynamic tables → SAGE
 ```
 
 See `models/CLAUDE.md` for model development conventions (naming, contracts, materialization, timestamp handling).
@@ -64,6 +65,3 @@ See `models/CLAUDE.md` for model development conventions (naming, contracts, mat
 ## Constraints
 
 - **`target/` and `logs/` are gitignored** — do not commit dbt artifacts.
-- **Do not run `dbt docs generate` without `--target prod`** — dev databases lack sage models; the generated lineage graph will be incomplete.
-- **Do not run `dbt run --selector sage` without `--target prod`** — sage models are disabled for non-prod targets; the run will succeed but produce no output.
-

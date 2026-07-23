@@ -185,6 +185,27 @@ jobs:
                 --config-folder synapse_data_warehouse \
                 --snowflake-role $SNOWFLAKE_CLONE_ADMIN_ROLE
 
+            ########################################################################################################
+            ########################################################################################################
+            ##################################### RUNNING DBT ON THE CLONE ##########################################
+            ########################################################################################################
+            ########################################################################################################
+            - name: Configure dbt
+              uses: ./.github/actions/configure-dbt
+              with:
+                  PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                  PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                  ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                  USER: ${{ vars.ADMIN_SERVICE_USER }}
+                  ROLE: ${{ env.SNOWFLAKE_CLONE_ADMIN_ROLE }}
+                  DATABASE: ${{ env.SNOWFLAKE_DOMAIN_CLONE_SANITIZED }}
+                  TARGET_NAME: clone 
+
+            - name: Run dbt models on the clone
+              working-directory: transform
+              shell: bash
+              run: dbt run --selector synapse_data_warehouse --target clone
+
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'

@@ -49,6 +49,22 @@ jobs:
             --config-folder synapse_data_warehouse \
             --snowflake-role synapse_data_warehouse_dev_admin
 
+      - name: Configure dbt
+        uses: ./.github/actions/configure-dbt
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          ROLE: synapse_data_warehouse_dev_admin
+          DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+          TARGET_NAME: dev
+
+      - name: Run dbt models
+        working-directory: transform
+        shell: bash
+        run: dbt run --selector synapse_data_warehouse --target dev
+
   schemachange_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
     if: github.ref_name == 'main'
@@ -81,8 +97,25 @@ jobs:
             --config-folder synapse_data_warehouse \
             --snowflake-role synapse_data_warehouse_admin
 
+      - name: Configure dbt
+        uses: ./.github/actions/configure-dbt
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          ROLE: synapse_data_warehouse_admin
+          DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
+          TARGET_NAME: prod
+
+      - name: Run dbt models
+        working-directory: transform
+        shell: bash
+        run: dbt run --selector synapse_data_warehouse --target prod
+
   schemachange_sage:
     runs-on: ubuntu-22.04
+    needs: schemachange_synapse_data_warehouse_prod
     if: github.ref_name == 'main'
     environment: prod
     steps:
@@ -104,6 +137,22 @@ jobs:
             --connection-name default \
             --config-folder sage \
             --snowflake-role sage_admin
+
+      - name: Configure dbt
+        uses: ./.github/actions/configure-dbt
+        with:
+          PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+          ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+          USER: ${{ vars.ADMIN_SERVICE_USER }}
+          ROLE: sage_admin
+          DATABASE: SAGE
+          TARGET_NAME: prod
+
+      - name: Run dbt models
+        working-directory: transform
+        shell: bash
+        run: dbt run --selector sage --target prod
 
   deploy_streamlit:
     runs-on: ubuntu-22.04
