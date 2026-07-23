@@ -38,7 +38,7 @@ runs:
       # dbt-snowflake has no console-script entry points of its own (dbt-core
       # provides the `dbt` executable), so it must be installed as a --with
       # dependency of dbt-core rather than as the tool package itself.
-      run: uv tool install dbt-core --with "dbt-snowflake==1.11.6"
+      run: uv tool install --python 3.12 dbt-core --with "dbt-snowflake==1.11.6"
 
     - name: Write private key file and dbt profiles.yml
       shell: bash
