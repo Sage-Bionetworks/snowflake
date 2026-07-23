@@ -83,7 +83,7 @@ runs:
 
     - name: Install schemachange
       shell: bash
-      run: uv tool install "schemachange==4.0.1"
+      run: uv tool install --python 3.12 "schemachange==4.0.1"
 
     - name: Test Snowflake connection
       shell: bash
