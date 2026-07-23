@@ -82,7 +82,7 @@ def main():
     select
         distinct x_forwarded_for as unique_ips
     from
-        synapse_data_warehouse.synapse.processedaccess
+        synapse_data_warehouse.synapse_event.access_event
     where
         x_forwarded_for is not null and
         x_forwarded_for not in (select ip from sage.it.extracted_ip_info) and

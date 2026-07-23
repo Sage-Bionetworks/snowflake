@@ -61,6 +61,8 @@ SYNAPSE_RAW                                RDS_LANDING → RDS_RAW
 
 **Python environment:** Dependencies are managed with [uv](https://docs.astral.sh/uv/). Run tools via `uv run --group <name> <cmd>` — no separate sync step needed. Available groups: `snowflake`, `schemachange`, `dbt`. See `pyproject.toml` for the full definitions. To use the Snowflake CLI, use the `snow` tool: `uvx --from snowflake-cli snow ...`. Streamlit app dependencies are managed per-app via `environment.yml` (conda/mamba) — see [STREAMLIT.md](./STREAMLIT.md).
 
+**Code comments:** Comments should be plain, concise, and should add context that is not already obvious from the code itself. Prefer comments that explain intent, assumptions, business logic, or non-obvious implementation details.
+
 **CONTRIBUTING.md** Additional contribution guidelines are contained in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Schemachange rules
@@ -72,6 +74,7 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 - **Do not use repeatable scripts to create objects with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
 - **Scripts that reference an object must have a higher version number than the script that creates it** — schemachange applies versioned scripts in ascending order, so a grant or DDL that depends on an object (e.g. a database role) must come after the script that creates it.
 - **All `GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`** — adding them inside DDL migration scripts will auto-suspend tasks.
+- **Schema subdirectories contain only object DDL** — scripts under a schema subdir (e.g. `synapse_data_warehouse/rds_landing/`) must only create or alter objects (tables, tasks, stages, etc.). Database role creation, ownership, and inheritance belong in that database's `database_roles/` subdir; all other grants belong in `admin/` (see `admin/AGENTS.md` for the full split across `ownership_grants/`, `future_grants/`, and `grants.sql`).
 - **SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
 ## Interfacing with Snowflake

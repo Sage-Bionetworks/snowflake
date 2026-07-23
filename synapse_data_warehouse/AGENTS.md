@@ -17,10 +17,6 @@ schemachange-managed DDL for the primary Synapse data warehouse. Contains all ta
 | `DATABASE_ROLES` | Role grant SQL (RBAC setup for this database) | V-scripts |
 | `SCHEMACHANGE` | Version history metadata — never edit manually | Auto-created |
 
-## RBAC
-
-This database follows the structured database-role-based access pattern. See `admin/CLAUDE.md` for the full hierarchy and `admin/future_grants/CLAUDE.md` for adding new object types. The `database_roles/` subdirectory contains the V-scripts that set up database roles and grants for each schema.
-
 ## Template variables
 
 Every schemachange SQL script uses `{{database_name}}` to stay environment-agnostic:
@@ -46,6 +42,7 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 - Use for: `CREATE TABLE`, `CREATE STREAM`, new objects that other objects depend on
 - Applied exactly once; version numbers are permanent
 - Current sequence is in the V2.x range; check `CHANGE_HISTORY` before picking a new version
+- **The version sequence is shared across every subdirectory of `synapse_data_warehouse/`** — `synapse/`, `synapse_raw/`, `synapse_aggregate/`, `rds_raw/`, `rds_landing/`, `database_roles/`, etc. all draw from the same V2.x sequence (CI deploys the whole tree with one `schemachange --root-folder synapse_data_warehouse` call writing to one `CHANGE_HISTORY` table). A new script's version must be higher than the highest version already used *anywhere* in the tree, not just within its own subdirectory. This sequence is independent of `sage/` (own sequence) and `admin/` (own sequence).
 
 **Repeatable (`R__{description}.sql`):**
 - Repeatable scripts run whenever the file contents change. It is strongly discouraged to use R scripts unless they provide a workaround for something that cannot be accomplished via a versioned script.
@@ -85,8 +82,11 @@ ALTER TASK {{database_name}}.schema.task_name RESUME;
 - Use `user_task_managed_initial_warehouse_size` — avoids needing a separate warehouse.
 - CRON uses `America/Los_Angeles` timezone.
 
+## Comments in schemachange scripts
+
+Keep comments short (one line max). Avoid step-numbered banners and ASCII decorators — they inflate context for agents reading these files.
 
 ## Constraints
 
-See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers).
+See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers, RBAC placement).
 
