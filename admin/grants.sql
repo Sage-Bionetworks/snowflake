@@ -15,8 +15,13 @@ TO USER "x.schildwachter@sagebase.org";
 GRANT ROLE SYSADMIN
 TO USER "phil.snyder@sagebase.org";
 
-GRANT ROLE SYSADMIN
-TO USER DPE_SERVICE;
+-- Revoke unnecessary roles
+-- This user only ever uses DATA_ANALYTICS and DATA_ENGINEER
+REVOKE ROLE SYSADMIN
+FROM USER DPE_SERVICE;
+REVOKE ROLE SECURITYADMIN
+FROM USER DPE_SERVICE;
+
 -- warehouse usage privileges
 GRANT USAGE ON WAREHOUSE COMPUTE_XSMALL
 TO ROLE PUBLIC;
