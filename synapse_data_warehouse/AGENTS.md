@@ -8,14 +8,16 @@ schemachange-managed DDL for the primary Synapse data warehouse. Contains all ta
 
 | Schema | Contents | Pattern |
 |--------|----------|---------|
-| `SYNAPSE_RAW` | Snapshot tables ingested from S3 (Parquet). 200+ tables. | V-scripts + R-scripts |
-| `RDS_RAW` | MySQL RDS snapshot tables (access approvals, requirements, ACLs) | V-scripts |
-| `RDS_LANDING` | External tables + stages for RDS snapshot ingestion | V-scripts |
-| `SYNAPSE_EVENT` | File/Node/Object download and upload event tables | V-scripts + dynamic tables |
-| `SYNAPSE_AGGREGATE` | Time-window aggregations of user upload/download activity | Dynamic tables |
-| `SYNAPSE` | Transformed/materialized tables consumed by dbt and analysts | V-scripts + dynamic tables |
+| `SYNAPSE_RAW` | Snapshot tables ingested from S3 (Parquet). 200+ tables. | V-scripts + R-scripts (100% schemachange) |
+| `RDS_LANDING` | Landing tables mirroring 150+ RDS MySQL tables (teams, ACLs, access requests/submissions, etc.); only a "high-priority" access-governance subset has live `COPY INTO` ingestion tasks today — the rest exist as empty scaffolding | V-scripts (100% schemachange) |
+| `RDS_RAW` | Intended promotion layer for `RDS_LANDING` tables, and what dbt's `rds` source declarations point at — but currently just the empty schema; no tables have been promoted yet (in-progress migration) | V-scripts (100% schemachange) |
+| `SYNAPSE_EVENT` | Deduplicated change-event history for various Synapse entities (file, node, ACL, team/team-member, data access submissions, etc.) | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
+| `SYNAPSE_AGGREGATE` | Time-window aggregations of user upload/download activity | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
+| `SYNAPSE` | Most-recent-state objects; transformed/materialized tables consumed by dbt and analysts | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
 | `DATABASE_ROLES` | Role grant SQL (RBAC setup for this database) | V-scripts |
 | `SCHEMACHANGE` | Version history metadata — never edit manually | Auto-created |
+
+See root `AGENTS.md`'s "When schemachange vs. dbt is ambiguous" section before assuming a schema's typical pattern dictates where a *new* object belongs.
 
 ## Template variables
 
