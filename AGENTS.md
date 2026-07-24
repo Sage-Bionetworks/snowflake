@@ -2,7 +2,7 @@
 
 ## Project
 
-Sage Bionetworks' Snowflake data warehouse. Ingests Synapse platform data (MySQL RDS snapshots + S3 event data), transforms it via dbt, and serves analytics to Tableau, Streamlit dashboards, and ad-hoc SQL consumers.
+Sage Bionetworks' Snowflake data warehouse. Ingests Synapse platform data (MySQL RDS snapshots + S3 event data), transforms it via either dbt or schemachange-managed DDL, and serves analytics to Tableau, Streamlit dashboards, and ad-hoc SQL consumers.
 
 ## Subsystems
 
@@ -81,7 +81,7 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 
 Snowflake can be interfaced with via the `snow` CLI tool.
 
-**DO NOT** run commands which create, delete, or alter resources in Snowflake unless the user explictly requests those actions. Complete `snow` documentation is [here](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index). 
+**DO NOT** run commands which create, delete, or alter resources in Snowflake unless the user explictly requests those actions. Complete `snow` documentation is [here](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index).
 
 ## Off-limits paths
 
