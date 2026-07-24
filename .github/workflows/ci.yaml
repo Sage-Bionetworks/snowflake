@@ -104,7 +104,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
-          ROLE: synapse_data_warehouse_admin
+          ROLE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_admin
           DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           TARGET_NAME: prod
 
