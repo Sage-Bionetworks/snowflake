@@ -997,3 +997,399 @@ def format_size_metric(bytes_value):
         return bytes_value / (1024**2), "MB"
     else:
         return bytes_value, "Bytes"
+
+
+def plot_upload_age_histogram(df, width=1400, height=500):
+    """Histogram of files by upload age (years since upload_date).
+
+    Pre-aggregates into 0.5-year bins server-side to keep the figure small.
+
+    Args:
+        df: DataFrame with columns DAYS_SINCE_UPLOAD and PROJECT_ID (and optionally PROJECT_NAME)
+    """
+    if df.empty:
+        return go.Figure()
+
+    years = df['DAYS_SINCE_UPLOAD'] / 365.25
+    bins = pd.cut(years, bins=30)
+    counts = bins.value_counts().sort_index()
+    bin_labels = [f"{iv.left:.1f}–{iv.right:.1f}" for iv in counts.index]
+
+    fig = go.Figure(go.Bar(
+        x=bin_labels,
+        y=counts.values,
+        marker_color=PORTAL_BLUE,
+        opacity=0.85,
+    ))
+    fig.update_layout(
+        title='Distribution of Files by Upload Age',
+        xaxis_title='Years Since Upload',
+        yaxis_title='Number of Files',
+        width=width,
+        height=height,
+        xaxis_tickangle=-45,
+    )
+    return fig
+
+
+def plot_download_recency_histogram(df, width=1400, height=500):
+    """Histogram of time since last download for files that have been downloaded at least once.
+
+    Pre-aggregates into bins server-side to keep the figure small.
+
+    Args:
+        df: DataFrame with column DAYS_SINCE_LAST_DOWNLOAD (NaN = never downloaded)
+    """
+    if df.empty:
+        return go.Figure()
+
+    downloaded = df.dropna(subset=['DAYS_SINCE_LAST_DOWNLOAD'])
+    if downloaded.empty:
+        fig = go.Figure()
+        fig.update_layout(title='No files have been downloaded yet.')
+        return fig
+
+    years = downloaded['DAYS_SINCE_LAST_DOWNLOAD'] / 365.25
+    bins = pd.cut(years, bins=30)
+    counts = bins.value_counts().sort_index()
+    bin_labels = [f"{iv.left:.1f}–{iv.right:.1f}" for iv in counts.index]
+
+    fig = go.Figure(go.Bar(
+        x=bin_labels,
+        y=counts.values,
+        marker_color=PORTAL_BLUE,
+        opacity=0.85,
+    ))
+    fig.update_layout(
+        title='Download Recency: Time Since Last External Download (Downloaded Files Only)',
+        xaxis_title='Years Since Last Download',
+        yaxis_title='Number of Files',
+        width=width,
+        height=height,
+        xaxis_tickangle=-45,
+    )
+    return fig
+
+
+def plot_never_downloaded_by_project(df, width=1400, height=600):
+    """Per-project grouped bar chart showing count and storage of never-downloaded vs downloaded files.
+
+    Args:
+        df: DataFrame with columns PROJECT_ID, PROJECT_NAME (optional), CONTENT_SIZE,
+            DAYS_SINCE_LAST_DOWNLOAD (NaN = never downloaded)
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df.copy()
+    df['downloaded'] = df['DAYS_SINCE_LAST_DOWNLOAD'].notna()
+    label_col = 'PROJECT_NAME' if 'PROJECT_NAME' in df.columns else 'PROJECT_ID'
+
+    summary = (
+        df.groupby([label_col, 'downloaded'])
+        .agg(file_count=('FILE_HANDLE_ID', 'count'),
+             total_size_gb=('CONTENT_SIZE', lambda x: x.sum() / 1e9))
+        .reset_index()
+    )
+    summary['status'] = summary['downloaded'].map({True: 'Downloaded', False: 'Never Downloaded'})
+
+    # Truncate long project names
+    summary['short_name'] = summary[label_col].apply(
+        lambda x: ' '.join(str(x).split()[:4]) + ('…' if len(str(x).split()) > 4 else '')
+    )
+
+    fig = go.Figure()
+    colors = {'Downloaded': PORTAL_BLUE, 'Never Downloaded': ORANGE}
+
+    for status in ['Downloaded', 'Never Downloaded']:
+        sub = summary[summary['status'] == status]
+        fig.add_trace(go.Bar(
+            name=status,
+            x=sub['short_name'],
+            y=sub['total_size_gb'],
+            marker_color=colors[status],
+            customdata=sub[['file_count', label_col]].values,
+            hovertemplate=(
+                '<b>%{customdata[1]}</b><br>'
+                'Storage: %{y:.1f} GB<br>'
+                'Files: %{customdata[0]:,}<extra></extra>'
+            )
+        ))
+
+    fig.update_layout(
+        barmode='group',
+        title='Storage Never Downloaded vs Downloaded, by Project',
+        xaxis_title='Project',
+        yaxis_title='Storage (GB)',
+        xaxis_tickangle=-40,
+        width=width,
+        height=height,
+        legend=dict(x=1.02, y=1),
+    )
+    return fig
+
+
+def plot_eol_scatter(df, upload_threshold=8.0, download_threshold=2.0, width=1400, height=700):
+    """Scatter plot: upload age (x) vs years since last download (y).
+
+    Files never downloaded are plotted along y=0 as hollow markers.
+    Separate threshold lines on each axis mark the EOL boundary.
+
+    Args:
+        df: DataFrame with DAYS_SINCE_UPLOAD, DAYS_SINCE_LAST_DOWNLOAD,
+            CONTENT_SIZE, PROJECT_ID, PROJECT_NAME (optional)
+        upload_threshold: years since upload before a file is considered old (x-axis line)
+        download_threshold: years since last download before a file is considered stale (y-axis line)
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df.copy()
+    label_col = 'PROJECT_NAME' if 'PROJECT_NAME' in df.columns else 'PROJECT_ID'
+    df['years_since_upload'] = df['DAYS_SINCE_UPLOAD'] / 365.25
+    df['years_since_download'] = df['DAYS_SINCE_LAST_DOWNLOAD'] / 365.25
+    df['size_gb'] = df['CONTENT_SIZE'] / 1e9
+    df['short_name'] = df[label_col].apply(
+        lambda x: ' '.join(str(x).split()[:4]) + ('…' if len(str(x).split()) > 4 else '')
+    )
+
+    # Filter to files >= 10 MB to reduce noise and improve rendering performance
+    df = df[df['CONTENT_SIZE'] >= 10 * 1024 * 1024].copy()
+
+    never_dl = df[df['DAYS_SINCE_LAST_DOWNLOAD'].isna()].copy()
+    ever_dl = df[df['DAYS_SINCE_LAST_DOWNLOAD'].notna()].copy()
+
+    fig = go.Figure()
+
+    max_x = max(df['years_since_upload'].max() * 1.05, upload_threshold + 0.5)
+    max_y = ever_dl['years_since_download'].max() * 1.05 if not ever_dl.empty else download_threshold + 0.5
+
+    # Vertical line: upload age threshold (8 yrs)
+    fig.add_shape(type='line', x0=upload_threshold, x1=upload_threshold, y0=0, y1=max_y,
+                  line=dict(color='rgba(180,0,0,0.4)', width=1.5, dash='dash'))
+    # Horizontal line: download recency threshold (2 yrs)
+    fig.add_shape(type='line', x0=0, x1=max_x, y0=download_threshold, y1=download_threshold,
+                  line=dict(color='rgba(180,0,0,0.4)', width=1.5, dash='dash'))
+
+    # Quadrant label: EOL candidates (upper-right: old upload AND stale download)
+    fig.add_annotation(
+        x=max_x * 0.97, y=max_y * 0.97,
+        text=f'<b>EOL candidates</b><br>Upload >{upload_threshold:.0f} yr & not downloaded in >{download_threshold:.0f} yr',
+        showarrow=False,
+        font=dict(color='rgba(180,0,0,0.7)', size=11),
+        align='right',
+        xanchor='right',
+    )
+
+    if not ever_dl.empty:
+        fig.add_trace(go.Scatter(
+            x=ever_dl['years_since_upload'],
+            y=ever_dl['years_since_download'],
+            mode='markers',
+            name='Downloaded ≥1×',
+            marker=dict(
+                size=ever_dl['size_gb'].clip(lower=0.5).apply(lambda s: min(5 + s * 0.3, 25)),
+                color=PORTAL_BLUE,
+                opacity=0.6,
+                line=dict(width=0.5, color='white')
+            ),
+            customdata=ever_dl[['short_name', 'DOWNLOAD_COUNT', 'size_gb']].values,
+            hovertemplate=(
+                '<b>%{customdata[0]}</b><br>'
+                'Upload age: %{x:.1f} yr<br>'
+                'Since last download: %{y:.1f} yr<br>'
+                'Downloads: %{customdata[1]:,}<br>'
+                'Size: %{customdata[2]:.2f} GB<extra></extra>'
+            )
+        ))
+
+    if not never_dl.empty:
+        fig.add_trace(go.Scatter(
+            x=never_dl['years_since_upload'],
+            y=[0] * len(never_dl),
+            mode='markers',
+            name='Never Downloaded',
+            marker=dict(
+                size=never_dl['size_gb'].clip(lower=0.5).apply(lambda s: min(5 + s * 0.3, 25)),
+                color=ORANGE,
+                opacity=0.7,
+                symbol='circle-open',
+                line=dict(width=1.5, color=ORANGE)
+            ),
+            customdata=never_dl[['short_name', 'size_gb']].values,
+            hovertemplate=(
+                '<b>%{customdata[0]}</b><br>'
+                'Upload age: %{x:.1f} yr<br>'
+                'Never downloaded<br>'
+                'Size: %{customdata[1]:.2f} GB<extra></extra>'
+            )
+        ))
+
+    fig.update_layout(
+        title='File Lifecycle: Upload Age vs. Download Recency<br>'
+              f'<sub>Files ≥10 MB · Marker size ∝ file size · Vertical = {upload_threshold:.0f}-yr upload threshold · Horizontal = {download_threshold:.0f}-yr download threshold</sub>',
+        xaxis_title='Years Since Upload',
+        yaxis_title='Years Since Last Download (0 = never downloaded)',
+        width=width,
+        height=height,
+        legend=dict(x=1.02, y=1),
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+    )
+    fig.update_xaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)', zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)', zeroline=False, rangemode='tozero')
+
+    return fig
+
+
+def _eol_scatter_base(x, y, color, symbol, hover_customdata, hovertemplate, name, title, xaxis_title, width, height):
+    """Shared layout helper for EOL candidate scatter plots."""
+    fig = go.Figure()
+    marker = dict(color=color, size=6, opacity=0.6)
+    if symbol == 'circle-open':
+        marker.update(symbol='circle-open', line=dict(width=1.5, color=color))
+    fig.add_trace(go.Scatter(
+        x=x, y=y, mode='markers', name=name,
+        marker=marker,
+        customdata=hover_customdata,
+        hovertemplate=hovertemplate,
+    ))
+    fig.update_layout(
+        title=title,
+        xaxis_title=xaxis_title,
+        yaxis_title='File Size (GB)',
+        yaxis_type='log',
+        width=width,
+        height=height,
+        showlegend=False,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+    )
+    fig.update_xaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)', zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor='rgba(128,128,128,0.2)', zeroline=False)
+    return fig
+
+
+def plot_eol_never_downloaded(df, width=1400, height=600):
+    """Scatter of deletion candidates that were never downloaded.
+
+    x = upload date, y = file size (log scale).
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df[df['CONTENT_SIZE'] >= 10 * 1024 * 1024].copy()
+    if df.empty:
+        return go.Figure()
+
+    label_col = 'PROJECT_NAME' if 'PROJECT_NAME' in df.columns else 'PROJECT_ID'
+    df['size_gb'] = df['CONTENT_SIZE'] / 1e9
+    df['short_name'] = df[label_col].apply(
+        lambda x: ' '.join(str(x).split()[:4]) + ('…' if len(str(x).split()) > 4 else '')
+    )
+
+    return _eol_scatter_base(
+        x=pd.to_datetime(df['UPLOAD_DATE']),
+        y=df['size_gb'],
+        color=ORANGE,
+        symbol='circle-open',
+        hover_customdata=df[['short_name', 'size_gb']].values,
+        hovertemplate=(
+            '<b>%{customdata[0]}</b><br>'
+            'Upload date: %{x|%Y-%m-%d}<br>'
+            'Size: %{customdata[1]:.2f} GB<extra></extra>'
+        ),
+        name='Never Downloaded',
+        title='Deletion Candidates: Never Downloaded — Upload Date vs. File Size<br><sub>Files ≥10 MB</sub>',
+        xaxis_title='Upload Date',
+        width=width,
+        height=height,
+    )
+
+
+def plot_eol_stale_downloads(df, width=1400, height=600):
+    """Scatter of deletion candidates that were downloaded but are now stale.
+
+    x = last download date, y = file size (log scale).
+    """
+    if df.empty:
+        return go.Figure()
+
+    df = df[df['CONTENT_SIZE'] >= 10 * 1024 * 1024].copy()
+    if df.empty:
+        return go.Figure()
+
+    label_col = 'PROJECT_NAME' if 'PROJECT_NAME' in df.columns else 'PROJECT_ID'
+    df['size_gb'] = df['CONTENT_SIZE'] / 1e9
+    df['short_name'] = df[label_col].apply(
+        lambda x: ' '.join(str(x).split()[:4]) + ('…' if len(str(x).split()) > 4 else '')
+    )
+
+    return _eol_scatter_base(
+        x=pd.to_datetime(df['LAST_DOWNLOAD_DATE']),
+        y=df['size_gb'],
+        color=PORTAL_BLUE,
+        symbol='circle',
+        hover_customdata=df[['short_name', 'DOWNLOAD_COUNT', 'size_gb']].values,
+        hovertemplate=(
+            '<b>%{customdata[0]}</b><br>'
+            'Last download: %{x|%Y-%m-%d}<br>'
+            'Size: %{customdata[2]:.2f} GB<br>'
+            'Total downloads: %{customdata[1]:,}<extra></extra>'
+        ),
+        name='Stale Downloads',
+        title='Deletion Candidates: Stale Downloads — Last Download Date vs. File Size<br><sub>Files ≥10 MB</sub>',
+        xaxis_title='Last Download Date',
+        width=width,
+        height=height,
+    )
+
+
+def plot_s3_tier_estimate(df, width=700, height=500):
+    """Donut chart of estimated S3 Intelligent Tiering storage distribution.
+
+    Expects a pre-aggregated DataFrame with columns TIER and SIZE_TB,
+    as returned by query_s3_tier_all_portal().
+
+    Args:
+        df: DataFrame with columns TIER, SIZE_TB
+    """
+    if df.empty:
+        return go.Figure()
+
+    tier_order = ['Frequent Access', 'Infrequent Access', 'Archive Access', 'Deep Archive Access']
+    tier_colors = {
+        'Frequent Access':     '#125E81',
+        'Infrequent Access':   '#748dcd',
+        'Archive Access':      '#bc590b',
+        'Deep Archive Access': '#941E24',
+    }
+
+    df = df.set_index('TIER').reindex(tier_order).fillna(0).reset_index()
+
+    fig = go.Figure(go.Pie(
+        labels=df['TIER'],
+        values=df['SIZE_TB'],
+        hole=0.45,
+        marker=dict(colors=[tier_colors[t] for t in df['TIER']]),
+        textinfo='label+percent',
+        hovertemplate='<b>%{label}</b><br>%{value:.2f} TB<br>%{percent}<extra></extra>',
+        sort=False,
+    ))
+
+    total_tb = df['SIZE_TB'].sum()
+    fig.update_layout(
+        title=dict(
+            text=f'Estimated S3 Intelligent Tiering Distribution — All NF Portal Data ({total_tb:.1f} TB)<br>'
+                 '<sub>Based on days since last external download · Never-downloaded files use upload age as proxy · Estimated, not measured from S3</sub>',
+            x=0.5,
+        ),
+        width=width,
+        height=height,
+        legend=dict(orientation='v', x=1.02, y=0.5),
+        margin=dict(t=110, b=40, l=40, r=40),
+    )
+
+    return fig
+
+

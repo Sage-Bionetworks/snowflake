@@ -687,3 +687,247 @@ def query_released_data_by_type(project_ids, released_statuses=None, limit=5):
         data_type ASC
     LIMIT {limit};
     """
+
+
+def query_table_query_counts(project_id=26338068, start_date='2022-01-01', excluded_users=STAFF_USERIDS):
+    """Return query counts for all tables and views within a specific project since start_date,
+    excluding internal Sage/DCC staff users. Uses access_event with the table query async start
+    endpoint as the signal for a table query."""
+
+    return f"""
+    WITH project_tables AS (
+        SELECT
+            nl.id AS entity_id,
+            nl.name AS entity_name,
+            nl.node_type
+        FROM
+            synapse_data_warehouse.synapse.node_latest nl
+        WHERE
+            nl.project_id = {project_id}
+            AND nl.node_type IN ('table', 'entityview', 'submissionview', 'dataset', 'datasetcollection', 'materializedview')
+    )
+    SELECT
+        pt.entity_id,
+        pt.entity_name,
+        pt.node_type,
+        COUNT(*) AS query_count
+    FROM
+        project_tables pt
+    JOIN
+        synapse_data_warehouse.synapse_event.access_event ae
+    ON
+        ae.entity_id = pt.entity_id
+    WHERE
+        ae.normalized_method_signature = 'POST /entity/#/table/query/async/start'
+        AND ae.record_date >= '{start_date}'
+        AND ae.user_id NOT IN ({','.join(map(str, excluded_users))})
+    GROUP BY
+        pt.entity_id,
+        pt.entity_name,
+        pt.node_type
+    ORDER BY
+        query_count DESC;
+    """
+
+
+def query_s3_tier_all_portal():
+    """Estimate S3 Intelligent Tiering storage distribution across the entire NF data portal.
+
+    Covers all projects in the portal view regardless of funder, data status, or sidebar filters.
+    Uses last download date (any user) to assign tiers; falls back to upload date for never-downloaded files.
+    All downloads are counted because any S3 access resets the tier, regardless of who triggered it.
+
+    Tiers:
+        Frequent Access:      <= 30 days inactive
+        Infrequent Access:    31–90 days
+        Archive Access:       91–180 days
+        Deep Archive Access:  > 180 days
+    """
+    return f"""
+    WITH portal_projects AS (
+        SELECT CAST(scopes.value AS INTEGER) AS project_id
+        FROM synapse_data_warehouse.synapse.node_latest,
+             LATERAL FLATTEN(input => node_latest.scope_ids) scopes
+        WHERE id = {PROJECT_VIEW_ID}
+    ),
+    project_files AS (
+        SELECT
+            nl.project_id,
+            nl.file_handle_id,
+            MIN(nl.created_on) AS upload_date
+        FROM synapse_data_warehouse.synapse.node_latest nl
+        JOIN portal_projects pp ON nl.project_id = pp.project_id
+        WHERE nl.file_handle_id IS NOT NULL
+        GROUP BY nl.project_id, nl.file_handle_id
+    ),
+    file_sizes AS (
+        SELECT id, content_size
+        FROM synapse_data_warehouse.synapse.file_latest
+        WHERE content_size IS NOT NULL AND content_size > 0
+    ),
+    file_downloads AS (
+        SELECT
+            file_handle_id,
+            MAX(record_date) AS last_download_date
+        FROM synapse_data_warehouse.synapse_event.objectdownload_event
+        GROUP BY file_handle_id
+    ),
+    file_activity AS (
+        SELECT
+            pf.file_handle_id,
+            fs.content_size,
+            COALESCE(
+                DATEDIFF('day', fd.last_download_date, CURRENT_DATE),
+                DATEDIFF('day', pf.upload_date, CURRENT_DATE)
+            ) AS days_inactive
+        FROM project_files pf
+        JOIN file_sizes fs ON fs.id = pf.file_handle_id
+        LEFT JOIN file_downloads fd ON fd.file_handle_id = pf.file_handle_id
+    )
+    SELECT
+        CASE
+            WHEN days_inactive <= 30  THEN 'Frequent Access'
+            WHEN days_inactive <= 90  THEN 'Infrequent Access'
+            WHEN days_inactive <= 180 THEN 'Archive Access'
+            ELSE                           'Deep Archive Access'
+        END AS tier,
+        SUM(content_size) / POWER(1024, 4) AS size_tb
+    FROM file_activity
+    GROUP BY tier
+    ORDER BY tier;
+    """
+
+
+def query_deep_archive_examples(n=20):
+    """Return a sample of files estimated to be in the S3 Deep Archive tier (inactive >180 days).
+
+    All downloads are counted (including staff) since any S3 access resets the tier.
+    Returns node IDs so files can be located in Synapse, along with size and last activity date.
+    """
+    return f"""
+    WITH portal_projects AS (
+        SELECT CAST(scopes.value AS INTEGER) AS project_id
+        FROM synapse_data_warehouse.synapse.node_latest,
+             LATERAL FLATTEN(input => node_latest.scope_ids) scopes
+        WHERE id = {PROJECT_VIEW_ID}
+    ),
+    project_files AS (
+        SELECT
+            nl.id AS node_id,
+            nl.project_id,
+            nl.file_handle_id,
+            nl.created_on AS upload_date
+        FROM synapse_data_warehouse.synapse.node_latest nl
+        JOIN portal_projects pp ON nl.project_id = pp.project_id
+        WHERE nl.file_handle_id IS NOT NULL
+          AND nl.node_type = 'file'
+    ),
+    file_sizes AS (
+        SELECT id, content_size
+        FROM synapse_data_warehouse.synapse.file_latest
+        WHERE content_size IS NOT NULL AND content_size > 0
+    ),
+    file_downloads AS (
+        SELECT
+            file_handle_id,
+            MAX(record_date) AS last_download_date
+        FROM synapse_data_warehouse.synapse_event.objectdownload_event
+        GROUP BY file_handle_id
+    )
+    SELECT
+        'syn' || pf.node_id AS synapse_id,
+        pf.project_id,
+        fs.content_size / (1024 * 1024) AS size_mb,
+        pf.upload_date::DATE AS upload_date,
+        fd.last_download_date::DATE AS last_download_date,
+        COALESCE(
+            DATEDIFF('day', fd.last_download_date, CURRENT_DATE),
+            DATEDIFF('day', pf.upload_date, CURRENT_DATE)
+        ) AS days_inactive
+    FROM project_files pf
+    JOIN file_sizes fs ON fs.id = pf.file_handle_id
+    LEFT JOIN file_downloads fd ON fd.file_handle_id = pf.file_handle_id
+    WHERE COALESCE(
+            DATEDIFF('day', fd.last_download_date, CURRENT_DATE),
+            DATEDIFF('day', pf.upload_date, CURRENT_DATE)
+          ) > 180
+      AND fs.content_size >= 10 * 1024 * 1024
+    ORDER BY RANDOM()
+    LIMIT {n};
+    """
+
+
+def query_file_eol_analysis(project_ids, excluded_users=STAFF_USERIDS):
+    """Return per-file upload date and last download date for end-of-life analysis.
+
+    Returns one row per unique (project_id, file_handle_id) pair with:
+    - upload_date: earliest created_on for that file handle in the project
+    - content_size: file size in bytes
+    - last_download_date: most recent external download (NULL if never downloaded)
+    - download_count: total external download events (0 if never downloaded)
+    - days_since_upload / days_since_last_download: computed age fields
+    """
+
+    project_list = ', '.join(f"'{id}'" for id in project_ids)
+
+    return f"""
+    WITH project_files AS (
+        SELECT
+            nl.project_id,
+            nl.file_handle_id,
+            MIN(nl.created_on) AS upload_date
+        FROM
+            synapse_data_warehouse.synapse.node_latest nl
+        WHERE
+            nl.project_id IN ({project_list})
+            AND nl.file_handle_id IS NOT NULL
+        GROUP BY
+            nl.project_id, nl.file_handle_id
+    ),
+    file_sizes AS (
+        SELECT
+            id,
+            content_size
+        FROM
+            synapse_data_warehouse.synapse.file_latest
+        WHERE
+            content_size IS NOT NULL
+            AND content_size > 0
+    ),
+    file_downloads AS (
+        SELECT
+            file_handle_id,
+            MAX(record_date) AS last_download_date,
+            COUNT(*) AS download_count
+        FROM
+            synapse_data_warehouse.synapse_event.objectdownload_event
+        WHERE
+            project_id IN ({project_list})
+            AND user_id NOT IN ({','.join(map(str, excluded_users))})
+        GROUP BY
+            file_handle_id
+    )
+    SELECT
+        pf.project_id,
+        pf.file_handle_id,
+        pf.upload_date,
+        fs.content_size,
+        fd.last_download_date,
+        COALESCE(fd.download_count, 0) AS download_count,
+        DATEDIFF('day', pf.upload_date, CURRENT_DATE) AS days_since_upload,
+        CASE
+            WHEN fd.last_download_date IS NOT NULL
+            THEN DATEDIFF('day', fd.last_download_date, CURRENT_DATE)
+            ELSE NULL
+        END AS days_since_last_download
+    FROM
+        project_files pf
+    JOIN
+        file_sizes fs ON fs.id = pf.file_handle_id
+    LEFT JOIN
+        file_downloads fd ON fd.file_handle_id = pf.file_handle_id
+    ORDER BY
+        pf.upload_date;
+    """
+
+
