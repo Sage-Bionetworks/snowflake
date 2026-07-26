@@ -687,3 +687,35 @@ def query_released_data_by_type(project_ids, released_statuses=None, limit=5):
         data_type ASC
     LIMIT {limit};
     """
+
+
+def query_user_demographics(project_ids, start_date, end_date, excluded_users=STAFF_USERIDS):
+    """
+    Return user profile info (company, email, location) for all non-staff downloaders
+    within the given projects and date window. Used to classify users by sector
+    (Academic/Industry/International) per NTAP feedback on the Task 2.4 Project
+    Analytics Report.
+    """
+    project_list = ", ".join(f"'{id}'" for id in project_ids)
+    excluded = ", ".join(map(str, excluded_users))
+
+    return f"""
+    WITH downloaders AS (
+        SELECT DISTINCT od.user_id
+        FROM synapse_data_warehouse.synapse_event.objectdownload_event od
+        WHERE od.project_id IN ({project_list})
+          AND od.record_date BETWEEN '{start_date}' AND '{end_date}'
+          AND od.user_id NOT IN ({excluded})
+    )
+    SELECT
+        d.user_id,
+        up.company,
+        up.email,
+        up.location
+    FROM downloaders d
+    LEFT JOIN synapse_data_warehouse.synapse.userprofile_latest up
+        ON up.id = d.user_id
+    WHERE (up.email IS NULL
+       OR (up.email NOT ILIKE '%@sagebase.org'
+           AND up.email NOT ILIKE '%@sagebionetworks.org'))
+    """
