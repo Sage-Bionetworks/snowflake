@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  schemachange_synapse_data_warehouse_dev:
+  deploy_synapse_data_warehouse_dev:
     runs-on: ubuntu-22.04
     if: github.ref_name == 'dev'
     environment: dev
@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: dbt run --selector synapse_data_warehouse --target dev
 
-  schemachange_synapse_data_warehouse_prod:
+  deploy_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
     if: github.ref_name == 'main'
     environment: prod
@@ -115,7 +115,7 @@ jobs:
 
   schemachange_sage:
     runs-on: ubuntu-22.04
-    needs: schemachange_synapse_data_warehouse_prod
+    needs: deploy_synapse_data_warehouse_prod
     if: github.ref_name == 'main'
     environment: prod
     steps:
@@ -226,7 +226,7 @@ jobs:
   schemachange_admin:
     runs-on: ubuntu-22.04
     needs:
-      - schemachange_synapse_data_warehouse_prod
+      - deploy_synapse_data_warehouse_prod
       - deploy_streamlit
     if: github.ref_name == 'main'
     steps:

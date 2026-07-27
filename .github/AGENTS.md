@@ -12,10 +12,10 @@ Triggers on push to `dev` or `main`. Jobs run only on the branch where they are 
 
 | Job | Trigger branch | What it does | Notable dependency |
 |-----|---------------|--------------|-------------------|
-| `schemachange_synapse_data_warehouse_dev` | `dev` | Deploys `synapse_data_warehouse/` to `SYNAPSE_DATA_WAREHOUSE_DEV` as `synapse_data_warehouse_dev_admin`, then runs `dbt run --selector synapse_data_warehouse --target dev` | — |
-| `schemachange_synapse_data_warehouse_prod` | `main` | Deploys `synapse_data_warehouse/` to `SYNAPSE_DATA_WAREHOUSE` as `synapse_data_warehouse_admin`, then runs `dbt run --selector synapse_data_warehouse --target prod` | — |
-| `schemachange_sage` | `main` | Deploys `sage/` to `SAGE` as `sage_admin`, then runs `dbt run --selector sage --target prod` | `needs: schemachange_synapse_data_warehouse_prod` |
-| `schemachange_admin` | `main` | Runs all four `admin/` schemachange subdirs in order (warehouses → policies → ownership_grants → future_grants) | `needs: schemachange_synapse_data_warehouse_prod` |
+| `deploy_synapse_data_warehouse_dev` | `dev` | Deploys `synapse_data_warehouse/` to `SYNAPSE_DATA_WAREHOUSE_DEV` as `synapse_data_warehouse_dev_admin`, then runs `dbt run --selector synapse_data_warehouse --target dev` | — |
+| `deploy_synapse_data_warehouse_prod` | `main` | Deploys `synapse_data_warehouse/` to `SYNAPSE_DATA_WAREHOUSE` as `synapse_data_warehouse_admin`, then runs `dbt run --selector synapse_data_warehouse --target prod` | — |
+| `schemachange_sage` | `main` | Deploys `sage/` to `SAGE` as `sage_admin`, then runs `dbt run --selector sage --target prod` | `needs: deploy_synapse_data_warehouse_prod` |
+| `schemachange_admin` | `main` | Runs all four `admin/` schemachange subdirs in order (warehouses → policies → ownership_grants → future_grants) | `needs: deploy_synapse_data_warehouse_prod` |
 | `snowsql_admin` | `main` | Runs `admin/*.sql` files via `snow sql` (users, roles, databases, integrations, grants) | `needs: schemachange_admin` |
 
 The `schemachange_admin` → `snowsql_admin` dependency means all DDL migrations always precede the idempotent grant scripts.
