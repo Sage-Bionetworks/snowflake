@@ -494,13 +494,6 @@ GRANT SELECT, REFERENCES
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE.SCHEMACHANGE
 	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.SCHEMACHANGE_TABLE_READ;
 
--- RDS_RAW: backfill existing tables for the masked read role (future tables are
--- covered by admin/future_grants/V1.37.0__rds_raw_future_tables_masked_read.sql)
-GRANT SELECT, REFERENCES
-	ON ALL TABLES
-	IN SCHEMA SYNAPSE_DATA_WAREHOUSE.RDS_RAW
-	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.RDS_RAW_TABLE_READ_MASKED;
-
 ---- SYNAPSE_DATA_WAREHOUSE_DEV ----
 -- Grant the aggregate roles usage on their respective schema
 GRANT USAGE, MONITOR
@@ -563,13 +556,6 @@ GRANT SELECT, REFERENCES
 	ON ALL TABLES
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.SCHEMACHANGE
 	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.SCHEMACHANGE_TABLE_READ;
-
--- RDS_RAW: backfill existing tables for the masked read role (future tables are
--- covered by admin/future_grants/V1.37.0__rds_raw_future_tables_masked_read.sql)
-GRANT SELECT, REFERENCES
-	ON ALL TABLES
-	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
-	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_TABLE_READ_MASKED;
 
 -- Allow SECURITYADMIN to deploy schemachange for versioned admin scripts
 GRANT USAGE
