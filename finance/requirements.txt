@@ -1,3 +1,0 @@
-snowflake-connector-python[pandas]==3.14.0
-synapseclient[pandas]==4.7.0
-backoff==2.2.1

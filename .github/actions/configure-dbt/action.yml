@@ -1,0 +1,99 @@
+name: "Configure dbt"
+description: "Installs dbt-snowflake and writes a ~/.dbt/profiles.yml for the transform project"
+inputs:
+  PRIVATE_KEY_PASSPHRASE:
+    description: "The pass phrase used to decrypt the private key"
+    required: true
+  PRIVATE_KEY:
+    description: "The private key"
+    required: true
+  ACCOUNT:
+    description: "Snowflake account identifier"
+    required: true
+  USER:
+    description: "Snowflake user identifier"
+    required: true
+  ROLE:
+    description: "Snowflake role dbt should assume (must match the deployment context, e.g. SYNAPSE_DATA_WAREHOUSE_ADMIN, SYNAPSE_DATA_WAREHOUSE_DEV_ADMIN, SAGE_ADMIN, or DATA_ENGINEER)"
+    required: true
+  DATABASE:
+    description: "Database dbt should deploy to"
+    required: true
+  TARGET_NAME:
+    description: "Name of the dbt target/output to generate."
+    required: true
+  WAREHOUSE:
+    description: "Snowflake warehouse"
+    required: false
+    default: "compute_xsmall"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+
+    - name: Install dbt-snowflake
+      shell: bash
+      # dbt-snowflake has no console-script entry points of its own (dbt-core
+      # provides the `dbt` executable), so it must be installed as a --with
+      # dependency of dbt-core rather than as the tool package itself.
+      run: uv tool install --python 3.12 dbt-core --with "dbt-snowflake==1.11.6"
+
+    - name: Write private key file and dbt profiles.yml
+      shell: bash
+      env:
+        SNOWFLAKE_ACCOUNT: ${{ inputs.ACCOUNT }}
+        SNOWFLAKE_USER: ${{ inputs.USER }}
+        SNOWFLAKE_ROLE: ${{ inputs.ROLE }}
+        SNOWFLAKE_WAREHOUSE: ${{ inputs.WAREHOUSE }}
+        SNOWFLAKE_DATABASE: ${{ inputs.DATABASE }}
+        DBT_TARGET_NAME: ${{ inputs.TARGET_NAME }}
+        SNOWFLAKE_PRIVATE_KEY: ${{ inputs.PRIVATE_KEY }}
+        SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ inputs.PRIVATE_KEY_PASSPHRASE }}
+      run: |
+        # Specify paths for the private key file and profiles.yml
+        mkdir -p $HOME/.dbt
+        PRIVATE_KEY_FILE=$HOME/.dbt/rsa_key.p8
+        PROFILES_FILE=$HOME/.dbt/profiles.yml
+
+        # Write the private key file
+        printf "%s" "$SNOWFLAKE_PRIVATE_KEY" > $PRIVATE_KEY_FILE
+        chmod 0600 $PRIVATE_KEY_FILE
+
+        # Write profiles.yml with a single output matching DBT_TARGET_NAME
+        cat > $PROFILES_FILE <<EOF
+        transform:
+          target: ${DBT_TARGET_NAME}
+          outputs:
+            ${DBT_TARGET_NAME}:
+              type: snowflake
+              account: "${SNOWFLAKE_ACCOUNT}"
+              user: "${SNOWFLAKE_USER}"
+              role: "${SNOWFLAKE_ROLE}"
+              warehouse: "${SNOWFLAKE_WAREHOUSE}"
+              # dbt requires us to set database/schema in the profile
+              # They can be overridden at the project, directory, or model levels
+              database: "${SNOWFLAKE_DATABASE}"
+              schema: RDS_RAW
+              private_key_path: "${PRIVATE_KEY_FILE}"
+              private_key_passphrase: "${SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}"
+              threads: 4
+        EOF
+
+        # Restrict file owner read/write only (contains the private key passphrase)
+        chmod 0600 $PROFILES_FILE
+
+        echo "dbt profiles.yml written to $PROFILES_FILE"
+
+    - name: Test dbt connection
+      working-directory: transform
+      shell: bash
+      env:
+        DBT_TARGET_NAME: ${{ inputs.TARGET_NAME }}
+      run: |
+        dbt --version
+
+        # dbt debug exits non-zero on a bad connection, so a misconfigured
+        # profile fails here instead of surfacing later during `dbt run`
+        dbt debug --target "${DBT_TARGET_NAME}"

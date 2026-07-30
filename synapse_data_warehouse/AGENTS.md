@@ -8,18 +8,16 @@ schemachange-managed DDL for the primary Synapse data warehouse. Contains all ta
 
 | Schema | Contents | Pattern |
 |--------|----------|---------|
-| `SYNAPSE_RAW` | Snapshot tables ingested from S3 (Parquet). 200+ tables. | V-scripts + R-scripts |
-| `RDS_RAW` | MySQL RDS snapshot tables (access approvals, requirements, ACLs) | V-scripts |
-| `RDS_LANDING` | External tables + stages for RDS snapshot ingestion | V-scripts |
-| `SYNAPSE_EVENT` | File/Node/Object download and upload event tables | V-scripts + dynamic tables |
-| `SYNAPSE_AGGREGATE` | Time-window aggregations of user upload/download activity | Dynamic tables |
-| `SYNAPSE` | Transformed/materialized tables consumed by dbt and analysts | V-scripts + dynamic tables |
+| `SYNAPSE_RAW` | Snapshot tables ingested from S3 (Parquet). 200+ tables. | V-scripts + R-scripts (100% schemachange) |
+| `RDS_LANDING` | Landing tables mirroring 150+ RDS MySQL tables (teams, ACLs, access requests/submissions, etc.); only a "high-priority" access-governance subset has live `COPY INTO` ingestion tasks today — the rest exist as empty scaffolding | V-scripts (100% schemachange) |
+| `RDS_RAW` | Intended promotion layer for `RDS_LANDING` tables, and what dbt's `rds` source declarations point at — but currently just the empty schema; no tables have been promoted yet (in-progress migration) | V-scripts (100% schemachange) |
+| `SYNAPSE_EVENT` | Deduplicated change-event history for various Synapse entities (file, node, ACL, team/team-member, data access submissions, etc.) | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
+| `SYNAPSE_AGGREGATE` | Time-window aggregations of user upload/download activity | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
+| `SYNAPSE` | Most-recent-state objects; transformed/materialized tables consumed by dbt and analysts | Mix of schemachange dynamic tables and dbt marts with a `schema:` override — not exclusively one framework |
 | `DATABASE_ROLES` | Role grant SQL (RBAC setup for this database) | V-scripts |
 | `SCHEMACHANGE` | Version history metadata — never edit manually | Auto-created |
 
-## RBAC
-
-This database follows the structured database-role-based access pattern. See `admin/CLAUDE.md` for the full hierarchy and `admin/future_grants/CLAUDE.md` for adding new object types. The `database_roles/` subdirectory contains the V-scripts that set up database roles and grants for each schema.
+See root `AGENTS.md`'s "When schemachange vs. dbt is ambiguous" section before assuming a schema's typical pattern dictates where a *new* object belongs.
 
 ## Template variables
 
@@ -46,6 +44,7 @@ Available variables (set via env vars resolved from `schemachange-config.yml`):
 - Use for: `CREATE TABLE`, `CREATE STREAM`, new objects that other objects depend on
 - Applied exactly once; version numbers are permanent
 - Current sequence is in the V2.x range; check `CHANGE_HISTORY` before picking a new version
+- **The version sequence is shared across every subdirectory of `synapse_data_warehouse/`** — `synapse/`, `synapse_raw/`, `synapse_aggregate/`, `rds_raw/`, `rds_landing/`, `database_roles/`, etc. all draw from the same V2.x sequence (CI deploys the whole tree with one `schemachange --root-folder synapse_data_warehouse` call writing to one `CHANGE_HISTORY` table). A new script's version must be higher than the highest version already used *anywhere* in the tree, not just within its own subdirectory. This sequence is independent of `sage/` (own sequence) and `admin/` (own sequence).
 
 **Repeatable (`R__{description}.sql`):**
 - Repeatable scripts run whenever the file contents change. It is strongly discouraged to use R scripts unless they provide a workaround for something that cannot be accomplished via a versioned script.
@@ -85,8 +84,11 @@ ALTER TASK {{database_name}}.schema.task_name RESUME;
 - Use `user_task_managed_initial_warehouse_size` — avoids needing a separate warehouse.
 - CRON uses `America/Los_Angeles` timezone.
 
+## Comments in schemachange scripts
+
+Keep comments short (one line max). Avoid step-numbered banners and ASCII decorators — they inflate context for agents reading these files.
 
 ## Constraints
 
-See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers).
+See root `CLAUDE.md` for schemachange rules that apply across all directories (version numbers, `CHANGE_HISTORY`, repeatable scripts, ownership transfers, RBAC placement).
 

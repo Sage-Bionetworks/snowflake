@@ -115,17 +115,23 @@ jobs:
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
-                
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
+
                 # We need to revoke OWNERSHIP on future objects from ${SNOWFLAKE_PROXY_ADMIN_ROLE} first, because only one role can have the OWNERSHIP privilege on an object.
                 # There's no "transferring of ownership" involved because these objects don't exist yet.
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "REVOKE OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_RAW FROM ROLE ${SNOWFLAKE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE} COPY CURRENT GRANTS;"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_AGGREGATE TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
                 snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_EVENT TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE TASKS IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
+                snow sql --role SECURITYADMIN -q "GRANT OWNERSHIP ON FUTURE DYNAMIC TABLES IN SCHEMA ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_RAW TO ROLE ${SNOWFLAKE_CLONE_PROXY_ADMIN_ROLE};"
 
             - name: Give <CLONE>_PROXY_ADMIN ownership of all objects in synapse, synapse_raw, schemachange, synapse_aggregate, synapse_event, rds_landing, rds_raw schemas
               shell: bash
@@ -181,6 +187,27 @@ jobs:
                 --root-folder synapse_data_warehouse \
                 --config-folder synapse_data_warehouse \
                 --snowflake-role $SNOWFLAKE_CLONE_ADMIN_ROLE
+
+            ########################################################################################################
+            ########################################################################################################
+            ##################################### RUNNING DBT ON THE CLONE ##########################################
+            ########################################################################################################
+            ########################################################################################################
+            - name: Configure dbt
+              uses: ./.github/actions/configure-dbt
+              with:
+                  PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                  PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                  ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                  USER: ${{ vars.ADMIN_SERVICE_USER }}
+                  ROLE: ${{ env.SNOWFLAKE_CLONE_ADMIN_ROLE }}
+                  DATABASE: ${{ env.SNOWFLAKE_DOMAIN_CLONE_SANITIZED }}
+                  TARGET_NAME: clone 
+
+            - name: Run dbt models on the clone
+              working-directory: transform
+              shell: bash
+              run: dbt run --selector synapse_data_warehouse --target clone
 
     drop_clone:
       runs-on: ubuntu-latest

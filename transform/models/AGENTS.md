@@ -11,7 +11,7 @@ intermediate/      int_synapse_*      materialized: view
     ↓
 marts/
   synapse_data_warehouse/             materialized: dynamic_table → SYNAPSE_DATA_WAREHOUSE
-  sage/                               materialized: dynamic_table → SAGE (prod only)
+  sage/                               materialized: dynamic_table → SAGE
 ```
 
 ## Naming conventions
@@ -42,10 +42,6 @@ Use `TIMESTAMP_NTZ(3)` when millisecond precision matters; plain `TIMESTAMP_NTZ`
 
 - Mart layers models are the only modeling layer which we expose to analysts. 
 - Mart models configuration and materialization is configured in `dbt_project.yml` (do not override in individual models)
-
-## Prod-only sage models
-
-All models in `marts/sage/` include `+enabled: "{{ target.name == 'prod' }}"`. They are silently skipped in dev and CI. Do not add sage mart models without this condition.
 
 ## Contract enforcement
 
