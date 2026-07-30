@@ -547,7 +547,7 @@ GRANT SELECT, REFERENCES
 -- RDS_RAW
 
 -- backfill SELECT, MONITOR grants for existing dynamic tables for the table-read role
--- (future dynamic tables are covered by admin/future_grants/V1.38.1__rds_raw_future_dynamic_tables.sql)
+-- (future dynamic tables are covered by admin/future_grants/V1.37.1__rds_raw_future_dynamic_tables.sql)
 GRANT SELECT, MONITOR
 	ON ALL DYNAMIC TABLES
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
