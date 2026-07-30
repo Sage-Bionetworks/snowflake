@@ -573,6 +573,15 @@ GRANT SELECT, MONITOR
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
 	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_TABLE_READ_MASKED;
 
+-- backfill SELECT, MONITOR grants for existing dynamic tables for the table-read-masked role in prod
+-- (needed because the future dynamic tables grant for this role isn't established on prod until
+-- admin/future_grants/ runs, which happens after synapse_data_warehouse/ creates the tables in the
+-- same deploy that promotes RDS_RAW_TABLE_READ_MASKED from dev to prod)
+GRANT SELECT, MONITOR
+	ON ALL DYNAMIC TABLES
+	IN SCHEMA SYNAPSE_DATA_WAREHOUSE.RDS_RAW
+	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE.RDS_RAW_TABLE_READ_MASKED;
+
 -- Allow SECURITYADMIN to deploy schemachange for versioned admin scripts
 GRANT USAGE
     ON DATABASE METADATA
