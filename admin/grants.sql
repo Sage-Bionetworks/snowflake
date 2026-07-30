@@ -557,6 +557,22 @@ GRANT SELECT, REFERENCES
 	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.SCHEMACHANGE
 	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.SCHEMACHANGE_TABLE_READ;
 
+-- RDS_RAW
+
+-- backfill SELECT, MONITOR grants for existing dynamic tables for the table-read role
+-- (future dynamic tables are covered by admin/future_grants/V1.37.1__rds_raw_future_dynamic_tables.sql)
+GRANT SELECT, MONITOR
+	ON ALL DYNAMIC TABLES
+	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
+	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_TABLE_READ;
+
+-- backfill SELECT, MONITOR grants for existing dynamic tables for the table-read-masked role
+-- (future dynamic tables are covered by admin/future_grants/V1.37.0__rds_raw_future_tables_masked_read.sql)
+GRANT SELECT, MONITOR
+	ON ALL DYNAMIC TABLES
+	IN SCHEMA SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW
+	TO DATABASE ROLE SYNAPSE_DATA_WAREHOUSE_DEV.RDS_RAW_TABLE_READ_MASKED;
+
 -- Allow SECURITYADMIN to deploy schemachange for versioned admin scripts
 GRANT USAGE
     ON DATABASE METADATA
