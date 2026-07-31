@@ -16,4 +16,4 @@ select
     accessor_changes,
     data_access_submission_raw
 from
-    {{ ref('int_synapse_data_access_submission_enriched') }}
+    dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
