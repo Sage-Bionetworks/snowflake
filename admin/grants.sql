@@ -1047,14 +1047,11 @@ GRANT USAGE ON STREAMLIT SAGE.ELITE.ELITE_USAGE_METRICS
 GRANT ROLE SYNAPSE_DATA_WAREHOUSE_ANALYST
 	TO ROLE SAGE_GOVERNANCE_ADMIN;
 
--- SYNAPSE_DATA_WAREHOUSE_ANALYST (above) does not cover RDS_RAW. Grant
--- SAGE_GOVERNANCE_ADMIN read access to the two RDS_RAW-backed dbt views that
--- data_access_submission_dashboard depends on (SNOW-544), narrowly scoped
--- rather than a broad database-role grant since RDS_RAW read access is
--- otherwise restricted to DATA_ENGINEER.
-GRANT USAGE
-	ON DATABASE SYNAPSE_DATA_WAREHOUSE
-	TO ROLE SAGE_GOVERNANCE_ADMIN;
+-- SYNAPSE_DATA_WAREHOUSE_ANALYST (above) already covers USAGE on the
+-- database, but not RDS_RAW. Grant SAGE_GOVERNANCE_ADMIN read access to the
+-- two RDS_RAW-backed dbt views that data_access_submission_dashboard depends
+-- on (SNOW-544), narrowly scoped rather than a broad database-role grant
+-- since RDS_RAW read access is otherwise restricted to DATA_ENGINEER.
 GRANT USAGE
 	ON SCHEMA SYNAPSE_DATA_WAREHOUSE.RDS_RAW
 	TO ROLE SAGE_GOVERNANCE_ADMIN;
