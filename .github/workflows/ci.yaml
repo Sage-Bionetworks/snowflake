@@ -146,7 +146,11 @@ jobs:
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
           ROLE: sage_admin
-          DATABASE: SAGE
+          # marts/sage models explicitly override +database: SAGE in
+          # dbt_project.yml, so the default database here only needs to
+          # resolve refs into staging/intermediate synapse models, which
+          # live in SYNAPSE_DATA_WAREHOUSE.
+          DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           TARGET_NAME: prod
 
       - name: Run dbt models
