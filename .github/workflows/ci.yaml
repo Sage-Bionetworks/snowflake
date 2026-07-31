@@ -63,7 +63,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector synapse_data_warehouse --target dev
+        run: dbt run --selector synapse_data_warehouse --target dev --full-refresh
 
   deploy_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
@@ -111,7 +111,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector synapse_data_warehouse --target prod
+        run: dbt run --selector synapse_data_warehouse --target prod --full-refresh
 
   schemachange_sage:
     runs-on: ubuntu-22.04
@@ -152,7 +152,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector sage --target prod
+        run: dbt run --selector sage --target prod --full-refresh
 
   deploy_streamlit:
     runs-on: ubuntu-22.04
