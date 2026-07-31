@@ -17,32 +17,32 @@ WITH base AS (
         state_reason,
         accessor_changes,
         data_access_submission_raw
-    FROM {{ ref('int_synapse_data_access_submission_enriched') }}
+    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
 ),
 access_requirements AS (
     SELECT DISTINCT
         access_requirement_id,
         access_requirement_name
-    FROM {{ ref('int_synapse_access_requirement') }}
+    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
 ),
 approval_cycles AS (
     SELECT
         data_access_submission_id,
         COALESCE(
-            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END) 
+            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END)
                 OVER (PARTITION BY data_access_request_id ORDER BY created_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),
             0
         ) AS approval_cycle
-    FROM {{ ref('int_synapse_data_access_submission_enriched') }}
+    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
 ),
 attempts AS (
     SELECT
         enriched.data_access_submission_id,
         ROW_NUMBER() OVER (
-            PARTITION BY enriched.data_access_request_id, approval_cycles.approval_cycle 
+            PARTITION BY enriched.data_access_request_id, approval_cycles.approval_cycle
             ORDER BY enriched.created_on
         ) AS attempt
-    FROM {{ ref('int_synapse_data_access_submission_enriched') }} enriched
+    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }}) enriched
     INNER JOIN approval_cycles 
         ON enriched.data_access_submission_id = approval_cycles.data_access_submission_id
 )

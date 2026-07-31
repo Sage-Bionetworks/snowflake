@@ -146,7 +146,9 @@ jobs:
           ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
           USER: ${{ vars.ADMIN_SERVICE_USER }}
           ROLE: sage_admin
-          DATABASE: SAGE
+          # Resolve refs for staging/intermediate models,
+          # which live in a SYNAPSE_DATA_WAREHOUSE environment.
+          DATABASE: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
           TARGET_NAME: prod
 
       - name: Run dbt models
