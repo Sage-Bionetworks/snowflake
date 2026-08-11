@@ -188,3 +188,32 @@ Following these guidelines helps maintain a clean, efficient, and well-tested co
 
 For guidelines on local development, environment setup, code organization, and deployment of Streamlit in Snowflake (SiS) apps, see [STREAMLIT.md](STREAMLIT.md).
 
+----
+
+## External Notification Integrations
+
+Notification integrations that connect Snowflake to external services (e.g. Slack) require a secret (webhook URL, OAuth token, etc.) that can't be safely committed to GitHub. See [here](https://docs.snowflake.com/en/sql-reference/sql/create-notification-integration-webhooks) for how to create an external notification integration for a webhook.
+
+Because of this, these integrations — and the privilege grants on them — are **not** managed through this repository.
+
+Instead:
+
+1. **Creation**: `CREATE NOTIFICATION INTEGRATION` must be run directly against the account by someone with the `ACCOUNTADMIN` role, outside of any PR.
+2. **Grants**: `GRANT USAGE ON INTEGRATION ...` must also be run directly against the account. The task or procedure that invokes the integration needs both:
+   - **Ownership** of the task — held by the `{DATABASE}_PROXY_ADMIN` account role, per the [RBAC pattern](admin/AGENTS.md#rbac-for-synapse_data_warehouse-databases).
+   - **Usage** on the notification integration itself.
+
+### Example
+
+The RDS snapshot finalizer task in our Synapse domains calls `SYSTEM$SEND_SNOWFLAKE_NOTIFICATION` against the `DEV_SLACK_INGEST_UPDATES` (dev) and `SLACK_INGEST_UPDATES` (prod) integrations. Those integrations were created manually and granted as follows:
+
+```sql
+GRANT USAGE ON INTEGRATION DEV_SLACK_INGEST_UPDATES TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN;
+
+GRANT USAGE ON INTEGRATION SLACK_INGEST_UPDATES TO ROLE SYNAPSE_DATA_WAREHOUSE_PROXY_ADMIN;
+```
+
+When adding a new external notification integration, follow the same pattern: create and grant it manually against the account, then reference its name from the schemachange-managed task/procedure in the repo (e.g. snowflake.notification.integration('YOUR_INTEGRATION_NAME')).
+
+[!NOTE]
+Without the USAGE grant on the integration, tasks that call `SYSTEM$SEND_SNOWFLAKE_NOTIFICATION` will run but silently fail to deliver notifications — this is why the grant above is required in addition to task ownership.
