@@ -645,6 +645,17 @@ GRANT USAGE
     TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN;
 USE ROLE SECURITYADMIN;
 
+-- Allow DATA_ENGINEER to use the Slack notification integrations (SNOW-513);
+-- these are manually created, so USAGE must be granted here rather than via schemachange
+USE ROLE ACCOUNTADMIN;
+GRANT USAGE
+    ON INTEGRATION SLACK_INGEST_UPDATES
+    TO ROLE DATA_ENGINEER;
+GRANT USAGE
+    ON INTEGRATION DEV_SLACK_INGEST_UPDATES
+    TO ROLE DATA_ENGINEER;
+USE ROLE SECURITYADMIN;
+
 -- Supplant read-type privileges on data warehouse --
 -- We first grant analyst account roles USAGE of the
 -- respective "core" analyst account role for the data
