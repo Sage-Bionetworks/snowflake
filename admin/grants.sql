@@ -645,8 +645,6 @@ GRANT USAGE
     TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN;
 USE ROLE SECURITYADMIN;
 
--- Allow the proxy admin and DATA_ENGINEER to use the Slack notification integrations (SNOW-513);
--- these are manually created, so USAGE must be granted here rather than via schemachange
 USE ROLE ACCOUNTADMIN;
 GRANT USAGE
     ON INTEGRATION SLACK_INGEST_UPDATES
