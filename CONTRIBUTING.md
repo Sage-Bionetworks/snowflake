@@ -215,5 +215,5 @@ GRANT USAGE ON INTEGRATION SLACK_INGEST_UPDATES TO ROLE SYNAPSE_DATA_WAREHOUSE_P
 
 When adding a new external notification integration, follow the same pattern: create and grant it manually against the account, then reference its name from the schemachange-managed task/procedure in the repo (e.g. snowflake.notification.integration('YOUR_INTEGRATION_NAME')).
 
-[!NOTE]
-Without the USAGE grant on the integration, tasks that call `SYSTEM$SEND_SNOWFLAKE_NOTIFICATION` will run but silently fail to deliver notifications — this is why the grant above is required in addition to task ownership.
+>[!NOTE]
+> Without the USAGE grant on the integration, tasks that call `SYSTEM$SEND_SNOWFLAKE_NOTIFICATION` will run but silently fail to deliver notifications — this is why the grant above is required in addition to task ownership.
