@@ -68,7 +68,7 @@ begin
         into :v_loaded, :v_failed, :v_total, :v_failed_names
         from table(snowflake.information_schema.task_history())
         where graph_run_group_id = :v_graph_run_group_id
-          and upper(name) like 'COPY\\_%' escape '\\';
+          and startswith(upper(name), 'COPY_');
 
         if (v_failed > 0) then
             -- Root task succeeded but some child tasks failed — partial success.
