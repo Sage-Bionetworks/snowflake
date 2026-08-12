@@ -1308,6 +1308,8 @@ GRANT ROLE SAGE_CCKP_ADMIN TO USER "verena.chung@sagebase.org";
 GRANT ROLE SAGE_CCKP_ANALYST TO USER "ashley.clayton@sagebase.org";
 GRANT ROLE SAGE_CCKP_ANALYST TO USER "savitha.sangameswaran@sagebase.org";
 GRANT ROLE SAGE_CCKP_ANALYST TO USER "jineta.banerjee@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "ziwei.pan@sagebase.org";
+GRANT ROLE SAGE_CCKP_ANALYST TO USER "amber.nelson@sagebase.org";
 
 -- SAGE.AD user grants
 GRANT ROLE SAGE_AD_ANALYST TO USER "samia.ahmed@sagebase.org";
