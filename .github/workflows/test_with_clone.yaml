@@ -85,6 +85,27 @@ jobs:
 
             ########################################################################################################
             ########################################################################################################
+            ##################### RE-ENABLING DIRECTORY ON CLONED EXTERNAL STAGES ##################################
+            ########################################################################################################
+            ########################################################################################################
+            - name: Re-enable DIRECTORY on cloned S3 external stages before schemachange
+              shell: bash
+              run: |
+                # Zero-copy cloning copies a stage's DDL (including DIRECTORY = (ENABLE = TRUE)) but not the
+                # directory table's file-listing metadata. REFRESH can fail/no-op on the fresh clone until
+                # DIRECTORY is explicitly re-enabled here, before schemachange/dbt run against the clone.
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING.RDS_SNAPSHOTS_STAGE SET DIRECTORY = (ENABLE = TRUE);"
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.RDS_LANDING.RDS_SNAPSHOTS_STAGE REFRESH;"
+
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW.${SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION}_STAGE SET DIRECTORY = (ENABLE = TRUE);"
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW.${SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION}_STAGE REFRESH;"
+
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW.synapse_filehandles_stage SET DIRECTORY = (ENABLE = TRUE);"
+                snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}.SYNAPSE_RAW.synapse_filehandles_stage REFRESH;"
+
+
+            ########################################################################################################
+            ########################################################################################################
             ####################### SETTING UP AND CREATING <CLONE>_PROXY_ADMIN ACCOUNT ROLE #######################
             ########################################################################################################
             ########################################################################################################
