@@ -6,6 +6,7 @@ from snowflake.snowpark.context import get_active_session
 
 import tabs.datasets as datasets
 import tabs.files_browser as files_browser
+import tabs.mc2_center as mc2_center
 import tabs.overview as overview
 import tabs.trends as trends
 import tabs.users as users
@@ -62,13 +63,16 @@ trends.prefetch()
 datasets.prefetch()
 users.prefetch()
 files_browser.prefetch()
+mc2_center.prefetch()
+
 (
     tab_overview,
     tab_trends,
     tab_datasets,
     tab_users,
     tab_browser,
-) = st.tabs(["Overview", "Trends", "Datasets", "Users", "Files Browser"])
+    tab_mc2_center,
+) = st.tabs(["Overview", "Trends", "Datasets", "Users", "Files Browser", "MC2 Center"])
 
 
 with tab_overview:
@@ -81,6 +85,9 @@ with tab_users:
     users.render()
 with tab_browser:
     files_browser.render()
+with tab_mc2_center:
+    mc2_center.render()
+
 # Footer
 st.markdown("---")
 st.markdown(
