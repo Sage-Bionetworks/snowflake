@@ -234,6 +234,7 @@ jobs:
       - deploy_synapse_data_warehouse_prod
       - deploy_streamlit
     if: github.ref_name == 'main'
+    environment: prod
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -283,6 +284,7 @@ jobs:
     needs:
       - schemachange_admin
     if: github.ref_name == 'main'
+    environment: prod
     env:
       PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
     steps:
