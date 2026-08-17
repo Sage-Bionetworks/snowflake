@@ -3,7 +3,9 @@ import argparse
 import streamlit as st
 from snowflake.snowpark import Session
 from snowflake.snowpark.context import get_active_session
+
 import tabs.overview as overview
+import tabs.trends as trends
 
 
 def read_args() -> argparse.Namespace:
@@ -53,13 +55,16 @@ except Exception:
 
 # Prefetch all queries so Snowflake starts executing them before each tab renders.
 overview.prefetch()
+trends.prefetch()
 (
     tab_overview,
-) = st.tabs(["Overview"])
+    tab_trends,
 
 
 with tab_overview:
     overview.render()
+with tab_trends:
+    trends.render()
 # Footer
 st.markdown("---")
 st.markdown(
