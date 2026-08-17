@@ -7,6 +7,7 @@ from snowflake.snowpark.context import get_active_session
 import tabs.datasets as datasets
 import tabs.overview as overview
 import tabs.trends as trends
+import tabs.users as users
 
 
 def read_args() -> argparse.Namespace:
@@ -58,11 +59,13 @@ except Exception:
 overview.prefetch()
 trends.prefetch()
 datasets.prefetch()
+users.prefetch()
 (
     tab_overview,
     tab_trends,
     tab_datasets,
-) = st.tabs(["Overview", "Trends", "Datasets"])
+    tab_users,
+) = st.tabs(["Overview", "Trends", "Datasets", "Users"])
 
 
 with tab_overview:
@@ -71,6 +74,8 @@ with tab_trends:
     trends.render()
 with tab_datasets:
     datasets.render()
+with tab_users:
+    users.render()
 # Footer
 st.markdown("---")
 st.markdown(
