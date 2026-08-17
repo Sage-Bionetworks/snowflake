@@ -51,6 +51,15 @@ try:
 except Exception:
     pass
 
+MODEL_AD_STUDY_IDS = (
+    "9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, "
+    "21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, "
+    "25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, "
+    "58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, "
+    "61250684, 65941765, 22341542, 61849889, 73812454, 73853757, 25882591, "
+    "73623346, 69969808, 69974024"
+)
+
 # Parameter input widgets arranged in a row
 (param_col_1,) = st.columns(1)
 
@@ -75,7 +84,7 @@ def execute_query(query: str) -> str:
 
 
 def query_1_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- The Synapse IDs in this query come from
 -- The ADTR portal backend table with Synapse folder dataset ids listed when filtered for Program = MODEL-AD.
 -- TODO: there can probably be an improvement to automatically query for folders with "program = model-AD"
@@ -106,7 +115,7 @@ WITH RECURSIVE all_nodes
             synapse_data_warehouse.synapse.node_latest
         WHERE
             ID IN (
-                9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889
+                {MODEL_AD_STUDY_IDS}
             )
             
         UNION ALL
@@ -201,7 +210,7 @@ cell_1_1()
 
 
 def query_2_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -214,7 +223,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -379,7 +388,7 @@ cell_2_1()
 
 
 def query_3_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -392,7 +401,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -555,7 +564,7 @@ def cell_3_1():
 
 
 def query_3_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -568,7 +577,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -767,7 +776,7 @@ with col3_2:
 
 
 def query_4_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -780,7 +789,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -952,7 +961,7 @@ cell_4_1()
 
 
 def query_5_1() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -965,7 +974,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -1147,7 +1156,7 @@ def cell_5_1():
 
 
 def query_5_2() -> str:
-    sql_query = r"""
+    sql_query = f"""
 -- 1. recursively grab all the subfolders and files that live within these MODEL-AD folders
 with recursive all_nodes as (
 
@@ -1160,7 +1169,7 @@ with recursive all_nodes as (
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        id in (9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889)
+        id in ({MODEL_AD_STUDY_IDS})
 
     union all
 
@@ -1391,7 +1400,7 @@ WITH RECURSIVE all_nodes
             synapse_data_warehouse.synapse.node_latest
         WHERE
             ID IN (
-                9850001, 15811463, 16798076, 17095980, 18634479, 21784897, 21595258, 21595255, 18693211, 20730014, 21983020, 22964685, 22313528, 22341543, 25316706, 21863375, 26943950, 50670633, 50944316, 27207345, 51713891, 58863147, 51534997, 27210656, 66318332, 66318364, 68527429, 26943727, 61250684, 65941765, 22341542, 61849889
+                {MODEL_AD_STUDY_IDS}
             )
             
         UNION ALL

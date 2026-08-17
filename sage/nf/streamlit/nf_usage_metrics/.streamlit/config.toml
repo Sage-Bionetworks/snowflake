@@ -1,0 +1,6 @@
+# This file can be used to set a custom theme for your Streamlit. See
+# https://docs.streamlit.io/develop/concepts/configuration/theming for more
+# information.
+
+[snowflake.sleep]
+streamlitSleepTimeoutMinutes = 5
