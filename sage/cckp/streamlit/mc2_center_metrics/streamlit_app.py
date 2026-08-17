@@ -4,6 +4,7 @@ import streamlit as st
 from snowflake.snowpark import Session
 from snowflake.snowpark.context import get_active_session
 
+import tabs.datasets as datasets
 import tabs.overview as overview
 import tabs.trends as trends
 
@@ -56,15 +57,20 @@ except Exception:
 # Prefetch all queries so Snowflake starts executing them before each tab renders.
 overview.prefetch()
 trends.prefetch()
+datasets.prefetch()
 (
     tab_overview,
     tab_trends,
+    tab_datasets,
+) = st.tabs(["Overview", "Trends", "Datasets"])
 
 
 with tab_overview:
     overview.render()
 with tab_trends:
     trends.render()
+with tab_datasets:
+    datasets.render()
 # Footer
 st.markdown("---")
 st.markdown(
