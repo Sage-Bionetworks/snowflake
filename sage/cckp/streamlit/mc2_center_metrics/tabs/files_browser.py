@@ -1,0 +1,232 @@
+"""Files Browser tab — all MC2 project files with download counts."""
+import pandas as pd
+import streamlit as st
+
+from utils import (
+    SQL_CTE_SYNAPSE_USERS,
+    rename_duplicate_columns,
+    execute_query,
+)
+
+
+def query_all_files() -> str:
+    """All MC2 file nodes with per-file download counts and access-type flags.
+
+    Uses LEFT JOIN so files with zero downloads are included.
+    """
+    return f"""
+WITH
+    {SQL_CTE_SYNAPSE_USERS},
+    -- Scoped to MC2 projects before scanning the events table
+    download_counts AS (
+        SELECT
+            dl.file_handle_id,
+            dl.project_id,
+            COUNT_IF(u.user_type = 'Sager') AS sage_downloads,
+            COUNT(DISTINCT CASE WHEN u.user_type = 'Sager' THEN dl.user_id END) AS sage_unique_users,
+            COUNT_IF(u.user_type = 'External') AS external_downloads,
+            COUNT(DISTINCT CASE WHEN u.user_type = 'External' THEN dl.user_id END) AS external_unique_users,
+            COUNT(*) AS total_downloads,
+            COUNT(DISTINCT dl.user_id) AS total_unique_users,
+            MAX(dl.record_date) AS latest_download_activity
+        FROM
+            synapse_data_warehouse.synapse_event.objectdownload_event AS dl
+        INNER JOIN
+            synapse_users u ON dl.user_id = u.id
+        WHERE
+            dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+        GROUP BY 1, 2
+    )
+
+SELECT
+    n.project_id,
+    n.project_name,
+    'syn' || n.id::STRING AS file_synid,
+    n.name AS filename,
+    n.is_public,
+    n.change_timestamp::DATE AS created_on,
+    COALESCE(dc.external_downloads, 0) AS external_downloads,
+    COALESCE(dc.external_unique_users, 0) AS external_unique_users,
+    COALESCE(dc.sage_downloads, 0) AS sage_downloads,
+    COALESCE(dc.sage_unique_users, 0) AS sage_unique_users,
+    COALESCE(dc.total_downloads, 0) AS total_downloads,
+    COALESCE(dc.total_unique_users, 0) AS total_unique_users,
+    dc.latest_download_activity
+FROM
+    sage.cckp.mc2_nodes AS n
+LEFT JOIN
+    download_counts dc
+        ON dc.file_handle_id = n.file_handle_id
+        AND dc.project_id = n.project_id
+WHERE
+    n.node_type = 'file'
+    AND n.name NOT ILIKE 'synapse_storage_manifest_%view.csv'
+ORDER BY 2 ASC, 9 DESC;
+"""
+
+
+@st.fragment
+def _cell_files_browser():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### All Files with Download Counts")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_files_browser",
+                help="Refresh all files data",
+            ):
+                execute_query.clear(query_all_files())
+                if "files_browser_df" in st.session_state:
+                    del st.session_state["files_browser_df"]
+
+        # Cache full dataframe so filter/toggle interactions don't re-query Snowflake.
+        if "files_browser_df" not in st.session_state:
+            try:
+                with st.spinner("Executing query", show_time=True):
+                    df = st.session_state.session.create_async_job(
+                        execute_query(query_all_files())
+                    ).result("pandas")
+                st.session_state["files_browser_df"] = rename_duplicate_columns(df)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                return
+
+        df = st.session_state["files_browser_df"]
+
+        # Filters
+        filter_col1, filter_col2 = st.columns([3, 1])
+        with filter_col1:
+            project_options = sorted(
+                f"{row['PROJECT_NAME']} ({row['PROJECT_ID']})"
+                for _, row in df[["PROJECT_NAME", "PROJECT_ID"]]
+                .drop_duplicates()
+                .iterrows()
+            )
+            selected_projects = st.multiselect(
+                "Filter by project",
+                options=project_options,
+                placeholder="Select one or more projects (shows all by default)",
+                key="files_browser_project_filter",
+            )
+        with filter_col2:
+            only_never_downloaded = st.checkbox(
+                "Never downloaded only",
+                key="files_browser_never_downloaded",
+            )
+
+        # Apply filters
+        filtered_df = df.copy()
+        if selected_projects:
+            selected_names = {s.rsplit(" (", 1)[0] for s in selected_projects}
+            filtered_df = filtered_df[filtered_df["PROJECT_NAME"].isin(selected_names)]
+        if only_never_downloaded:
+            filtered_df = filtered_df[filtered_df["EXTERNAL_DOWNLOADS"] == 0]
+
+        total_ext_dl = int(filtered_df["EXTERNAL_DOWNLOADS"].sum())
+        st.caption(
+            f"{len(filtered_df):,} of {len(df):,} files · "
+            f"{total_ext_dl:,} total external downloads in view"
+        )
+
+        max_ext = int(df["EXTERNAL_DOWNLOADS"].max()) if len(df) > 0 else 1
+        st.dataframe(
+            filtered_df.drop(columns=["PROJECT_ID"]),
+            width="stretch",
+            hide_index=True,
+            height=500,
+            column_config={
+                "PROJECT_NAME": st.column_config.TextColumn("Project"),
+                "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
+                "FILENAME": st.column_config.TextColumn("File Name"),
+                "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
+                "CREATED_ON": st.column_config.DateColumn("Created On"),
+                "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
+                    "Ext. Downloads",
+                    min_value=0,
+                    max_value=max_ext,
+                    format="%d",
+                ),
+                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
+                "SAGE_DOWNLOADS": st.column_config.NumberColumn("Sage Downloads"),
+                "SAGE_UNIQUE_USERS": st.column_config.NumberColumn("Sage Unique Users"),
+                "TOTAL_DOWNLOADS": st.column_config.NumberColumn("Total Downloads"),
+                "TOTAL_UNIQUE_USERS": st.column_config.NumberColumn("Total Unique Users"),
+                "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download"),
+            },
+        )
+
+
+@st.fragment
+def _cell_recently_added_never_downloaded():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Recently Added Files with No External Downloads")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_files_browser_new",
+                help="Refresh recently added files",
+            ):
+                execute_query.clear(query_all_files())
+                if "files_browser_df" in st.session_state:
+                    del st.session_state["files_browser_df"]
+
+        # Reuses the cached result from _cell_files_browser — no extra query.
+        if "files_browser_df" not in st.session_state:
+            try:
+                with st.spinner("Executing query", show_time=True):
+                    df = st.session_state.session.create_async_job(
+                        execute_query(query_all_files())
+                    ).result("pandas")
+                st.session_state["files_browser_df"] = rename_duplicate_columns(df)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                return
+
+        df = st.session_state["files_browser_df"]
+
+        cutoff = pd.Timestamp.now() - pd.DateOffset(days=90)
+        df["CREATED_ON"] = pd.to_datetime(df["CREATED_ON"], errors="coerce")
+        recent_never = df[
+            (df["CREATED_ON"] >= cutoff) & (df["EXTERNAL_DOWNLOADS"] == 0)
+        ][["PROJECT_NAME", "FILE_SYNID", "FILENAME", "IS_PUBLIC",
+           "CREATED_ON"]].sort_values("CREATED_ON", ascending=False)
+
+        if len(recent_never) == 0:
+            st.success("All files added in the last 90 days have been downloaded at least once.")
+        else:
+            st.caption(
+                f"{len(recent_never):,} file(s) added in the last 90 days have never been downloaded externally."
+            )
+            st.dataframe(
+                recent_never,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "PROJECT_NAME": st.column_config.TextColumn("Project"),
+                    "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
+                    "FILENAME": st.column_config.TextColumn("File Name"),
+                    "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
+                    "CREATED_ON": st.column_config.DateColumn("Created On"),
+                },
+            )
+
+
+def prefetch():
+    execute_query(query_all_files())
+
+
+def render():
+    _cell_files_browser()
+    _cell_recently_added_never_downloaded()
