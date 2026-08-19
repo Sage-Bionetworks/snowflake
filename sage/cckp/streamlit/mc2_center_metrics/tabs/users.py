@@ -1,4 +1,5 @@
-"""Users tab."""
+"""External users tab."""
+import pandas as pd
 import streamlit as st
 
 from utils import (
@@ -116,7 +117,6 @@ def _cell_returning_vs_onetime():
                       delta_color="off")
 
             # Bar chart: download distribution bucketed by download count
-            import pandas as pd
             buckets = pd.cut(
                 df["TOTAL_DOWNLOADS"],
                 bins=[0, 1, 5, 10, 50, float("inf")],
@@ -145,7 +145,7 @@ def _cell_user_table():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All External Users")
+                st.markdown("### All Users")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -162,6 +162,7 @@ def _cell_user_table():
                 ).result("pandas")
             df = rename_duplicate_columns(df)
             max_dl = int(df["TOTAL_DOWNLOADS"].max()) if len(df) > 0 else 1
+            st.caption(f"{len(df):,} rows")
             st.dataframe(
                 df,
                 width="stretch",
@@ -227,6 +228,7 @@ def _cell_user_project_breakdown():
         )
         filtered = df[df["USER_NAME"].isin(selected)] if selected else df
 
+        st.caption(f"{len(filtered):,} of {len(df):,} rows" if selected else f"{len(df):,} rows")
         st.dataframe(
             filtered,
             width="stretch",
@@ -242,6 +244,61 @@ def _cell_user_project_breakdown():
         )
 
 
+@st.fragment
+def _cell_projects_per_user():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Projects Downloaded per User")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_projects_per_user",
+                help="Refresh projects per user",
+            ):
+                execute_query.clear(query_user_summary())
+
+        try:
+            with st.spinner("Executing query", show_time=True):
+                # Reuses cached result from _cell_user_table
+                df = st.session_state.session.create_async_job(
+                    execute_query(query_user_summary())
+                ).result("pandas")
+            df = rename_duplicate_columns(df)
+            summary = (
+                df[["USER_NAME", "PROJECTS_DOWNLOADED"]]
+                .sort_values("PROJECTS_DOWNLOADED", ascending=False)
+                .reset_index(drop=True)
+            )
+
+            user_options = sorted(summary["USER_NAME"].dropna().unique())
+            selected = st.multiselect(
+                "Filter by username",
+                options=user_options,
+                placeholder="Select one or more users (shows all by default)",
+                key="projects_per_user_filter",
+            )
+            filtered = summary[summary["USER_NAME"].isin(selected)] if selected else summary
+
+            st.caption(f"{len(filtered):,} of {len(summary):,} rows" if selected else f"{len(summary):,} rows")
+            st.dataframe(
+                filtered,
+                width="stretch",
+                hide_index=True,
+                height=400,
+                column_config={
+                    "USER_NAME": st.column_config.TextColumn("Username"),
+                    "PROJECTS_DOWNLOADED": st.column_config.NumberColumn("Projects Downloaded From"),
+                },
+            )
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
 def prefetch():
     execute_query(query_user_summary())
     execute_query(query_user_project_breakdown())
@@ -249,9 +306,9 @@ def prefetch():
 
 def render():
     _cell_returning_vs_onetime()
-
-    col1, col2 = st.columns([3, 2])
+    _cell_user_table()
+    col1, col2 = st.columns(2)
     with col1:
-        _cell_user_table()
-    with col2:
         _cell_user_project_breakdown()
+    with col2:
+        _cell_projects_per_user()
