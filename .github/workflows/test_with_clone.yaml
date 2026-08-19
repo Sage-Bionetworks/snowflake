@@ -19,7 +19,7 @@ jobs:
     test_with_clone:
         runs-on: ubuntu-latest
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' }}
-        environment: dev
+        environment: dev_restricted
         env:
             # Establish the snowflake account credentials
             SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
@@ -212,7 +212,7 @@ jobs:
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
-      environment: dev
+      environment: dev_restricted
       env:
           # Establish the snowflake account credentials
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
