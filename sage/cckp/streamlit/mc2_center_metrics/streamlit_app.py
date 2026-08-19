@@ -82,7 +82,7 @@ mc2_center.prefetch()
     tab_users,
     tab_browser,
     tab_mc2_center,
-) = st.tabs(["Overview", "Trends", "Datasets", "Users", "Files Browser", "MC2 Center"])
+) = st.tabs(["Overview", "Trends", "Datasets", "External Users", "Files Browser", "MC2 Center Project"])
 
 
 with tab_overview:
@@ -98,8 +98,12 @@ with tab_browser:
 with tab_mc2_center:
     mc2_center.render()
 
-# Footer
-st.markdown("---")
+st.divider()
 st.markdown(
-    "*Dashboard loaded: {}*".format(dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    '<p style="text-align: center; color: #cc0000; font-size: 0.8rem;">'
+    "This app is "
+    '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on GitHub</a>. '
+    "Any local edits will not be retained."
+    "</p>",
+    unsafe_allow_html=True,
 )
