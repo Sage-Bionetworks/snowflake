@@ -96,13 +96,15 @@ LIMIT 50;
 
 @st.fragment
 def _cell_kpis():
-    if st.button(
-        ":material/refresh:",
-        type="tertiary",
-        key="refresh_mc2_center_kpis",
-        help="Refresh metrics",
-    ):
-        execute_query.clear(query_kpis())
+    _, col_btn = st.columns([9, 1])
+    with col_btn:
+        if st.button(
+            ":material/refresh:",
+            type="tertiary",
+            key="refresh_mc2_center_kpis",
+            help="Refresh metrics",
+        ):
+            execute_query.clear(query_kpis())
 
     try:
         with st.spinner("Loading metrics", show_time=True):
@@ -129,13 +131,19 @@ def _cell_kpis():
 
 @st.fragment
 def _cell_trends():
-    if st.button(
-        ":material/refresh:",
-        type="tertiary",
-        key="refresh_mc2_center_trends",
-        help="Refresh trends",
+    with st.container(
+        horizontal=True,
+        horizontal_alignment="distribute",
+        vertical_alignment="center",
     ):
-        execute_query.clear(query_daily_downloads())
+        st.markdown("### Download Trends")
+        if st.button(
+            ":material/refresh:",
+            type="tertiary",
+            key="refresh_mc2_center_trends",
+            help="Refresh trends",
+        ):
+            execute_query.clear(query_daily_downloads())
 
     try:
         with st.spinner("Loading trend data", show_time=True):
@@ -164,13 +172,19 @@ def _cell_trends():
 
 @st.fragment
 def _cell_top_files():
-    if st.button(
-        ":material/refresh:",
-        type="tertiary",
-        key="refresh_mc2_center_files",
-        help="Refresh file list",
+    with st.container(
+        horizontal=True,
+        horizontal_alignment="distribute",
+        vertical_alignment="center",
     ):
-        execute_query.clear(query_top_files())
+        st.markdown("### Top Downloaded Files")
+        if st.button(
+            ":material/refresh:",
+            type="tertiary",
+            key="refresh_mc2_center_files",
+            help="Refresh file list",
+        ):
+            execute_query.clear(query_top_files())
 
     try:
         with st.spinner("Loading file data", show_time=True):
@@ -210,9 +224,8 @@ def prefetch():
 
 
 def render():
-    st.subheader("Multi-Consortia Coordinating (MC2) Center", divider="gray")
     st.markdown(
-        "Metrics scoped to [syn7080714](https://www.synapse.org/Synapse:syn7080714).",
+        "Metrics scoped to [syn7080714](https://www.synapse.org/Synapse:syn7080714)",
         unsafe_allow_html=False,
     )
     _cell_kpis()
