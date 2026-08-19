@@ -163,7 +163,7 @@ def _cell_files_browser():
 
 
 @st.fragment
-def _cell_recently_added_never_downloaded():
+def _cell_recently_added():
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -171,7 +171,7 @@ def _cell_recently_added_never_downloaded():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Recently Added Files with No External Downloads")
+                st.markdown("### Recently Added Files (Last 30 Days)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -196,21 +196,16 @@ def _cell_recently_added_never_downloaded():
 
         df = st.session_state["files_browser_df"]
 
-        cutoff = pd.Timestamp.now() - pd.DateOffset(days=90)
+        cutoff = pd.Timestamp.now() - pd.DateOffset(days=30)
         df["CREATED_ON"] = pd.to_datetime(df["CREATED_ON"], errors="coerce")
-        recent_never = df[
-            (df["CREATED_ON"] >= cutoff) & (df["EXTERNAL_DOWNLOADS"] == 0)
-        ][["PROJECT_NAME", "FILE_SYNID", "FILENAME", "IS_PUBLIC",
-           "CREATED_ON"]].sort_values("CREATED_ON", ascending=False)
+        recent = df[df["CREATED_ON"] >= cutoff].sort_values("CREATED_ON", ascending=False)
 
-        if len(recent_never) == 0:
-            st.success("All files added in the last 90 days have been downloaded at least once.")
+        st.caption(f"{len(recent):,} files added in the last 30 days")
+        if len(recent) == 0:
+            st.info("No files have been added in the last 30 days.")
         else:
-            st.caption(
-                f"{len(recent_never):,} file(s) added in the last 90 days have never been downloaded externally."
-            )
             st.dataframe(
-                recent_never,
+                recent.drop(columns=["PROJECT_ID"]),
                 width="stretch",
                 hide_index=True,
                 column_config={
@@ -219,6 +214,10 @@ def _cell_recently_added_never_downloaded():
                     "FILENAME": st.column_config.TextColumn("File Name"),
                     "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
                     "CREATED_ON": st.column_config.DateColumn("Created On"),
+                    "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
+                    "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
+                    "SAGE_DOWNLOADS": st.column_config.NumberColumn("Sage Downloads"),
+                    "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download"),
                 },
             )
 
@@ -227,6 +226,46 @@ def prefetch():
     execute_query(query_all_files())
 
 
+def _cell_download_count_note():
+    with st.container(border=True):
+        st.markdown("##### About Download Counts")
+        st.markdown(
+            "Each file's download count reflects how many times that specific file's "
+            "content was downloaded. In Synapse, multiple file entities can reference the "
+            "same underlying file handle; for example, when a file is copied or linked "
+            "to another project."
+        )
+        st.markdown(
+            "Because of this, **summing the download counts across files in a project "
+            "can overcount**. That is, the same download event can be attributed to each "
+            "file entity that shares that file handle."
+        )
+        st.markdown(
+            "For the most accurate project-level download counts, see the **Overview tab**."
+        )
+
+
+def _cell_recently_added_note():
+    with st.container(border=True):
+        st.markdown("##### About Recently Added Files")
+        st.markdown(
+            "This table shows all file nodes found across the MC2 Center projects whose "
+            "`created_on` date falls within the last 30 days."
+        )
+        st.markdown(
+            "It includes download counts so you can quickly see whether newly added "
+            "files are already being accessed."
+        )
+
+
 def render():
-    _cell_files_browser()
-    _cell_recently_added_never_downloaded()
+    col_browser, col_note = st.columns([3, 1])
+    with col_browser:
+        _cell_files_browser()
+    with col_note:
+        _cell_download_count_note()
+    col_recent, col_recent_note = st.columns([3, 1])
+    with col_recent:
+        _cell_recently_added()
+    with col_recent_note:
+        _cell_recently_added_note()
