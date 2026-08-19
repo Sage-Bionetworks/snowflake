@@ -37,13 +37,23 @@ def get_session(local_dev: bool) -> Session:
 # Set page config
 st.set_page_config(page_title="MC2 Center Metrics", layout="wide")
 
-# Title
-st.title("MC2 Center Metrics")
+# Styling
+st.markdown("""
+<style>
+    h4 {
+        text-align: center;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+_, col_logo, _ = st.columns([2, 1, 2])
+with col_logo:
+    st.image("mc2-logo.png", width='stretch')
+st.markdown("#### Metrics Dashboard")
 st.markdown(
-    '<p style="color: #cc0000; font-size: 0.85rem; margin-top: -0.4rem;">'
-    "This app is "
-    '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on Github</a>. '
-    "Any local edits will not be retained."
+    f'<p style="text-align: center; font-size: 0.8rem; color: grey;">'
+    f"Dashboard loaded: {dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     "</p>",
     unsafe_allow_html=True,
 )
