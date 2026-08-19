@@ -4,6 +4,7 @@ import streamlit as st
 from utils import (
     SQL_CTE_MC2_DATASET_FILES,
     SQL_CTE_MC2_DATASET_NODES,
+    SQL_CTE_NODES_WITH_PARENT,
     SQL_CTE_NON_SAGERS,
     rename_duplicate_columns,
     execute_query,
@@ -19,6 +20,7 @@ def query_dataset_summary() -> str:
     return f"""
 WITH
     {SQL_CTE_NON_SAGERS},
+    {SQL_CTE_NODES_WITH_PARENT},
     {SQL_CTE_MC2_DATASET_NODES},
     {SQL_CTE_MC2_DATASET_FILES},
     -- Dataset-level download events, scoped to MC2 projects and non-Sagers only.
@@ -49,20 +51,23 @@ WITH
     )
 
 SELECT
-    f.dataset_name,
-    f.project_name,
+    d.dataset_name,
+    d.project_name,
+    d.matched_rule,
     COUNT(DISTINCT f.file_entity_id) AS total_files,
     COALESCE(s.external_downloads, 0) AS external_downloads,
     COALESCE(s.external_unique_users, 0) AS external_unique_users,
     s.last_download_activity
 FROM
-    mc2_dataset_files f
+    mc2_dataset_nodes d
+LEFT JOIN
+    mc2_dataset_files f ON f.project_id = d.project_id AND f.dataset_name = d.dataset_name
 LEFT JOIN
     dataset_dl_summary s
-        ON s.dataset_name = f.dataset_name
-        AND s.project_id  = f.project_id
-GROUP BY 1, 2, 4, 5, 6
-ORDER BY 4 DESC NULLS LAST;
+        ON s.dataset_name = d.dataset_name
+        AND s.project_id  = d.project_id
+GROUP BY 1, 2, 3, 5, 6, 7
+ORDER BY 5 DESC NULLS LAST;
 """
 
 
@@ -74,6 +79,7 @@ def query_dataset_files() -> str:
     return f"""
 WITH
     {SQL_CTE_NON_SAGERS},
+    {SQL_CTE_NODES_WITH_PARENT},
     {SQL_CTE_MC2_DATASET_NODES},
     {SQL_CTE_MC2_DATASET_FILES},
     -- Scoped to MC2 projects before scanning the events table
@@ -139,6 +145,7 @@ def _cell_dataset_summary():
                 ).result("pandas")
             df = rename_duplicate_columns(df)
             max_dl = int(df["EXTERNAL_DOWNLOADS"].max()) if len(df) > 0 else 1
+            st.caption(f"{len(df):,} rows")
             st.dataframe(
                 df,
                 width="stretch",
@@ -146,6 +153,7 @@ def _cell_dataset_summary():
                 column_config={
                     "DATASET_NAME": st.column_config.TextColumn("Dataset"),
                     "PROJECT_NAME": st.column_config.TextColumn("Project"),
+                    "MATCHED_RULE": st.column_config.TextColumn("Rule"),
                     "TOTAL_FILES": st.column_config.NumberColumn("Files"),
                     "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
                         "External Downloads",
@@ -166,52 +174,6 @@ def _cell_dataset_summary():
 
 
 @st.fragment
-def _cell_never_downloaded():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Datasets with Zero External Downloads")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key="refresh_datasets_never",
-                help="Refresh zero-download datasets",
-            ):
-                execute_query.clear(query_dataset_summary())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                # Reuses the cached result from _cell_dataset_summary
-                df = st.session_state.session.create_async_job(
-                    execute_query(query_dataset_summary())
-                ).result("pandas")
-            df = rename_duplicate_columns(df)
-            never = df[df["EXTERNAL_DOWNLOADS"] == 0][
-                ["DATASET_NAME", "PROJECT_NAME", "TOTAL_FILES"]
-            ]
-            if len(never) == 0:
-                st.success("All datasets have been downloaded at least once.")
-            else:
-                st.caption(f"{len(never)} dataset(s) have never been downloaded externally.")
-                st.dataframe(
-                    never,
-                    width="stretch",
-                    hide_index=True,
-                    column_config={
-                        "DATASET_NAME": st.column_config.TextColumn("Dataset"),
-                        "PROJECT_NAME": st.column_config.TextColumn("Project"),
-                        "TOTAL_FILES": st.column_config.NumberColumn("Files"),
-                    },
-                )
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-@st.fragment
 def _cell_file_detail():
     with st.container(border=True):
         with st.container(
@@ -220,7 +182,7 @@ def _cell_file_detail():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### File Detail")
+                st.markdown("### Dataset File Detail")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -255,6 +217,7 @@ def _cell_file_detail():
         )
         filtered = df[df["DATASET_NAME"].isin(selected)] if selected else df
 
+        st.caption(f"{len(filtered):,} of {len(df):,} rows" if selected else f"{len(df):,} rows")
         st.dataframe(
             filtered,
             width="stretch",
@@ -278,7 +241,21 @@ def prefetch():
     execute_query(query_dataset_files())
 
 
+def _cell_dataset_rules():
+    with st.container(border=True):
+        st.markdown("##### What Counts as a Dataset?")
+        st.markdown(
+            "A node is counted as a dataset if it meets **any** of the following criteria:\n\n"
+            "1. **Entity type:** `node_type` is `dataset` or `datasetcollection`\n\n"
+            "2. **Annotations:** `node_type` is `file` or `folder` with the annotations: `portal = CCKP` & `entityType = dataset`\n\n"
+            "3. **`datasets` parent folder:** `node_type` is an unannotated `file` with a parent folder named \"datasets\""
+        )
+
+
 def render():
-    _cell_dataset_summary()
-    _cell_never_downloaded()
+    col_summary, col_rules = st.columns([3, 1])
+    with col_summary:
+        _cell_dataset_summary()
+    with col_rules:
+        _cell_dataset_rules()
     _cell_file_detail()
