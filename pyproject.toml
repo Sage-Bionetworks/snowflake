@@ -10,13 +10,13 @@ dependencies = []
 # Install the snow CLI separately: uv tool install snowflake-cli
 snowflake = [
     "boto3>=1.42,<2",
-    "snowflake-connector-python>=3.18,<4",
+    "snowflake-connector-python>=4,<5",
     "snowflake-snowpark-python>=1.41,<2",
 ]
 
 # Schema migration runner for synapse_data_warehouse/, sage/, and admin/.
 schemachange = [
-    "schemachange==4.0.1",
+    "schemachange==4.3.3",
 ]
 
 # dbt Snowflake adapter and SQL linter for the transform/ project.
