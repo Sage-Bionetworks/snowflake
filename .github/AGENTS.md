@@ -18,11 +18,11 @@ Triggers on push to `dev` or `main`. Jobs run only on the branch where they are 
 | `schemachange_admin` | `main` | Runs all four `admin/` schemachange subdirs in order (warehouses → policies → ownership_grants → future_grants) | `needs: deploy_synapse_data_warehouse_prod` |
 | `snowsql_admin` | `main` | Runs `admin/*.sql` files via `snow sql` (users, roles, databases, integrations, grants) | `needs: schemachange_admin` |
 
-The `schemachange_admin` → `snowsql_admin` dependency means all DDL migrations always precede the idempotent grant scripts. Every job here declares `environment: dev` or `environment: prod` and only runs `if: github.ref_name == 'dev'/'main'` — i.e. only as a consequence of a push that already passed the branch's PR-approval ruleset. Because nothing here ever executes pre-merge, the `dev`/`prod` environments have no required-reviewer protection rule; the branch ruleset is the only gate, and it's sufficient.
+The `schemachange_admin` → `snowsql_admin` dependency means all DDL migrations always precede the idempotent grant scripts.
 
 ### `test_with_clone.yaml` — PR validation
 
-Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label is present. Both jobs declare `environment: dev_restricted`, not `environment: dev` — this workflow runs on `opened`/`synchronize`/`reopened`/`closed`, i.e. it executes whatever is on the PR's own branch *before* any merge review happens. `dev_restricted` carries a required-reviewer protection rule (the `snowflake-developers` team, self-approval allowed) for exactly that reason; `dev` itself does not.
+Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label is present.
 
 1. Zero-copy clones `SYNAPSE_DATA_WAREHOUSE_DEV` → `SYNAPSE_DATA_WAREHOUSE_DEV_{branch}` (branch name sanitized to alphanumeric + underscores)
 2. Creates a `<CLONE>_PROXY_ADMIN` account role, transfers ownership of all inter-schema objects (tasks, dynamic tables) and database roles in the clone to it, then grants it to `DATA_ENGINEER` so the clone admin can act through the proxy
