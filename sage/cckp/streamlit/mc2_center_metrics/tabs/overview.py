@@ -72,13 +72,13 @@ WITH
 SELECT
     mc2.project_name,
 
-    -- Sage metrics
-    COUNT_IF(synapse_users.user_type = 'Sager') AS sage_downloads,
-    COUNT(DISTINCT CASE WHEN synapse_users.user_type = 'Sager' THEN dl.user_id END) AS sage_unique_users,
-
     -- External community metrics
     COUNT_IF(synapse_users.user_type = 'External') AS external_downloads,
-    COUNT(DISTINCT CASE WHEN synapse_users.user_type = 'External' THEN dl.user_id END) AS external_unique_users
+    COUNT(DISTINCT CASE WHEN synapse_users.user_type = 'External' THEN dl.user_id END) AS external_unique_users,
+
+    -- Sage metrics
+    COUNT_IF(synapse_users.user_type = 'Sager') AS sage_downloads,
+    COUNT(DISTINCT CASE WHEN synapse_users.user_type = 'Sager' THEN dl.user_id END) AS sage_unique_users
 FROM
     sage.cckp.mc2_projects AS mc2
 LEFT JOIN
@@ -92,7 +92,7 @@ LEFT JOIN
 LEFT JOIN
     synapse_users ON dl.user_id = synapse_users.id
 GROUP BY 1
-ORDER BY 4 DESC;
+ORDER BY 2 DESC;
 """
 
 

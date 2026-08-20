@@ -41,9 +41,9 @@ WITH
 
 SELECT
     n.project_id,
-    n.project_name,
     'syn' || n.id::STRING AS file_synid,
     n.name AS filename,
+    n.project_name,
     n.is_public,
     (mdf.file_entity_id IS NOT NULL) AS in_dataset,
     n.change_timestamp::DATE AS created_on,
@@ -65,7 +65,7 @@ LEFT JOIN
 WHERE
     n.node_type = 'file'
     AND n.name NOT ILIKE 'synapse_storage_manifest_%view.csv'
-ORDER BY 2 ASC, 8 DESC;
+ORDER BY 4 ASC, 9 DESC;
 """
 
 
@@ -104,7 +104,7 @@ def _cell_files_browser():
         df = st.session_state["files_browser_df"]
 
         # Filters
-        filter_col1, _ = st.columns([3, 1])
+        filter_col1, filter_col2, filter_col3 = st.columns([3, 1, 1])
         with filter_col1:
             project_options = sorted(
                 f"{row['PROJECT_NAME']} ({row['PROJECT_ID']})"
@@ -118,17 +118,39 @@ def _cell_files_browser():
                 placeholder="Select one or more projects (shows all by default)",
                 key="files_browser_project_filter",
             )
+        with filter_col2:
+            public_filter = st.selectbox(
+                "Is publicly viewable?",
+                options=["All", "Yes", "No"],
+                key="files_browser_public_filter",
+            )
+        with filter_col3:
+            dataset_filter = st.selectbox(
+                "Part of a dataset?",
+                options=["All", "Yes", "No"],
+                key="files_browser_dataset_filter",
+            )
 
         # Apply filters
         filtered_df = df.copy()
         if selected_projects:
             selected_names = {s.rsplit(" (", 1)[0] for s in selected_projects}
             filtered_df = filtered_df[filtered_df["PROJECT_NAME"].isin(selected_names)]
+        if public_filter == "Yes":
+            filtered_df = filtered_df[filtered_df["IS_PUBLIC"] == True]
+        elif public_filter == "No":
+            filtered_df = filtered_df[filtered_df["IS_PUBLIC"] == False]
+        if dataset_filter == "Yes":
+            filtered_df = filtered_df[filtered_df["IN_DATASET"] == True]
+        elif dataset_filter == "No":
+            filtered_df = filtered_df[filtered_df["IN_DATASET"] == False]
 
         total_ext_dl = int(filtered_df["EXTERNAL_DOWNLOADS"].sum())
+        n_projects = filtered_df["PROJECT_NAME"].nunique()
         st.caption(
-            f"{len(filtered_df):,} of {len(df):,} files · "
-            f"{total_ext_dl:,} total external downloads in view"
+            f"{len(filtered_df):,} files · "
+            f"{n_projects:,} projects · "
+            f"{total_ext_dl:,} external downloads in view"
         )
 
         max_ext = int(df["EXTERNAL_DOWNLOADS"].max()) if len(df) > 0 else 1
@@ -138,19 +160,19 @@ def _cell_files_browser():
             hide_index=True,
             height=500,
             column_config={
-                "PROJECT_NAME": st.column_config.TextColumn("Project"),
-                "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
+                "FILE_SYNID": st.column_config.TextColumn("File synID"),
                 "FILENAME": st.column_config.TextColumn("File Name"),
+                "PROJECT_NAME": st.column_config.TextColumn("Project"),
                 "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
                 "IN_DATASET": st.column_config.CheckboxColumn("In Dataset"),
                 "CREATED_ON": st.column_config.DateColumn("Created On"),
                 "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
-                    "Ext. Downloads",
+                    "External Downloads",
                     min_value=0,
                     max_value=max_ext,
                     format="%d",
                 ),
-                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
+                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("External Unique Users"),
                 "SAGE_DOWNLOADS": st.column_config.NumberColumn("Sage Downloads"),
                 "SAGE_UNIQUE_USERS": st.column_config.NumberColumn("Sage Unique Users"),
                 "TOTAL_DOWNLOADS": st.column_config.NumberColumn("Total Downloads"),
@@ -198,7 +220,11 @@ def _cell_recently_added():
         df["CREATED_ON"] = pd.to_datetime(df["CREATED_ON"], errors="coerce")
         recent = df[df["CREATED_ON"] >= cutoff].sort_values("CREATED_ON", ascending=False)
 
-        st.caption(f"{len(recent):,} files added in the last 30 days")
+        st.caption(
+            f"{len(recent):,} files · "
+            f"{recent['PROJECT_NAME'].nunique():,} projects · "
+            f"{int(recent['EXTERNAL_DOWNLOADS'].sum()):,} external downloads in view"
+        )
         if len(recent) == 0:
             st.info("No files have been added in the last 30 days.")
         else:
@@ -207,14 +233,14 @@ def _cell_recently_added():
                 width="stretch",
                 hide_index=True,
                 column_config={
-                    "PROJECT_NAME": st.column_config.TextColumn("Project"),
-                    "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
+                    "FILE_SYNID": st.column_config.TextColumn("File synID"),
                     "FILENAME": st.column_config.TextColumn("File Name"),
+                    "PROJECT_NAME": st.column_config.TextColumn("Project"),
                     "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
                     "IN_DATASET": st.column_config.CheckboxColumn("In Dataset"),
                     "CREATED_ON": st.column_config.DateColumn("Created On"),
-                    "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
-                    "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
+                    "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("External Downloads"),
+                    "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("External Unique Users"),
                     "SAGE_DOWNLOADS": st.column_config.NumberColumn("Sage Downloads"),
                     "SAGE_UNIQUE_USERS": st.column_config.NumberColumn("Sage Unique Users"),
                     "TOTAL_DOWNLOADS": st.column_config.NumberColumn("Total Downloads"),

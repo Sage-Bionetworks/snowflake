@@ -180,8 +180,8 @@ def _cell_dataset_summary():
         df = st.session_state["datasets_summary_df"]
         max_dl = max(1, int(df["EXTERNAL_DOWNLOADS"].max())) if len(df) > 0 else 1
 
-        col_project, col_dl_type = st.columns(2)
-        with col_project:
+        row1_col1, row1_col2 = st.columns([3, 1])
+        with row1_col1:
             project_options = sorted(df["PROJECT_NAME"].dropna().unique())
             selected_projects = st.multiselect(
                 "Filter by project",
@@ -189,7 +189,7 @@ def _cell_dataset_summary():
                 placeholder="All projects",
                 key="datasets_summary_project_filter",
             )
-        with col_dl_type:
+        with row1_col2:
             dl_type_options = sorted(df["DOWNLOAD_TYPE"].dropna().unique())
             selected_dl_types = st.multiselect(
                 "Filter by download type",
@@ -205,13 +205,17 @@ def _cell_dataset_summary():
             filtered = filtered[filtered["DOWNLOAD_TYPE"].isin(selected_dl_types)]
 
         active_filters = bool(selected_projects or selected_dl_types)
-        st.caption(f"{len(filtered):,} of {len(df):,} rows" if active_filters else f"{len(df):,} rows")
+        st.caption(
+            f"{len(filtered):,} datasets · "
+            f"{int(filtered['TOTAL_FILES'].sum()):,} files · "
+            f"{int(filtered['EXTERNAL_DOWNLOADS'].sum()):,} external downloads in view"
+        )
         st.dataframe(
             filtered,
             width="stretch",
             hide_index=True,
             column_config={
-                "SYN_ID": st.column_config.TextColumn("Syn ID"),
+                "SYN_ID": st.column_config.TextColumn("Dataset synID"),
                 "DATASET_NAME": st.column_config.TextColumn("Dataset"),
                 "PROJECT_NAME": st.column_config.TextColumn("Project"),
                 "TOTAL_FILES": st.column_config.NumberColumn("Files"),
@@ -223,7 +227,7 @@ def _cell_dataset_summary():
                     format="%d",
                 ),
                 "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn(
-                    "Ext. Unique Users"
+                    "External Unique Users"
                 ),
                 "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn(
                     "Last Download Activity"
@@ -268,28 +272,32 @@ def _cell_file_detail():
         df = st.session_state["datasets_files_df"]
 
         dataset_options = sorted(df["DATASET_NAME"].dropna().unique())
-        selected = st.multiselect(
-            "Filter by dataset",
+        selected_datasets = st.multiselect(
+            "Filter by dataset name",
             options=dataset_options,
-            placeholder="Select one or more datasets (shows all by default)",
-            key="datasets_files_filter",
+            placeholder="All datasets",
+            key="datasets_files_name_filter",
         )
-        filtered = df[df["DATASET_NAME"].isin(selected)] if selected else df
 
-        st.caption(f"{len(filtered):,} of {len(df):,} rows" if selected else f"{len(df):,} rows")
+        filtered = df[df["DATASET_NAME"].isin(selected_datasets)] if selected_datasets else df
+
+        st.caption(
+            f"{len(filtered):,} files · "
+            f"{int(filtered['EXTERNAL_DOWNLOADS'].sum()):,} external downloads in view"
+        )
         st.dataframe(
             filtered,
             width="stretch",
             hide_index=True,
             height=450,
             column_config={
-                "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
+                "FILE_SYNID": st.column_config.TextColumn("File synID"),
                 "FILE_NAME": st.column_config.TextColumn("File Name"),
                 "DATASET_NAME": st.column_config.TextColumn("Dataset"),
                 "PROJECT_NAME": st.column_config.TextColumn("Project"),
                 "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
-                "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
-                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
+                "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("External Downloads"),
+                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("External Unique Users"),
                 "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download Activity"),
             },
         )

@@ -201,7 +201,7 @@ def _cell_top_files():
                 width="stretch",
                 hide_index=True,
                 column_config={
-                    "SYNID": st.column_config.TextColumn("Syn ID"),
+                    "SYNID": st.column_config.TextColumn("synID"),
                     "FILE_NAME": st.column_config.TextColumn("File Name"),
                     "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
                         "External Downloads",
