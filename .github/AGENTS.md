@@ -54,7 +54,7 @@ Used alongside `configure-snowflake-cli` in the three dbt-running `ci.yaml` jobs
 
 ## Secrets and variables
 
-All credentials are stored as GitHub Actions secrets/vars under the `dev` and `prod` environments. Key names:
+Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, and `prod` environments (not at the repository level) — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` duplicates `dev`'s values for `test_with_clone.yaml`'s use; keep the two in sync manually when rotating credentials, since there's no way to copy a secret's value between environments programmatically. Key names:
 
 - `SNOWSQL_ACCOUNT` — Snowflake account identifier
 - `ADMIN_SERVICE_USER` — service account username
