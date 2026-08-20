@@ -54,12 +54,21 @@ Used alongside `configure-snowflake-cli` in the three dbt-running `ci.yaml` jobs
 
 ## Secrets and variables
 
-Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, and `prod` environments (not at the repository level) — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` duplicates `dev`'s values for `test_with_clone.yaml`'s use; keep the two in sync manually when rotating credentials, since there's no way to copy a secret's value between environments programmatically. Key names:
+Credentials must be stored as GitHub Actions secrets scoped to the `dev`, `dev_restricted`, or `prod` environments — never at the repository level. A job only resolves a given secret/var if it declares the matching `environment:`, so a repository-level copy of a credential is reachable from any job with no approval gate and defeats the environment protection rules entirely. Every job that touches Snowflake must therefore declare an `environment:`.
 
-- `SNOWSQL_ACCOUNT` — Snowflake account identifier
-- `ADMIN_SERVICE_USER` — service account username
+`dev_restricted` duplicates `dev`'s values for `test_with_clone.yaml`'s use; keep the two in sync manually when rotating credentials, since there's no way to copy a secret's value between environments programmatically.
+
+Secrets:
+
 - `ADMIN_SERVICE_PRIVATE_KEY` / `ADMIN_SERVICE_PASS_PHRASE` — key pair auth
+- `SNOWSQL_ACCOUNT` — Snowflake account identifier
+- `SNOWSQL_WAREHOUSE` — warehouse; also picked up by `snow` and schemachange from `SNOWFLAKE_WAREHOUSE`, where it overrides `connections.toml`
+
+Variables:
+
+- `ADMIN_SERVICE_USER` — service account username
 - `SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE` — database name (differs per environment)
 - `SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SYNAPSE_STAGE_URL`
 - `SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SNAPSHOTS_STAGE_URL`
-- `SAML2_ISSUER`, `SAML2_SSO_URL`, `SAML2_X509_CERT` — SAML integration secrets (prod only)
+- `STACK`
+- `SAML2_ISSUER`, `SAML2_SSO_URL`, `SAML2_X509_CERT` — Google Workspace IdP metadata for the `GOOGLE_SSO` SAML integration (prod only). Variables rather than secrets: these are the IdP's public entity ID, SSO endpoint, and public signing certificate, all published in Google's SAML metadata. Note that `admin/integrations.sql` creates `GOOGLE_SSO` with `IF NOT EXISTS`, so these values only take effect if the integration is absent — they are a recovery seed, not the live config.
