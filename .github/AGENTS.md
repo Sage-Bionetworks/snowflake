@@ -54,7 +54,7 @@ Used alongside `configure-snowflake-cli` in the three dbt-running `ci.yaml` jobs
 
 ## Secrets and variables
 
-Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, `dev_merged`, and `prod` environments — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` and `dev_merged` are both meant to mirror `dev`'s environment, except that `dev_restricted` gates on `snowflake-developers` approval so it can be safely used by `test_with_clone.yaml`'s pre-merge jobs, while `dev_merged` carries no gate and is only reachable from `drop_clone`'s post-merge case (`github.event.pull_request.merged == true`), since that content already passed the `dev` branch ruleset's review. Key names used by our environments:
+Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, `dev_merged`, and `prod` environments — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` and `dev_merged` are both meant to mirror `dev`'s environment, except that `dev_restricted` gates on `snowflake-developers` approval so it can be safely used by `test_with_clone.yaml`'s pre-merge jobs, while `dev_merged` carries no gate and is only reachable from `drop_clone`'s post-merge case, since that content already passed the `dev` branch ruleset's review. Key names used by our environments:
 
 - `SNOWSQL_ACCOUNT` — Snowflake account identifier
 - `ADMIN_SERVICE_USER` — service account username
