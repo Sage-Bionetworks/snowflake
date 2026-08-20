@@ -54,12 +54,12 @@ Used alongside `configure-snowflake-cli` in the three dbt-running `ci.yaml` jobs
 
 ## Secrets and variables
 
-Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, and `prod` environments (not at the repository level) — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` duplicates `dev`'s values for `test_with_clone.yaml`'s use; keep the two in sync manually when rotating credentials, since there's no way to copy a secret's value between environments programmatically. Key names:
+Credentials are stored as GitHub Actions secrets/vars scoped to the `dev`, `dev_restricted`, `dev_merged`, and `prod` environments — a job only resolves a given secret/var if it declares the matching `environment:`. `dev_restricted` and `dev_merged` are both meant to mirror `dev`'s environment, except that `dev_restricted` gates on `snowflake-developers` approval so it can be safely used by `test_with_clone.yaml`'s pre-merge jobs, while `dev_merged` carries no gate and is only reachable from `drop_clone`'s post-merge case (`github.event.pull_request.merged == true`), since that content already passed the `dev` branch ruleset's review. Key names used by our environments:
 
 - `SNOWSQL_ACCOUNT` — Snowflake account identifier
 - `ADMIN_SERVICE_USER` — service account username
 - `ADMIN_SERVICE_PRIVATE_KEY` / `ADMIN_SERVICE_PASS_PHRASE` — key pair auth
-- `SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE` — database name (differs per environment)
+- `SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE` — database name (value differs per environment)
 - `SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SYNAPSE_STAGE_URL`
 - `SNOWFLAKE_SNAPSHOTS_STAGE_STORAGE_INTEGRATION`, `SNOWFLAKE_SNAPSHOTS_STAGE_URL`
 - `SAML2_ISSUER`, `SAML2_SSO_URL`, `SAML2_X509_CERT` — SAML integration secrets (prod only)

@@ -212,7 +212,7 @@ jobs:
     drop_clone:
       runs-on: ubuntu-latest
       if: github.event.action == 'closed'
-      environment: dev_restricted
+      environment: ${{ github.event.pull_request.merged && 'dev_merged' || 'dev_restricted' }}
       env:
           # Establish the snowflake account credentials
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
