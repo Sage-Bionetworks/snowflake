@@ -127,7 +127,7 @@ def _cell_kpis():
         c1.metric("Projects", f"{int(counts['TOTAL_PROJECTS']):,}")
         c2.metric("Datasets", f"{int(counts['TOTAL_DATASETS']):,}")
         c3.metric("Files", f"{total_files:,}")
-        c4.metric("Public Files", f"{public_files:,}", delta=f"{public_pct}% of all files", delta_color="off")
+        c4.metric("Public* Files", f"{public_files:,}", delta=f"{public_pct}% of all files", delta_color="off")
         c5.metric("External Users", f"{int(downloads['TOTAL_EXTERNAL_USERS']):,}")
 
         st.divider()

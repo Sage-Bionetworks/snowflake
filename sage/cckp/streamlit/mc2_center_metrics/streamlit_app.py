@@ -79,10 +79,10 @@ mc2_center.prefetch()
     tab_overview,
     tab_trends,
     tab_datasets,
-    tab_users,
     tab_browser,
+    tab_users,
     tab_mc2_center,
-) = st.tabs(["Overview", "Trends", "Datasets", "External Users", "Files Browser", "MC2 Center Project"])
+) = st.tabs(["Overview", "Trends", "Datasets", "Files Browser", "External Users", "MC2 Center Project"])
 
 
 with tab_overview:
@@ -99,8 +99,9 @@ with tab_mc2_center:
     mc2_center.render()
 
 st.divider()
+st.caption("\* \"Public\" means the entity is viewable by anyone on the web. This does not necessarily mean it can be downloaded.")
 st.markdown(
-    '<p style="text-align: center; color: #cc0000; font-size: 0.8rem;">'
+    '<p style="color: #cc0000; font-size: 0.8rem;">'
     "This app is "
     '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on GitHub</a>. '
     "Any local edits will not be retained."

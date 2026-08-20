@@ -138,7 +138,7 @@ def _cell_files_browser():
                 "PROJECT_NAME": st.column_config.TextColumn("Project"),
                 "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
                 "FILENAME": st.column_config.TextColumn("File Name"),
-                "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
+                "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
                 "CREATED_ON": st.column_config.DateColumn("Created On"),
                 "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
                     "Ext. Downloads",
@@ -151,7 +151,7 @@ def _cell_files_browser():
                 "SAGE_UNIQUE_USERS": st.column_config.NumberColumn("Sage Unique Users"),
                 "TOTAL_DOWNLOADS": st.column_config.NumberColumn("Total Downloads"),
                 "TOTAL_UNIQUE_USERS": st.column_config.NumberColumn("Total Unique Users"),
-                "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download"),
+                "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download Activity"),
             },
         )
 
@@ -206,12 +206,15 @@ def _cell_recently_added():
                     "PROJECT_NAME": st.column_config.TextColumn("Project"),
                     "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
                     "FILENAME": st.column_config.TextColumn("File Name"),
-                    "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
+                    "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
                     "CREATED_ON": st.column_config.DateColumn("Created On"),
                     "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
                     "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
                     "SAGE_DOWNLOADS": st.column_config.NumberColumn("Sage Downloads"),
-                    "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download"),
+                    "SAGE_UNIQUE_USERS": st.column_config.NumberColumn("Sage Unique Users"),
+                    "TOTAL_DOWNLOADS": st.column_config.NumberColumn("Total Downloads"),
+                    "TOTAL_UNIQUE_USERS": st.column_config.NumberColumn("Total Unique Users"),
+                    "LATEST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download Activity"),
                 },
             )
 
@@ -243,7 +246,7 @@ def _cell_recently_added_note():
     with st.container(border=True):
         st.markdown("##### About Recently Added Files")
         st.markdown(
-            "This table shows all file nodes found across the MC2 Center projects whose "
+            "This table shows file nodes across MC2 Center projects that have at least one download, whose "
             "`created_on` date falls within the last 30 days."
         )
         st.markdown(

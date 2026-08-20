@@ -120,7 +120,7 @@ def _cell_returning_vs_onetime():
             buckets = pd.cut(
                 df["TOTAL_DOWNLOADS"],
                 bins=[0, 1, 5, 10, 50, float("inf")],
-                labels=["1", "2–5", "6–10", "11–50", "50+"],
+                labels=["1", "2-5", "6-10", "11-50", "50+"],
                 right=True,
             )
             bucket_counts = buckets.value_counts().sort_index().reset_index()
@@ -304,8 +304,23 @@ def prefetch():
     execute_query(query_user_project_breakdown())
 
 
+def _cell_user_definition():
+    with st.container(border=True):
+        st.markdown("##### Who Counts as an External User?")
+        st.markdown(
+            "An **External User** is defined as any non-Sage Synapse account (where the registered email does "
+            "not end in `@sagebase.org` or `@sagebionetworks.org`) and has triggered at least one download event "
+            "on a file within a MC2 project.\n\n"
+            "A returning user is defined as an external user who has triggered more than one download event."
+        )
+
+
 def render():
-    _cell_returning_vs_onetime()
+    col_main, col_def = st.columns([3, 1])
+    with col_main:
+        _cell_returning_vs_onetime()
+    with col_def:
+        _cell_user_definition()
     _cell_user_table()
     col1, col2 = st.columns(2)
     with col1:
