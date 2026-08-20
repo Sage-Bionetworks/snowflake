@@ -51,101 +51,57 @@ SQL_CTE_SYNAPSE_USERS = """\
             synapse_data_warehouse.synapse.userprofile_latest
     )"""
 
-# CTE to join each node with its parent node's name.
-SQL_CTE_NODES_WITH_PARENT = """\
-    nodes_with_parent AS (
-        SELECT
-            child.*,
-            parent.name AS parent_name
-        FROM sage.cckp.mc2_nodes AS child
-        LEFT JOIN sage.cckp.mc2_nodes AS parent
-            ON child.parent_id = parent.id
-    )"""
-
-# CTE to get CCKP-annotated dataset entities from mc2_nodes, based on 3 criteria:
-#   Rule 1 — Native dataset/datasetcollection nodes (any portal annotation).
-#   Rule 2 — Files or folders explicitly annotated with portal=CCKP, entityType=dataset.
-#   Rule 3 — Unannotated, non-manifest files inside a folder named "datasets"
-#             (the parent folder is the canonical dataset entity).
-# Includes matched_rule for troubleshooting.
+# CTE to get CCKP dataset entities.
 SQL_CTE_MC2_DATASET_NODES = """\
     mc2_dataset_nodes AS (
         SELECT DISTINCT
-            n.id,
-            n.name AS dataset_name,
-            n.file_handle_id,
-            n.project_id,
-            n.project_name,
-            classified.matched_rule
-        FROM (
-            SELECT
-                CASE
-                    -- Rule 1: Native dataset entities (any portal)
-                    WHEN LOWER(node_type) IN ('dataset', 'datasetcollection')
-                    THEN id
-                    -- Rule 2: Explicitly annotated CCKP files/folders
-                    WHEN LOWER(node_type) IN ('file', 'folder')
-                         AND LOWER(annotations:annotations:portal.value[0]::string) = 'cckp'
-                         AND LOWER(annotations:annotations:entityType.value[0]::string) = 'dataset'
-                    THEN id
-                    -- Rule 3: Unannotated files in a "datasets" folder → parent is the dataset
-                    WHEN LOWER(node_type) = 'file'
-                         AND name NOT ILIKE 'synapse_storage_manifest_%'
-                         AND annotations:annotations:portal IS NULL
-                         AND annotations:annotations:entityType IS NULL
-                         AND LOWER(parent_name) = 'datasets'
-                    THEN parent_id
-                END AS dataset_id,
-                CASE
-                    WHEN LOWER(node_type) IN ('dataset', 'datasetcollection')
-                    THEN 'Rule 1'
-                    WHEN LOWER(node_type) IN ('file', 'folder')
-                         AND LOWER(annotations:annotations:portal.value[0]::string) = 'cckp'
-                         AND LOWER(annotations:annotations:entityType.value[0]::string) = 'dataset'
-                    THEN 'Rule 2'
-                    WHEN LOWER(node_type) = 'file'
-                         AND name NOT ILIKE 'synapse_storage_manifest_%'
-                         AND annotations:annotations:portal IS NULL
-                         AND annotations:annotations:entityType IS NULL
-                         AND LOWER(parent_name) = 'datasets'
-                    THEN 'Rule 3'
-                END AS matched_rule
-            FROM nodes_with_parent
-        ) classified
-        INNER JOIN sage.cckp.mc2_nodes n ON n.id = classified.dataset_id
-        WHERE classified.dataset_id IS NOT NULL
-    )"""
-
-# CTE to get all CCKP dataset files — direct files and files nested one
-# level inside a dataset/folder container.
-SQL_CTE_MC2_DATASET_FILES = """\
-    mc2_dataset_files AS (
-        -- File entities that are themselves the dataset node
-        SELECT
-            id AS file_entity_id,
+            id,
+            node_type,
+            name AS dataset_name,
             file_handle_id,
-            dataset_name,
             project_id,
             project_name
-        FROM
-            mc2_dataset_nodes
-        WHERE
-            file_handle_id IS NOT NULL
+        FROM sage.cckp.mc2_nodes
+        WHERE node_type IN ('dataset', 'datasetcollection')
+    )"""
 
-        UNION ALL
+# CTE to expand dataset/datasetcollection items into file rows, where:
+#   dataset -> files
+#   datasetcollection -> datasets -> files
+SQL_CTE_MC2_DATASET_FILES = """\
+    mc2_dataset_files AS (
+        -- case 1: dataset entities -> file items
+        SELECT DISTINCT
+            d.dataset_name,
+            d.project_id,
+            d.project_name,
+            n.id              AS file_entity_id,
+            n.file_handle_id
+        FROM mc2_dataset_nodes d
+        INNER JOIN synapse_data_warehouse.synapse.node_latest nl ON nl.id = d.id,
+        LATERAL FLATTEN(input => nl.items) AS item
+        INNER JOIN sage.cckp.mc2_nodes n
+            ON n.id = TRY_CAST(REPLACE(item.value:entityId::STRING, 'syn', '') AS BIGINT)
+        WHERE n.file_handle_id IS NOT NULL
+            AND d.node_type = 'dataset'
 
-        -- Files nested one level inside dataset/folder entities
-        SELECT
-            child.id AS file_entity_id,
-            child.file_handle_id,
-            parent.dataset_name,
-            parent.project_id,
-            parent.project_name
-        FROM
-            sage.cckp.mc2_nodes child
-        INNER JOIN
-            mc2_dataset_nodes parent ON child.parent_id = parent.id
-        WHERE
-            child.file_handle_id IS NOT NULL
-            AND child.name NOT ILIKE 'synapse_storage_manifest_%'
+        UNION
+
+        -- case 2: datasetcollection entities -> dataset items -> file items
+        SELECT DISTINCT
+            dc.dataset_name,
+            dc.project_id,
+            dc.project_name,
+            n.id              AS file_entity_id,
+            n.file_handle_id
+        FROM mc2_dataset_nodes dc
+        INNER JOIN synapse_data_warehouse.synapse.node_latest nl_dc ON nl_dc.id = dc.id,
+        LATERAL FLATTEN(input => nl_dc.items) AS ds_item
+        INNER JOIN synapse_data_warehouse.synapse.node_latest nl_ds
+            ON nl_ds.id = TRY_CAST(REPLACE(ds_item.value:entityId::STRING, 'syn', '') AS BIGINT),
+        LATERAL FLATTEN(input => nl_ds.items) AS file_item
+        INNER JOIN sage.cckp.mc2_nodes n
+            ON n.id = TRY_CAST(REPLACE(file_item.value:entityId::STRING, 'syn', '') AS BIGINT)
+        WHERE n.file_handle_id IS NOT NULL
+            AND dc.node_type = 'datasetcollection'
     )"""

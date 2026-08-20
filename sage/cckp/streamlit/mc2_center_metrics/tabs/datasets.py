@@ -51,10 +51,11 @@ WITH
     )
 
 SELECT
+    'syn' || d.id::STRING AS syn_id,
     d.dataset_name,
     d.project_name,
-    d.matched_rule,
     COUNT(DISTINCT f.file_entity_id) AS total_files,
+    'N/A' AS download_type,  -- TODO: update when downloadType annotation available
     COALESCE(s.external_downloads, 0) AS external_downloads,
     COALESCE(s.external_unique_users, 0) AS external_unique_users,
     s.last_download_activity
@@ -66,8 +67,8 @@ LEFT JOIN
     dataset_dl_summary s
         ON s.dataset_name = d.dataset_name
         AND s.project_id  = d.project_id
-GROUP BY 1, 2, 3, 5, 6, 7
-ORDER BY 5 DESC NULLS LAST;
+GROUP BY 1, 2, 3, 5, 6, 7, 8
+ORDER BY 6 DESC NULLS LAST;
 """
 
 
@@ -137,40 +138,73 @@ def _cell_dataset_summary():
                 help="Refresh dataset summary",
             ):
                 execute_query.clear(query_dataset_summary())
+                if "datasets_summary_df" in st.session_state:
+                    del st.session_state["datasets_summary_df"]
 
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = st.session_state.session.create_async_job(
-                    execute_query(query_dataset_summary())
-                ).result("pandas")
-            df = rename_duplicate_columns(df)
-            max_dl = int(df["EXTERNAL_DOWNLOADS"].max()) if len(df) > 0 else 1
-            st.caption(f"{len(df):,} rows")
-            st.dataframe(
-                df,
-                width="stretch",
-                hide_index=True,
-                column_config={
-                    "DATASET_NAME": st.column_config.TextColumn("Dataset"),
-                    "PROJECT_NAME": st.column_config.TextColumn("Project"),
-                    "MATCHED_RULE": st.column_config.TextColumn("Rule"),
-                    "TOTAL_FILES": st.column_config.NumberColumn("Files"),
-                    "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
-                        "External Downloads",
-                        min_value=0,
-                        max_value=max_dl,
-                        format="%d",
-                    ),
-                    "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn(
-                        "Ext. Unique Users"
-                    ),
-                    "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn(
-                        "Last Download"
-                    ),
-                },
+        if "datasets_summary_df" not in st.session_state:
+            try:
+                with st.spinner("Executing query", show_time=True):
+                    df = st.session_state.session.create_async_job(
+                        execute_query(query_dataset_summary())
+                    ).result("pandas")
+                st.session_state["datasets_summary_df"] = rename_duplicate_columns(df)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                return
+
+        df = st.session_state["datasets_summary_df"]
+        max_dl = max(1, int(df["EXTERNAL_DOWNLOADS"].max())) if len(df) > 0 else 1
+
+        col_project, col_dl_type = st.columns(2)
+        with col_project:
+            project_options = sorted(df["PROJECT_NAME"].dropna().unique())
+            selected_projects = st.multiselect(
+                "Filter by project",
+                options=project_options,
+                placeholder="All projects",
+                key="datasets_summary_project_filter",
             )
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+        with col_dl_type:
+            dl_type_options = sorted(df["DOWNLOAD_TYPE"].dropna().unique())
+            selected_dl_types = st.multiselect(
+                "Filter by download type",
+                options=dl_type_options,
+                placeholder="All download types",
+                key="datasets_summary_dl_type_filter",
+            )
+
+        filtered = df.copy()
+        if selected_projects:
+            filtered = filtered[filtered["PROJECT_NAME"].isin(selected_projects)]
+        if selected_dl_types:
+            filtered = filtered[filtered["DOWNLOAD_TYPE"].isin(selected_dl_types)]
+
+        active_filters = bool(selected_projects or selected_dl_types)
+        st.caption(f"{len(filtered):,} of {len(df):,} rows" if active_filters else f"{len(df):,} rows")
+        st.dataframe(
+            filtered,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "SYN_ID": st.column_config.TextColumn("Syn ID"),
+                "DATASET_NAME": st.column_config.TextColumn("Dataset"),
+                "PROJECT_NAME": st.column_config.TextColumn("Project"),
+                "TOTAL_FILES": st.column_config.NumberColumn("Files"),
+                "DOWNLOAD_TYPE": st.column_config.TextColumn("Download Type"),
+                "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
+                    "External Downloads",
+                    min_value=0,
+                    max_value=max_dl,
+                    format="%d",
+                ),
+                "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn(
+                    "Ext. Unique Users"
+                ),
+                "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn(
+                    "Last Download Activity"
+                ),
+            },
+        )
 
 
 @st.fragment
@@ -228,12 +262,14 @@ def _cell_file_detail():
                 "FILE_NAME": st.column_config.TextColumn("File Name"),
                 "DATASET_NAME": st.column_config.TextColumn("Dataset"),
                 "PROJECT_NAME": st.column_config.TextColumn("Project"),
-                "IS_PUBLIC": st.column_config.CheckboxColumn("Public"),
+                "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
                 "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
                 "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),
-                "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download"),
+                "LAST_DOWNLOAD_ACTIVITY": st.column_config.DateColumn("Last Download Activity"),
             },
         )
+
+
 
 
 def prefetch():
@@ -245,10 +281,28 @@ def _cell_dataset_rules():
     with st.container(border=True):
         st.markdown("##### What Counts as a Dataset?")
         st.markdown(
-            "A node is counted as a dataset if it meets **any** of the following criteria:\n\n"
-            "1. **Entity type:** `node_type` is `dataset` or `datasetcollection`\n\n"
-            "2. **Annotations:** `node_type` is `file` or `folder` with the annotations: `portal = CCKP` & `entityType = dataset`\n\n"
-            "3. **`datasets` parent folder:** `node_type` is an unannotated `file` with a parent folder named \"datasets\""
+            "A node is counted as a dataset if its `node_type` is `dataset` or `datasetcollection` "
+            "in `sage.cckp.mc2_nodes`.\n\n"
+            "Legacy datasets organized as `file` or `folder` nodes are excluded here; their metrics can "
+            "still be found in the **Files Browser** tab.\n\n"
+            "The long-term goal is for all CCKP datasets to be represented as native Synapse `dataset` entities."
+        )
+        st.divider()
+        st.markdown(
+            "**Upcoming Feature**: the **Download Type** column will be populated with one of the following "
+            "values:"
+        )
+        st.markdown(
+            "* `Synapse Hosted`: hosted in Synapse and available for download"
+        )
+        st.markdown(
+            "* `Synapse Indexed`: externally hosted but can be downloaded from Synapse"
+        )
+        st.markdown(
+            "* `Externally Hosted`: hosted externally and will need to be downloaded from the external source"
+        )
+        st.markdown(
+            "* `Not Available for Download`"
         )
 
 
