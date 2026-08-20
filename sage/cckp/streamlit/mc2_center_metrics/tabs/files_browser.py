@@ -45,6 +45,7 @@ SELECT
     'syn' || n.id::STRING AS file_synid,
     n.name AS filename,
     n.is_public,
+    (mdf.file_entity_id IS NOT NULL) AS in_dataset,
     n.change_timestamp::DATE AS created_on,
     COALESCE(dc.external_downloads, 0) AS external_downloads,
     COALESCE(dc.external_unique_users, 0) AS external_unique_users,
@@ -55,14 +56,16 @@ SELECT
     dc.latest_download_activity
 FROM
     sage.cckp.mc2_nodes AS n
-LEFT JOIN
+INNER JOIN
     download_counts dc
         ON dc.file_handle_id = n.file_handle_id
         AND dc.project_id = n.project_id
+LEFT JOIN
+    (SELECT DISTINCT file_entity_id FROM mc2_dataset_files) mdf ON mdf.file_entity_id = n.id
 WHERE
     n.node_type = 'file'
     AND n.name NOT ILIKE 'synapse_storage_manifest_%view.csv'
-ORDER BY 2 ASC, 9 DESC;
+ORDER BY 2 ASC, 8 DESC;
 """
 
 
@@ -139,6 +142,7 @@ def _cell_files_browser():
                 "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
                 "FILENAME": st.column_config.TextColumn("File Name"),
                 "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
+                "IN_DATASET": st.column_config.CheckboxColumn("In Dataset"),
                 "CREATED_ON": st.column_config.DateColumn("Created On"),
                 "EXTERNAL_DOWNLOADS": st.column_config.ProgressColumn(
                     "Ext. Downloads",
@@ -207,6 +211,7 @@ def _cell_recently_added():
                     "FILE_SYNID": st.column_config.TextColumn("Syn ID"),
                     "FILENAME": st.column_config.TextColumn("File Name"),
                     "IS_PUBLIC": st.column_config.CheckboxColumn("Public*"),
+                    "IN_DATASET": st.column_config.CheckboxColumn("In Dataset"),
                     "CREATED_ON": st.column_config.DateColumn("Created On"),
                     "EXTERNAL_DOWNLOADS": st.column_config.NumberColumn("Ext. Downloads"),
                     "EXTERNAL_UNIQUE_USERS": st.column_config.NumberColumn("Ext. Unique Users"),

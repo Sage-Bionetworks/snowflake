@@ -1,11 +1,13 @@
 """Datasets tab."""
+import pandas as pd
 import streamlit as st
 
 from utils import (
     SQL_CTE_MC2_DATASET_FILES,
     SQL_CTE_MC2_DATASET_NODES,
-    SQL_CTE_NODES_WITH_PARENT,
     SQL_CTE_NON_SAGERS,
+    GRANULARITY_OPTIONS,
+    RESAMPLE_FREQ,
     rename_duplicate_columns,
     execute_query,
 )
@@ -20,7 +22,6 @@ def query_dataset_summary() -> str:
     return f"""
 WITH
     {SQL_CTE_NON_SAGERS},
-    {SQL_CTE_NODES_WITH_PARENT},
     {SQL_CTE_MC2_DATASET_NODES},
     {SQL_CTE_MC2_DATASET_FILES},
     -- Dataset-level download events, scoped to MC2 projects and non-Sagers only.
@@ -80,7 +81,6 @@ def query_dataset_files() -> str:
     return f"""
 WITH
     {SQL_CTE_NON_SAGERS},
-    {SQL_CTE_NODES_WITH_PARENT},
     {SQL_CTE_MC2_DATASET_NODES},
     {SQL_CTE_MC2_DATASET_FILES},
     -- Scoped to MC2 projects before scanning the events table
@@ -118,6 +118,31 @@ LEFT JOIN
 LEFT JOIN
     sage.cckp.mc2_nodes n ON n.id = f.file_entity_id
 ORDER BY 3 ASC, 8 DESC;
+"""
+
+
+def query_dataset_downloads_over_time() -> str:
+    """Daily external download counts per dataset, for the downloads-over-time chart."""
+    return f"""
+WITH
+    {SQL_CTE_NON_SAGERS},
+    {SQL_CTE_MC2_DATASET_NODES},
+    {SQL_CTE_MC2_DATASET_FILES}
+
+SELECT
+    dl.record_date,
+    f.dataset_name,
+    COUNT(*) AS external_downloads
+FROM
+    mc2_dataset_files f
+INNER JOIN
+    synapse_data_warehouse.synapse_event.objectdownload_event dl
+        ON dl.file_handle_id = f.file_handle_id
+        AND dl.project_id = f.project_id
+INNER JOIN
+    non_sagers ON dl.user_id = non_sagers.user_id
+GROUP BY 1, 2
+ORDER BY 1 ASC, 2 ASC;
 """
 
 
@@ -270,11 +295,83 @@ def _cell_file_detail():
         )
 
 
+@st.fragment
+def _cell_downloads_over_time():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Dataset Downloads Over Time")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_dataset_downloads_over_time",
+                help="Refresh downloads over time",
+            ):
+                execute_query.clear(query_dataset_downloads_over_time())
+                if "dataset_downloads_over_time_df" in st.session_state:
+                    del st.session_state["dataset_downloads_over_time_df"]
+
+        if "dataset_downloads_over_time_df" not in st.session_state:
+            try:
+                with st.spinner("Executing query", show_time=True):
+                    df = st.session_state.session.create_async_job(
+                        execute_query(query_dataset_downloads_over_time())
+                    ).result("pandas")
+                st.session_state["dataset_downloads_over_time_df"] = rename_duplicate_columns(df)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                return
+
+        df = st.session_state["dataset_downloads_over_time_df"]
+        df["RECORD_DATE"] = pd.to_datetime(df["RECORD_DATE"])
+
+        col_filter, col_gran = st.columns([3, 1])
+        with col_filter:
+            dataset_options = sorted(df["DATASET_NAME"].dropna().unique())
+            selected = st.multiselect(
+                "Filter by dataset",
+                options=dataset_options,
+                placeholder="Select one or more datasets (shows all by default)",
+                key="dataset_downloads_time_filter",
+            )
+        with col_gran:
+            granularity = st.selectbox(
+                "Granularity",
+                GRANULARITY_OPTIONS,
+                index=2,
+                key="dataset_downloads_time_granularity",
+            )
+
+        filtered = df[df["DATASET_NAME"].isin(selected)].copy() if selected else df.copy()
+
+        if filtered.empty:
+            st.info("No download data available for the selected dataset(s).")
+            return
+
+        # Reindex to the full date range so sparse datasets don't collapse the x-axis
+        full_range = pd.date_range(df["RECORD_DATE"].min(), df["RECORD_DATE"].max(), freq="D")
+        pivot = (
+            filtered.pivot_table(
+                index="RECORD_DATE",
+                columns="DATASET_NAME",
+                values="EXTERNAL_DOWNLOADS",
+                aggfunc="sum",
+            )
+            .reindex(full_range, fill_value=0)
+            .resample(RESAMPLE_FREQ[granularity])
+            .sum()
+        )
+        st.line_chart(pivot, width="stretch", height=400)
 
 
 def prefetch():
     execute_query(query_dataset_summary())
     execute_query(query_dataset_files())
+    execute_query(query_dataset_downloads_over_time())
 
 
 def _cell_dataset_rules():
@@ -312,4 +409,5 @@ def render():
         _cell_dataset_summary()
     with col_rules:
         _cell_dataset_rules()
+    _cell_downloads_over_time()
     _cell_file_detail()
