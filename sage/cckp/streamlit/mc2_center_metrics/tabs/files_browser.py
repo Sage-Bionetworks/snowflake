@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 
 from utils import (
+    SQL_CTE_MC2_DATASET_FILES,
+    SQL_CTE_MC2_DATASET_NODES,
     SQL_CTE_SYNAPSE_USERS,
     rename_duplicate_columns,
     execute_query,
@@ -10,13 +12,12 @@ from utils import (
 
 
 def query_all_files() -> str:
-    """All MC2 file nodes with per-file download counts and access-type flags.
-
-    Uses LEFT JOIN so files with zero downloads are included.
-    """
+    """All MC2 file nodes that have at least one download, with per-file download counts."""
     return f"""
 WITH
     {SQL_CTE_SYNAPSE_USERS},
+    {SQL_CTE_MC2_DATASET_NODES},
+    {SQL_CTE_MC2_DATASET_FILES},
     -- Scoped to MC2 projects before scanning the events table
     download_counts AS (
         SELECT
@@ -100,7 +101,7 @@ def _cell_files_browser():
         df = st.session_state["files_browser_df"]
 
         # Filters
-        filter_col1, filter_col2 = st.columns([3, 1])
+        filter_col1, _ = st.columns([3, 1])
         with filter_col1:
             project_options = sorted(
                 f"{row['PROJECT_NAME']} ({row['PROJECT_ID']})"
@@ -114,19 +115,12 @@ def _cell_files_browser():
                 placeholder="Select one or more projects (shows all by default)",
                 key="files_browser_project_filter",
             )
-        with filter_col2:
-            only_never_downloaded = st.checkbox(
-                "Never downloaded only",
-                key="files_browser_never_downloaded",
-            )
 
         # Apply filters
         filtered_df = df.copy()
         if selected_projects:
             selected_names = {s.rsplit(" (", 1)[0] for s in selected_projects}
             filtered_df = filtered_df[filtered_df["PROJECT_NAME"].isin(selected_names)]
-        if only_never_downloaded:
-            filtered_df = filtered_df[filtered_df["EXTERNAL_DOWNLOADS"] == 0]
 
         total_ext_dl = int(filtered_df["EXTERNAL_DOWNLOADS"].sum())
         st.caption(

@@ -4,7 +4,6 @@ import streamlit as st
 from utils import (
     SQL_CTE_NON_SAGERS,
     SQL_CTE_SYNAPSE_USERS,
-    SQL_CTE_NODES_WITH_PARENT,
     SQL_CTE_MC2_DATASET_NODES,
     rename_duplicate_columns,
     execute_query,
@@ -15,7 +14,6 @@ def query_kpi_counts() -> str:
     """Single query for all cheap headline counts (no events table scan)."""
     return f"""
 WITH
-    {SQL_CTE_NODES_WITH_PARENT},
     {SQL_CTE_MC2_DATASET_NODES}
 
 SELECT

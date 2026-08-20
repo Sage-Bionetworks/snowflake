@@ -1,5 +1,8 @@
 import streamlit as st
 
+GRANULARITY_OPTIONS = ["Daily", "Weekly", "Monthly"]
+RESAMPLE_FREQ = {"Daily": "D", "Weekly": "W-MON", "Monthly": "MS"}
+
 
 @st.cache_data(ttl="23h50m")
 def execute_query(query: str) -> str:

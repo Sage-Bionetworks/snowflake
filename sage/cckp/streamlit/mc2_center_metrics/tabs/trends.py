@@ -5,12 +5,11 @@ import streamlit as st
 from utils import (
     SQL_CTE_NON_SAGERS,
     SQL_CTE_SYNAPSE_USERS,
+    GRANULARITY_OPTIONS,
+    RESAMPLE_FREQ,
     rename_duplicate_columns,
     execute_query,
 )
-
-GRANULARITY_OPTIONS = ["Daily", "Weekly", "Monthly"]
-_RESAMPLE_FREQ = {"Daily": "D", "Weekly": "W-MON", "Monthly": "MS"}
 
 
 def query_daily_downloads() -> str:
@@ -74,7 +73,7 @@ def _resample(df: pd.DataFrame, granularity: str) -> pd.DataFrame:
     """
     return (
         df.set_index("RECORD_DATE")
-        .resample(_RESAMPLE_FREQ[granularity])
+        .resample(RESAMPLE_FREQ[granularity])
         .sum()
         .reset_index()
     )
