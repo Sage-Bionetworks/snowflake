@@ -75,6 +75,67 @@ users.prefetch()
 files_browser.prefetch()
 mc2_center.prefetch()
 
+with st.sidebar:
+    st.caption("HELP & DEFINITIONS")
+    with st.expander("What is a download?"):
+        st.markdown(
+            """
+            A "download" is recorded whenever a file's content is accessed via the Synapse web
+            UI or API.
+
+            This includes both direct file downloads and full file previews on Synapse (such as images
+            PDFs, or small text files). For large files that cannot be fully previewed, only the direct
+            downloads are counted.
+            """
+        )
+    with st.expander("What is an external user?"):
+        st.markdown(
+            """
+            An "external user" is defined as any Synapse account where the registered email
+            does not end in `@sagebase.org` or `@sagebionetworks.org`.
+
+            It may be possible for a Sage employee to be categorized as "external" if they are
+            using a non-Sage email in their account.
+            """
+        )
+    with st.expander("What is a public file?"):
+        st.markdown(
+            """
+            A "public file" is any file that can be viewed by anyone on the web.
+            
+            It does not necessarily mean the file is open for unrestricted download (a.k.a. `OPEN_DATA`).
+            """
+        )
+    with st.expander("What is a dataset?"):
+        st.markdown(
+            """
+            In this dashboard, a "dataset" is any entity with a type of `dataset` or `datasetcollection`.
+            
+            Legacy datasets uploaded as `file` or `folder` types are excluded from the total datasets count
+            and the **Datasets Browser**, but will automatically be included once they are converted to the
+            `dataset` or `datasetcollection` type.
+            """
+        )
+    with st.expander("What is a dataset download?"):
+        st.markdown(
+            """
+            A "dataset download" is counted whenever a file _inside_ that dataset is downloaded. Dataset
+            nodes themselves don't have downloadable content; the counts reflect the files they contain.
+
+            Each unique filehandle is counted once per dataset, even if it is referenced by multiple file
+            entities within that dataset.
+            """
+        )
+    with st.expander("How do I report an issue or request a metric?"):
+        st.markdown(
+            """
+            Please reach out to Savitha or Verena on Slack!
+
+            We're happy to answer questions, investigate missing data, or discuss new metric requests as
+            we continue improving this dashboard.
+            """
+        )
+
 (
     tab_overview,
     tab_trends,
