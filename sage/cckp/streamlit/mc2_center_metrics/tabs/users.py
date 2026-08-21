@@ -3,7 +3,8 @@ import pandas as pd
 import streamlit as st
 
 from utils import (
-    SQL_CTE_NON_SAGERS,
+    CTE_NON_SAGERS,
+    CTE_MC2_FILE_NODES,
     rename_duplicate_columns,
     execute_query,
 )
@@ -11,71 +12,71 @@ from utils import (
 
 def query_user_summary() -> str:
     """
-    One row per external user: total downloads, projects touched, first/last
-    activity, and whether they are a one-time or returning downloader.
+    Get total downloads, projects touched, first/last activity of
+    each external user, along with 'one-time' vs 'returning' label.
     """
     return f"""
-WITH
-    {SQL_CTE_NON_SAGERS},
-    user_stats AS (
+        WITH
+            {CTE_NON_SAGERS},
+            {CTE_MC2_FILE_NODES},
+            user_stats AS (
+                SELECT
+                    dl.user_id,
+                    COUNT(*) AS total_downloads,
+                    COUNT(DISTINCT dl.project_id) AS projects_downloaded,
+                    MIN(dl.record_date) AS first_download,
+                    MAX(dl.record_date) AS latest_download
+                FROM
+                    synapse_data_warehouse.synapse_event.objectdownload_event AS dl
+                INNER JOIN
+                    non_sagers ON dl.user_id = non_sagers.user_id
+                WHERE
+                    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+                    AND dl.file_handle_id IN (SELECT file_handle_id FROM mc2_file_nodes)
+                GROUP BY 1
+            )
+
         SELECT
-            dl.user_id,
-            COUNT(*) AS total_downloads,
-            COUNT(DISTINCT dl.project_id) AS projects_downloaded,
+            ns.user_name,
+            us.total_downloads,
+            us.projects_downloaded,
+            us.first_download,
+            us.latest_download,
+            CASE WHEN us.total_downloads = 1 THEN 'One-time' ELSE 'Returning' END AS user_type
+        FROM
+            user_stats us
+        INNER JOIN
+            non_sagers ns ON ns.user_id = us.user_id
+        ORDER BY 2 DESC;
+        """
+
+
+def query_user_project_breakdown() -> str:
+    """Downloads per user per project."""
+    return f"""
+        WITH
+            {CTE_NON_SAGERS},
+            {CTE_MC2_FILE_NODES}
+
+        SELECT
+            ns.user_name,
+            mc2.project_name,
+            COUNT(*) AS downloads,
             MIN(dl.record_date) AS first_download,
             MAX(dl.record_date) AS latest_download
         FROM
             synapse_data_warehouse.synapse_event.objectdownload_event AS dl
         INNER JOIN
-            non_sagers ON dl.user_id = non_sagers.user_id
+            non_sagers ns ON dl.user_id = ns.user_id
+        INNER JOIN
+            -- TODO: fix source table to remove duplicate project ids, then remove DISTINCT workaround
+            -- sage.cckp.mc2_projects mc2 ON dl.project_id = mc2.project_id
+            (SELECT DISTINCT project_id, project_name FROM sage.cckp.mc2_projects) mc2 ON dl.project_id = mc2.project_id
         WHERE
-            dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
-            AND dl.file_handle_id IN (
-                SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file'
-            )
-        GROUP BY 1
-    )
-
-SELECT
-    ns.user_name,
-    us.total_downloads,
-    us.projects_downloaded,
-    us.first_download,
-    us.latest_download,
-    CASE WHEN us.total_downloads = 1 THEN 'One-time' ELSE 'Returning' END AS user_type
-FROM
-    user_stats us
-INNER JOIN
-    non_sagers ns ON ns.user_id = us.user_id
-ORDER BY 2 DESC;
-"""
-
-
-def query_user_project_breakdown() -> str:
-    """Downloads per user per project — used for the filterable breakdown table."""
-    return f"""
-WITH
-    {SQL_CTE_NON_SAGERS}
-
-SELECT
-    ns.user_name,
-    mc2.project_name,
-    COUNT(*) AS downloads,
-    MIN(dl.record_date) AS first_download,
-    MAX(dl.record_date) AS latest_download
-FROM
-    synapse_data_warehouse.synapse_event.objectdownload_event AS dl
-INNER JOIN
-    non_sagers ns ON dl.user_id = ns.user_id
-INNER JOIN
-    sage.cckp.mc2_projects mc2 ON dl.project_id = mc2.project_id
-WHERE
-    dl.file_handle_id IN (
-        SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file'
-    )
-GROUP BY 1, 2
-ORDER BY 1 ASC, 3 DESC;
-"""
+            dl.file_handle_id IN (SELECT file_handle_id FROM mc2_file_nodes)
+        GROUP BY 1, 2
+        ORDER BY 1 ASC, 3 DESC;
+        """
 
 
 @st.fragment
@@ -116,7 +117,6 @@ def _cell_returning_vs_onetime():
                       delta=f"{one_time / total * 100:.0f}% of total" if total else None,
                       delta_color="off")
 
-            # Bar chart: download distribution bucketed by download count
             buckets = pd.cut(
                 df["TOTAL_DOWNLOADS"],
                 bins=[0, 1, 5, 10, 50, float("inf")],
@@ -156,7 +156,6 @@ def _cell_user_table():
 
         try:
             with st.spinner("Executing query", show_time=True):
-                # Reuses cached result from _cell_returning_vs_onetime
                 df = st.session_state.session.create_async_job(
                     execute_query(query_user_summary())
                 ).result("pandas")
@@ -205,14 +204,19 @@ def _cell_user_project_breakdown():
                 execute_query.clear(query_user_project_breakdown())
                 if "users_project_df" in st.session_state:
                     del st.session_state["users_project_df"]
+                if "users_project_qid" in st.session_state:
+                    del st.session_state["users_project_qid"]
 
-        if "users_project_df" not in st.session_state:
+        current_qid = execute_query(query_user_project_breakdown())
+        if (
+            "users_project_df" not in st.session_state
+            or st.session_state.get("users_project_qid") != current_qid
+        ):
             try:
                 with st.spinner("Executing query", show_time=True):
-                    df = st.session_state.session.create_async_job(
-                        execute_query(query_user_project_breakdown())
-                    ).result("pandas")
+                    df = st.session_state.session.create_async_job(current_qid).result("pandas")
                 st.session_state["users_project_df"] = rename_duplicate_columns(df)
+                st.session_state["users_project_qid"] = current_qid
             except Exception as e:
                 st.error(f"Error: {str(e)}")
                 return
@@ -304,24 +308,10 @@ def prefetch():
     execute_query(query_user_project_breakdown())
 
 
-def _cell_user_definition():
-    with st.container(border=True):
-        st.markdown("##### Who Counts as an External User?")
-        st.markdown(
-            "An **External User** is defined as any non-Sage Synapse account (where the registered email does "
-            "not end in `@sagebase.org` or `@sagebionetworks.org`) and has triggered at least one download event "
-            "on a file within a MC2 project.\n\n"
-            "A returning user is defined as an external user who has triggered more than one download event."
-        )
-
-
 def render():
-    col_main, col_def = st.columns([3, 1])
-    with col_main:
-        _cell_returning_vs_onetime()
-    with col_def:
-        _cell_user_definition()
+    _cell_returning_vs_onetime()
     _cell_user_table()
+
     col1, col2 = st.columns(2)
     with col1:
         _cell_user_project_breakdown()

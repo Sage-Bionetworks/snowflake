@@ -3,8 +3,9 @@ import pandas as pd
 import streamlit as st
 
 from utils import (
-    SQL_CTE_NON_SAGERS,
-    SQL_CTE_SYNAPSE_USERS,
+    CTE_NON_SAGERS,
+    CTE_SYNAPSE_USERS,
+    CTE_MC2_FILE_NODES,
     GRANULARITY_OPTIONS,
     RESAMPLE_FREQ,
     rename_duplicate_columns,
@@ -15,62 +16,58 @@ from utils import (
 def query_daily_downloads() -> str:
     """Daily external and Sage download counts across all MC2 projects."""
     return f"""
-WITH
-    {SQL_CTE_SYNAPSE_USERS}
+        WITH
+            {CTE_SYNAPSE_USERS},
+            {CTE_MC2_FILE_NODES}
 
-SELECT
-    record_date,
-    COUNT_IF(u.user_type = 'External') AS external_downloads,
-    COUNT_IF(u.user_type = 'Sager') AS sage_downloads
-FROM
-    synapse_data_warehouse.synapse_event.objectdownload_event AS dl
-INNER JOIN
-    synapse_users u ON dl.user_id = u.id
-WHERE
-    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
-    AND dl.file_handle_id IN (
-        SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file'
-    )
-GROUP BY 1
-ORDER BY 1 ASC;
-"""
-
-
-def query_new_external_users_by_day() -> str:
-    """Count of external users whose *first ever* MC2 download fell on each date."""
-    return f"""
-WITH
-    {SQL_CTE_NON_SAGERS},
-    first_downloads AS (
         SELECT
-            dl.user_id,
-            MIN(dl.record_date) AS first_download_date
+            record_date,
+            COUNT_IF(u.user_type = 'External') AS external_user_downloads,
+            COUNT_IF(u.user_type = 'Sager') AS sage_downloads
         FROM
             synapse_data_warehouse.synapse_event.objectdownload_event AS dl
         INNER JOIN
-            non_sagers ON dl.user_id = non_sagers.user_id
+            synapse_users u ON dl.user_id = u.id
         WHERE
             dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
-            AND dl.file_handle_id IN (
-                SELECT file_handle_id FROM sage.cckp.mc2_nodes WHERE node_type = 'file'
-            )
+            AND dl.file_handle_id IN (SELECT file_handle_id FROM mc2_file_nodes)
         GROUP BY 1
-    )
+        ORDER BY 1 ASC;
+        """
 
-SELECT
-    first_download_date AS record_date,
-    COUNT(*)            AS new_external_users
-FROM
-    first_downloads
-GROUP BY 1
-ORDER BY 1 ASC;
-"""
+
+def query_new_external_users_by_day() -> str:
+    """Count of external users whose first download fell on each date."""
+    return f"""
+        WITH
+            {CTE_NON_SAGERS},
+            {CTE_MC2_FILE_NODES},
+            first_downloads AS (
+                SELECT
+                    dl.user_id,
+                    MIN(dl.record_date) AS first_download_date
+                FROM
+                    synapse_data_warehouse.synapse_event.objectdownload_event AS dl
+                INNER JOIN
+                    non_sagers ON dl.user_id = non_sagers.user_id
+                WHERE
+                    dl.project_id IN (SELECT project_id FROM sage.cckp.mc2_projects)
+                    AND dl.file_handle_id IN (SELECT file_handle_id FROM mc2_file_nodes)
+                GROUP BY 1
+            )
+
+        SELECT
+            first_download_date AS record_date,
+            COUNT(*) AS new_external_users
+        FROM
+            first_downloads
+        GROUP BY 1
+        ORDER BY 1 ASC;
+        """
 
 
 def _resample(df: pd.DataFrame, granularity: str) -> pd.DataFrame:
-    """
-    Resample a daily dataframe (with RECORD_DATE as a datetime column) to the given granularity.
-    """
+    """Resample a daily df to the given granularity."""
     return (
         df.set_index("RECORD_DATE")
         .resample(RESAMPLE_FREQ[granularity])
@@ -88,7 +85,7 @@ def _cell_downloads(granularity: str):
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### External & Sage Downloads Over Time")
+                st.markdown("### Downloads Over Time")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -150,7 +147,7 @@ def _cell_cumulative(granularity: str):
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Cumulative External Downloads")
+                st.markdown("### Cumulative External User Downloads")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -167,9 +164,9 @@ def _cell_cumulative(granularity: str):
                 ).result("pandas")
             df = rename_duplicate_columns(df)
             df["RECORD_DATE"] = pd.to_datetime(df["RECORD_DATE"])
-            df = _resample(df, granularity)[["RECORD_DATE", "EXTERNAL_DOWNLOADS"]]
-            df["CUMULATIVE_EXTERNAL_DOWNLOADS"] = df["EXTERNAL_DOWNLOADS"].cumsum()
-            df = df.drop(columns=["EXTERNAL_DOWNLOADS"])
+            df = _resample(df, granularity)[["RECORD_DATE", "EXTERNAL_USER_DOWNLOADS"]]
+            df["CUMULATIVE_EXTERNAL_DOWNLOADS"] = df["EXTERNAL_USER_DOWNLOADS"].cumsum()
+            df = df.drop(columns=["EXTERNAL_USER_DOWNLOADS"])
             st.area_chart(df.set_index("RECORD_DATE"), width="stretch", height=350)
         except Exception as e:
             st.error(f"Error: {str(e)}")
@@ -181,9 +178,9 @@ def prefetch():
 
 
 def render():
-    col_label, col_select, col_spacer = st.columns([1, 2, 6])
+    _, col_label, col_select = st.columns([7, 1, 2])
     with col_label:
-        st.markdown("<div style='padding-top:0.45rem'>View by:</div>", unsafe_allow_html=True)
+        st.markdown("**View by:**")
     with col_select:
         granularity = st.selectbox(
             "granularity",
@@ -193,10 +190,9 @@ def render():
             label_visibility="collapsed",
         )
 
-    col1, col2 = st.columns(2)
-    with col1:
+    col_downloads, col_users = st.columns(2)
+    with col_downloads:
         _cell_downloads(granularity)
-    with col2:
+    with col_users:
         _cell_new_users(granularity)
-
     _cell_cumulative(granularity)

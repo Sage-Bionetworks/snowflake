@@ -35,26 +35,30 @@ def get_session(local_dev: bool) -> Session:
 
 
 # Set page config
-st.set_page_config(page_title="MC2 Center Metrics", layout="wide")
+st.set_page_config(page_title="MC2 Center Metrics", layout="wide", initial_sidebar_state="expanded")
 
 # Styling
-st.markdown("""
-<style>
-    h4 {
-        text-align: center;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+        h4 { text-align: center;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 _, col_logo, _ = st.columns([2, 1, 2])
 with col_logo:
-    st.image("mc2-logo.png", width='stretch')
-st.markdown("#### Metrics Dashboard")
-st.markdown(
-    f'<p style="text-align: center; font-size: 0.8rem; color: grey;">'
-    f"Dashboard loaded: {dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    "</p>",
+    st.image("mc2-logo.png", width="stretch")
+    st.markdown(
+    f"""
+    #### Metrics Dashboard
+
+    <p style="text-align: center; font-size: 0.8rem; color: grey;">
+        Dashboard loaded: {dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    </p>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -143,7 +147,7 @@ with st.sidebar:
     tab_browser,
     tab_users,
     tab_mc2_center,
-) = st.tabs(["Overview", "Trends", "Datasets", "Files Browser", "External Users", "MC2 Center Project"])
+) = st.tabs(["Overview", "Trends", "Datasets Browser", "Files Browser", "External Users", "MC2 Center Project"])
 
 
 with tab_overview:
@@ -160,12 +164,12 @@ with tab_mc2_center:
     mc2_center.render()
 
 st.divider()
-st.caption("\* \"Public\" means the entity is viewable by anyone on the web. This does not necessarily mean it can be downloaded.")
 st.markdown(
-    '<p style="color: #cc0000; font-size: 0.8rem;">'
-    "This app is "
-    '<a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on GitHub</a>. '
-    "Any local edits will not be retained."
-    "</p>",
+    """
+    <p style="text-align: center; color: #cc0000; font-size: 0.8rem;">
+        This app is <a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on GitHub</a>.
+        Any local edits will not be retained.
+    </p> 
+    """,
     unsafe_allow_html=True,
 )
