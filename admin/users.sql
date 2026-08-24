@@ -6,7 +6,6 @@ CREATE USER IF NOT EXISTS "x.schildwachter@sagebase.org";
 CREATE USER IF NOT EXISTS "kevin.boske@sagebase.org";
 CREATE USER IF NOT EXISTS "john.hill@sagebase.org";
 CREATE USER IF NOT EXISTS "bruce.hoff@sagebase.org";
-CREATE USER IF NOT EXISTS "marco.marasca@sagebase.org";
 CREATE USER IF NOT EXISTS "sandhra.sokhal@sagebase.org";
 CREATE USER IF NOT EXISTS "adam.hindman@sagebase.org";
 CREATE USER IF NOT EXISTS "jay.hodgson@sagebase.org";
@@ -99,7 +98,6 @@ CREATE USER IF NOT EXISTS "jon.long@sagebase.org";
 CREATE USER IF NOT EXISTS "bryan.fauble@sagebase.org";
 CREATE USER IF NOT EXISTS "rixing.xu@sagebase.org";
 CREATE USER IF NOT EXISTS "thomas.yu@sagebase.org";
-CREATE USER IF NOT EXISTS "jenny.medina@sagebase.org";
 CREATE USER IF NOT EXISTS "phil.snyder@sagebase.org";
 CREATE USER IF NOT EXISTS "sophia.jobe@sagebase.org";
 CREATE USER IF NOT EXISTS "dan.lu@sagebase.org";
@@ -282,7 +280,10 @@ DECLARE
             'serghei.mangul@sagebase.org',
             'loren.wolfe@sagebase.org',
             'mieko.hashimoto@sagebase.org',
-            'gianna.jordan@sagebase.org'
+            'gianna.jordan@sagebase.org',
+            'jenny.medina@sagebase.org',
+            'marco.marasca@sagebase.org',
+            'jake.albrecht@sagebase.org'
         );
 BEGIN
     SHOW USERS;
