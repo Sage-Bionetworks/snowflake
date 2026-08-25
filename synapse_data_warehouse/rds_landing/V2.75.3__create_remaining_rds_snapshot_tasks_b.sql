@@ -185,7 +185,7 @@ AS
             $1:REVOKED_ON::BIGINT                         AS revoked_on,
             $1:QUIZ_ID::BIGINT                            AS quiz_id,
             $1:SCORE::BIGINT                              AS score,
-            $1:PASSED::BOOLEAN                            AS passed,
+            ($1:PASSED::VARCHAR != CHR(0))                AS passed,
             $1:RESPONSE_JSON::VARCHAR                     AS response_json,
             $1:PASSING_JSON::VARCHAR                      AS passing_json,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
@@ -482,7 +482,7 @@ AS
             $1:ATTRIBUTE::VARCHAR                         AS attribute,
             $1:SUBMISSION_ID::BIGINT                      AS submission_id,
             $1:VALUE::FLOAT                               AS value,
-            $1:IS_PRIVATE::BOOLEAN                        AS is_private,
+            ($1:IS_PRIVATE::NUMBER != 0)                  AS is_private,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -500,7 +500,7 @@ AS
             $1:ATTRIBUTE::VARCHAR                         AS attribute,
             $1:SUBMISSION_ID::BIGINT                      AS submission_id,
             $1:VALUE::BIGINT                              AS value,
-            $1:IS_PRIVATE::BOOLEAN                        AS is_private,
+            ($1:IS_PRIVATE::NUMBER != 0)                  AS is_private,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -518,7 +518,7 @@ AS
             $1:ATTRIBUTE::VARCHAR                         AS attribute,
             $1:SUBMISSION_ID::BIGINT                      AS submission_id,
             $1:VALUE::VARCHAR                             AS value,
-            $1:IS_PRIVATE::BOOLEAN                        AS is_private,
+            ($1:IS_PRIVATE::NUMBER != 0)                  AS is_private,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -631,8 +631,8 @@ AS
             $1:ROW_COUNT::BIGINT                          AS row_count,
             $1:CHANGE_TYPE::VARCHAR                       AS change_type,
             $1:TRX_ID::BIGINT                             AS trx_id,
-            $1:HAS_FILE_REFS::BOOLEAN                     AS has_file_refs,
-            $1:SEARCH_ENABLED::BOOLEAN                    AS search_enabled,
+            ($1:HAS_FILE_REFS::NUMBER != 0)               AS has_file_refs,
+            ($1:SEARCH_ENABLED::NUMBER != 0)              AS search_enabled,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -847,7 +847,7 @@ AS
             $1:DELETED_ON::TIMESTAMP_NTZ(9)               AS deleted_on,
             $1:PARENT_ID::BIGINT                          AS parent_id,
             $1:ETAG::VARCHAR                              AS etag,
-            $1:PRIORITY_PURGE::BOOLEAN                    AS priority_purge,
+            ($1:PRIORITY_PURGE::NUMBER != 0)              AS priority_purge,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -879,7 +879,7 @@ AS
         SELECT
             $1:ID::BIGINT                                 AS id,
             $1:CREATION_DATE::TIMESTAMP_NTZ(9)            AS creation_date,
-            $1:ISINDIVIDUAL::BOOLEAN                      AS isindividual,
+            ($1:ISINDIVIDUAL::VARCHAR != CHR(0))          AS isindividual,
             $1:ETAG::VARCHAR                              AS etag,
             $1:REALM::BIGINT                              AS realm,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
@@ -899,7 +899,7 @@ AS
             $1:ETAG::VARCHAR                              AS etag,
             $1:PROPERTIES::BINARY                         AS properties,
             $1:PICTURE_ID::BIGINT                         AS picture_id,
-            $1:SEND_EMAIL_NOTIFICATION::BOOLEAN           AS send_email_notification,
+            ($1:SEND_EMAIL_NOTIFICATION::NUMBER != 0)     AS send_email_notification,
             $1:FIRST_NAME::BINARY                         AS first_name,
             $1:LAST_NAME::BINARY                          AS last_name,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
@@ -921,7 +921,7 @@ AS
             $1:PRINCIPAL_ID::BIGINT                       AS principal_id,
             $1:ETAG::VARCHAR                              AS etag,
             $1:LAST_SEEN_ON::TIMESTAMP_NTZ(9)             AS last_seen_on,
-            $1:DISABLED::BOOLEAN                          AS disabled,
+            ($1:DISABLED::NUMBER != 0)                    AS disabled,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -936,7 +936,7 @@ AS
     COPY INTO user_two_fa_status FROM (
         SELECT
             $1:PRINCIPAL_ID::BIGINT                       AS principal_id,
-            $1:ENABLED::BOOLEAN                           AS enabled,
+            ($1:ENABLED::NUMBER != 0)                     AS enabled,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
@@ -1148,7 +1148,7 @@ AS
             $1:OBJECT_TYPE::VARCHAR                       AS object_type,
             $1:EVENT_TYPES::VARCHAR                       AS event_types,
             $1:INVOKE_ENDPOINT::VARCHAR                   AS invoke_endpoint,
-            $1:IS_ENABLED::BOOLEAN                        AS is_enabled,
+            ($1:IS_ENABLED::NUMBER != 0)                  AS is_enabled,
             SPLIT_PART(METADATA$FILENAME, '/', 3)::BIGINT AS stack,
             SPLIT_PART(METADATA$FILENAME, '/', 4)::DATE   AS snapshot_date,
             METADATA$FILENAME                             AS filename
