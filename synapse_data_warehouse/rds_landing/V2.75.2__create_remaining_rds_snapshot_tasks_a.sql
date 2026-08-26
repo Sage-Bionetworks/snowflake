@@ -82,6 +82,9 @@ AS
     )
     PATTERN = '.*\/[0-9]+\/[0-9]{4}-[0-9]{2}-[0-9]{2}\/.*\.gz\.parquet';
 
+-- $1:COL::BOOLEAN fails here since these snapshots never contain a native JSON boolean.
+-- MySQL BOOLEAN (== TINYINT(1)) columns export as INTEGER, cast below via ::NUMBER != 0;
+-- CANCELING is MySQL BIT(1), which exports as a raw byte instead, cast via ::VARCHAR != CHR(0)
 CREATE OR REPLACE TASK COPY_ASYNCH_JOB_STATUS_TASK
     WAREHOUSE = compute_xsmall
     AFTER PROXY_TASK_A
