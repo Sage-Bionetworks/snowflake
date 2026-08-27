@@ -1,0 +1,110 @@
+version: 2
+models:
+  - name: data_access_submission_aggregate
+    description: >
+      Time- and access-requirement-scoped rollup of data access submission volume, approval
+      outcomes, attempt distribution, and review latency. Grain-additive by design: stores raw
+      counts/sums (never pre-computed percentages, rates, or averages) so any downstream ratio can
+      be correctly recomputed across any combination of the ALL TIME/YEARLY/QUARTERLY/MONTHLY/DAILY
+      period grain. Bucketed by submission `created_on` (cohort-style) — a submission's period is
+      fixed at creation even if its review concludes in a later period. The primary key is a
+      surrogate hash (`agg_row_id`) rather than the natural grain columns directly, since the
+      time-grain columns are intentionally NULL for rolled-up periods (e.g. `agg_month` is NULL
+      for a YEARLY row).
+    constraints:
+      - type: primary_key
+        columns: [agg_row_id]
+    columns:
+      - name: agg_row_id
+        description: "Deterministic surrogate key hashing the full grain (agg_period, agg_year, agg_quarter, agg_month, agg_day, agg_access_requirement_id). The model's enforced primary key."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+          - type: unique
+      - name: agg_period
+        description: "The time grain of this row. One of: 'ALL TIME', 'YEARLY', 'QUARTERLY', 'MONTHLY', 'DAILY'."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: agg_year
+        description: "Calendar year of the aggregation period. NULL for the 'ALL TIME' grain."
+        data_type: NUMBER
+      - name: agg_quarter
+        description: "Calendar quarter (1-4) of the aggregation period. NULL for the 'YEARLY' and 'ALL TIME' grains."
+        data_type: NUMBER
+      - name: agg_month
+        description: "Calendar month (1-12) of the aggregation period. NULL for the 'QUARTERLY', 'YEARLY', and 'ALL TIME' grains."
+        data_type: NUMBER
+      - name: agg_day
+        description: "Calendar day of month of the aggregation period. NULL for every grain above 'DAILY'."
+        data_type: NUMBER
+      - name: agg_access_requirement_id
+        description: "The access requirement this row is scoped to. Always populated — this table is grouped by access requirement but does not roll up across access requirements, since an 'across all access requirements' total is not a meaningful metric."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('int_synapse_access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: agg_period_start
+        description: "Inclusive start date of the aggregation period."
+        data_type: DATE
+        constraints:
+          - type: not_null
+      - name: agg_period_end
+        description: "Inclusive end date of the aggregation period."
+        data_type: DATE
+        constraints:
+          - type: not_null
+      - name: agg_period_is_complete
+        description: "TRUE once CURRENT_DATE is past agg_period_end, i.e. the period will no longer accumulate new submissions. Reflects calendar completeness only — a submission created within a complete period may still be awaiting review, in which case reviewed_count/sum_days_to_review for that period will keep changing on future refreshes even after the period itself is marked complete."
+        data_type: BOOLEAN
+        constraints:
+          - type: not_null
+      - name: total_received_count
+        description: "Count of non-Cancelled submissions created in this period/access-requirement cohort."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: total_cancelled_count
+        description: "Count of submissions in this cohort whose current state is Cancelled."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: total_approved_count
+        description: "Count of submissions in this cohort whose current state is Approved."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: total_rejected_count
+        description: "Count of submissions in this cohort whose current state is Rejected."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: attempt_1_count
+        description: "Count of non-Cancelled submissions in this cohort that were the 1st attempt within their approval cycle."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: attempt_2_count
+        description: "Count of non-Cancelled submissions in this cohort that were the 2nd attempt within their approval cycle."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: attempt_3_plus_count
+        description: "Count of non-Cancelled submissions in this cohort that were the 3rd or later attempt within their approval cycle."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: highest_attempt
+        description: "Maximum attempt number observed in this cohort. NULL if the cohort has zero non-Cancelled submissions."
+        data_type: NUMBER
+      - name: reviewed_count
+        description: "Count of submissions in this cohort that reached a terminal reviewed state (Approved or Rejected)."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: sum_days_to_review
+        description: "Sum of days between created_on and state_modified_on across reviewed (Approved/Rejected) submissions in this cohort. Divide by reviewed_count downstream to get the average days to review — the average itself is never stored, so it can be correctly recomputed across any combination of periods."
+        data_type: NUMBER
