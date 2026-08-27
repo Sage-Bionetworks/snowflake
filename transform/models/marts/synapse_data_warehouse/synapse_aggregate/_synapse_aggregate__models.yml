@@ -21,11 +21,16 @@ models:
         constraints:
           - type: not_null
           - type: unique
+        data_tests:
+          - not_null
+          - unique
       - name: agg_period
         description: "The time grain of this row. One of: 'ALL TIME', 'YEARLY', 'QUARTERLY', 'MONTHLY', 'DAILY'."
         data_type: VARCHAR
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: agg_year
         description: "Calendar year of the aggregation period. NULL for the 'ALL TIME' grain."
         data_type: NUMBER
@@ -47,56 +52,70 @@ models:
             to: ref('int_synapse_access_requirement')
             to_columns: [access_requirement_id]
             warn_unenforced: false
+        data_tests:
+          - not_null
       - name: agg_period_start
-        description: "Inclusive start date of the aggregation period."
+        description: "Inclusive start date of the aggregation period. NULL for the 'ALL TIME' grain, which has no fixed start."
         data_type: DATE
-        constraints:
-          - type: not_null
       - name: agg_period_end
-        description: "Inclusive end date of the aggregation period."
+        description: "Inclusive end date of the aggregation period. NULL for the 'ALL TIME' grain, which has no fixed end."
         data_type: DATE
-        constraints:
-          - type: not_null
       - name: agg_period_is_complete
         description: "TRUE once CURRENT_DATE is past agg_period_end, i.e. the period will no longer accumulate new submissions. Reflects calendar completeness only — a submission created within a complete period may still be awaiting review, in which case reviewed_count/sum_days_to_review for that period will keep changing on future refreshes even after the period itself is marked complete."
         data_type: BOOLEAN
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: total_received_count
         description: "Count of non-Cancelled submissions created in this period/access-requirement cohort."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: total_cancelled_count
         description: "Count of submissions in this cohort whose current state is Cancelled."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: total_approved_count
         description: "Count of submissions in this cohort whose current state is Approved."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: total_rejected_count
         description: "Count of submissions in this cohort whose current state is Rejected."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: attempt_1_count
         description: "Count of non-Cancelled submissions in this cohort that were the 1st attempt within their approval cycle."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: attempt_2_count
         description: "Count of non-Cancelled submissions in this cohort that were the 2nd attempt within their approval cycle."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: attempt_3_plus_count
         description: "Count of non-Cancelled submissions in this cohort that were the 3rd or later attempt within their approval cycle."
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: highest_attempt
         description: "Maximum attempt number observed in this cohort. NULL if the cohort has zero non-Cancelled submissions."
         data_type: NUMBER
@@ -105,6 +124,8 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
+        data_tests:
+          - not_null
       - name: sum_days_to_review
         description: "Sum of days between created_on and state_modified_on across reviewed (Approved/Rejected) submissions in this cohort. Divide by reviewed_count downstream to get the average days to review — the average itself is never stored, so it can be correctly recomputed across any combination of periods."
         data_type: NUMBER

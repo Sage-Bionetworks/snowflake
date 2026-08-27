@@ -105,7 +105,9 @@ SELECT
     access_requirement_id AS agg_access_requirement_id,
     agg_period_start,
     agg_period_end,
-    (CURRENT_DATE > agg_period_end) AS agg_period_is_complete,
+    -- ALL TIME has no fixed end (agg_period_end is NULL), and by definition never stops
+    -- accumulating new submissions, so it's always incomplete rather than unknown
+    COALESCE(CURRENT_DATE > agg_period_end, FALSE) AS agg_period_is_complete,
 
     -- Surrogate PK covering the full grain; the natural key columns above are
     -- legitimately NULL for rolled-up time grains, so they can't serve as a PK directly
