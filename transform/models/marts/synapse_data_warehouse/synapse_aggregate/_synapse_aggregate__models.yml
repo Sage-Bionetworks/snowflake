@@ -2,21 +2,22 @@ version: 2
 models:
   - name: data_access_submission_aggregate
     description: >
-      Time- and access-requirement-scoped rollup of data access submission volume, approval
-      outcomes, attempt distribution, and review latency. Grain-additive by design: stores raw
-      counts/sums (never pre-computed percentages, rates, or averages) so any downstream ratio can
-      be correctly recomputed across any combination of the ALL TIME/YEARLY/QUARTERLY/MONTHLY/DAILY
-      period grain. Bucketed by submission `created_on` (cohort-style) — a submission's period is
-      fixed at creation even if its review concludes in a later period. The primary key is a
-      surrogate hash (`agg_row_id`) rather than the natural grain columns directly, since the
-      time-grain columns are intentionally NULL for rolled-up periods (e.g. `agg_month` is NULL
-      for a YEARLY row).
+      This table contains aggregate statistics over data access submissions associated with a given access requirement.
+      Aggregates are computed for daily, monthly, quarterly, yearly, and all-time grains (see `agg_period`).
+      Any columns in this table which contain information about the aggregate itself, such as the particular 
+      period, date, or the access requirement ID have their column name prefixed with `agg_`.
+      Columns which represent aggregate statistics, such as submission volume, approval/rejection
+      counts, attempt distribution, and review latency, lack this prefix. In this way, it is easy
+      to differentiate between columns that contain information about the dates we are aggregating over,
+      and columns which contain the resulting statistics. The data access submissions are date-bucketed
+      by their `created_on` date — hence the date which a submission corresponds to is fixed at creation,
+      even if its review concludes in a later period.
     constraints:
       - type: primary_key
         columns: [agg_row_id]
     columns:
       - name: agg_row_id
-        description: "Deterministic surrogate key hashing the full grain (agg_period, agg_year, agg_quarter, agg_month, agg_day, agg_access_requirement_id). The model's enforced primary key."
+        description: "Unique, deterministic surrogate key hashing the full grain (agg_period, agg_year, agg_quarter, agg_month, agg_day, agg_access_requirement_id). The model's enforced primary key."
         data_type: VARCHAR
         constraints:
           - type: not_null
@@ -44,7 +45,7 @@ models:
         description: "Calendar day of month of the aggregation period. NULL for every grain above 'DAILY'."
         data_type: NUMBER
       - name: agg_access_requirement_id
-        description: "The access requirement this row is scoped to. Always populated — this table is grouped by access requirement but does not roll up across access requirements, since an 'across all access requirements' total is not a meaningful metric."
+        description: "The access requirement this row is scoped to. "
         data_type: NUMBER
         constraints:
           - type: not_null
@@ -61,14 +62,14 @@ models:
         description: "Inclusive end date of the aggregation period. NULL for the 'ALL TIME' grain, which has no fixed end."
         data_type: DATE
       - name: agg_period_is_complete
-        description: "TRUE once CURRENT_DATE is past agg_period_end, i.e. the period will no longer accumulate new submissions. Reflects calendar completeness only — a submission created within a complete period may still be awaiting review, in which case reviewed_count/sum_days_to_review for that period will keep changing on future refreshes even after the period itself is marked complete."
+        description: "TRUE once CURRENT_DATE is past agg_period_end, i.e. the period will no longer accumulate new submissions. Reflects calendar completeness only — a submission created within a complete period may still be awaiting review, in which case aggregate metrics related to the review cycle, such as `reviewed_count` and `sum_days_to_review`, will continue to change on future refreshes even after the period itself is marked complete."
         data_type: BOOLEAN
         constraints:
           - type: not_null
         data_tests:
           - not_null
       - name: total_received_count
-        description: "Count of non-Cancelled submissions created in this period/access-requirement cohort."
+        description: "Count of non-Cancelled submissions created in this period/access-requirement cohort. If a submission in the 'Submitted' state is later canceled, this aggregate is liable to change upon future refreshes."
         data_type: NUMBER
         constraints:
           - type: not_null
@@ -127,5 +128,5 @@ models:
         data_tests:
           - not_null
       - name: sum_days_to_review
-        description: "Sum of days between created_on and state_modified_on across reviewed (Approved/Rejected) submissions in this cohort. Divide by reviewed_count downstream to get the average days to review — the average itself is never stored, so it can be correctly recomputed across any combination of periods."
+        description: "Sum of days between `created_on` and `state_modified_on` across reviewed (Approved/Rejected) submissions in this cohort. Divide by reviewed_count downstream to get the average days to review."
         data_type: NUMBER
