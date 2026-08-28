@@ -3,7 +3,7 @@ USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 CREATE OR REPLACE PROCEDURE list_downloaders_with_size(start_record_date VARCHAR, entity_list VARCHAR)
 RETURNS TABLE ("USER_ID" NUMBER, "USER_NAME" VARCHAR, "EMAIL" VARCHAR, "SYNAPSE_PROFILE" VARCHAR, "NUM_DOWNLOADS" NUMBER, "SIZE_DOWNLOADS" NUMBER)
 LANGUAGE SQL
-COMMENT = 'Lists users who downloaded files under entity_list on or after start_record_date, with total download size. Migrated from deprecated synapse.filedownload to synapse_event.objectdownload_event and rewritten from dynamic SQL to a static parameterized query (SNOW-572); num_downloads now counts distinct (user, object, date) download rows since the source table is deduplicated at that grain, not raw download events.'
+COMMENT = 'Lists users who downloaded files under `entity_list` on or after `start_record_date`, with total download size.'
 EXECUTE AS OWNER
 AS
 $$

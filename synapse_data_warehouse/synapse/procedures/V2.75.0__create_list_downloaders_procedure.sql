@@ -3,7 +3,7 @@ USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 CREATE OR REPLACE PROCEDURE list_downloaders(start_record_date VARCHAR, entity_list VARCHAR)
 RETURNS TABLE ("USER_ID" NUMBER, "USER_NAME" VARCHAR, "EMAIL" VARCHAR, "SYNAPSE_PROFILE" VARCHAR, "NUM_DOWNLOADS" NUMBER, "EARLIEST_DOWNLOAD_TIME" TIMESTAMP_NTZ, "LATEST_DOWNLOAD_TIME" TIMESTAMP_NTZ)
 LANGUAGE SQL
-COMMENT = 'Lists users who downloaded files under entity_list on or after start_record_date. Migrated from deprecated synapse.filedownload to synapse_event.objectdownload_event and rewritten from dynamic SQL to a static parameterized query (SNOW-572); num_downloads now counts distinct (user, object, date) download rows since the source table is deduplicated at that grain, not raw download events.'
+COMMENT = 'Lists users who downloaded files under `entity_list` on or after `start_record_date`.'
 EXECUTE AS OWNER
 AS
 $$
