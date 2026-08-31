@@ -43,8 +43,9 @@ attempts AS (
             ORDER BY enriched.created_on
         ) AS attempt
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }}) enriched
-    INNER JOIN approval_cycles 
+    INNER JOIN approval_cycles
         ON enriched.data_access_submission_id = approval_cycles.data_access_submission_id
+    WHERE enriched.state != 'Cancelled'
 )
 SELECT
     base.data_access_submission_id,
