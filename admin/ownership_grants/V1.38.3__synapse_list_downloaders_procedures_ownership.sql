@@ -7,9 +7,11 @@
 -- procedures run EXECUTE AS OWNER (except LIST_DOWNLOADERS_DBG, which is EXECUTE AS CALLER) and query
 -- across the SYNAPSE/SYNAPSE_EVENT schema split; PROXY_ADMIN already directly owns the dynamic tables
 -- (NODE_LATEST, FILE_LATEST, USERPROFILE_LATEST, OBJECTDOWNLOAD_EVENT) they read, matching the existing
--- cross-schema ownership pattern for tasks and dynamic tables.
+-- cross-schema ownership pattern for tasks and dynamic tables. This holds in both PROD and DEV.
 --
--- Only PROD is covered here: these procedures do not yet exist in SYNAPSE_DATA_WAREHOUSE_DEV.
+-- DEV's copies of these procedures already exist (deployed successfully via schemachange on
+-- 2026-08-28), owned by SYNAPSE_DATA_WAREHOUSE_DEV_ADMIN with no further grants -- the same
+-- "incorrect" default state PROD's copies would end up in without this script.
 
 -------------------------------------------------------------------------------------------------
 -- Grant ownership of the four existing procedures in PROD SYNAPSE to the PROXY_ADMIN account role:
@@ -32,4 +34,27 @@ GRANT OWNERSHIP
 GRANT OWNERSHIP
     ON PROCEDURE SYNAPSE_DATA_WAREHOUSE.SYNAPSE.LIST_DOWNLOADERS_WITH_SIZE_BY_MONTH(VARCHAR, VARCHAR)
     TO ROLE SYNAPSE_DATA_WAREHOUSE_PROXY_ADMIN
+    REVOKE CURRENT GRANTS;
+
+------------------------------------------------------------------------------------------------
+-- Grant ownership of the four existing procedures in DEV SYNAPSE to the PROXY_ADMIN account role:
+------------------------------------------------------------------------------------------------
+GRANT OWNERSHIP
+    ON PROCEDURE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE.LIST_DOWNLOADERS(VARCHAR, VARCHAR)
+    TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN
+    REVOKE CURRENT GRANTS;
+
+GRANT OWNERSHIP
+    ON PROCEDURE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE.LIST_DOWNLOADERS_DBG(DATE, VARCHAR)
+    TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN
+    REVOKE CURRENT GRANTS;
+
+GRANT OWNERSHIP
+    ON PROCEDURE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE.LIST_DOWNLOADERS_WITH_SIZE(VARCHAR, VARCHAR)
+    TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN
+    REVOKE CURRENT GRANTS;
+
+GRANT OWNERSHIP
+    ON PROCEDURE SYNAPSE_DATA_WAREHOUSE_DEV.SYNAPSE.LIST_DOWNLOADERS_WITH_SIZE_BY_MONTH(VARCHAR, VARCHAR)
+    TO ROLE SYNAPSE_DATA_WAREHOUSE_DEV_PROXY_ADMIN
     REVOKE CURRENT GRANTS;
