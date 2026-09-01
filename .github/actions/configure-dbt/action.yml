@@ -38,7 +38,9 @@ runs:
       # Syncs the `dbt` dependency group from the repo's pyproject.toml/uv.lock,
       # so dbt-core/dbt-snowflake versions here always match the project's
       # lockfile instead of drifting from a separately hand-pinned copy.
-      run: uv sync --only-group dbt
+      # --frozen fails instead of silently re-resolving if uv.lock is stale,
+      # so CI always installs the exact hash-pinned versions committed to the lockfile.
+      run: uv sync --only-group dbt --frozen
 
     - name: Write private key file and dbt profiles.yml
       shell: bash
