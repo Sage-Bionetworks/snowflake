@@ -87,9 +87,11 @@ runs:
       # pyproject.toml/uv.lock, so callers invoke it via
       # `uv run --group schemachange schemachange ...` instead of relying on
       # a separately hand-pinned tool install that can drift from the lockfile.
-      # --frozen fails instead of silently re-resolving if uv.lock is stale,
-      # so CI always installs the exact hash-pinned versions committed to the lockfile.
-      run: uv sync --only-group schemachange --frozen
+      # --frozen fails instead of silently re-resolving if uv.lock is stale, so CI
+      # always installs the exact hash-pinned versions committed to the lockfile.
+      # --no-build forces wheel-only installs, ruling out arbitrary code execution
+      # via a source distribution's PEP 517 build backend.
+      run: uv sync --only-group schemachange --frozen --no-build
 
     - name: Test Snowflake connection
       shell: bash

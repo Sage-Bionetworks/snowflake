@@ -40,6 +40,9 @@ runs:
       # lockfile instead of drifting from a separately hand-pinned copy.
       # --frozen fails instead of silently re-resolving if uv.lock is stale,
       # so CI always installs the exact hash-pinned versions committed to the lockfile.
+      # --no-build is intentionally omitted: dbt-core's dbt-core-experimental-parser
+      # dependency ships no wheel for the version dbt-core 1.12.3 requires, so forcing
+      # wheel-only installs breaks this sync entirely.
       run: uv sync --only-group dbt --frozen
 
     - name: Write private key file and dbt profiles.yml
@@ -94,8 +97,8 @@ runs:
       env:
         DBT_TARGET_NAME: ${{ inputs.TARGET_NAME }}
       run: |
-        uv run --group dbt dbt --version
+        uv run --group dbt --frozen dbt --version
 
         # dbt debug exits non-zero on a bad connection, so a misconfigured
         # profile fails here instead of surfacing later during `dbt run`
-        uv run --group dbt dbt debug --target "${DBT_TARGET_NAME}"
+        uv run --group dbt --frozen dbt debug --target "${DBT_TARGET_NAME}"

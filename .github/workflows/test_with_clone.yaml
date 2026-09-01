@@ -207,7 +207,7 @@ jobs:
             - name: Run schemachange on the clone as SNOWFLAKE_CLONE_ADMIN_ROLE
               shell: bash
               run: |
-                uv run --group schemachange schemachange \
+                uv run --group schemachange --frozen --no-build schemachange \
                 --connection-name default \
                 --root-folder synapse_data_warehouse \
                 --config-folder synapse_data_warehouse \
@@ -232,7 +232,7 @@ jobs:
             - name: Run dbt models on the clone
               working-directory: transform
               shell: bash
-              run: uv run --group dbt dbt run --selector synapse_data_warehouse --target clone --full-refresh
+              run: uv run --group dbt --frozen dbt run --selector synapse_data_warehouse --target clone --full-refresh
 
     drop_clone:
       runs-on: ubuntu-latest
