@@ -81,9 +81,13 @@ runs:
     - name: Install Snowflake CLI
       uses: Snowflake-Labs/snowflake-cli-action@18d88e589d4df312334083e08cc408b68641fd5a  # v1.5
 
-    - name: Install schemachange
+    - name: Sync schemachange dependency group
       shell: bash
-      run: uv tool install --python 3.12 "schemachange==4.3.3"
+      # Syncs the `schemachange` dependency group from the repo's
+      # pyproject.toml/uv.lock, so callers invoke it via
+      # `uv run --group schemachange schemachange ...` instead of relying on
+      # a separately hand-pinned tool install that can drift from the lockfile.
+      run: uv sync --only-group schemachange
 
     - name: Test Snowflake connection
       shell: bash
