@@ -35,11 +35,6 @@ runs:
 
     - name: Sync dbt dependency group
       shell: bash
-      # Syncs the `dbt` dependency group from the repo's pyproject.toml/uv.lock,
-      # so dbt-core/dbt-snowflake versions here always match the project's
-      # lockfile instead of drifting from a separately hand-pinned copy.
-      # --frozen fails instead of silently re-resolving if uv.lock is stale,
-      # so CI always installs the exact hash-pinned versions committed to the lockfile.
       # --no-build is intentionally omitted: dbt-core's dbt-core-experimental-parser
       # dependency ships no wheel for the version dbt-core 1.12.3 requires, so forcing
       # wheel-only installs breaks this sync entirely.
