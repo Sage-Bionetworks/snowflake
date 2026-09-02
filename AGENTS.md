@@ -75,7 +75,7 @@ Before implementing a new object, check **both** `synapse_data_warehouse/` and `
 
 **PR title format:** `[SNOW-NNN] Brief description` — Jira ticket prefix is required by the PR template.
 
-**Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved.
+**Skip clone label:** Add `skip_cloning` label to a PR to bypass the zero-copy clone test if no schema changes are involved. Even if there are no schema changes, it may be useful to include this label to test changes to the zero-copy clone workflow (`.github/workflows/test_with_clone.yaml`).
 
 **`admin/` changes:** Any PR targeting `dev` that also touches `admin/` must have those `admin/` changes cherry-picked into a separate branch off `main` and opened as a separate PR (since `admin/` deploys only on push to `main`). If the `dev` based changes are dependent on changes in `admin/`, then the description of the associated PR should indicate that this PR "depends on" the PR associated with the `admin/` changes.
 
