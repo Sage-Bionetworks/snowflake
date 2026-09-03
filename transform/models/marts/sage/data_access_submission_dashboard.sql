@@ -14,6 +14,7 @@ WITH base AS (
         state_modified_on,
         state,
         submission_type,
+        attempt,
         state_reason,
         accessor_changes,
         data_access_submission_raw
@@ -24,28 +25,6 @@ access_requirements AS (
         access_requirement_id,
         access_requirement_name
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
-),
-approval_cycles AS (
-    SELECT
-        data_access_submission_id,
-        COALESCE(
-            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END)
-                OVER (PARTITION BY data_access_request_id ORDER BY created_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),
-            0
-        ) AS approval_cycle
-    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
-),
-attempts AS (
-    SELECT
-        enriched.data_access_submission_id,
-        ROW_NUMBER() OVER (
-            PARTITION BY enriched.data_access_request_id, approval_cycles.approval_cycle
-            ORDER BY enriched.created_on
-        ) AS attempt
-    FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }}) enriched
-    INNER JOIN approval_cycles
-        ON enriched.data_access_submission_id = approval_cycles.data_access_submission_id
-    WHERE enriched.state != 'Cancelled'
 )
 SELECT
     base.data_access_submission_id,
@@ -57,7 +36,7 @@ SELECT
     base.created_by as submitted_by,
     created_by_user_name as submitted_by_user_name,
     base.created_on as submitted_on,
-    attempts.attempt,
+    base.attempt,
     base.state as submission_status,
     base.submission_type,
     base.state_modified_by as reviewed_by,
@@ -68,7 +47,5 @@ SELECT
     ARRAY_SIZE(OBJECT_KEYS(base.accessor_changes)) AS accessor_count,
     base.data_access_submission_raw
 FROM base
-LEFT JOIN attempts
-    ON base.data_access_submission_id = attempts.data_access_submission_id
 LEFT JOIN access_requirements
     ON base.access_requirement_id = access_requirements.access_requirement_id
