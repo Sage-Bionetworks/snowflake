@@ -22,6 +22,8 @@ from toolkit.queries import (
     query_project_sizes,
     query_unique_users,
     query_file_metadata_for_growth,
+    query_file_eol_analysis,
+    query_s3_tier_all_portal,
     query_total_data_size_by_initiative,
     query_top_data_types_by_size,
     query_released_data_by_type,
@@ -43,6 +45,11 @@ from toolkit.widgets import (
     plot_data_type_bar_chart,
     create_data_type_table,
     format_size_metric,
+    plot_never_downloaded_by_project,
+    plot_eol_scatter,
+    plot_eol_never_downloaded,
+    plot_eol_stale_downloads,
+    plot_s3_tier_estimate,
     # TRANSFORMS
     merge_size_and_downloads,
     # PALETTE
@@ -395,437 +402,533 @@ def main():
                 st.warning("No projects match the selected data status filters.")
                 return
 
-            st.header("Reference Overview")
+            tab1, tab2 = st.tabs(["📊 Data Analytics", "⏳ Data Lifecycle"])
 
-            with st.expander("Glossary"):
-                st.markdown("""
-                    #### Project Status
+            with tab1:
+                st.header("Reference Overview")
 
-                    - **Active**: The project is in the performance period (between grant start and grant end dates).
-                    - **Completed**: The project has reached the grant end date and gone through a closeout process as requested by NTAP.
-                    - **Withdrawn**: The project was planned/started but not completed (withdrawn).
+                with st.expander("Glossary"):
+                    st.markdown("""
+                        #### Project Status
 
-                    #### Data Status
+                        - **Active**: The project is in the performance period (between grant start and grant end dates).
+                        - **Completed**: The project has reached the grant end date and gone through a closeout process as requested by NTAP.
+                        - **Withdrawn**: The project was planned/started but not completed (withdrawn).
 
-                    - **None**: There is no available data for the project.
-                    - **Data Not Expected**: There is no available data for the project because data is not expected to be stored for this project.
-                    - **Data Pending**: Data is pending for the project, either still being generated or has not yet been uploaded to Synapse yet, so there are no files in the project.
-                    - **Under Embargo**: Data is present in the project but not accessible to anyone outside the project admins. When data is first uploaded, the status will change from "Data Pending" to "Under Embargo".
-                    - **Rolling Release**: Some data is available for download for the project via rolling release.
-                    - **Partially Available**: Some data is available for download for the project.
-                    - **Available**: Data is fully available for download for the project.
-                    """)
+                        #### Data Status
 
-            # Project Reference Table ----------------------------------------------------------#
-            with st.expander("Projects included in reporting"):
-                reference_df = filtered_project_meta.reset_index(drop=True)
-                st.table(reference_df)
+                        - **None**: There is no available data for the project.
+                        - **Data Not Expected**: There is no available data for the project because data is not expected to be stored for this project.
+                        - **Data Pending**: Data is pending for the project, either still being generated or has not yet been uploaded to Synapse yet, so there are no files in the project.
+                        - **Under Embargo**: Data is present in the project but not accessible to anyone outside the project admins. When data is first uploaded, the status will change from "Data Pending" to "Under Embargo".
+                        - **Rolling Release**: Some data is available for download for the project via rolling release.
+                        - **Partially Available**: Some data is available for download for the project.
+                        - **Available**: Data is fully available for download for the project.
+                        """)
 
-            # What does overall project portfolio look like when grouped solely by data status ontology
-            st.subheader("Data Status Distribution")
-            data_status_flow = graphviz_status(
-                filtered_project_meta["DATA_STATUS"].tolist()
-            )
-            with st.container():
-                col1, col2 = st.columns([1, 1])
+                # Project Reference Table ----------------------------------------------------------#
+                with st.expander("Projects included in reporting"):
+                    reference_df = filtered_project_meta.reset_index(drop=True)
+                    st.table(reference_df)
+
+                # What does overall project portfolio look like when grouped solely by data status ontology
+                st.subheader("Data Status Distribution")
+                data_status_flow = graphviz_status(
+                    filtered_project_meta["DATA_STATUS"].tolist()
+                )
+                with st.container():
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        st.graphviz_chart(data_status_flow, use_container_width=True)
+                    st.markdown(
+                        '<div style="padding-bottom: 40px;"></div>', unsafe_allow_html=True
+                    )
+
+                # How many active vs completed projects, and how many projects are in each data status
+                st.subheader(
+                    "Data Status Distribution, Comparing Active vs. Completed Projects"
+                )
+                col1, col2, col3 = st.columns([1, 1, 4])
                 with col1:
-                    st.graphviz_chart(data_status_flow, use_container_width=True)
-                st.markdown(
-                    '<div style="padding-bottom: 40px;"></div>', unsafe_allow_html=True
-                )
-
-            # How many active vs completed projects, and how many projects are in each data status
-            st.subheader(
-                "Data Status Distribution, Comparing Active vs. Completed Projects"
-            )
-            col1, col2, col3 = st.columns([1, 1, 4])
-            with col1:
-                st.metric(
-                    label="Active Projects",
-                    value=len(
-                        filtered_project_meta[
-                            filtered_project_meta["STUDY_STATUS"] == "Active"
-                        ]
-                    ),
-                )
-            with col2:
-                st.metric(
-                    label="Completed Projects",
-                    value=len(
-                        filtered_project_meta[
-                            filtered_project_meta["STUDY_STATUS"] == "Completed"
-                        ]
-                    ),
-                )
-            st.plotly_chart(plot_stacked_bar_chart(filtered_project_meta))
-
-            # Data Release Report ---------------------------------------------------------------#
-            st.header("Data Release")
-
-            # DF with grouped data
-            grouped_df = (
-                filtered_project_meta.groupby(["STUDY_STATUS", "DATA_STATUS"])
-                .size()
-                .reset_index(name="COUNT")
-            )
-
-            project_sizes = get_data_from_snowflake(query_project_sizes(project_ids))
-            if project_sizes.empty:
-                st.warning("No data sizes available for the selected projects.")
-                return
-
-            total_data_size_gib = project_sizes["TOTAL_CONTENT_SIZE"].sum()
-            total_data_size_tb = convert_to_tb(
-                project_sizes["TOTAL_CONTENT_SIZE"].sum()
-            )
-            average_project_size = round(
-                convert_to_gb(np.mean(project_sizes["TOTAL_CONTENT_SIZE"])), 2
-            )
-            annual_cost = calculate_annual_cost(total_data_size_gib)
-
-            # Metrics
-            col1, col2, col3 = st.columns([1, 1, 1])
-            col1.metric(
-                f"{', '.join(funders)} Projects With Target Data Status",
-                f"{len(project_ids)}",
-            )
-            col2.metric("Total Data in These Projects", f"{total_data_size_tb:,.2f} TB")
-            col3.metric("Avg. Project Size", f"{average_project_size} GB")
-
-            # Data Usage Report ---------------------------------------------------------------#
-            st.header("Data Usage")
-            st.subheader("General Overview")
-            if project_ids:
-                project_downloads_df = get_data_from_snowflake(
-                    query_project_downloads(project_ids, start_date, end_date)
-                )
-                if project_downloads_df.empty:
-                    st.warning("No download data available for the selected projects.")
-                else:
-                    total_downloads_gb = convert_to_gb(
-                        project_downloads_df["TOTAL_DOWNLOADS"].sum()
+                    st.metric(
+                        label="Active Projects",
+                        value=len(
+                            filtered_project_meta[
+                                filtered_project_meta["STUDY_STATUS"] == "Active"
+                            ]
+                        ),
                     )
-                    total_unique_files = project_downloads_df[
-                        "TOTAL_UNIQUE_FILEHANDLEIDS"
-                    ].sum()
-
-                    # Metrics
-                    col1, col2, col3 = st.columns([1, 1, 1])
-                    col1.metric("Number of Unique Files Requested", total_unique_files)
-                    col2.metric("Total Egressed Data", f"{total_downloads_gb:,.2f} GB")
-                    col3.metric(
-                        "Avg Downloads for Downloaded File",
-                        f"{(total_downloads_gb / total_unique_files) if total_unique_files else 0:,.2f} GB",
+                with col2:
+                    st.metric(
+                        label="Completed Projects",
+                        value=len(
+                            filtered_project_meta[
+                                filtered_project_meta["STUDY_STATUS"] == "Completed"
+                            ]
+                        ),
                     )
+                st.plotly_chart(plot_stacked_bar_chart(filtered_project_meta))
 
-                    # What does egress look like over selected timeframe?
-                    monthly_file_egress_df = get_data_from_snowflake(
-                        query_monthly_file_egress(project_ids, start_date, end_date)
+                # Data Release Report ---------------------------------------------------------------#
+                st.header("Data Release")
+
+                # DF with grouped data
+                grouped_df = (
+                    filtered_project_meta.groupby(["STUDY_STATUS", "DATA_STATUS"])
+                    .size()
+                    .reset_index(name="COUNT")
+                )
+
+                project_sizes = get_data_from_snowflake(query_project_sizes(project_ids))
+                if project_sizes.empty:
+                    st.warning("No data sizes available for the selected projects.")
+                    return
+
+                total_data_size_gib = project_sizes["TOTAL_CONTENT_SIZE"].sum()
+                total_data_size_tb = convert_to_tb(
+                    project_sizes["TOTAL_CONTENT_SIZE"].sum()
+                )
+                average_project_size = round(
+                    convert_to_gb(np.mean(project_sizes["TOTAL_CONTENT_SIZE"])), 2
+                )
+                annual_cost = calculate_annual_cost(total_data_size_gib)
+
+                # Metrics
+                col1, col2, col3 = st.columns([1, 1, 1])
+                col1.metric(
+                    f"{', '.join(funders)} Projects With Target Data Status",
+                    f"{len(project_ids)}",
+                )
+                col2.metric("Total Data in These Projects", f"{total_data_size_tb:,.2f} TB")
+                col3.metric("Avg. Project Size", f"{average_project_size} GB")
+
+                # Data Usage Report ---------------------------------------------------------------#
+                st.header("Data Usage")
+                st.subheader("General Overview")
+                if project_ids:
+                    project_downloads_df = get_data_from_snowflake(
+                        query_project_downloads(project_ids, start_date, end_date)
                     )
-                    if not monthly_file_egress_df.empty:
-                        monthly_file_egress_df = monthly_file_egress_df.merge(
+                    if project_downloads_df.empty:
+                        st.warning("No download data available for the selected projects.")
+                    else:
+                        total_downloads_gb = convert_to_gb(
+                            project_downloads_df["TOTAL_DOWNLOADS"].sum()
+                        )
+                        total_unique_files = project_downloads_df[
+                            "TOTAL_UNIQUE_FILEHANDLEIDS"
+                        ].sum()
+
+                        # Metrics
+                        col1, col2, col3 = st.columns([1, 1, 1])
+                        col1.metric("Number of Unique Files Requested", total_unique_files)
+                        col2.metric("Total Egressed Data", f"{total_downloads_gb:,.2f} GB")
+                        col3.metric(
+                            "Avg Downloads for Downloaded File",
+                            f"{(total_downloads_gb / total_unique_files) if total_unique_files else 0:,.2f} GB",
+                        )
+
+                        # What does egress look like over selected timeframe?
+                        monthly_file_egress_df = get_data_from_snowflake(
+                            query_monthly_file_egress(project_ids, start_date, end_date)
+                        )
+                        if not monthly_file_egress_df.empty:
+                            monthly_file_egress_df = monthly_file_egress_df.merge(
+                                filtered_project_meta[["PROJECT_ID", "PROJECT_NAME"]],
+                                on="PROJECT_ID",
+                                how="left",
+                            )
+                            st.plotly_chart(plot_monthly_egress(monthly_file_egress_df))
+
+                        st.subheader("Dissemination By Project")
+
+                        # Add project names
+                        project_sizes = project_sizes.merge(
                             filtered_project_meta[["PROJECT_ID", "PROJECT_NAME"]],
                             on="PROJECT_ID",
                             how="left",
                         )
-                        st.plotly_chart(plot_monthly_egress(monthly_file_egress_df))
 
-                    st.subheader("Dissemination By Project")
+                        merged_df = merge_size_and_downloads(
+                            project_sizes, project_downloads_df
+                        )
+                        merged_df = merged_df.dropna(
+                            subset=["TOTAL_CONTENT_SIZE", "TOTAL_DOWNLOADS"]
+                        )
 
-                    # Add project names
-                    project_sizes = project_sizes.merge(
-                        filtered_project_meta[["PROJECT_ID", "PROJECT_NAME"]],
-                        on="PROJECT_ID",
-                        how="left",
+                        # Two way display mean for downloads
+                        mean_downloads = convert_to_gb(merged_df["TOTAL_DOWNLOADS"].mean())
+                        nonzero_downloads = merged_df[merged_df["TOTAL_DOWNLOADS"] > 0]
+                        mean_filtered_download = convert_to_gb(
+                            nonzero_downloads["TOTAL_DOWNLOADS"].mean()
+                        )
+
+                        col1, col2, col3 = st.columns([1, 1, 1])
+                        col1.metric(
+                            "Number of projects that see downloads",
+                            f"{len(project_downloads_df)} out of {len(project_ids)}",
+                        )
+                        col2.metric(
+                            "Mean download size for downloaded projects",
+                            f"{mean_filtered_download:,.2f} GB",
+                        )
+
+                        st.plotly_chart(plot_download_scatter(merged_df))
+
+                        st.subheader("Characteristics of Disseminated Data")
+
+                        data_meta_df = get_data_from_snowflake(
+                            query_downloaded_file_meta(project_ids, start_date, end_date)
+                        )
+                        if data_meta_df.empty:
+                            st.warning("No data available for the selected criteria.")
+                        else:
+                            # Metrics
+                            col1, col2, col3 = st.columns([1, 1, 1])
+                            unique_assays = len(data_meta_df["ASSAY"].unique())
+                            delta_assays = (
+                                unique_assays - comp_assay_count
+                                if comp_assay_count is not None
+                                else None
+                            )
+                            col1.metric(
+                                "Number of Unique Assays", unique_assays, delta=delta_assays
+                            )
+                            col2.metric("", "")
+                            col3.metric("Avg. ", 3)
+
+                            # What are assays being downloaded?
+                            st.plotly_chart(
+                                plot_resource_downloads(
+                                    data_meta_df,
+                                    resource_column="ASSAY",
+                                    color=ORANGE,
+                                    title="Assays Being Downloaded",
+                                )
+                            )
+
+                            # What are resources being downloaded?
+                            st.plotly_chart(
+                                plot_resource_downloads(
+                                    data_meta_df,
+                                    resource_column="RESOURCE_TYPE",
+                                    color=PURPLE,
+                                    title="Resources Being Downloaded",
+                                )
+                            )
+
+                # User Network -----------------------------------------------------------------------#
+                st.header("Users Network")
+                if project_ids:
+                    unique_users_df = get_data_from_snowflake(
+                        query_unique_users(project_ids, start_date, end_date)
                     )
-
-                    merged_df = merge_size_and_downloads(
-                        project_sizes, project_downloads_df
-                    )
-                    merged_df = merged_df.dropna(
-                        subset=["TOTAL_CONTENT_SIZE", "TOTAL_DOWNLOADS"]
-                    )
-
-                    # Two way display mean for downloads
-                    mean_downloads = convert_to_gb(merged_df["TOTAL_DOWNLOADS"].mean())
-                    nonzero_downloads = merged_df[merged_df["TOTAL_DOWNLOADS"] > 0]
-                    mean_filtered_download = convert_to_gb(
-                        nonzero_downloads["TOTAL_DOWNLOADS"].mean()
-                    )
-
-                    col1, col2, col3 = st.columns([1, 1, 1])
-                    col1.metric(
-                        "Number of projects that see downloads",
-                        f"{len(project_downloads_df)} out of {len(project_ids)}",
-                    )
-                    col2.metric(
-                        "Mean download size for downloaded projects",
-                        f"{mean_filtered_download:,.2f} GB",
-                    )
-
-                    st.plotly_chart(plot_download_scatter(merged_df))
-
-                    st.subheader("Characteristics of Disseminated Data")
-
-                    data_meta_df = get_data_from_snowflake(
-                        query_downloaded_file_meta(project_ids, start_date, end_date)
-                    )
-                    if data_meta_df.empty:
-                        st.warning("No data available for the selected criteria.")
+                    if unique_users_df.empty:
+                        st.warning(
+                            "No unique user data available for the selected projects."
+                        )
                     else:
+                        unique_users_count = unique_users_df["USER_ID"].nunique()
+                        avg_users_per_project = (
+                            unique_users_count / len(project_downloads_df)
+                            if len(project_downloads_df) > 0
+                            else 0
+                        )
+
                         # Metrics
                         col1, col2, col3 = st.columns([1, 1, 1])
-                        unique_assays = len(data_meta_df["ASSAY"].unique())
-                        delta_assays = (
-                            unique_assays - comp_assay_count
-                            if comp_assay_count is not None
+                        delta_users = (
+                            unique_users_count - comp_user_count
+                            if comp_user_count is not None
                             else None
                         )
                         col1.metric(
-                            "Number of Unique Assays", unique_assays, delta=delta_assays
+                            "Total Unique Users", unique_users_count, delta=delta_users
                         )
-                        col2.metric("", "")
-                        col3.metric("Avg. ", 3)
+                        col2.metric(
+                            "Average Downloaders Per Project",
+                            f"{avg_users_per_project:.1f}",
+                        )
+                        col3.metric(
+                            "Avg. Download Size Per User",
+                            f"{(total_downloads_gb / unique_users_count) if unique_users_count else 0:,.2f} GB",
+                        )
 
-                        # What are assays being downloaded?
+                        # Plot of user network
+                        st.info(
+                            "The interactive network chart can be slow in Snowflake for broad filters. "
+                            "If it stalls, reduce the date range or selected projects."
+                        )
+                        col1, col2, col3 = st.columns([4, 1, 1])
+                        with col1:
+                            plot_network(unique_users_df)
+                        with col2:
+                            network_legend()
+
+                        # How many unique users are downloading data for each project monthly?
+                        st.plotly_chart(plot_unique_users_monthly(unique_users_df))
+
+                    # Cumulative Data Growth ---------------------------------------------------------------#
+                    st.header("Cumulative Data Growth")
+                    st.subheader("Data Portal Growth Over Time")
+                    cumulative_growth_df = get_data_from_snowflake(
+                        query_file_metadata_for_growth(project_ids)
+                    )
+                    if cumulative_growth_df.empty:
+                        st.warning(
+                            "No cumulative data growth data available for the selected projects."
+                        )
+                    else:
                         st.plotly_chart(
-                            plot_resource_downloads(
-                                data_meta_df,
-                                resource_column="ASSAY",
-                                color=ORANGE,
-                                title="Assays Being Downloaded",
+                            plot_cumulative_data_growth(
+                                cumulative_growth_df, width=plot_width
                             )
                         )
 
-                        # What are resources being downloaded?
-                        st.plotly_chart(
-                            plot_resource_downloads(
-                                data_meta_df,
-                                resource_column="RESOURCE_TYPE",
-                                color=PURPLE,
-                                title="Resources Being Downloaded",
-                            )
+                    # Google Analytics ---------------------------------------------------------------#
+                    # Google analytics measurements go here for now
+                    # 1. Web views --
+                    # a) Mostly corresponds with top projects by numbers of unique downloaders, but interesting when it doesn't
+                    # b) Can suggest projects that still have influence/value for non-downloader users such as patients / patient advocates
+                    # c) Potentially a leading indicator of interest and collaboration for *un-released* projects
+                    # st.header("Google Analytics")
+                    # st.subheader("Total Page Views for synapse.org project pages")
+                    # pageviews_df = get_total_page_views(project_ids, start_date, end_date)
+                    # pageviews_df = pageviews_df.merge(filtered_project_meta[['PROJECT_ID', 'PROJECT_NAME']], on='PROJECT_ID', how='left')
+                    # st.table(pageviews_df)
+                    # st.plotly_chart(plot_project_pageviews(pageviews_df))
+
+                    # Initiative Data Metrics ---------------------------------------------------------------#
+                    st.header("Initiative Data Metrics")
+
+                    # Show info box about scope
+                    scope_description = (
+                        "Open Proposal Program only"
+                        if open_proposal_only
+                        else (
+                            f"{len(selected_initiatives)} initiative(s)"
+                            if selected_initiatives
+                            else "All initiatives"
                         )
-
-            # User Network -----------------------------------------------------------------------#
-            st.header("Users Network")
-            if project_ids:
-                unique_users_df = get_data_from_snowflake(
-                    query_unique_users(project_ids, start_date, end_date)
-                )
-                if unique_users_df.empty:
-                    st.warning(
-                        "No unique user data available for the selected projects."
                     )
-                else:
-                    unique_users_count = unique_users_df["USER_ID"].nunique()
-                    avg_users_per_project = (
-                        unique_users_count / len(project_downloads_df)
-                        if len(project_downloads_df) > 0
-                        else 0
-                    )
-
-                    # Metrics
-                    col1, col2, col3 = st.columns([1, 1, 1])
-                    delta_users = (
-                        unique_users_count - comp_user_count
-                        if comp_user_count is not None
-                        else None
-                    )
-                    col1.metric(
-                        "Total Unique Users", unique_users_count, delta=delta_users
-                    )
-                    col2.metric(
-                        "Average Downloaders Per Project",
-                        f"{avg_users_per_project:.1f}",
-                    )
-                    col3.metric(
-                        "Avg. Download Size Per User",
-                        f"{(total_downloads_gb / unique_users_count) if unique_users_count else 0:,.2f} GB",
-                    )
-
-                    # Plot of user network
                     st.info(
-                        "The interactive network chart can be slow in Snowflake for broad filters. "
-                        "If it stalls, reduce the date range or selected projects."
+                        f"📊 **Current Scope:** {scope_description} | **Projects:** {len(project_ids)}"
                     )
-                    col1, col2, col3 = st.columns([4, 1, 1])
-                    with col1:
-                        plot_network(unique_users_df)
-                    with col2:
-                        network_legend()
 
-                    # How many unique users are downloading data for each project monthly?
-                    st.plotly_chart(plot_unique_users_monthly(unique_users_df))
+                    # Total Data Size
+                    st.subheader("Total Data Size")
+                    with st.expander("ℹ️ Metric Definition"):
+                        st.markdown("""
+                        **Total Data Size** aggregates the content size of all files across the scoped projects.
+                        - **Size aggregation**: Sum of all file content_size values
+                        - **Units**: Displayed in TB (terabytes) with 1 decimal place
+                        - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                        """)
 
-                # Cumulative Data Growth ---------------------------------------------------------------#
-                st.header("Cumulative Data Growth")
-                st.subheader("Data Portal Growth Over Time")
-                cumulative_growth_df = get_data_from_snowflake(
-                    query_file_metadata_for_growth(project_ids)
-                )
-                if cumulative_growth_df.empty:
-                    st.warning(
-                        "No cumulative data growth data available for the selected projects."
+                    total_size_df = get_data_from_snowflake(
+                        query_total_data_size_by_initiative(project_ids)
                     )
+                    if (
+                        not total_size_df.empty
+                        and total_size_df["TOTAL_CONTENT_SIZE"].iloc[0] is not None
+                    ):
+                        total_size_bytes = total_size_df["TOTAL_CONTENT_SIZE"].iloc[0]
+                        total_file_count = total_size_df["TOTAL_FILE_COUNT"].iloc[0]
+                        size_value, size_unit = format_size_metric(total_size_bytes)
+
+                        col1, col2, col3 = st.columns([1, 1, 1])
+                        with col1:
+                            st.metric(
+                                label="Total Data Size",
+                                value=f"{size_value:.1f} {size_unit}",
+                                help=f"Exact size: {total_size_bytes:,} bytes",
+                            )
+                        with col2:
+                            st.metric(
+                                label="Total Files",
+                                value=f"{total_file_count:,}",
+                                help="Number of unique files across all scoped projects",
+                            )
+                        with col3:
+                            avg_file_size_mb = (
+                                (total_size_bytes / total_file_count / (1024**2))
+                                if total_file_count > 0
+                                else 0
+                            )
+                            st.metric(
+                                label="Avg File Size",
+                                value=f"{avg_file_size_mb:.1f} MB",
+                                help="Average size per file",
+                            )
+                    else:
+                        st.warning(
+                            "No data size information available for the selected projects."
+                        )
+
+                    # Top 5 Data Types by Size
+                    st.subheader("Top 5 Data Types by Size")
+                    with st.expander("ℹ️ Metric Definition"):
+                        st.markdown("""
+                        **Top Data Types** shows the 5 largest data types (by total size) across scoped projects.
+                        - **Data type**: Derived from file 'assay' annotation
+                        - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
+                        - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
+                        - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                        """)
+
+                    top_data_types_df = get_data_from_snowflake(
+                        query_top_data_types_by_size(project_ids, limit=5)
+                    )
+                    if not top_data_types_df.empty:
+                        st.plotly_chart(
+                            plot_data_type_bar_chart(
+                                top_data_types_df,
+                                title="Top 5 Data Types by Size",
+                                width=plot_width,
+                                color=TEAL,
+                            )
+                        )
+
+                        # Display table
+                        st.markdown("**Detailed Breakdown:**")
+                        display_table = create_data_type_table(top_data_types_df)
+                        st.table(display_table)
+                    else:
+                        st.warning(
+                            "No data type information available for the selected projects."
+                        )
+
+                    # Released Data Only - Data Size by Type
+                    st.subheader("Released Data Only - Data Size by Type")
+                    with st.expander("ℹ️ Metric Definition"):
+                        st.markdown("""
+                        **Released Data** filters to only projects with released data status before grouping by data type.
+                        - **Released statuses**: 'Available', 'Partially Available', 'Rolling Release'
+                        - **Data type**: Derived from file 'assay' annotation
+                        - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
+                        - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
+                        - **Scope**: Respects both Initiative filter and Open Proposal toggle
+                        """)
+
+                    released_statuses = [
+                        "Available",
+                        "Partially Available",
+                        "Rolling Release",
+                    ]
+                    released_data_df = get_data_from_snowflake(
+                        query_released_data_by_type(project_ids, released_statuses, limit=5)
+                    )
+                    if not released_data_df.empty:
+                        st.plotly_chart(
+                            plot_data_type_bar_chart(
+                                released_data_df,
+                                title="Top 5 Data Types (Released Projects Only)",
+                                width=plot_width,
+                                color=GREEN,
+                            )
+                        )
+
+                        # Display table
+                        st.markdown("**Detailed Breakdown:**")
+                        display_table = create_data_type_table(released_data_df)
+                        st.table(display_table)
+                    else:
+                        st.warning(
+                            "No released data available for the selected projects, or no data type information available."
+                        )
+
+            with tab2:
+                st.header("Data Lifecycle")
+                st.subheader("Upload Age & Download Recency — Released Projects Only")
+
+                # S3 tier estimate covers all NF portal data regardless of sidebar filters
+                st.subheader("Estimated S3 Intelligent Tiering Distribution")
+                tier_df = get_data_from_snowflake(query_s3_tier_all_portal())
+                if not tier_df.empty:
+                    st.plotly_chart(plot_s3_tier_estimate(tier_df))
+
+                released_statuses = ["Available", "Partially Available", "Rolling Release"]
+                eol_project_ids = filtered_project_meta[
+                    filtered_project_meta["DATA_STATUS"].isin(released_statuses)
+                ]["PROJECT_ID"].tolist()
+
+                if not eol_project_ids:
+                    st.warning("No released projects in the current selection.")
                 else:
-                    st.plotly_chart(
-                        plot_cumulative_data_growth(
-                            cumulative_growth_df, width=plot_width
+                    eol_df = get_data_from_snowflake(query_file_eol_analysis(eol_project_ids))
+
+                    if eol_df.empty:
+                        st.warning("No file lifecycle data available for the selected projects.")
+                    else:
+                        eol_df = eol_df.merge(
+                            filtered_project_meta[["PROJECT_ID", "PROJECT_NAME"]],
+                            on="PROJECT_ID", how="left"
                         )
-                    )
 
-                # Google Analytics ---------------------------------------------------------------#
-                # Google analytics measurements go here for now
-                # 1. Web views --
-                # a) Mostly corresponds with top projects by numbers of unique downloaders, but interesting when it doesn't
-                # b) Can suggest projects that still have influence/value for non-downloader users such as patients / patient advocates
-                # c) Potentially a leading indicator of interest and collaboration for *un-released* projects
-                # st.header("Google Analytics")
-                # st.subheader("Total Page Views for synapse.org project pages")
-                # pageviews_df = get_total_page_views(project_ids, start_date, end_date)
-                # pageviews_df = pageviews_df.merge(filtered_project_meta[['PROJECT_ID', 'PROJECT_NAME']], on='PROJECT_ID', how='left')
-                # st.table(pageviews_df)
-                # st.plotly_chart(plot_project_pageviews(pageviews_df))
-
-                # Initiative Data Metrics ---------------------------------------------------------------#
-                st.header("Initiative Data Metrics")
-
-                # Show info box about scope
-                scope_description = (
-                    "Open Proposal Program only"
-                    if open_proposal_only
-                    else (
-                        f"{len(selected_initiatives)} initiative(s)"
-                        if selected_initiatives
-                        else "All initiatives"
-                    )
-                )
-                st.info(
-                    f"📊 **Current Scope:** {scope_description} | **Projects:** {len(project_ids)}"
-                )
-
-                # Total Data Size
-                st.subheader("Total Data Size")
-                with st.expander("ℹ️ Metric Definition"):
-                    st.markdown("""
-                    **Total Data Size** aggregates the content size of all files across the scoped projects.
-                    - **Size aggregation**: Sum of all file content_size values
-                    - **Units**: Displayed in TB (terabytes) with 1 decimal place
-                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
-                    """)
-
-                total_size_df = get_data_from_snowflake(
-                    query_total_data_size_by_initiative(project_ids)
-                )
-                if (
-                    not total_size_df.empty
-                    and total_size_df["TOTAL_CONTENT_SIZE"].iloc[0] is not None
-                ):
-                    total_size_bytes = total_size_df["TOTAL_CONTENT_SIZE"].iloc[0]
-                    total_file_count = total_size_df["TOTAL_FILE_COUNT"].iloc[0]
-                    size_value, size_unit = format_size_metric(total_size_bytes)
-
-                    col1, col2, col3 = st.columns([1, 1, 1])
-                    with col1:
-                        st.metric(
-                            label="Total Data Size",
-                            value=f"{size_value:.1f} {size_unit}",
-                            help=f"Exact size: {total_size_bytes:,} bytes",
+                        st.info(
+                            "⚠️ **Data caveat:** Snowflake download records only go back to 2022-01-01. "
+                            "Files with no download record that were uploaded **before 2022** may have been "
+                            "downloaded prior to that date — they are marked below as 'no record since 2022' "
+                            "rather than 'never downloaded'."
                         )
-                    with col2:
-                        st.metric(
-                            label="Total Files",
-                            value=f"{total_file_count:,}",
-                            help="Number of unique files across all scoped projects",
+
+                        upload_eol_days = 10 * 365
+                        download_stale_days = 5 * 365
+                        data_cutoff = pd.Timestamp("2022-01-01")
+
+                        eol_df["UPLOAD_DATE_DT"] = pd.to_datetime(eol_df["UPLOAD_DATE"])
+
+                        total_files = len(eol_df)
+
+                        # Split "no download record" into pre/post data cutoff
+                        no_record = eol_df["LAST_DOWNLOAD_DATE"].isna()
+                        uploaded_post_cutoff = eol_df["UPLOAD_DATE_DT"] >= data_cutoff
+                        truly_never_dl = (no_record & uploaded_post_cutoff).sum()
+                        no_record_pre2022 = (no_record & ~uploaded_post_cutoff).sum()
+
+                        stale_files = eol_df[
+                            eol_df["DAYS_SINCE_LAST_DOWNLOAD"].notna() &
+                            (eol_df["DAYS_SINCE_LAST_DOWNLOAD"] > download_stale_days)
+                        ]
+                        stale_count = len(stale_files)
+
+                        eol_candidates_df = eol_df[
+                            (eol_df["DAYS_SINCE_UPLOAD"] > upload_eol_days) &
+                            (
+                                eol_df["LAST_DOWNLOAD_DATE"].isna() |
+                                (eol_df["DAYS_SINCE_LAST_DOWNLOAD"] > download_stale_days)
+                            )
+                        ]
+                        candidate_files = len(eol_candidates_df)
+                        candidate_size_tb = convert_to_tb(eol_candidates_df["CONTENT_SIZE"].sum())
+
+                        col1, col2, col3, col4 = st.columns(4)
+                        col1.metric("Total Unique Files", f"{total_files:,}")
+                        col2.metric("No Download Record (post-2022 uploads)", f"{truly_never_dl:,}")
+                        col3.metric("Deletion Candidates (Files)", f"{candidate_files:,}")
+                        col4.metric("Deletion Candidates (Storage)", f"{candidate_size_tb:,.2f} TB")
+
+                        st.markdown(
+                            f"""
+                            **{truly_never_dl:,}** files uploaded after 2022-01-01 have **no download record** — these are confidently never downloaded.
+
+                            **{no_record_pre2022:,}** files uploaded before 2022-01-01 have no download record since 2022 — downloads prior to that date are unknown.
+
+                            **{stale_count:,}** files have been downloaded at some point but not accessed in the last 5 years.
+                            Combined storage: **{convert_to_gb(stale_files["CONTENT_SIZE"].sum()):,.1f} GB**.
+                            """
                         )
-                    with col3:
-                        avg_file_size_mb = (
-                            (total_size_bytes / total_file_count / (1024**2))
-                            if total_file_count > 0
-                            else 0
-                        )
-                        st.metric(
-                            label="Avg File Size",
-                            value=f"{avg_file_size_mb:.1f} MB",
-                            help="Average size per file",
-                        )
-                else:
-                    st.warning(
-                        "No data size information available for the selected projects."
-                    )
 
-                # Top 5 Data Types by Size
-                st.subheader("Top 5 Data Types by Size")
-                with st.expander("ℹ️ Metric Definition"):
-                    st.markdown("""
-                    **Top Data Types** shows the 5 largest data types (by total size) across scoped projects.
-                    - **Data type**: Derived from file 'assay' annotation
-                    - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
-                    - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
-                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
-                    """)
-
-                top_data_types_df = get_data_from_snowflake(
-                    query_top_data_types_by_size(project_ids, limit=5)
-                )
-                if not top_data_types_df.empty:
-                    st.plotly_chart(
-                        plot_data_type_bar_chart(
-                            top_data_types_df,
-                            title="Top 5 Data Types by Size",
-                            width=plot_width,
-                            color=TEAL,
-                        )
-                    )
-
-                    # Display table
-                    st.markdown("**Detailed Breakdown:**")
-                    display_table = create_data_type_table(top_data_types_df)
-                    st.table(display_table)
-                else:
-                    st.warning(
-                        "No data type information available for the selected projects."
-                    )
-
-                # Released Data Only - Data Size by Type
-                st.subheader("Released Data Only - Data Size by Type")
-                with st.expander("ℹ️ Metric Definition"):
-                    st.markdown("""
-                    **Released Data** filters to only projects with released data status before grouping by data type.
-                    - **Released statuses**: 'Available', 'Partially Available', 'Rolling Release'
-                    - **Data type**: Derived from file 'assay' annotation
-                    - **Ranking**: Sorted by total size descending; ties broken by data type name (ascending)
-                    - **Limit**: Exactly 5 rows (or fewer if <5 types exist)
-                    - **Scope**: Respects both Initiative filter and Open Proposal toggle
-                    """)
-
-                released_statuses = [
-                    "Available",
-                    "Partially Available",
-                    "Rolling Release",
-                ]
-                released_data_df = get_data_from_snowflake(
-                    query_released_data_by_type(project_ids, released_statuses, limit=5)
-                )
-                if not released_data_df.empty:
-                    st.plotly_chart(
-                        plot_data_type_bar_chart(
-                            released_data_df,
-                            title="Top 5 Data Types (Released Projects Only)",
-                            width=plot_width,
-                            color=GREEN,
-                        )
-                    )
-
-                    # Display table
-                    st.markdown("**Detailed Breakdown:**")
-                    display_table = create_data_type_table(released_data_df)
-                    st.table(display_table)
-                else:
-                    st.warning(
-                        "No released data available for the selected projects, or no data type information available."
-                    )
+                        st.plotly_chart(plot_eol_never_downloaded(
+                            eol_candidates_df[eol_candidates_df["LAST_DOWNLOAD_DATE"].isna()],
+                            width=plot_width
+                        ))
+                        st.plotly_chart(plot_eol_stale_downloads(
+                            eol_candidates_df[eol_candidates_df["LAST_DOWNLOAD_DATE"].notna()],
+                            width=plot_width
+                        ))
+                        st.plotly_chart(plot_eol_scatter(eol_df, upload_threshold=10.0, download_threshold=5.0, width=plot_width))
+                        st.plotly_chart(plot_never_downloaded_by_project(eol_df, width=plot_width))
 
     else:
         st.write("No projects match filters.")
