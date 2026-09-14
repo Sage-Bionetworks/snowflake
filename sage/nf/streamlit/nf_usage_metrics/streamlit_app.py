@@ -25,6 +25,7 @@ from toolkit.queries import (
     query_total_data_size_by_initiative,
     query_top_data_types_by_size,
     query_released_data_by_type,
+    query_user_demographics,
 )
 from toolkit.utils import get_data_from_snowflake
 from toolkit.widgets import (
@@ -43,6 +44,8 @@ from toolkit.widgets import (
     plot_data_type_bar_chart,
     create_data_type_table,
     format_size_metric,
+    plot_project_size_distribution,
+    plot_user_demographics,
     # TRANSFORMS
     merge_size_and_downloads,
     # PALETTE
@@ -459,6 +462,16 @@ def main():
                 )
             st.plotly_chart(plot_stacked_bar_chart(filtered_project_meta))
 
+            # Data Size Distribution by Storage Tier (NTAP feedback, Task 2.4) ------------------#
+            st.subheader("Data Size Distribution by Storage Tier")
+            sizes_df = get_data_from_snowflake(query_project_sizes(project_ids))
+            if sizes_df.empty:
+                st.warning("No project size data available for the selected projects.")
+            else:
+                st.plotly_chart(
+                    plot_project_size_distribution(sizes_df, filtered_project_meta)
+                )
+
             # Data Release Report ---------------------------------------------------------------#
             st.header("Data Release")
 
@@ -657,6 +670,16 @@ def main():
 
                     # How many unique users are downloading data for each project monthly?
                     st.plotly_chart(plot_unique_users_monthly(unique_users_df))
+
+                # User Demographics (NTAP feedback, Task 2.4) -------------------------------------#
+                st.subheader("User Demographics")
+                demo_df = get_data_from_snowflake(
+                    query_user_demographics(project_ids, start_date, end_date)
+                )
+                if demo_df.empty:
+                    st.warning("No user demographic data available for the selected projects.")
+                else:
+                    st.plotly_chart(plot_user_demographics(demo_df))
 
                 # Cumulative Data Growth ---------------------------------------------------------------#
                 st.header("Cumulative Data Growth")

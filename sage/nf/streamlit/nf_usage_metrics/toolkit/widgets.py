@@ -997,3 +997,190 @@ def format_size_metric(bytes_value):
         return bytes_value / (1024**2), "MB"
     else:
         return bytes_value, "Bytes"
+
+
+# ── Size-distribution chart (NTAP feedback, Task 2.4) ───────────────────────#
+
+SIZE_TIERS = [
+    ("≤100 GB",       0,                    100  * 1024**3),
+    (">100 GB – 1 TB", 100 * 1024**3,       1    * 1024**4),
+    (">1 – 10 TB",     1   * 1024**4,       10   * 1024**4),
+    (">10 – 100 TB",   10  * 1024**4,       100  * 1024**4),
+    (">100 TB",        100 * 1024**4,       float("inf")),
+]
+
+def assign_size_tier(bytes_val):
+    for label, lo, hi in SIZE_TIERS:
+        if lo < bytes_val <= hi or (lo == 0 and bytes_val <= hi):
+            return label
+    return ">100 TB"
+
+
+def plot_project_size_distribution(sizes_df: pd.DataFrame,
+                                   meta_df: pd.DataFrame,
+                                   width: int = 900) -> go.Figure:
+    """
+    Grouped bar chart: project count per storage-tier (rows) × study status (groups).
+
+    Parameters
+    ----------
+    sizes_df : DataFrame with PROJECT_ID and TOTAL_CONTENT_SIZE (bytes)
+    meta_df  : DataFrame with PROJECT_ID and STUDY_STATUS
+    """
+    if sizes_df.empty:
+        return go.Figure()
+
+    df = sizes_df.merge(
+        meta_df[["PROJECT_ID", "STUDY_STATUS"]].drop_duplicates(),
+        on="PROJECT_ID", how="left"
+    )
+    df["SIZE_TIER"] = df["TOTAL_CONTENT_SIZE"].fillna(0).apply(assign_size_tier)
+    df["STUDY_STATUS"] = df["STUDY_STATUS"].fillna("Unknown")
+
+    tier_order = [t[0] for t in SIZE_TIERS]
+    counts = (
+        df.groupby(["SIZE_TIER", "STUDY_STATUS"])
+        .size()
+        .reset_index(name="COUNT")
+    )
+    counts["SIZE_TIER"] = pd.Categorical(counts["SIZE_TIER"], categories=tier_order, ordered=True)
+    counts = counts.sort_values("SIZE_TIER")
+
+    status_colors = {"Active": PORTAL_BLUE, "Completed": TEAL, "Unknown": GRAY}
+
+    fig = go.Figure()
+    for status in counts["STUDY_STATUS"].unique():
+        sub = counts[counts["STUDY_STATUS"] == status]
+        # fill missing tiers with 0
+        full = pd.DataFrame({"SIZE_TIER": tier_order})
+        full = full.merge(sub[["SIZE_TIER", "COUNT"]], on="SIZE_TIER", how="left").fillna(0)
+        fig.add_trace(go.Bar(
+            name=status,
+            x=full["SIZE_TIER"],
+            y=full["COUNT"],
+            marker_color=status_colors.get(status, GRAY),
+            text=full["COUNT"].astype(int),
+            textposition="outside",
+        ))
+
+    fig.update_layout(
+        barmode="group",
+        xaxis_title="Storage Tier",
+        yaxis_title="Number of Projects",
+        legend_title="Project Status",
+        width=width,
+        height=420,
+        margin=dict(l=60, r=60, t=40, b=60),
+        annotations=[dict(
+            text=(
+                "Pricing tiers per contract: ≤100 GB included in base fee · "
+                ">100 GB–1 TB: $7,500 · >1–10 TB: $10,500 · >10–100 TB: $26,500"
+            ),
+            xref="paper", yref="paper",
+            x=0, y=-0.22,
+            showarrow=False,
+            font=dict(size=10, color=GRAY),
+            align="left",
+        )],
+    )
+    return fig
+
+
+# ── User-demographics chart (NTAP feedback, Task 2.4) ───────────────────────#
+
+ACADEMIC_KEYWORDS = [
+    "university", "université", "universität", "universidad",
+    "college", "school of", "institute", "institut",
+    "hospital", "clinic", "medical center", "health system",
+    "children's", "pediatric", "cancer center",
+    "nih", "nci", "nhgri", "ninds", "nimh", "niaid",
+    "cdc", "fda", "hhs", "nhs",
+    "foundation", "non-profit", "nonprofit",
+    "research center", "research institute",
+    "academy", "académie",
+]
+
+INDUSTRY_KEYWORDS = [
+    "pharma", "pharmaceutical", "therapeutics", "biosciences", "biotech",
+    "genentech", "pfizer", "roche", "novartis", "merck", "abbvie",
+    "bristol-myers", "astrazeneca", "sanofi", "bayer",
+    " inc", " inc.", " corp", " corp.", " ltd", " llc",
+    "biomed", "biomedicine", "drug", "biomedical",
+]
+
+US_DOMAINS = {".edu", ".gov", ".mil", ".org"}
+
+
+def classify_user(company: str, email: str, location: str) -> str:
+    """Return 'Academic', 'Industry', 'International', or 'Unknown'."""
+    c = (company or "").lower()
+    e = (email or "").lower()
+    loc = (location or "").lower()
+
+    if any(kw in c for kw in ACADEMIC_KEYWORDS):
+        return "Academic / Non-profit"
+    if any(kw in c for kw in INDUSTRY_KEYWORDS):
+        return "Industry / Pharma"
+
+    # Email-domain heuristic
+    domain = e.rsplit("@", 1)[-1] if "@" in e else ""
+    if domain.endswith(".edu") or domain.endswith(".gov") or domain.endswith(".org"):
+        return "Academic / Non-profit"
+    tld = "." + domain.rsplit(".", 1)[-1] if "." in domain else ""
+    if tld not in ("", ".com", ".net", ".edu", ".gov", ".org", ".mil"):
+        return "International"
+
+    # Location heuristic (non-blank, non-US)
+    us_terms = {"usa", "united states", "u.s.", "u.s.a", "us"}
+    if loc and not any(t in loc for t in us_terms) and loc not in ("", "none"):
+        return "International"
+
+    return "Unknown / Other"
+
+
+def plot_user_demographics(demo_df: pd.DataFrame, width: int = 700) -> go.Figure:
+    """
+    Horizontal bar chart of user counts by sector classification.
+
+    Parameters
+    ----------
+    demo_df : DataFrame with columns USER_ID, COMPANY, EMAIL, LOCATION
+    """
+    if demo_df.empty:
+        return go.Figure()
+
+    demo_df = demo_df.copy()
+    demo_df["SECTOR"] = demo_df.apply(
+        lambda r: classify_user(
+            r.get("COMPANY", ""), r.get("EMAIL", ""), r.get("LOCATION", "")
+        ),
+        axis=1,
+    )
+
+    counts = demo_df.groupby("SECTOR")["USER_ID"].nunique().reset_index(name="USERS")
+    counts = counts.sort_values("USERS", ascending=True)
+
+    sector_colors = {
+        "Academic / Non-profit": PORTAL_BLUE,
+        "Industry / Pharma":     ORANGE,
+        "International":         TEAL,
+        "Unknown / Other":       GRAY,
+    }
+    colors = [sector_colors.get(s, GRAY) for s in counts["SECTOR"]]
+
+    fig = go.Figure(go.Bar(
+        x=counts["USERS"],
+        y=counts["SECTOR"],
+        orientation="h",
+        marker_color=colors,
+        text=counts["USERS"],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        xaxis_title="Unique Users",
+        yaxis_title="",
+        width=width,
+        height=320,
+        margin=dict(l=180, r=80, t=30, b=50),
+    )
+    return fig
