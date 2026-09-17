@@ -124,3 +124,6 @@ models:
       - name: sum_attempts_to_approval
         description: "Sum of `attempt`s across submissions approved in this period. Divide by `approved_count` downstream to get the average attempts per approval granted in the period. NULL if no submissions were approved in this period."
         data_type: NUMBER
+      - name: max_attempt
+        description: "Highest submission attempt in this period. Cancelled submissions do not count as an attempt. NULL if no non-cancelled submission reached a terminal state in this period."
+        data_type: NUMBER

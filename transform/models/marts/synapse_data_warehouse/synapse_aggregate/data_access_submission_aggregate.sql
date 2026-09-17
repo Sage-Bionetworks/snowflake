@@ -28,6 +28,7 @@ lifecycle_event AS (
         access_requirement_id,
         'RECEIVED' AS event_type,
         created_on AS event_on,
+        CAST(NULL AS NUMBER) AS attempt,
         CAST(NULL AS NUMBER) AS days_to_review,
         CAST(NULL AS NUMBER) AS attempts_to_approval
     FROM submissions
@@ -38,6 +39,7 @@ lifecycle_event AS (
         access_requirement_id,
         UPPER(state) AS event_type,
         state_modified_on AS event_on,
+        attempt,
         -- Latency is only meaningful for a review decision; a cancellation is not a review
         CASE
             WHEN state IN ('Approved', 'Rejected')
@@ -75,7 +77,8 @@ event_rollup AS (
         -- Cancelled was withdrawn before a decision, so it is neither a review nor an attempt (by convention)
         COUNT(CASE WHEN event_type IN ('APPROVED', 'REJECTED') THEN 1 END) AS reviewed_count,
         SUM(days_to_review) AS sum_days_to_review,
-        SUM(attempts_to_approval) AS sum_attempts_to_approval
+        SUM(attempts_to_approval) AS sum_attempts_to_approval,
+        MAX(attempt) AS max_attempt
     FROM lifecycle_event
     GROUP BY
         ROLLUP(agg_year, agg_quarter, agg_month, agg_day),
@@ -119,7 +122,8 @@ agg_period_calculations AS (
         rejected_count,
         reviewed_count,
         sum_days_to_review,
-        sum_attempts_to_approval
+        sum_attempts_to_approval,
+        max_attempt
     FROM event_rollup
 )
 
@@ -151,6 +155,7 @@ SELECT
     rejected_count,
     reviewed_count,
     sum_days_to_review,
-    sum_attempts_to_approval
+    sum_attempts_to_approval,
+    max_attempt
 FROM agg_period_calculations
 ORDER BY agg_year, agg_month, agg_day, agg_access_requirement_id
