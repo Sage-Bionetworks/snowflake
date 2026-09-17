@@ -43,7 +43,7 @@ jobs:
           SNOWFLAKE_SNAPSHOTS_STAGE_URL: ${{ vars.SNOWFLAKE_SNAPSHOTS_STAGE_URL }}
           STACK: ${{ vars.STACK }}
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder synapse_data_warehouse \
             --config-folder synapse_data_warehouse \
@@ -63,7 +63,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector synapse_data_warehouse --target dev --full-refresh
+        run: uv run --group dbt --frozen dbt run --selector synapse_data_warehouse --target dev --full-refresh
 
   deploy_synapse_data_warehouse_prod:
     runs-on: ubuntu-22.04
@@ -91,7 +91,7 @@ jobs:
           SNOWFLAKE_SNAPSHOTS_STAGE_URL: ${{ vars.SNOWFLAKE_SNAPSHOTS_STAGE_URL }}
           STACK: ${{ vars.STACK }}
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder synapse_data_warehouse \
             --config-folder synapse_data_warehouse \
@@ -111,7 +111,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector synapse_data_warehouse --target prod --full-refresh
+        run: uv run --group dbt --frozen dbt run --selector synapse_data_warehouse --target prod --full-refresh
 
   schemachange_sage:
     runs-on: ubuntu-22.04
@@ -133,7 +133,7 @@ jobs:
       - name: Deploy sage
         shell: bash
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --config-folder sage \
             --snowflake-role sage_admin
@@ -154,7 +154,7 @@ jobs:
       - name: Run dbt models
         working-directory: transform
         shell: bash
-        run: dbt run --selector sage --target prod --full-refresh
+        run: uv run --group dbt --frozen dbt run --selector sage --target prod --full-refresh
 
   deploy_streamlit:
     runs-on: ubuntu-22.04
@@ -250,7 +250,7 @@ jobs:
       - name: Deploy warehouses
         shell: bash
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder admin/warehouses \
             --snowflake-role SYSADMIN
@@ -258,7 +258,7 @@ jobs:
       - name: Deploy policies
         shell: bash
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder admin/policies \
             --snowflake-role ACCOUNTADMIN
@@ -266,7 +266,7 @@ jobs:
       - name: Deploy ownership grants
         shell: bash
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder admin/ownership_grants \
             --snowflake-role SECURITYADMIN
@@ -274,7 +274,7 @@ jobs:
       - name: Deploy future grants
         shell: bash
         run: |
-          schemachange \
+          uv run --group schemachange --frozen --no-build schemachange \
             --connection-name default \
             --root-folder admin/future_grants \
             --snowflake-role SECURITYADMIN
