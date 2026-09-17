@@ -11,10 +11,10 @@ models:
       to differentiate between columns that contain information about the dates we are aggregating over,
       and columns which contain the resulting statistics.
 
-      Each metric is attributed to the date of the event that produced it, not to the date its
-      submission was created. `received_count` is dated by `created_on`; every other metric is
-      dated by `state_modified_on`, the date the submission reached its terminal state. A
-      submission received in March and approved in June therefore increments March's
+      Each aggregate statistic consists of events which transpired during the given time period.
+      For example, `received_count` consists of all submission created within the time period; whereas
+      every other metric consists of submissions that reached their terminal state within the time period.
+      A submission received in March and approved in June therefore increments March's
       `received_count` and June's `approved_count`. Because states are terminal in Synapse —
       an Approved, Rejected, or Cancelled submission never changes state again — a metric
       attributed to a past date cannot be revised by anything that happens later, so once
@@ -84,35 +84,35 @@ models:
         data_tests:
           - not_null
       - name: received_count
-        description: "Count of submissions created in this period for this access requirement, dated by `created_on`. Includes submissions that were subsequently cancelled, since a cancelled submission was still received on its creation date; the cancellation is counted separately in `cancelled_count` on the date it occurred."
+        description: "Count of submissions made in this period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
         data_tests:
           - not_null
       - name: cancelled_count
-        description: "Count of submissions withdrawn in this period, dated by `state_modified_on`. These submissions are also counted in `received_count` for whichever period they were created in, which may be an earlier period."
+        description: "Count of submissions withdrawn in this period."
         data_type: NUMBER
         constraints:
           - type: not_null
         data_tests:
           - not_null
       - name: approved_count
-        description: "Count of submissions approved in this period, dated by `state_modified_on` — i.e. approvals granted during the period, regardless of when the submissions were received."
+        description: "Count of submissions approved in this period — i.e., approvals granted during the period, regardless of when the submissions were received."
         data_type: NUMBER
         constraints:
           - type: not_null
         data_tests:
           - not_null
       - name: rejected_count
-        description: "Count of submissions rejected in this period, dated by `state_modified_on` — i.e. rejections issued during the period, regardless of when the submissions were received."
+        description: "Count of submissions rejected in this period — i.e., rejections issued during the period, regardless of when the submissions were received."
         data_type: NUMBER
         constraints:
           - type: not_null
         data_tests:
           - not_null
       - name: reviewed_count
-        description: "Count of submissions that reached a review decision (Approved or Rejected) in this period, dated by `state_modified_on`. Equals `approved_count` + `rejected_count`. Cancelled submissions are excluded, as a withdrawal is not a review decision."
+        description: "Count of submissions that reached a review decision (Approved or Rejected) in this period. Equals `approved_count` + `rejected_count`. Cancelled submissions are excluded, as a withdrawal is not a review decision."
         data_type: NUMBER
         constraints:
           - type: not_null
@@ -122,5 +122,5 @@ models:
         description: "Sum of days between `created_on` and `state_modified_on` across submissions reviewed in this period. Divide by `reviewed_count` downstream to get the average turnaround of reviews completed in the period. NULL if no submissions were reviewed in this period."
         data_type: NUMBER
       - name: sum_attempts_to_approval
-        description: "Sum of `attempt` across submissions approved in this period. Because `attempt` numbers a submission within its approval cycle and an approved submission is always the last of its cycle, each addend is the total number of attempts that cycle took to win approval. Divide by `approved_count` downstream to get the average attempts per approval granted in the period. NULL if no submissions were approved in this period."
+        description: "Sum of `attempt`s across submissions approved in this period. Divide by `approved_count` downstream to get the average attempts per approval granted in the period. NULL if no submissions were approved in this period."
         data_type: NUMBER

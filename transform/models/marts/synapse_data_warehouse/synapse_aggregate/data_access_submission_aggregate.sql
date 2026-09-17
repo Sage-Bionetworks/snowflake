@@ -38,7 +38,7 @@ lifecycle_event AS (
         access_requirement_id,
         UPPER(state) AS event_type,
         state_modified_on AS event_on,
-        -- Latency is only meaningful for a review decision; a withdrawal is not a review
+        -- Latency is only meaningful for a review decision; a cancellation is not a review
         CASE
             WHEN state IN ('Approved', 'Rejected')
                 THEN DATEDIFF(day, created_on, state_modified_on)
@@ -72,7 +72,7 @@ event_rollup AS (
         COUNT(CASE WHEN event_type = 'REJECTED' THEN 1 END) AS rejected_count,
 
         -- "Reviewed" means a review decision was reached (Approved/Rejected);
-        -- Cancelled was withdrawn before a decision, so it is not a review
+        -- Cancelled was withdrawn before a decision, so it is neither a review nor an attempt (by convention)
         COUNT(CASE WHEN event_type IN ('APPROVED', 'REJECTED') THEN 1 END) AS reviewed_count,
         SUM(days_to_review) AS sum_days_to_review,
         SUM(attempts_to_approval) AS sum_attempts_to_approval
