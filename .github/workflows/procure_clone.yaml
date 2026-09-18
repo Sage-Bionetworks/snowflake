@@ -35,6 +35,11 @@ on:
                 required: false
                 default: ""
                 type: string
+            dbt_selector:
+                description: dbt selector to run against the clone after schemachange (e.g. synapse_data_warehouse). Leave blank to skip dbt.
+                required: false
+                default: ""
+                type: string
             action:
                 description: Procure a new clone or tear an existing one down
                 required: true
@@ -83,6 +88,7 @@ jobs:
                   USER: ${{ vars.ADMIN_SERVICE_USER }}
 
             - name: Procure clone
+              id: procure
               if: ${{ inputs.action == 'procure' }}
               shell: bash
               run: |
@@ -93,7 +99,29 @@ jobs:
                 [ -n "${{ inputs.deploy_folder }}" ] && ARGS+=(--deploy-folder "${{ inputs.deploy_folder }}")
                 [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
                 # `uv run` syncs the workspace (installs the snowclone package + its connector).
+                # Emits a `clone_db` output with the resolved clone name for the dbt step below.
                 uv run snowclone freeze "${ARGS[@]}"
+
+            # dbt is not part of snowclone itself (most databases don't use it) - a non-empty
+            # dbt_selector opts this particular clone into running dbt against it afterward,
+            # the same way test_with_clone.yaml's clone job does for SYNAPSE_DATA_WAREHOUSE.
+            - name: Configure dbt
+              if: ${{ inputs.action == 'procure' && inputs.dbt_selector != '' && !inputs.dry_run }}
+              uses: ./.github/actions/configure-dbt
+              with:
+                  PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
+                  PRIVATE_KEY: ${{ secrets.ADMIN_SERVICE_PRIVATE_KEY }}
+                  ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
+                  USER: ${{ vars.ADMIN_SERVICE_USER }}
+                  ROLE: ${{ inputs.developer_role }}
+                  DATABASE: ${{ steps.procure.outputs.clone_db }}
+                  TARGET_NAME: clone
+
+            - name: Run dbt models on the clone
+              if: ${{ inputs.action == 'procure' && inputs.dbt_selector != '' && !inputs.dry_run }}
+              working-directory: transform
+              shell: bash
+              run: uv run --group dbt --frozen dbt run --selector "${{ inputs.dbt_selector }}" --target clone --full-refresh
 
             - name: Tear down clone
               if: ${{ inputs.action == 'teardown' }}

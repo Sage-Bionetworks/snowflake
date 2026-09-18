@@ -13,12 +13,27 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 
 from . import procure, teardown
 from .connection import Session
 
 logger = logging.getLogger("snowclone")
+
+
+def _emit_output(name: str, value: str) -> None:
+    """Append a ``name=value`` line to ``$GITHUB_OUTPUT``, if set.
+
+    Lets a calling workflow chain further steps (e.g. running dbt) off the
+    resolved clone name without re-deriving snowclone's sanitization rules itself.
+    No-ops outside GitHub Actions.
+    """
+    path = os.environ.get("GITHUB_OUTPUT")
+    if not path:
+        return
+    with open(path, "a") as f:
+        f.write(f"{name}={value}\n")
 
 
 def _add_clone_selectors(p: argparse.ArgumentParser) -> None:
@@ -77,6 +92,7 @@ def main(argv: list[str] | None = None) -> int:
                 ctx.clone_db, ctx.source_db, ctx.proxy_role, ctx.developer_role, args.dry_run,
             )
             procure.procure(ctx)
+            _emit_output("clone_db", ctx.clone_db)
         else:  # melt
             source_db = procure.sanitize(args.database)
             clone_db = procure.resolve_clone_name(args)

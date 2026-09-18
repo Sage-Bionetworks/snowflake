@@ -41,7 +41,16 @@ Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label i
 `workflow_dispatch` wrapper around the same `packages/snowclone/` package for ad-hoc
 clones of any database (free-form `database` input — not a fixed list). Inputs:
 `database`, `environment`, `clone_suffix`, `developer_role`, `deploy_folder`
-(blank skips the deploy), `action` (procure/teardown), `dry_run`.
+(blank skips the deploy), `dbt_selector` (blank skips dbt), `action` (procure/teardown),
+`dry_run`.
+
+**dbt is layered on in the workflow, not in `snowclone`:** the package only ever
+runs schemachange (every database has that); dbt is database-specific, so
+`snowclone freeze` emits its resolved clone name as a `clone_db` step output, and
+the workflow uses that to run `actions/configure-dbt` + `dbt run --selector
+${{ inputs.dbt_selector }}` as its own step, the same way `test_with_clone.yaml`'s
+clone job does for `SYNAPSE_DATA_WAREHOUSE`. A caller cloning a database with no dbt
+project just leaves `dbt_selector` blank.
 
 **Python version:** The `configure-snowflake-cli` action sets up Python 3.13 and installs `uv`. `procure_clone.yaml` invokes `uv run snowclone freeze` / `uv run snowclone melt`, which syncs the workspace and installs the `snowclone` package (and its Snowflake connector dependency) on the fly — no separate install step.
 
