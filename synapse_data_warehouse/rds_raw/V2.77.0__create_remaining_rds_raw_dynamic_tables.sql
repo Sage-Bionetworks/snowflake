@@ -9,13 +9,11 @@ USE SCHEMA {{database_name}}.RDS_RAW; --noqa: JJ01,PRS,TMP
 -- PII masking policies (admin/policies/V1.36.0), matching the masking applied
 -- to the same columns in SYNAPSE_RDS_SNAPSHOT for SNOW-482.
 --
--- Two categories of RDS_LANDING tables are intentionally excluded here (SNOW-562):
--- - Tables whose upstream source is periodically truncated (e.g. asynch_job_status),
---   for which a same-day snapshot filter would silently drop history. These get a
---   dedup-based dynamic table in V2.77.1 instead.
--- - Tables observed to be entirely empty in RDS_LANDING, likely due to the
---   ingestion bug tracked in SNOW-580 (e.g. changes, comment, oauth_authorization_code).
---   Skipped for now until that bug is resolved.
+-- Tables whose upstream source is periodically truncated (job/token/log-style
+-- tables such as asynch_job_status, materialized_view_id, and
+-- materialized_view_source_tables) are excluded here: a same-day snapshot
+-- filter would silently drop history. Those get dedup-based dynamic tables in
+-- V2.77.1 instead.
 
 -- activity
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.activity --noqa: JJ01,PRS,TMP
@@ -127,6 +125,17 @@ FROM {{database_name}}.RDS_LANDING.challenge_team --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
+-- changes
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.changes --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.changes with no transformations applied. Serves as the dbt source table for the stg_synapse__changes staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.changes --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
 -- column_analyzer_override
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.column_analyzer_override --noqa: JJ01,PRS,TMP
     TARGET_LAG = '5 hours'
@@ -146,6 +155,17 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.column_model --noqa: J
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.column_model --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
+-- comment
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.comment --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.comment with no transformations applied. Serves as the dbt source table for the stg_synapse__comment staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.comment --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
@@ -448,6 +468,17 @@ FROM {{database_name}}.RDS_LANDING.feature_status --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
+-- files
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.files --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.files with no transformations applied. Serves as the dbt source table for the stg_synapse__files staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.files --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
 -- form_data
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.form_data --noqa: JJ01,PRS,TMP
     TARGET_LAG = '5 hours'
@@ -712,6 +743,17 @@ FROM {{database_name}}.RDS_LANDING.node_access_requirement --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
+-- node_revision
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.node_revision --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.node_revision with no transformations applied. Serves as the dbt source table for the stg_synapse__node_revision staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.node_revision --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
 -- notification_email
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.notification_email --noqa: JJ01,PRS,TMP
     TARGET_LAG = '5 hours'
@@ -935,6 +977,17 @@ FROM {{database_name}}.RDS_LANDING.research_project --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
+-- search_config_object_binding
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.search_config_object_binding --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.search_config_object_binding with no transformations applied. Serves as the dbt source table for the stg_synapse__search_config_object_binding staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.search_config_object_binding --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
 -- search_configuration
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.search_configuration --noqa: JJ01,PRS,TMP
     TARGET_LAG = '5 hours'
@@ -943,6 +996,17 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.search_configuration -
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.search_configuration --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
+-- sent_messages
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.sent_messages --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.sent_messages with no transformations applied. Serves as the dbt source table for the stg_synapse__sent_messages staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.sent_messages --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
@@ -1254,6 +1318,17 @@ FROM {{database_name}}.RDS_LANDING.throttle_rules --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
+-- unsuccessful_login_lockout
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.unsuccessful_login_lockout --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.unsuccessful_login_lockout with no transformations applied. Serves as the dbt source table for the stg_synapse__unsuccessful_login_lockout staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.unsuccessful_login_lockout --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
 -- user_group
 CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.user_group --noqa: JJ01,PRS,TMP
     TARGET_LAG = '5 hours'
@@ -1405,6 +1480,17 @@ CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.webhook --noqa: JJ01,P
 AS
 SELECT *
 FROM {{database_name}}.RDS_LANDING.webhook --noqa: JJ01,PRS,TMP
+WHERE snapshot_date = CURRENT_DATE();
+
+
+-- webhook_allowed_domain
+CREATE OR REPLACE DYNAMIC TABLE {{database_name}}.RDS_RAW.webhook_allowed_domain --noqa: JJ01,PRS,TMP
+    TARGET_LAG = '5 hours'
+    WAREHOUSE = COMPUTE_XSMALL
+    COMMENT = 'Dynamic table sourcing all columns from RDS_LANDING.webhook_allowed_domain with no transformations applied. Serves as the dbt source table for the stg_synapse__webhook_allowed_domain staging model.'
+AS
+SELECT *
+FROM {{database_name}}.RDS_LANDING.webhook_allowed_domain --noqa: JJ01,PRS,TMP
 WHERE snapshot_date = CURRENT_DATE();
 
 
