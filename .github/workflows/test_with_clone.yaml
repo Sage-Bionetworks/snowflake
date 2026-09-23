@@ -73,9 +73,9 @@ jobs:
                 echo "Clone name has been updated! The clone name will be: ${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}"
                 echo "SNOWFLAKE_DOMAIN_CLONE_SANITIZED=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
-                # Next, create the environment variable: SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE
+                # Next, create the environment variable: SNOWFLAKE_DEPLOY_DATABASE
                 # which schemachange uses to deploy changes to the right database (this is used in the schemachange step)
-                echo "SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
+                echo "SNOWFLAKE_DEPLOY_DATABASE=${SNOWFLAKE_DOMAIN_CLONE_SANITIZED}" >> $GITHUB_ENV
 
             - name: Zero-copy clone the database as ADMIN
               shell: bash
