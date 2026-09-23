@@ -1,9 +1,5 @@
 use schema {{database_name}}.rds_landing; --noqa: JJ01,PRS,TMP
 
--- Finalizer previously picked the root task row with the latest scheduled_time, which can match a future
--- not-yet-run occurrence instead of the run being finalized. Pull the current run's graph_run_group_id
--- directly from task runtime context instead.
-
 alter task refresh_rds_snapshots_stage_task suspend;
 
 create or replace task refresh_rds_snapshots_stage_finalizer_task
@@ -32,7 +28,7 @@ begin
     -- widens that scope, and graph_run_group_id picks the exact run rather than the latest by schedule.
     select root_task_id, state, scheduled_time, query_start_time, completed_time
     into :v_root_task_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
-    from table(snowflake.information_schema.task_history(task_name => 'REFRESH_RDS_SNAPSHOTS_STAGE_TASK', result_limit => 10000))
+    from table(snowflake.information_schema.task_history(task_name => 'REFRESH_RDS_SNAPSHOTS_STAGE_TASK'))
     where graph_run_group_id = :v_graph_run_group_id;
 
     v_run_date := to_varchar(current_date(), 'MM/DD/YYYY');
