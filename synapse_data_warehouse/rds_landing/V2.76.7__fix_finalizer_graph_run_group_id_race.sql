@@ -24,15 +24,30 @@ declare
     v_failed_names  varchar default '';
     v_run_date      varchar;
     v_message       varchar;
+    v_attempts      integer default 0;
 begin
     v_graph_run_group_id := system$task_runtime_info('CURRENT_TASK_GRAPH_RUN_GROUP_ID');
 
     -- Root task's own row for this exact run, scoped by graph_run_group_id rather than "most recent by scheduled_time".
-    select root_task_id, state, scheduled_time, query_start_time, completed_time
-    into :v_root_task_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
-    from table(snowflake.information_schema.task_history())
-    where graph_run_group_id = :v_graph_run_group_id
-    and upper(name) = 'REFRESH_RDS_SNAPSHOTS_STAGE_TASK';
+    -- Retry briefly: this row can lag information_schema.task_history()'s visibility by several seconds after completion.
+    loop
+        select root_task_id, state, scheduled_time, query_start_time, completed_time
+        into :v_root_task_id, :v_root_task_state, :v_root_task_scheduled_time, :v_root_task_query_start_time, :v_root_task_completed_time
+        from table(snowflake.information_schema.task_history())
+        where graph_run_group_id = :v_graph_run_group_id
+        and upper(name) = 'REFRESH_RDS_SNAPSHOTS_STAGE_TASK';
+
+        if (v_root_task_state is not null) then
+            break;
+        end if;
+
+        v_attempts := v_attempts + 1;
+        if (v_attempts >= 5) then
+            break;
+        end if;
+
+        call system$wait(3);
+    end loop;
 
     v_run_date := to_varchar(current_date(), 'MM/DD/YYYY');
 
