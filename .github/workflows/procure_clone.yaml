@@ -98,9 +98,11 @@ jobs:
                 # A non-empty deploy folder enables the schemachange deploy; blank skips it.
                 [ -n "${{ inputs.deploy_folder }}" ] && ARGS+=(--deploy-folder "${{ inputs.deploy_folder }}")
                 [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
-                # `uv run` syncs the workspace (installs the snowclone package + its connector).
-                # Emits a `clone_db` output with the resolved clone name for the dbt step below.
-                uv run snowclone freeze "${ARGS[@]}"
+                # --package tells uv which workspace member to sync; without it, `uv run`
+                # only installs the root (virtual) project and the snowclone script is never
+                # placed on PATH. Emits a `clone_db` output with the resolved clone name for
+                # the dbt step below.
+                uv run --package snowclone snowclone freeze "${ARGS[@]}"
 
             # dbt is not part of snowclone itself (most databases don't use it) - a non-empty
             # dbt_selector opts this particular clone into running dbt against it afterward,
@@ -130,4 +132,4 @@ jobs:
                 ARGS=(--database "${{ inputs.database }}"
                       --clone-suffix "${{ inputs.clone_suffix }}")
                 [ "${{ inputs.dry_run }}" = "true" ] && ARGS+=(--dry-run)
-                uv run snowclone melt "${ARGS[@]}"
+                uv run --package snowclone snowclone melt "${ARGS[@]}"
