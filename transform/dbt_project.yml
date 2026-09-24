@@ -38,3 +38,6 @@ models:
       +snowflake_warehouse: compute_xsmall
       sage:
         +database: "SAGE"
+      synapse_data_warehouse:
+        synapse_aggregate:
+          +schema: synapse_aggregate
