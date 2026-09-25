@@ -64,10 +64,14 @@ jobs:
             - name: Procure clone
               id: procure
               shell: bash
+              env:
+                # Routed through an env var, not interpolated directly into the script body,
+                # since github.head_ref is attacker-controlled (script injection).
+                CLONE_SUFFIX: ${{ github.head_ref }}
               run: |
                 uv run snowclone freeze \
                   --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
-                  --clone-suffix "${{ github.head_ref }}" \
+                  --clone-suffix "$CLONE_SUFFIX" \
                   --developer-role "$SNOWFLAKE_CLONE_ADMIN_ROLE"
 
             - name: Re-enable DIRECTORY on cloned S3 external stages before schemachange
@@ -147,7 +151,9 @@ jobs:
 
           - name: Drop the clone and its proxy admin role
             shell: bash
+            env:
+              CLONE_SUFFIX: ${{ github.head_ref }}
             run: |
               uv run snowclone melt \
                 --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
-                --clone-suffix "${{ github.head_ref }}"
+                --clone-suffix "$CLONE_SUFFIX"
