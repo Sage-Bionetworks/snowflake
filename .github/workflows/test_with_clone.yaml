@@ -65,8 +65,6 @@ jobs:
               id: procure
               shell: bash
               env:
-                # Routed through an env var, not interpolated directly into the script body,
-                # since github.head_ref is attacker-controlled (script injection).
                 CLONE_SUFFIX: ${{ github.head_ref }}
               run: |
                 uv run snowclone freeze \
