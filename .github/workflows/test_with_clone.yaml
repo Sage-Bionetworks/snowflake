@@ -21,21 +21,17 @@ jobs:
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip_cloning') && github.event.pull_request.state == 'open' }}
         environment: dev_restricted
         env:
-            # Establish the snowflake account credentials
+            # configure-snowflake-cli relevant variables
             SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
             SNOWFLAKE_USER: ${{ vars.ADMIN_SERVICE_USER }}
             PRIVATE_KEY_PASSPHRASE: ${{ secrets.ADMIN_SERVICE_PASS_PHRASE }}
 
-            # Source database to clone (SYNAPSE_DATA_WAREHOUSE_DEV in the dev environment)
+            # snowclone relevant variables
             SNOWFLAKE_DOMAIN_ORIGINAL: ${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}
-
-            # The source db's admin role owns the clone immediately after cloning (see
-            # packages/snowclone/), so it's used for the stage-DIRECTORY workaround below.
             SNOWFLAKE_ADMIN_ROLE: "${{ vars.SNOWFLAKE_SYNAPSE_DATA_WAREHOUSE_DATABASE }}_ADMIN"
             SNOWFLAKE_CLONE_ADMIN_ROLE: DATA_ENGINEER
 
-            # Stage/integration variables consumed by synapse_data_warehouse/schemachange-config.yml
-            # during the deploy phase of the procurement script.
+            # schemachange relevant variables, consumed by synapse_data_warehouse/schemachange-config.yml
             SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWSQL_WAREHOUSE }}
             SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION }}
             SNOWFLAKE_SYNAPSE_STAGE_URL: ${{ vars.SNOWFLAKE_SYNAPSE_STAGE_URL }}
@@ -54,13 +50,10 @@ jobs:
                   ACCOUNT: ${{ secrets.SNOWSQL_ACCOUNT }}
                   USER: ${{ vars.ADMIN_SERVICE_USER }}
 
-            # Procure an RBAC-configured zero-copy clone. The schemachange deploy is run as
-            # a separate step below (rather than via --deploy-folder here) so the
-            # stage-DIRECTORY workaround can run in between, before schemachange/dbt touch
-            # the clone. The script discovers the ownership hierarchy at runtime, so it
-            # auto-adapts when schemas are added — no per-schema maintenance of this
-            # workflow is needed. `uv run` syncs the workspace (installs the snowclone
-            # package + its connector).
+            # Procure an RBAC-configured zero-copy clone.
+            # The schemachange deploy is run as a separate step below (rather than
+            # via --deploy-folder here), since some changes may be dependent on
+            # a stage's directory data being refreshed. See SNOW-495. 
             - name: Procure clone
               id: procure
               shell: bash
@@ -83,10 +76,7 @@ jobs:
                 snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${CLONE_DB}.RDS_LANDING.RDS_SNAPSHOTS_STAGE SET DIRECTORY = (ENABLE = TRUE);"
                 snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${CLONE_DB}.RDS_LANDING.RDS_SNAPSHOTS_STAGE REFRESH;"
 
-                # Skipped: this stage currently holds 3.26M+ files, and a full-stage REFRESH (no SUBPATH)
-                # exceeds Snowflake's ~1GB file-descriptor metadata cap per call (error 001057), so it cannot
-                # succeed here regardless of cloning. Needs a SUBPATH-scoped refresh strategy to fix properly.
-                # TODO [SNOW-556]: Implement SUBPATH-scoped refresh strategy for oversized SYNAPSE_RAW stage.
+                # Skipped. See SNOW-556
                 # snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${CLONE_DB}.SYNAPSE_RAW.${SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION}_STAGE SET DIRECTORY = (ENABLE = TRUE);"
                 # snow sql --role $SNOWFLAKE_ADMIN_ROLE -q "ALTER STAGE IF EXISTS ${CLONE_DB}.SYNAPSE_RAW.${SNOWFLAKE_SYNAPSE_STAGE_STORAGE_INTEGRATION}_STAGE REFRESH;"
 
@@ -104,11 +94,6 @@ jobs:
                 --config-folder synapse_data_warehouse \
                 --snowflake-role $SNOWFLAKE_CLONE_ADMIN_ROLE
 
-            ########################################################################################################
-            ########################################################################################################
-            ##################################### RUNNING DBT ON THE CLONE ##########################################
-            ########################################################################################################
-            ########################################################################################################
             - name: Configure dbt
               uses: ./.github/actions/configure-dbt
               with:
