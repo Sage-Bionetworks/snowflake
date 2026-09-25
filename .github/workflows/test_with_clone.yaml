@@ -67,7 +67,7 @@ jobs:
               env:
                 CLONE_SUFFIX: ${{ github.head_ref }}
               run: |
-                uv run snowclone freeze \
+                uv run --package snowclone --frozen --no-build snowclone freeze \
                   --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
                   --clone-suffix "$CLONE_SUFFIX" \
                   --developer-role "$SNOWFLAKE_CLONE_ADMIN_ROLE"
@@ -152,6 +152,6 @@ jobs:
             env:
               CLONE_SUFFIX: ${{ github.head_ref }}
             run: |
-              uv run snowclone melt \
+              uv run --package snowclone --frozen --no-build snowclone melt \
                 --database "$SNOWFLAKE_DOMAIN_ORIGINAL" \
                 --clone-suffix "$CLONE_SUFFIX"
