@@ -28,6 +28,13 @@ Triggers on pull requests targeting `dev`. Skipped if the `skip_cloning` label i
 2. Re-enables `DIRECTORY` on the clone's S3 external stages (a zero-copy-clone quirk; see the inline comment and SNOW-556), then deploys `synapse_data_warehouse/` schemachange and runs `dbt run --selector synapse_data_warehouse --target clone` against the clone — both keyed off the `clone_db` output from step 1
 3. Tears down the clone (`uv run snowclone melt`) when the PR is closed
 
+**Isolation correctness** (which account roles can reach into the clone) lives
+entirely in `packages/snowclone/`'s Phase 2 — see its `AGENTS.md` for the two
+revoke vectors it has to cover (direct database privileges, and database-role
+membership, since a role holding a database role reaches the clone via that
+role's own database `USAGE` regardless of its own grants). This workflow has no
+grant-management steps of its own left to maintain when a schema changes.
+
 **Branch naming requirement:** Feature branches must start with `snow-` (e.g., `snow-407-feature`) for the `test_with_clone.yaml` workflow to trigger.
 
 ### `procure_clone.yaml` — on-demand provisioning
