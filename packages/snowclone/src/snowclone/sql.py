@@ -136,6 +136,19 @@ def grant_database_role(clone_db: str, db_role: str, proxy_role: str) -> str:
     return f"GRANT DATABASE ROLE {target} TO ROLE {proxy_role}"
 
 
+def revoke_database_role(clone_db: str, db_role: str, grantee_role: str) -> str:
+    """Return SQL revoking a clone database role's membership from an account role.
+
+    A database role carries its own ``USAGE`` on the (cloned) database, so any
+    account role still holding one after the clone can reach into it regardless
+    of that account role's own database-level access — this is what actually
+    isolates the clone, alongside :func:`revoke_all_on_database`.
+    """
+    target = f"{clone_db}.{db_role}"
+    assert_clone(clone_db, target)
+    return f"REVOKE DATABASE ROLE {target} FROM ROLE {grantee_role}"
+
+
 def transfer_schema_ownership(clone_db: str, schema: str, proxy_role: str) -> str:
     """Return SQL transferring ownership of a clone schema to the proxy."""
     target = f"{clone_db}.{schema}"

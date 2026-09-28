@@ -282,6 +282,44 @@ def test_revoke_other_roles(make_session, make_context, rows):
         assert ignore_errors is True
 
 
+def test_revoke_other_roles_also_revokes_database_role_membership(make_session, make_context, rows):
+    # A pre-existing (cloned-over) grant of a leaf database role to an unrelated
+    # analyst/governance account role must be revoked even though that role was
+    # never granted anything directly on the database itself.
+    def router(stmt):
+        if "SHOW GRANTS ON DATABASE" in stmt:
+            return []
+        if "SHOW DATABASE ROLES IN DATABASE" in stmt:
+            return [
+                rows.db_role("A_ALL_ADMIN", "SRC_ADMIN"),
+                rows.db_role("A_CHILD", "A_ALL_ADMIN"),
+            ]
+        if "SHOW GRANTS OF DATABASE ROLE SRC_CLONE.A_ALL_ADMIN" in stmt:
+            return [rows.grant(granted_to="ROLE", grantee_name="SRC_ADMIN")]
+        if "SHOW GRANTS OF DATABASE ROLE SRC_CLONE.A_CHILD" in stmt:
+            return [
+                rows.grant(granted_to="ROLE", grantee_name="SAGE_GOVERNANCE_ADMIN"),
+                # Membership held by another database role (internal hierarchy)
+                # must be left alone.
+                rows.grant(granted_to="DATABASE_ROLE", grantee_name="A_ALL_ADMIN"),
+            ]
+        return []
+
+    session = make_session(router)
+    ctx = make_context(session=session)
+
+    phases.revoke_other_roles(ctx)
+
+    # SRC_ADMIN is allowlisted -> not revoked; the DATABASE_ROLE grantee is not
+    # an account role -> never considered.
+    assert session.executed_sql == [
+        "REVOKE DATABASE ROLE SRC_CLONE.A_CHILD FROM ROLE SAGE_GOVERNANCE_ADMIN"
+    ]
+    for role, _sql, ignore_errors in session.executed:
+        assert role == phases.SECURITYADMIN
+        assert ignore_errors is True
+
+
 # --------------------------------------------------------------------------- #
 # deploy
 # --------------------------------------------------------------------------- #
