@@ -15,11 +15,11 @@ staging as (
         to_timestamp(created_on/1000) as created_on,
         INITCAP(state) AS state,
         case
-            when state in ('Cancelled', 'Submitted') then null
+            when INITCAP(state) in ('Cancelled', 'Submitted') then null
             else modified_by
         end as state_modified_by,
         case
-            when state in ('Cancelled', 'Submitted') then null
+            when INITCAP(state) in ('Cancelled', 'Submitted') then null
             else to_timestamp(modified_on/1000)
         end as state_modified_on,
         case
