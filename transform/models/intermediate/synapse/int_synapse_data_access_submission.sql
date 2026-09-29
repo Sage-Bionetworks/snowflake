@@ -26,10 +26,7 @@ data_access_submission_status as (
         state_modified_on,
         state,
         state_reason,
-        case
-            when state in ('Cancelled', 'Submitted') then null
-            else state_modified_by
-        end as state_modified_by
+        state_modified_by
     from
         {{ ref('stg_synapse__data_access_submission_status') }}
 ),
