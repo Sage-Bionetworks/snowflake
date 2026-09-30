@@ -575,3 +575,80 @@ sources:
               - accepted_values:
                   arguments:
                     values: ['USER_NAME', 'TEAM_NAME', 'USER_EMAIL', 'USER_OPEN_ID', 'USER_ORCID']
+
+  - name: synapse_event
+    schema: SYNAPSE_EVENT
+    description: "Deduplicated change-event history for SYNAPSE_RAW data types that cannot be fully reconstructed from RDS data types."
+    tables:
+      - name: filehandleassociation_event
+        description: "This dynamic table, indexed by the associateid, associatetype, and filehandleid columns, contains every file handle association for each Synapse object. In other words, for any Synapse object, this table contains the complete set of file handles which have ever been associated with it. For example, when a new version of a file entity is uploaded, a new file handle is associated with that file entity. Table entities are more complicated: a new file handle is associated with a table entity only when a row with a FILEHANDLEID column is added or updated in that table."
+        columns:
+          - name: associateid
+            description: "PRIMARY KEY (Composite). The unique identifier of the Synapse object that wraps the file."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: associatetype
+            description: "PRIMARY KEY (Composite). The type of the Synapse object that wraps the file. One of: FileEntity, TableEntity, WikiMarkdown, WikiAttachment, UserProfileAttachment, TeamAttachment, MessageAttachment, FormData, SubmissionAttachment, VerificationSubmission, AccessRequirementAttachment, DataAccessRequestAttachment, DataAccessSubmissionAttachment."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: filehandleid
+            description: "PRIMARY KEY (Composite). The unique identifier of the file handle."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: instance
+            description: "The version of the stack that processed the file association."
+            data_type: VARCHAR
+          - name: stack
+            description: "The stack (prod, dev) on which the file handle association was processed."
+            data_type: VARCHAR
+          - name: timestamp
+            description: "The time when the association data was collected."
+            data_type: TIMESTAMP_NTZ
+
+      - name: objectdownload_event
+        description: "This dynamic table, indexed by the user_id, association_object_id, association_object_type and record_date columns, contains the most recent file download event matching the given index."
+        columns:
+          - name: timestamp
+            description: "The time when the file download event is pushed to the queue for recording, after generating the pre-signed url."
+            data_type: TIMESTAMP_NTZ(9)
+          - name: user_id
+            description: "PRIMARY KEY (Composite). The id of the user who downloaded the file."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: project_id
+            description: "The unique identifier of the project where the downloaded entity resides. Applicable only for FileEntity and TableEntity."
+            data_type: NUMBER
+          - name: file_handle_id
+            description: "The unique identifier of the file handle."
+            data_type: NUMBER
+          - name: downloaded_file_handle_id
+            description: "The unique identifier of the zip file handle containing the downloaded file when the download is requested as zip/package, otherwise the id of the file handle itself."
+            data_type: NUMBER
+          - name: association_object_id
+            description: "PRIMARY KEY (Composite). The unique identifier of the Synapse object (without 'syn' prefix) that wraps the file."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: association_object_type
+            description: "PRIMARY KEY (Composite). The type of the Synapse object that wraps the file, e.g., FileEntity, TableEntity, WikiAttachment, WikiMarkdown, UserProfileAttachment, MessageAttachment, TeamAttachment."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: stack
+            description: "The stack (prod, dev) on which the download request was processed."
+            data_type: VARCHAR
+          - name: instance
+            description: "The version of the stack that processed the download request."
+            data_type: VARCHAR
+          - name: record_date
+            description: "PRIMARY KEY (Composite). The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries."
+            data_type: DATE
+            data_tests:
+              - not_null
+          - name: session_id
+            description: "The UUID assigned to the API request that triggered this download. By joining this table with the processedaccessrecord on session_id, more information about the call that triggered this download can be found."
+            data_type: VARCHAR
