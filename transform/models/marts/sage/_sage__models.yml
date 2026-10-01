@@ -55,13 +55,13 @@ models:
         constraints:
           - type: not_null
       - name: reviewed_by
-        description: "Identifier of the user who last modified the submission status."
+        description: "Identifier of the user who last modified the submission status. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
         data_type: NUMBER
       - name: reviewed_by_user_name
-        description: "Username of the user who last modified the submission status."
+        description: "Username of the user who last modified the submission status. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
         data_type: VARCHAR
       - name: reviewed_on
-        description: "UTC timestamp when the submission status was last modified."
+        description: "UTC timestamp when the submission status was last modified. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
         data_type: TIMESTAMP_NTZ
       - name: submission_status_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations."
