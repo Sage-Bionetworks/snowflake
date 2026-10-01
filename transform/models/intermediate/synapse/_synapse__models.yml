@@ -234,6 +234,9 @@ models:
         data_type: VARCHAR
         constraints:
           - type: not_null
+      - name: attempt
+        description: "The submission attempt number within the current approval cycle for this data access request. Cancelled submissions do not count toward this sequence and are shown as NULL."
+        data_type: NUMBER
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR
