@@ -23,10 +23,10 @@ data_access_submission_base as (
 data_access_submission_status as (
     select
         data_access_submission_id,
-        state_modified_by,
         state_modified_on,
         state,
-        state_reason
+        state_reason,
+        state_modified_by
     from
         {{ ref('stg_synapse__data_access_submission_status') }}
 ),
