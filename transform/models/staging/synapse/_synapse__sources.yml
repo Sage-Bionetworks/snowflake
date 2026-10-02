@@ -575,3 +575,212 @@ sources:
               - accepted_values:
                   arguments:
                     values: ['USER_NAME', 'TEAM_NAME', 'USER_EMAIL', 'USER_OPEN_ID', 'USER_ORCID']
+
+  - name: synapse_event
+    schema: SYNAPSE_EVENT
+    description: "Deduplicated change-event history for SYNAPSE_RAW data types that cannot be fully reconstructed from RDS data types."
+    tables:
+      - name: filehandleassociation_event
+        description: "This dynamic table, indexed by the associateid, associatetype, and filehandleid columns, contains every file handle association for each Synapse object. In other words, for any Synapse object, this table contains the complete set of file handles which have ever been associated with it. For example, when a new version of a file entity is uploaded, a new file handle is associated with that file entity. Table entities are more complicated: a new file handle is associated with a table entity only when a row with a FILEHANDLEID column is added or updated in that table."
+        columns:
+          - name: associateid
+            description: "PRIMARY KEY (Composite). The unique identifier of the Synapse object (without 'syn' prefix)."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: associatetype
+            description: "PRIMARY KEY (Composite). The type of the Synapse object that wraps the file. One of: FileEntity, TableEntity, WikiMarkdown, WikiAttachment, UserProfileAttachment, TeamAttachment, MessageAttachment, FormData, SubmissionAttachment, VerificationSubmission, AccessRequirementAttachment, DataAccessRequestAttachment, DataAccessSubmissionAttachment."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: filehandleid
+            description: "PRIMARY KEY (Composite). The unique identifier of the file handle."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: instance
+            description: "The stack version that processed the file association."
+            data_type: VARCHAR
+          - name: stack
+            description: "The stack (prod, dev) on which the file handle association was processed."
+            data_type: VARCHAR
+          - name: timestamp
+            description: "The time when the association data was collected."
+            data_type: TIMESTAMP_NTZ
+
+      - name: objectdownload_event
+        description: "This dynamic table, indexed by the user_id, association_object_id, association_object_type and record_date columns, contains the most recent file download event matching the given index."
+        columns:
+          - name: timestamp
+            description: "The time when the file download event is pushed to the queue for recording, after generating the pre-signed url."
+            data_type: TIMESTAMP_NTZ(9)
+          - name: user_id
+            description: "PRIMARY KEY (Composite). The id of the user who downloaded the file."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: project_id
+            description: "The unique identifier of the project where the downloaded entity resides. Applicable only for FileEntity and TableEntity."
+            data_type: NUMBER
+          - name: file_handle_id
+            description: "The unique identifier of the file handle."
+            data_type: NUMBER
+          - name: downloaded_file_handle_id
+            description: "The unique identifier of the zip file handle containing the downloaded file when the download is requested as zip/package, otherwise the id of the file handle itself."
+            data_type: NUMBER
+          - name: association_object_id
+            description: "PRIMARY KEY (Composite). The unique identifier of the Synapse object (without 'syn' prefix) that wraps the file."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: association_object_type
+            description: "PRIMARY KEY (Composite). The type of the Synapse object that wraps the file, e.g., FileEntity, TableEntity, WikiAttachment, WikiMarkdown, UserProfileAttachment, MessageAttachment, TeamAttachment."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: stack
+            description: "The stack (prod, dev) on which the download request was processed."
+            data_type: VARCHAR
+          - name: instance
+            description: "The version of the stack that processed the download request."
+            data_type: VARCHAR
+          - name: record_date
+            description: "PRIMARY KEY (Composite). The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries."
+            data_type: DATE
+            data_tests:
+              - not_null
+          - name: session_id
+            description: "The UUID assigned to the API request that triggered this download. By joining this table with the processedaccessrecord on session_id, more information about the call that triggered this download can be found."
+            data_type: VARCHAR
+
+      - name: fileupload_event
+        description: "Upload records for FileEntity (e.g. a new file creation, upload, or update to an existing file) and TableEntity (e.g. an appended row set, uploaded file to an existing table). Events are recorded only after the file or table change is successfully uploaded. Cloned on a schedule from SYNAPSE_RAW.FILEUPLOAD."
+        columns:
+          - name: timestamp
+            description: "The time of the upload event."
+            data_type: TIMESTAMP_NTZ
+            data_tests:
+              - not_null
+          - name: user_id
+            description: "The id of the user who performed the upload."
+            data_type: NUMBER
+          - name: project_id
+            description: "The unique identifier of the project where the uploaded entity resides."
+            data_type: NUMBER
+          - name: file_handle_id
+            description: "The unique identifier of the file handle created or updated by the upload."
+            data_type: NUMBER
+          - name: association_object_id
+            description: "The unique identifier of the Synapse object (without 'syn' prefix) that wraps the file. The upstream ETL job (Synapse-ETL-Jobs) always populates this from the source record's associateId."
+            data_type: NUMBER
+            data_tests:
+              - not_null
+          - name: association_object_type
+            description: "The type of the Synapse object that wraps the file, e.g., FileEntity, TableEntity."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: stack
+            description: "The stack (prod, dev) on which the upload was processed."
+            data_type: VARCHAR
+          - name: instance
+            description: "The stack version that processed the upload."
+            data_type: VARCHAR
+          - name: record_date
+            description: "The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries."
+            data_type: DATE
+            data_tests:
+              - not_null
+
+      - name: access_event
+        description: "Access records for the Synapse server. Each record reflects a single API request received by Synapse, useful for audits and analyzing API performance such as delays, errors, or success rates. Cloned on a schedule from SYNAPSE_RAW.PROCESSEDACCESS."
+        columns:
+          - name: session_id
+            description: "The UUID assigned to the API request. Can be joined with other event tables on session_id for additional context about the call."
+            data_type: VARCHAR
+          - name: timestamp
+            description: "The time the API request was processed."
+            data_type: TIMESTAMP_NTZ
+            data_tests:
+              - not_null
+          - name: user_id
+            description: "The id of the user who made the API request."
+            data_type: NUMBER
+          - name: method
+            description: "The HTTP method of the API request (e.g., GET, POST, PUT, DELETE)."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: request_url
+            description: "The URL path of the API request."
+            data_type: VARCHAR
+            data_tests:
+              - not_null
+          - name: user_agent
+            description: "The user agent string of the client that made the request."
+            data_type: VARCHAR
+          - name: host
+            description: "The host header of the API request."
+            data_type: VARCHAR
+          - name: origin
+            description: "The origin header of the API request."
+            data_type: VARCHAR
+          - name: x_forwarded_for
+            description: "The X-Forwarded-For header, identifying the originating IP address of a client connecting through a proxy."
+            data_type: VARCHAR
+          - name: via
+            description: "The Via header of the API request."
+            data_type: VARCHAR
+          - name: thread_id
+            description: "The identifier of the server thread that processed the request."
+            data_type: NUMBER
+          - name: elapse_ms
+            description: "The elapsed time, in milliseconds, taken to process the request."
+            data_type: NUMBER
+          - name: success
+            description: "Whether the API request was processed successfully."
+            data_type: BOOLEAN
+          - name: stack
+            description: "The stack (prod, dev) on which the request was processed."
+            data_type: VARCHAR
+          - name: instance
+            description: "The version of the stack that processed the request."
+            data_type: VARCHAR
+          - name: vm_id
+            description: "The identifier of the virtual machine instance that processed the request."
+            data_type: VARCHAR
+          - name: return_object_id
+            description: "The identifier of the object returned by the request, if applicable."
+            data_type: VARCHAR
+          - name: query_string
+            description: "The query string portion of the API request URL."
+            data_type: VARCHAR
+          - name: response_status
+            description: "The HTTP response status code returned for the request."
+            data_type: NUMBER
+          - name: oauth_client_id
+            description: "The OAuth client identifier associated with the request, if the request was made via OAuth."
+            data_type: VARCHAR
+          - name: basic_auth_username
+            description: "The username used for HTTP basic authentication, if applicable."
+            data_type: VARCHAR
+          - name: auth_method
+            description: "The authentication method used for the request (e.g., session token, OAuth, basic auth)."
+            data_type: VARCHAR
+          - name: normalized_method_signature
+            description: "A normalized representation of the API method signature, used to group requests by endpoint regardless of path parameters."
+            data_type: VARCHAR
+          - name: client
+            description: "The client application that made the request (e.g., web, synapseclient, synapser)."
+            data_type: VARCHAR
+          - name: client_version
+            description: "The version of the client application that made the request."
+            data_type: VARCHAR
+          - name: entity_id
+            description: "The unique identifier of the Synapse entity targeted by the request, if applicable."
+            data_type: NUMBER
+          - name: record_date
+            description: "The data is partitioned for fast and cost effective queries. The timestamp field is converted into a date and stored in the record_date field for partitioning. The date should be used as a condition (WHERE CLAUSE) in the queries. The upstream ETL job (Synapse-ETL-Jobs) derives this directly from timestamp, so it is always populated."
+            data_type: DATE
+            data_tests:
+              - not_null
