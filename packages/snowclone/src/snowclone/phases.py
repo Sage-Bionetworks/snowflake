@@ -221,16 +221,28 @@ def grant_database_privileges(ctx: Context) -> None:
 
 
 def revoke_other_roles(ctx: Context) -> None:
-    """Phase 2: revoke DATABASE-level access from non-allowlisted account roles.
+    """Phase 2: revoke residual access from non-allowlisted account roles.
 
     Runs immediately after the clone so the environment is isolated before the
-    proxy's control is layered on. Revoking ``ALL PRIVILEGES`` on the *database*
-    strips USAGE, so these roles can no longer traverse into the clone to use any
-    schema or object — which neuters them without disturbing the finer-grained
-    schema/object grants. Those grants are deliberately retained (here, and via
-    ``COPY CURRENT GRANTS`` in Phases 5–6) so the clone mirrors the source's grant
-    structure; with no database USAGE they are inert. ``REVOKE ALL PRIVILEGES``
-    excludes OWNERSHIP, so nothing is orphaned.
+    proxy's control is layered on. Cloning copies grants at every level, not just
+    the database object, so this closes two separate vectors:
+
+    1. DATABASE-level privileges granted directly to an account role. Revoking
+       ``ALL PRIVILEGES`` on the *database* strips USAGE, so these roles can no
+       longer traverse into the clone to use any schema or object — which
+       neuters them without disturbing the finer-grained schema/object grants.
+       Those grants are deliberately retained (here, and via ``COPY CURRENT
+       GRANTS`` in Phases 5–6) so the clone mirrors the source's grant
+       structure; with no database USAGE they are inert. ``REVOKE ALL
+       PRIVILEGES`` excludes OWNERSHIP, so nothing is orphaned.
+    2. Database-role MEMBERSHIP granted directly to an account role — e.g. a
+       pre-existing ``GRANT DATABASE ROLE RDS_RAW_TABLE_READ_MASKED TO ROLE
+       SAGE_GOVERNANCE_ADMIN`` from the source database. A database role carries
+       its own USAGE on the database it belongs to, so (1) alone does not
+       neuter an account role that independently holds one — it can still reach
+       into the clone regardless of its own database-level access. Membership
+       held by *another database role* (the admin/developer/analyst hierarchy
+       Phase 5 captures) is left alone; only account-role holders are revoked.
     """
     logger.info("Phase 2: revoking database-level access from non-allowlisted roles")
     allowlist = ctx.revoke_allowlist
@@ -247,6 +259,21 @@ def revoke_other_roles(ctx: Context) -> None:
         ctx.session.execute(
             sql.revoke_all_on_database(ctx.clone_db, role), role=SECURITYADMIN, ignore_errors=True
         )
+
+    logger.info("Phase 2: revoking non-allowlisted account-role membership of database roles")
+    db_roles = introspect.database_roles(ctx.session, ctx.introspect_db, role=INTROSPECT)
+    for db_role in db_roles:
+        holders = introspect.database_role_grantees(
+            ctx.session, ctx.introspect_db, db_role.name, role=INTROSPECT
+        )
+        for holder in sorted(holders):
+            if holder.upper() in allowlist:
+                continue
+            ctx.session.execute(
+                sql.revoke_database_role(ctx.clone_db, db_role.name, holder),
+                role=SECURITYADMIN,
+                ignore_errors=True,
+            )
 
 
 def deploy(ctx: Context) -> None:
