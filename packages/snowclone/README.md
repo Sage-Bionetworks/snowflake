@@ -37,9 +37,8 @@ the `--deploy-folder` argument.
 
 The clone is named `{DATABASE}_{suffix}` (sanitized to `[A-Za-z0-9_]`). The proxy
 admin role is `{CLONE}_PROXY_ADMIN`. From CI it is driven by
-`.github/workflows/procure_clone.yaml` (on-demand); `test_with_clone.yaml` (PR
-testing of the dev warehouse) still uses its own hardcoded steps today — wiring it
-up to `snowclone` is a follow-up.
+`.github/workflows/procure_clone.yaml` (on-demand) and
+`.github/workflows/test_with_clone.yaml` (PR testing of the dev warehouse).
 
 `freeze` writes `clone_db=<name>` to `$GITHUB_OUTPUT` (a no-op outside GitHub
 Actions) once provisioning succeeds, so a calling workflow can chain further
