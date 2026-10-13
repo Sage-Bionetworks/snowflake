@@ -64,13 +64,25 @@ handled uniformly:
 ## Phases (executing role)
 
 1. **Clone** — `CREATE OR REPLACE DATABASE … CLONE …` — `{DATABASE}_ADMIN`.
-2. **Revoke residual access**: `REVOKE ALL PRIVILEGES ON DATABASE` from every
-   account role except the allowlist (`{DATABASE}_ADMIN` and the proxy). This
-   strips database `USAGE`, so those roles can't traverse into the clone — which
-   neuters them while the schema/object grants are **retained** for fidelity
-   (inert without database `USAGE`). The developer re-derives access via the
-   proxy, and the system roles via the developer. `REVOKE ALL PRIVILEGES`
-   excludes OWNERSHIP, so nothing is orphaned — `SECURITYADMIN`.
+2. **Revoke residual access** from every account role except the allowlist
+   (`{DATABASE}_ADMIN` and the proxy) — two vectors, since cloning copies grants
+   at every level, not just the database object:
+   - `REVOKE ALL PRIVILEGES ON DATABASE`, which strips database `USAGE` so those
+     roles can't traverse into the clone — neutering them while the
+     schema/object grants are **retained** for fidelity (inert without database
+     `USAGE`). `REVOKE ALL PRIVILEGES` excludes OWNERSHIP, so nothing is
+     orphaned.
+   - `REVOKE DATABASE ROLE ... FROM ROLE`, for every account role directly
+     holding membership in any database role in the clone. A database role
+     carries its own `USAGE` on the database it belongs to, so an account role
+     holding one (e.g. a pre-existing grant of a `{schema}_ANALYST` role to an
+     unrelated analyst/governance role) can reach into the clone regardless of
+     its own database-level access — the first bullet alone does not neuter it.
+     Membership held by *another database role* (the hierarchy Phase 5
+     captures) is left alone.
+
+   The developer re-derives access via the proxy, and the system roles via the
+   developer — `SECURITYADMIN`.
 3. **Create proxy** — `CREATE OR REPLACE ROLE {CLONE}_PROXY_ADMIN` — `USERADMIN`.
 4. **Grant proxy to developer** — `SECURITYADMIN`.
 5. **Capture database-role hierarchy** — for each database role owned by an
@@ -92,7 +104,10 @@ handled uniformly:
 - Cloning a database also clones its **database roles** and the contained objects,
   preserving each object's owning role; account-role-owned objects therefore stay
   owned by the (un-cloned) account role in the clone. Object/schema **grants are
-  copied** from the source — hence phase 2.
+  copied** from the source, as is **database-role membership** — an account role
+  granted a database role in the source keeps that grant in the clone, and a
+  database role's own `USAGE` on its database travels with it — hence phase 2's
+  two revoke vectors.
 - Only one role holds `OWNERSHIP` per object. Existing objects transfer with
   `COPY CURRENT GRANTS` (mirror prod's grant structure), while database-role
   ownership is taken with `REVOKE CURRENT GRANTS` (no privileges to preserve on a

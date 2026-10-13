@@ -57,6 +57,12 @@ standardized `SNOWFLAKE_DEPLOY_DATABASE` env var.
 - **Hierarchy-preserving:** capture top-level database roles (cheap, transitive);
   only fall back to per-object `GRANT OWNERSHIP ON ALL` for account-role-owned
   objects. Leave future grants held by database roles intact.
+- **Isolation is two vectors, not one:** `CLONE` copies grants at every level, so
+  Phase 2 must revoke both direct database privileges *and* database-role
+  membership from non-allowlisted account roles — a role holding a database role
+  (e.g. a pre-existing `{schema}_ANALYST` grant to an unrelated account role)
+  keeps real access via that role's own database `USAGE` even after its direct
+  database grant is stripped.
 - **Always `--dry-run` first** when changing the logic — read-only `SHOW`
   queries still run, so the logged plan reflects the real database.
 

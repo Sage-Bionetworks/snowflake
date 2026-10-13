@@ -102,6 +102,24 @@ def database_roles(session: Session, clone_db: str, role: str) -> list[DatabaseR
     return out
 
 
+def database_role_grantees(session: Session, clone_db: str, db_role: str, role: str) -> list[str]:
+    """Return account-role names that hold membership in ``db_role``.
+
+    ``SHOW GRANTS OF DATABASE ROLE`` rows describe role membership, not privilege
+    grants, so there is no ``privilege`` column. Membership held by *another*
+    database role (the internal admin/developer/analyst hierarchy) is excluded —
+    only account-role (``ROLE``) grantees are returned.
+    """
+    rows = session.query(f"SHOW GRANTS OF DATABASE ROLE {clone_db}.{db_role}", role=role)
+    out: list[str] = []
+    for r in rows:
+        granted_to = _cval(r, "granted_to", "grant_to")
+        grantee = _cval(r, "grantee_name")
+        if granted_to and granted_to.upper() == "ROLE" and grantee:
+            out.append(grantee)
+    return out
+
+
 def schemas_with_owners(session: Session, clone_db: str, role: str) -> list[SchemaInfo]:
     """Return all schemas in ``clone_db`` (excluding INFORMATION_SCHEMA) with owners."""
     rows = session.query(f"SHOW SCHEMAS IN DATABASE {clone_db}", role=role)

@@ -44,6 +44,42 @@ def test_database_roles(make_session, rows):
 
 
 # --------------------------------------------------------------------------- #
+# database_role_grantees
+# --------------------------------------------------------------------------- #
+def test_database_role_grantees_filters_to_account_roles(make_session):
+    session = make_session(
+        {
+            "SHOW GRANTS OF DATABASE ROLE": [
+                {"granted_to": "ROLE", "grantee_name": "SAGE_GOVERNANCE_ADMIN"},
+                {"granted_to": "DATABASE_ROLE", "grantee_name": "RDS_RAW_ALL_ADMIN"},
+                {"granted_to": "ROLE", "grantee_name": "DATA_ENGINEER"},
+            ]
+        }
+    )
+    result = introspect.database_role_grantees(
+        session, "SRC_CLONE", "RDS_RAW_TABLE_READ_MASKED", "SRC_ADMIN"
+    )
+
+    assert result == ["SAGE_GOVERNANCE_ADMIN", "DATA_ENGINEER"]
+
+
+def test_database_role_grantees_grant_to_fallback(make_session):
+    # Raw row using grant_to as fallback for granted_to.
+    raw = {"grant_to": "ROLE", "grantee_name": "TECH_PRODUCT"}
+    session = make_session({"SHOW GRANTS OF DATABASE ROLE": [raw]})
+    result = introspect.database_role_grantees(session, "SRC_CLONE", "R", "SRC_ADMIN")
+
+    assert result == ["TECH_PRODUCT"]
+
+
+def test_database_role_grantees_empty(make_session):
+    session = make_session({"SHOW GRANTS OF DATABASE ROLE": []})
+    result = introspect.database_role_grantees(session, "SRC_CLONE", "R", "SRC_ADMIN")
+
+    assert result == []
+
+
+# --------------------------------------------------------------------------- #
 # schemas_with_owners
 # --------------------------------------------------------------------------- #
 def test_schemas_with_owners(make_session, rows):

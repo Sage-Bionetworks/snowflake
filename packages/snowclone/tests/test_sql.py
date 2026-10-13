@@ -56,6 +56,10 @@ def test_assert_clone_rejects_non_prefix():
         ),
         (sql.grant_database_role("C", "DR", "P"), "GRANT DATABASE ROLE C.DR TO ROLE P"),
         (
+            sql.revoke_database_role("C", "DR", "R"),
+            "REVOKE DATABASE ROLE C.DR FROM ROLE R",
+        ),
+        (
             sql.transfer_schema_ownership("C", "SCH", "P"),
             "GRANT OWNERSHIP ON SCHEMA C.SCH TO ROLE P COPY CURRENT GRANTS",
         ),
