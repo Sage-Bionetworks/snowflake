@@ -1,0 +1,3 @@
+-- Drop CERTIFIEDQUIZ_LATEST table
+USE SCHEMA {{database_name}}.synapse;
+DROP TABLE CERTIFIEDQUIZ_LATEST;
