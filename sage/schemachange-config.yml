@@ -3,10 +3,13 @@ config-version: 1
 # The root folder for the database change scripts
 root-folder: sage
 # The name of the default database to use. Can be overridden in the change scripts.
-snowflake-database: SAGE
+# SNOWFLAKE_DEPLOY_DATABASE is the standardized target-database env var across all
+# schemachange configs. Defaults to SAGE (prod) so CI is unaffected; snowclone
+# sets it to the clone. SAGE is prod-only, so a default is safe here.
+snowflake-database: {{env_var('SNOWFLAKE_DEPLOY_DATABASE','SAGE')}}
 # Create the change history schema and table, if they do not exist (the default is False)
 create-change-history-table: True
 # Used to override the default name of the change history table (the default is METADATA.SCHEMACHANGE.CHANGE_HISTORY)
-change-history-table: SAGE.SCHEMACHANGE.CHANGE_HISTORY
+change-history-table: {{env_var('SNOWFLAKE_DEPLOY_DATABASE','SAGE')}}.SCHEMACHANGE.CHANGE_HISTORY
 vars:
-  database_name: SAGE
+  database_name: {{env_var('SNOWFLAKE_DEPLOY_DATABASE','SAGE')}}

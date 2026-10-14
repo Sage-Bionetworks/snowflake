@@ -55,6 +55,28 @@ principal_usernames AS (
         alias_display
     FROM {{ ref('stg_synapse__principal_alias') }}
     WHERE alias_type = 'USER_NAME'
+),
+approval_cycles AS (
+    SELECT
+        data_access_submission_id,
+        COALESCE(
+            SUM(CASE WHEN state = 'Approved' THEN 1 ELSE 0 END)
+                OVER (PARTITION BY data_access_request_id ORDER BY created_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),
+            0
+        ) AS approval_cycle
+    FROM base
+),
+attempts AS (
+    SELECT
+        base.data_access_submission_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY base.data_access_request_id, approval_cycles.approval_cycle
+            ORDER BY base.created_on
+        ) AS attempt
+    FROM base
+    INNER JOIN approval_cycles
+        ON base.data_access_submission_id = approval_cycles.data_access_submission_id
+    WHERE base.state != 'Cancelled'
 )
 SELECT
     base.data_access_submission_id,
@@ -70,6 +92,7 @@ SELECT
     base.state_modified_on,
     base.state,
     submission_types.submission_type,
+    attempts.attempt,
     base.state_reason,
     base.accessor_changes,
     base.data_access_submission_raw
@@ -80,3 +103,5 @@ LEFT JOIN principal_usernames pa_created
     ON base.created_by = pa_created.principal_id
 LEFT JOIN principal_usernames pa_modified
     ON base.state_modified_by = pa_modified.principal_id
+LEFT JOIN attempts
+    ON base.data_access_submission_id = attempts.data_access_submission_id
