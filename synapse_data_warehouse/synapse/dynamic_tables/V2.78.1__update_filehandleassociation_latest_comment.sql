@@ -1,9 +1,9 @@
 USE SCHEMA {{database_name}}.synapse; --noqa: JJ01,PRS,TMP
 
 -- Table comment
-COMMENT ON DYNAMIC TABLE FILEHANDLEASSOCIATION_LATEST IS 'This dynamic table, indexed by ASSOCIATEID, ASSOCIATETYPE and FILEHANDLEID, contains the file handle associations captured by the single most recent FILEHANDLEASSOCIATIONSNAPSHOTS scan run (identified by its INSTANCE value) that occurred within the past 14 days.
+COMMENT ON DYNAMIC TABLE FILEHANDLEASSOCIATION_LATEST IS 'This dynamic table, indexed by ASSOCIATEID, ASSOCIATETYPE and FILEHANDLEID, contains the file handle associations captured by the single most recent file handle snapshot (identified by its `INSTANCE` value) that occurred within the past 14 days.
 
-Unlike SYNAPSE_EVENT.FILEHANDLEASSOCIATION_EVENT, which independently deduplicates every association ever observed by ASSOCIATEID, ASSOCIATETYPE and FILEHANDLEID and therefore also retains associations that are no longer re-confirmed by the latest scan, this table reflects only the contents of a single scan run. If a scan is partial, or a given ASSOCIATETYPE is scanned on a different cadence or under a different INSTANCE value than the rest, associations it covers may be entirely absent from this table until they share the most recent INSTANCE. Prefer SYNAPSE_EVENT.FILEHANDLEASSOCIATION_EVENT for a complete, more robustly deduplicated view of current file handle associations; use this table when the single-scan-run semantics described above are specifically what is wanted.
+This differs from SYNAPSE_EVENT.FILEHANDLEASSOCIATION_EVENT, which contains every file handle association captured by any snapshot. Hence, not all historical file handle associations may be present in this table.
 
 h2. Associate Types
 
