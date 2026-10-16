@@ -61,8 +61,8 @@ with param_col_1:
         # Parameter: datewindow
         st.markdown("**Date window**")
         st.markdown(
-            "For charts which group results by time period, this property restricts "
-            "results to the periods between the selected start and end dates. "
+            "All charts and metrics are filtered by a date window. The date window "
+            "restricts results to the period between the start and end dates. "
             "Start dates are rounded down and end dates rounded up in charts which "
             "bucket their data by the date bucket."
         )
@@ -83,7 +83,7 @@ with param_col_1:
         input_datebucket = st.selectbox(
             "Date bucket",
             options=list(AGGREGATE_PERIODS),
-            index=3,
+            index=1,
             label_visibility="collapsed",
             key="datebucket_param",
         )
@@ -1499,16 +1499,18 @@ def cell_7_2():
 
 def query_8_2() -> str:
     sql_query = rf"""
-select 
-    record_date,
-    sum("'TRUE'") AS internal_users,
-    sum("'FALSE'") AS external_users
-    from (select * from sage.ad.user_frequency where {window_filter_sql('record_date')})
-    pivot(count(user_id) for sage_internal in ('TRUE', 'FALSE'))
-        as p
-    group by record_date
-    order by
-        record_date desc;  """
+select
+    date_trunc('{input_datebucket}', record_date) as bucket_start,
+    count(distinct iff(sage_internal = 'TRUE', user_id, null)) as internal_users,
+    count(distinct iff(sage_internal = 'FALSE', user_id, null)) as external_users
+from
+    sage.ad.user_frequency
+where
+    {window_filter_sql('record_date')}
+group by
+    bucket_start
+order by
+    bucket_start desc;  """
 
     return sql_query
 
@@ -1525,7 +1527,7 @@ def cell_8_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### internal vs external AD portal users")
+                st.markdown(f"### internal vs external AD portal users per {input_datebucket.lower()}")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -1552,7 +1554,7 @@ def cell_8_2():
             # Prepare data for line chart with aggregation
             if len(df) > 0:
                 df = (
-                    df.groupby(by="RECORD_DATE", sort=False)
+                    df.groupby(by="BUCKET_START", sort=False)
                     .agg(col1=("INTERNAL_USERS", "sum"), col2=("EXTERNAL_USERS", "sum"))
                     .rename(
                         columns={
@@ -1563,10 +1565,13 @@ def cell_8_2():
                     .reset_index()
                 )
 
+                df["BUCKET_START"] = pd.to_datetime(df["BUCKET_START"])
+
                 st.line_chart(
-                    df.set_index("RECORD_DATE"),
+                    df.set_index("BUCKET_START"),
                     width="stretch",
                     height=400,
+                    x_label=input_datebucket,
                 )
             else:
                 st.warning("No data available")
@@ -1576,20 +1581,21 @@ def cell_8_2():
 
 def query_10_1() -> str:
     sql_query = rf"""
-select 
-    --datebucket(RECORD_DATE) as MONTH_OF_DL,
-    year(month_created) as year,
-    monthname(month_created) as month,
-    month_created as measurement_point, 
+select
+    date_trunc('{input_datebucket}', month_created) as measurement_point,
     simple_assay,
-    round((cumulative_volume) / power(2, 40), 2) as cumulative_volume_TB
+    -- cumulative volume never decreases, so its max is the value at the end of the bucket
+    round(max(cumulative_volume) / power(2, 40), 2) as cumulative_volume_TB
 from 
     sage.ad.datatype_cumulative_volume
 where 
     simple_assay is not null 
     and simple_assay not in ('', 'Blood Chemistry Measurement', 'polymeraseChainReaction')
-    and year >= 2015
+    and year(month_created) >= 2015
     and {window_filter_sql('month_created')}
+group by
+    measurement_point,
+    simple_assay
 order by 
     measurement_point desc,
     cumulative_volume_TB desc
@@ -1678,7 +1684,7 @@ def cell_10_1():
                     width="stretch",
                     height=400,
                     stack=True,
-                    x_label="year-month",
+                    x_label=input_datebucket,
                     y_label="CUMULATIVE_VOLUME (TB)",
                 )
             else:
@@ -2035,22 +2041,22 @@ dedup_last_month_downloads as (
     where {window_filter_sql('record_date')}
 )
 select
+    date_trunc('{input_datebucket}', dl.record_date) as bucket_start,
     case 
         when grouping(bucket) = 1 then 'Total All Buckets'
         else bucket
     end bucket,
     count(distinct dl.user_id, dl.record_date, dl.file_handle_id) AS number_of_downloads,
     count(distinct dl.user_id) as number_of_unique_users,
-    sum(b.content_size)/power(2,30) as download_volume_gb,
-    record_date
+    sum(b.content_size)/power(2,30) as download_volume_gb
 from bucket_info b
 inner join dedup_last_month_downloads dl
     on b.file_handle_id = dl.file_handle_id
 group by 
-    dl.record_date, 
+    bucket_start, 
     rollup(bucket)
 order by 
-    dl.record_date
+    bucket_start
 ;
 
   """
@@ -2070,12 +2076,12 @@ def cell_14_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### STRIDES bucket downloads")
+                st.markdown(f"### STRIDES bucket downloads per {input_datebucket.lower()}")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_14_2",
-                help="Refresh strides_bucket_downloads_-_previous_30_days data",
+                help="Refresh strides_bucket_downloads data",
             ):
                 execute_query.clear(query_14_2())
 
@@ -2097,7 +2103,7 @@ def cell_14_2():
             # Prepare data for line chart with aggregation
             if len(df) > 0:
                 df = (
-                    df.groupby(by=["RECORD_DATE", "BUCKET"], sort=False)
+                    df.groupby(by=["BUCKET_START", "BUCKET"], sort=False)
                     .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
                     .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
                     .unstack(level=1)
@@ -2108,12 +2114,14 @@ def cell_14_2():
                 ]
 
                 df = df.reset_index()
+                df["BUCKET_START"] = pd.to_datetime(df["BUCKET_START"])
 
                 st.line_chart(
-                    df.set_index("RECORD_DATE"),
+                    df.set_index("BUCKET_START"),
                     width="stretch",
                     height=400,
-                    y_label="DOWNLOAD_VOLUME_GB",
+                    x_label=input_datebucket,
+                    y_label="NUMBER_OF_DOWNLOADS",
                 )
             else:
                 st.warning("No data available")
