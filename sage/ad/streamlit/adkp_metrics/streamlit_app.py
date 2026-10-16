@@ -1207,6 +1207,7 @@ with node_annotations as (
         id,
         file_handle_id,
         annotations:annotations:dataType:value[0]::string as dataType,
+        created_on,
     from
         synapse_data_warehouse.synapse.node_latest
     where
@@ -1234,11 +1235,14 @@ with node_annotations as (
     where
         email not ilike '%@sagebase.org' and email not ilike '%sagebionetworks.org'
 ), files_per_datatype as (
-    -- includes files with no downloads, so the mean is per file in the datatype
+    -- includes files with no downloads, so the mean is per file in the datatype;
+    -- limited to files created by the end of the window, since later files
+    -- could not have been downloaded in it
     select
         dataType,
         count(distinct id) as number_of_files
     from node_annotations
+    where created_on < dateadd('{input_datebucket}', 1, date_trunc('{input_datebucket}', '{window_end}'::date))
     group by dataType
 )
 select
@@ -2352,6 +2356,193 @@ def cell_17_1():
             st.error(f"Error: {str(e)}")
 
 
+def query_17_2() -> str:
+    # Pooled average over the window (total attempts / total approvals), not an average of
+    # per-period averages, so periods with more approvals weigh proportionally more
+    sql_query = f"""
+select
+    round(sum(sum_attempts_to_approval) / nullif(sum(approved_count), 0), 2) as average_attempts_until_approval
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')};  """
+
+    return sql_query
+
+
+execute_query(query_17_2())
+
+
+@st.fragment
+def cell_17_2():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Average attempts until approval")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_button_cell_17_2",
+                help="Refresh average_attempts_until_approval data",
+            ):
+                execute_query.clear(query_17_2())
+
+        try:
+            with st.spinner("Executing query", show_time=True):
+                df = session.create_async_job(execute_query(query_17_2())).result(
+                    "pandas"
+                )
+
+            render_dataframe(df)
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
+def query_17_3() -> str:
+    # Pooled average over the window (total review days / total reviews). Reviews
+    # are those completed in each period, regardless of when they were submitted
+    sql_query = f"""
+select
+    round(sum(sum_days_to_review) / nullif(sum(reviewed_count), 0), 2) as average_days_to_review
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')};  """
+
+    return sql_query
+
+
+execute_query(query_17_3())
+
+
+@st.fragment
+def cell_17_3():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Average days to review")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_button_cell_17_3",
+                help="Refresh average_days_to_review data",
+            ):
+                execute_query.clear(query_17_3())
+
+        try:
+            with st.spinner("Executing query", show_time=True):
+                df = session.create_async_job(execute_query(query_17_3())).result(
+                    "pandas"
+                )
+
+            render_dataframe(df)
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
+def query_17_4() -> str:
+    sql_query = f"""
+select
+    agg_period_start as BUCKET_START,
+    received_count as RECEIVED_SUBMISSIONS
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')}
+order by
+    agg_period_start desc;  """
+
+    return sql_query
+
+
+execute_query(query_17_4())
+
+
+def cell_17_4() -> None:
+    downloads_over_time_cell(
+        "received_submissions",
+        query_17_4,
+        "RECEIVED_SUBMISSIONS",
+        "Submissions",
+    )
+
+
+def query_17_5() -> str:
+    # Per-period average attempts until approval, over approvals granted in that
+    # period; NULL (a gap in the line) for periods with no approvals
+    sql_query = f"""
+select
+    agg_period_start as BUCKET_START,
+    round(sum_attempts_to_approval / nullif(approved_count, 0), 2) as AVERAGE_ATTEMPTS_UNTIL_APPROVAL
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')}
+order by
+    agg_period_start desc;  """
+
+    return sql_query
+
+
+execute_query(query_17_5())
+
+
+def cell_17_5() -> None:
+    downloads_over_time_cell(
+        "average_attempts",
+        query_17_5,
+        "AVERAGE_ATTEMPTS_UNTIL_APPROVAL",
+        "Average attempts until approval",
+    )
+
+
+def query_17_6() -> str:
+    # Per-period average days to review for reviews completed in that period; NULL
+    # (a gap in the line) for periods with no reviews
+    sql_query = f"""
+select
+    agg_period_start as BUCKET_START,
+    round(sum_days_to_review / nullif(reviewed_count, 0), 2) as AVERAGE_DAYS_TO_REVIEW
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')}
+order by
+    agg_period_start desc;  """
+
+    return sql_query
+
+
+execute_query(query_17_6())
+
+
+def cell_17_6() -> None:
+    downloads_over_time_cell(
+        "average_days_to_review",
+        query_17_6,
+        "AVERAGE_DAYS_TO_REVIEW",
+        "Average days to review",
+    )
+
+
 def cell_date_window() -> None:
     # Shows the window the queries actually cover, rounded out to whole date-bucket periods
     with st.container(border=True):
@@ -2444,7 +2635,7 @@ with st.expander("Access Requests"):
         'All charts are with respect to the "AD Knowledge Portal" (9603055) '
         "access requirement."
     )
-    render_cells([cell_date_window, cell_17_1], num_columns=2)
+    render_cells([cell_date_window, cell_17_1, cell_17_2, cell_17_3, cell_17_4, cell_17_5, cell_17_6], num_columns=2)
 
 # Cells that don't fit Overview/Downloads/Uploads; pending review
 with st.expander("Misc."):
