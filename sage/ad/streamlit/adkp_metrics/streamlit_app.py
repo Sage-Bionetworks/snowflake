@@ -40,21 +40,134 @@ try:
 except Exception:
     pass
 
+# Date buckets available in SYNAPSE_AGGREGATE.OBJECTDOWNLOAD_AGGREGATE (AGG_PERIOD values)
+AGGREGATE_PERIODS = {
+    "Day": "DAILY",
+    "Month": "MONTHLY",
+    "Quarter": "QUARTERLY",
+    "Year": "YEARLY",
+}
+
+# Earliest record in objectdownload_event for the ADKP project
+DEFAULT_WINDOW_START = dt.date(2022, 1, 1)
+
 # Parameter input widgets arranged in a row
 (param_col_1,) = st.columns(1)
 
 with param_col_1:
-    # Parameter: datebucket
-    st.markdown("**Date bucket**")
-    input_datebucket = st.selectbox(
-        "Date bucket",
-        options=["Second", "Minute", "Hour", "Day", "Week", "Month", "Quarter", "Year"],
-        index=7,
-        label_visibility="collapsed",
-        key="datebucket_param",
+    # Widgets in a form only take effect when the form is submitted, so the charts
+    # don't re-query on every change
+    with st.form("params_form", border=False):
+        # Parameter: datewindow
+        st.markdown("**Date window**")
+        st.markdown(
+            "For charts which group results by time period, this property restricts "
+            "results to the periods between the selected start and end dates. "
+            "Start dates are rounded down and end dates rounded up in charts which "
+            "bucket their data by the date bucket."
+        )
+        input_datewindow = st.date_input(
+            "Date window",
+            value=(DEFAULT_WINDOW_START, dt.date.today()),
+            max_value=dt.date.today(),
+            label_visibility="collapsed",
+            key="datewindow_param",
+        )
+
+        # Parameter: datebucket
+        st.markdown("**Date bucket**")
+        st.markdown(
+            "For charts which group results by time period, this property configures "
+            "which time period those results are bucketed by."
+        )
+        input_datebucket = st.selectbox(
+            "Date bucket",
+            options=list(AGGREGATE_PERIODS),
+            index=3,
+            label_visibility="collapsed",
+            key="datebucket_param",
+        )
+
+        st.form_submit_button("Update", type="primary")
+
+# A range picker returns one date until the user has chosen both ends
+if len(input_datewindow) != 2:
+    st.warning("Select both a start and an end date for the date window, then click Update.")
+    st.stop()
+window_start, window_end = input_datewindow
+
+
+def bucket_floor(d: dt.date, bucket: str) -> dt.date:
+    if bucket == "Month":
+        return d.replace(day=1)
+    if bucket == "Quarter":
+        return d.replace(month=3 * ((d.month - 1) // 3) + 1, day=1)
+    if bucket == "Year":
+        return d.replace(month=1, day=1)
+    return d
+
+
+def bucket_end(d: dt.date, bucket: str) -> dt.date:
+    # Last day of the bucket period containing d
+    start = bucket_floor(d, bucket)
+    months = {"Month": 1, "Quarter": 3, "Year": 12}.get(bucket)
+    if months is None:
+        return start
+    next_month = start.month - 1 + months
+    next_start = start.replace(year=start.year + next_month // 12, month=next_month % 12 + 1)
+    return next_start - dt.timedelta(days=1)
+
+
+def window_filter_sql(column: str) -> str:
+    # Keeps whole date-bucket periods: from the period containing the start date
+    # through the period containing the end date
+    return (
+        f"{column} >= date_trunc('{input_datebucket}', '{window_start}'::date) "
+        f"and {column} < dateadd('{input_datebucket}', 1, "
+        f"date_trunc('{input_datebucket}', '{window_end}'::date))"
     )
 
+
 st.markdown("---")
+
+
+MAX_METRIC_COLUMNS = 4
+
+
+def format_metric_value(value, compact: bool = False) -> str:
+    if pd.isna(value):
+        return "—"
+    if isinstance(value, (int, float)):
+        if compact and abs(value) >= 1e9:
+            return f"{value / 1e9:,.2f}B"
+        if compact and abs(value) >= 1e6:
+            return f"{value / 1e6:,.2f}M"
+        if compact and abs(value) >= 1e3:
+            return f"{value:,.0f}"
+        return f"{value:,.2f}".rstrip("0").rstrip(".") if value % 1 else f"{value:,.0f}"
+    return str(value)
+
+
+def render_dataframe(df: pd.DataFrame, height=400) -> None:
+    # A single-row result reads better as metric cards than as a mostly empty table
+    if len(df) == 1 and len(df.columns) <= MAX_METRIC_COLUMNS:
+        for col, (name, value) in zip(st.columns(len(df.columns)), df.iloc[0].items()):
+            # Fixed-height caption keeps values aligned when labels wrap differently;
+            # large values are abbreviated to avoid truncation, with the full value as help text
+            with col.container(height=50, border=False):
+                st.caption(name.replace("_", " "))
+            if isinstance(value, (int, float)):
+                col.metric(
+                    label=name,
+                    value=format_metric_value(value, compact=True),
+                    help=format_metric_value(value),
+                    label_visibility="collapsed",
+                )
+            else:
+                # Text and dates are wider than numbers; st.metric would truncate them
+                col.markdown(f"#### {format_metric_value(value)}")
+    else:
+        st.dataframe(df, width="stretch", hide_index=True, height=height)
 
 
 @st.cache_data(ttl="23h50m")
@@ -62,72 +175,8 @@ def execute_query(query: str) -> str:
     return session.sql(query).collect_nowait().query_id
 
 
-def query_1_1() -> str:
-    sql_query = r"""
-select
-    min(record_date) as earliest_download_record,
-    max(record_date) as latest_download_record
-from
-    synapse_data_warehouse.synapse_event.objectdownload_event
-where
-    project_id in (
-        2580853
-    );
-  """
-
-    return sql_query
-
-
-execute_query(query_1_1())
-
-
-@st.fragment
-def cell_1_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Download record date range")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_1_1",
-                help="Refresh download_record_date_range data",
-            ):
-                execute_query.clear(query_1_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_1_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
 def query_1_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
     SELECT
         count(distinct(FILE_LATEST.ID)) as TOTAL_FILES,
@@ -139,7 +188,8 @@ def query_1_2() -> str:
         synapse_data_warehouse.synapse.node_latest
         on file_latest.id = node_latest.file_handle_id
     where
-        node_latest.project_id = 2580853  """
+        node_latest.project_id = 2580853
+        and {window_filter_sql('node_latest.created_on')}  """
 
     return sql_query
 
@@ -180,20 +230,13 @@ def cell_1_2():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
 def query_1_3() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
 SELECT
     node_latest.annotations:annotations:dataType:value as datatype,
@@ -207,6 +250,7 @@ join
     on file_latest.id = node_latest.file_handle_id
 where
     node_latest.project_id = 2580853
+    and {window_filter_sql('node_latest.created_on')}
 group by
     datatype  """
 
@@ -249,37 +293,20 @@ def cell_1_3():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
-# Row 1: 3 Cells
-col1_1, col1_2, col1_3 = st.columns(3)
-with col1_1:
-    cell_1_1()
-with col1_2:
-    cell_1_2()
-with col1_3:
-    cell_1_3()
-
-
 def query_2_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with dedup_downloads as (
     select
         user_id, record_date, file_handle_id
     from
         synapse_data_warehouse.synapse_event.objectdownload_event
     where project_id = 2580853
-        
+        and {window_filter_sql('record_date')}
 ), file_size as(
     select
         id,
@@ -313,7 +340,7 @@ def cell_2_1():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All time downloads")
+                st.markdown("### Total downloads")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -337,27 +364,20 @@ def cell_2_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
 def query_2_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with dedup_downloads as (
     select
         user_id, record_date, file_handle_id, 
     from
         synapse_data_warehouse.synapse_event.objectdownload_event
     where project_id = 2580853
-        
+        and {window_filter_sql('record_date')}
 ), external_users as (
     select id as user_id
     from
@@ -400,12 +420,12 @@ def cell_2_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### All time non-Sage downloads")
+                st.markdown("### Total downloads (non-Sagers)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_2_2",
-                help="Refresh all_time_non-sage_downloads data",
+                help="Refresh all_time_downloads_(non-sagers) data",
             ):
                 execute_query.clear(query_2_2())
 
@@ -424,393 +444,292 @@ def cell_2_2():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
-# Row 2: 2 Cells
-col2_1, col2_2 = st.columns(2)
-with col2_1:
-    cell_2_1()
-with col2_2:
-    cell_2_2()
+def query_downloads_aggregate() -> str:
+    # Project-level downloads and unique users, pre-aggregated at the selected bucket
+    sql_query = f"""
+select
+    agg_period_start as BUCKET_START,
+    download_event_count as NUMBER_OF_DOWNLOADS,
+    user_download_count as UNIQUE_USERS
+from
+    synapse_data_warehouse.synapse_aggregate.objectdownload_aggregate
+where
+    agg_project_id = 2580853
+    and agg_level = 'PROJECT'
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')}
+order by
+    agg_period_start desc;  """
+
+    return sql_query
 
 
-def query_3_1() -> str:
-    # Transform :datebucket parameter - convert to DATE_TRUNC call
+def query_downloads_volume() -> str:
+    # The aggregate table has no size column, so volume comes from the event table
     expr_datebucket = f"DATE_TRUNC('{input_datebucket}', RECORD_DATE)"
 
     sql_query = rf"""
--- Distribution of downloads, users, and TB downloaded over months
-with dedup_downloads as (
-    select 
-        objectdownload_event.user_id,
-        objectdownload_event.file_handle_id,
-        objectdownload_event.record_date,
-        file_latest.content_size
+select
+    {expr_datebucket} as BUCKET_START,
+    round(sum(file_latest.content_size) / power(2, 40), 2) as TB_DOWNLOADED
+from
+    synapse_data_warehouse.synapse_event.objectdownload_event
+join
+    synapse_data_warehouse.synapse.file_latest
+    on objectdownload_event.file_handle_id = file_latest.id
+where
+    project_id = 2580853
+    and {window_filter_sql('record_date')}
+group by
+    BUCKET_START
+order by
+    BUCKET_START desc
+    nulls last;  """
+
+    return sql_query
+
+
+execute_query(query_downloads_aggregate())
+execute_query(query_downloads_volume())
+
+
+@st.fragment
+def downloads_over_time_cell(
+    key: str,
+    query_fn,
+    value_column: str,
+    title: str,
+    color: str | None = None,
+    title_suffix: str = "",
+) -> None:
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown(f"### {title} per {input_datebucket.lower()}{title_suffix}")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key=f"refresh_button_{key}",
+                help=f"Refresh {key} data",
+            ) and (color is None or input_studies):
+                execute_query.clear(query_fn())
+
+        try:
+            if color is not None and not input_studies:
+                st.info("Select at least one study.")
+                return
+
+            with st.spinner("Executing query", show_time=True):
+                df = session.create_async_job(execute_query(query_fn())).result(
+                    "pandas"
+                )
+
+            if len(df) > 0:
+                df = df[
+                    ["BUCKET_START", value_column] + ([color] if color else [])
+                ].copy()
+                df["BUCKET_START"] = pd.to_datetime(df["BUCKET_START"])
+                st.line_chart(
+                    df,
+                    x="BUCKET_START",
+                    y=value_column,
+                    color=color,
+                    x_label=input_datebucket,
+                    width="stretch",
+                    height=400,
+                )
+            else:
+                st.warning("No data available")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
+def cell_downloads_count() -> None:
+    downloads_over_time_cell(
+        "downloads_count",
+        query_downloads_aggregate,
+        "NUMBER_OF_DOWNLOADS",
+        "Number of downloads",
+    )
+
+
+def cell_downloads_users() -> None:
+    downloads_over_time_cell(
+        "downloads_users", query_downloads_aggregate, "UNIQUE_USERS", "Unique users"
+    )
+
+
+def cell_downloads_volume() -> None:
+    downloads_over_time_cell(
+        "downloads_volume",
+        query_downloads_volume,
+        "TB_DOWNLOADED",
+        "Data volume downloaded (TB)",
+    )
+
+
+STUDY_NODES_CTE = """
+study_node as (
+    select
+        id,
+        file_handle_id,
+        annotations:annotations:study:value[0]::string as study
     from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    join
-        synapse_data_warehouse.synapse.file_latest
-        on objectdownload_event.file_handle_id = file_latest.id
+        synapse_data_warehouse.synapse.node_latest
     where
         project_id = 2580853
-)
-SELECT
-    {expr_datebucket} as MONTH_OF_DL,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct USER_ID) UNIQUE_USERS,
-    round(sum(content_size) / power(2, 40), 2) AS TB_DOWNLOADED
-FROM
-    dedup_downloads
-GROUP BY
-    MONTH_OF_DL
-ORDER BY
-    MONTH_OF_DL DESC
-    NULLS LAST;  """
+)"""
+
+
+def query_study_options() -> str:
+    # Studies ordered by all-time downloads so the most active ones are listed first
+    sql_query = f"""
+with {STUDY_NODES_CTE}
+select
+    study_node.study as STUDY
+from
+    synapse_data_warehouse.synapse_aggregate.objectdownload_aggregate as agg
+join
+    study_node on agg.agg_object_id = study_node.id
+where
+    agg.agg_project_id = 2580853
+    and agg.agg_level = 'OBJECT WITHIN PROJECT'
+    and agg.agg_period = 'ALL TIME'
+    and study_node.study is not null
+group by
+    study_node.study
+order by
+    sum(agg.download_event_count) desc, study_node.study;  """
 
     return sql_query
 
 
-execute_query(query_3_1())
-
-
-@st.fragment
-def cell_3_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### downloads per month")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_1",
-                help="Refresh downloads_per_month data",
-            ):
-                execute_query.clear(query_3_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_3_2() -> str:
-    sql_query = r"""
---- Downloads from AD Portal Jan 1 2022 - Oct 18 2023
---- Excludes users with sagebase or sagebionetwork email domains
---- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
-
-
--- WITH USER AS (
---     SELECT ID AS PROFILE_ID
---     FROM
---         SYNAPSE_DATA_WAREHOUSE.SYNAPSE.USERPROFILE_LATEST
---     WHERE
---         EMAIL NOT ILIKE '%@sagebase.org' AND EMAIL NOT ILIKE '%sagebionetworks.org'
--- )
-
--- SELECT
---     study,
---     COUNT(RECORD_DATE) as number_downloads,
---     count(distinct USER_ID) distinct_users_downloading,
---     count(distinct id) as total_files,
---     min(RECORD_DATE) as earliest_download_record
--- FROM
---     SAGE.PORTAL_DOWNLOADS.AD
--- WHERE
---     USER_ID IN (SELECT PROFILE_ID FROM USER)
---     AND resourceType != 'metadata'
--- GROUP BY
---     study
--- ORDER BY
---     distinct_users_downloading DESC;
-
-
---- AD Portal monthly downloads by study 
---- limit to non-Sage users
-
-with node_annotations as (
+DATATYPE_NODES_CTE = """
+datatype_node as (
     select
-        file_handle_id,
-        annotations:annotations:study:value[0] as study,
+        id,
+        annotations:annotations:dataType:value[0]::string as datatype
     from
         synapse_data_warehouse.synapse.node_latest
     where
-        project_id in (
-            2580853
-        )
-), dedup_downloads as (
-    select
-        objectdownload_event.user_id,
-        objectdownload_event.record_date,
-        objectdownload_event.file_handle_id,
-        node_annotations.study
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
-), external_users as (
+        project_id = 2580853
+)"""
+
+
+def query_datatype_options() -> str:
+    # Datatypes ordered by all-time downloads so the most popular ones are listed first
+    sql_query = f"""
+with {DATATYPE_NODES_CTE}
+select
+    datatype_node.datatype as DATATYPE
+from
+    synapse_data_warehouse.synapse_aggregate.objectdownload_aggregate as agg
+join
+    datatype_node on agg.agg_object_id = datatype_node.id
+where
+    agg.agg_project_id = 2580853
+    and agg.agg_level = 'OBJECT WITHIN PROJECT'
+    and agg.agg_period = 'ALL TIME'
+    and datatype_node.datatype is not null
+group by
+    datatype_node.datatype
+order by
+    sum(agg.download_event_count) desc, datatype_node.datatype;  """
+
+    return sql_query
+
+
+def sql_in_list(studies: list[str]) -> str:
+    return ", ".join("'" + study.replace("'", "''") + "'" for study in studies)
+
+
+def query_study_downloads() -> str:
+    # Non-Sage downloads, users, and volume per study from the event table (the
+    # aggregate has no user detail, so it can't exclude Sage staff).
+    # Join on the entity id (not file_handle_id): entities get new file handles when
+    # re-versioned, so a file_handle_id join drops most historical downloads.
+    expr_datebucket = f"DATE_TRUNC('{input_datebucket}', RECORD_DATE)"
+
+    sql_query = f"""
+with {STUDY_NODES_CTE}, external_users as (
     select
         id as user_id
     from
         synapse_data_warehouse.synapse.userprofile_latest
     where
         email not ilike '%@sagebase.org' and email not ilike '%sagebionetworks.org'
-
-), file_size as(
-    select
-        id,
-        content_size  
-    from synapse_data_warehouse.synapse.file_latest
 )
 select
-    study,
-    count(record_date) AS number_of_downloads,
-    count(distinct dedup_downloads.user_id) as number_of_unique_users,
-    round(sum(file_size.content_size) / power(2, 30), 2) AS GiB_downloaded
+    {expr_datebucket} as BUCKET_START,
+    study_node.study as STUDY,
+    count(*) as NUMBER_OF_DOWNLOADS,
+    count(distinct objectdownload_event.user_id) as UNIQUE_USERS,
+    round(sum(file_latest.content_size) / power(2, 40), 3) as TB_DOWNLOADED
 from
-    dedup_downloads
-inner join
-    external_users
-    on dedup_downloads.user_id = external_users.user_id
+    synapse_data_warehouse.synapse_event.objectdownload_event
+join
+    study_node on objectdownload_event.association_object_id = study_node.id
+join
+    external_users on objectdownload_event.user_id = external_users.user_id
 left join
-    file_size
-    on dedup_downloads.file_handle_id = file_size.id
+    synapse_data_warehouse.synapse.file_latest
+    on objectdownload_event.file_handle_id = file_latest.id
 where
-    study is not null
+    objectdownload_event.project_id = 2580853
+    and study_node.study in ({sql_in_list(input_studies)})
+    and {window_filter_sql('objectdownload_event.record_date')}
 group by
-    study
+    BUCKET_START, STUDY
 order by
-    number_of_unique_users desc, study desc
-;  """
+    BUCKET_START desc, STUDY;  """
 
     return sql_query
 
 
-execute_query(query_3_2())
+def cell_study_downloads_count() -> None:
+    downloads_over_time_cell(
+        "study_downloads_count",
+        query_study_downloads,
+        "NUMBER_OF_DOWNLOADS",
+        "Number of downloads by study,",
+        color="STUDY",
+        title_suffix=" (non-Sagers)",
+    )
 
 
-@st.fragment
-def cell_3_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Downloads per study")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_2",
-                help="Refresh downloads_per_study data",
-            ):
-                execute_query.clear(query_3_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+def cell_study_downloads_users() -> None:
+    downloads_over_time_cell(
+        "study_downloads_users",
+        query_study_downloads,
+        "UNIQUE_USERS",
+        "Unique users by study,",
+        color="STUDY",
+        title_suffix=" (non-Sagers)",
+    )
 
 
-def query_3_3() -> str:
-    sql_query = r"""
-
---- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
-
-with node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType,
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        project_id in (
-            2580853
-        )
-), dedup_downloads as (
-    select
-        objectdownload_event.user_id,
-        objectdownload_event.record_date,
-        objectdownload_event.file_handle_id,
-        node_annotations.dataType
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations
-    on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
-), external_users as (
-    select
-        id as user_id
-    from
-        synapse_data_warehouse.synapse.userprofile_latest
-    where
-        email not ilike '%@sagebase.org' and email not ilike '%sagebionetworks.org'
-
-), file_size as(
-    select
-        id,
-        content_size  
-    from synapse_data_warehouse.synapse.file_latest
-)
-select
-    dataType,
-    count(distinct dedup_downloads.user_id) as number_of_unique_users,
-    count(record_date) AS number_of_downloads,
-    round(sum(file_size.content_size) / power(2, 30), 2) AS GiB_downloaded
-from
-    dedup_downloads
-inner join
-    external_users
-    on dedup_downloads.user_id = external_users.user_id
-left join
-    file_size
-    on dedup_downloads.file_handle_id = file_size.id
-where
-    dataType is not null
-group by
-    dataType
-order by
-    number_of_unique_users desc, dataType desc
--- ;
-
-
--- SELECT
---     datatype,
---     COUNT(RECORD_DATE) as number_downloads,
---     count(distinct USER_ID) distinct_users_downloading,
---     count(distinct id) as total_files,
---     number_downloads/total_files as mean_downloads_per_file
--- FROM
---     SAGE.PORTAL_DOWNLOADS.AD
--- WHERE
---     resourceType != 'metadata' AND datatype != '[]' AND NOT datatype LIKE '%,%'
--- GROUP BY
---     datatype
--- ORDER BY
---     distinct_users_downloading DESC;  """
-
-    return sql_query
-
-
-execute_query(query_3_3())
-
-
-@st.fragment
-def cell_3_3():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Total downloads by datatype")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_3_3",
-                help="Refresh total_downloads_by_datatype data",
-            ):
-                execute_query.clear(query_3_3())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_3_3())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 3: 3 Cells
-col3_1, col3_2, col3_3 = st.columns(3)
-with col3_1:
-    cell_3_1()
-with col3_2:
-    cell_3_2()
-with col3_3:
-    cell_3_3()
+def cell_study_downloads_volume() -> None:
+    downloads_over_time_cell(
+        "study_downloads_volume",
+        query_study_downloads,
+        "TB_DOWNLOADED",
+        "Data volume downloaded (TB) by study,",
+        color="STUDY",
+        title_suffix=" (non-Sagers)",
+    )
 
 
 def query_4_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with individuals as (
     select
         annotations:annotations:individualID:value as individualID,
@@ -821,6 +740,7 @@ with individuals as (
         project_id in (
             2580853
         )
+        and {window_filter_sql('created_on')}
 )
 select
     case 
@@ -874,20 +794,13 @@ def cell_4_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
 def query_4_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with specimens as (
     select
         annotations:annotations:specimenID:value as specimenID,
@@ -898,6 +811,7 @@ with specimens as (
         project_id in (
             2580853
         )
+        and {window_filter_sql('created_on')}
 )
 select
     case 
@@ -953,308 +867,21 @@ def cell_4_2():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
-
-
-def query_4_3() -> str:
-    # Transform :datebucket parameter - convert to DATE_TRUNC call
-    expr_datebucket = f"DATE_TRUNC('{input_datebucket}', RECORD_DATE)"
-
-    sql_query = rf"""
--- Distribution of downloads, users, and TB downloaded over months
-with dedup_downloads as (
-    select 
-        objectdownload_event.user_id,
-        objectdownload_event.file_handle_id,
-        objectdownload_event.record_date,
-        file_latest.content_size
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    join
-        synapse_data_warehouse.synapse.file_latest
-        on objectdownload_event.file_handle_id = file_latest.id
-    where
-        project_id = 2580853
-)
-SELECT
-    {expr_datebucket} as MONTH_OF_DL,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct USER_ID) UNIQUE_USERS,
-    round(sum(content_size) / power(2, 40), 2) AS TB_DOWNLOADED
-FROM
-    dedup_downloads
-GROUP BY
-    MONTH_OF_DL
-ORDER BY
-    MONTH_OF_DL DESC
-    NULLS LAST;  """
-
-    return sql_query
-
-
-execute_query(query_4_3())
-
-
-@st.fragment
-def cell_4_3():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### downloads per month")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_4_3",
-                help="Refresh downloads_per_month data",
-            ):
-                execute_query.clear(query_4_3())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_4_3())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for line chart with aggregation
-            if len(df) > 0:
-                df = (
-                    df.groupby(by="MONTH_OF_DL", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                st.area_chart(
-                    df.set_index("MONTH_OF_DL"),
-                    width="stretch",
-                    height=400,
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 4: 3 Cells
-col4_1, col4_2, col4_3 = st.columns(3)
-with col4_1:
-    cell_4_1()
-with col4_2:
-    cell_4_2()
-with col4_3:
-    cell_4_3()
-
-
-def query_5_1() -> str:
-    sql_query = r"""
--- Distribution of downloads, users, and TB downloaded over months
-with dedup_downloads as (
-    select 
-        objectdownload_event.user_id,
-        objectdownload_event.file_handle_id,
-        objectdownload_event.record_date,
-        file_latest.content_size
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    join
-        synapse_data_warehouse.synapse.file_latest
-        on objectdownload_event.file_handle_id = file_latest.id
-    where
-        project_id = 2580853
-)
-SELECT
-    date_trunc('MONTH', RECORD_DATE) AS MONTH_OF_DL,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct USER_ID) UNIQUE_USERS,
-    round(sum(content_size) / power(2, 40), 2) AS TB_DOWNLOADED
-FROM
-    dedup_downloads
-GROUP BY
-    MONTH_OF_DL
-ORDER BY
-    MONTH_OF_DL DESC
-    NULLS LAST;  """
-
-    return sql_query
-
-
-execute_query(query_5_1())
-
-
-@st.fragment
-def cell_5_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### unique users per month")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_5_1",
-                help="Refresh unique_users_per_month data",
-            ):
-                execute_query.clear(query_5_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_5_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Calculate metric for scorecard
-            if len(df) > 0:
-                value = df["UNIQUE_USERS"].mean()
-                st.metric(label="UNIQUE_USERS", value=f"{value:,.0f}")
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_5_2() -> str:
-    sql_query = r"""
--- Distribution of downloads, users, and TB downloaded over months
-with dedup_downloads as (
-    select 
-        objectdownload_event.user_id,
-        objectdownload_event.file_handle_id,
-        objectdownload_event.record_date,
-        file_latest.content_size
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    join
-        synapse_data_warehouse.synapse.file_latest
-        on objectdownload_event.file_handle_id = file_latest.id
-    where
-        project_id = 2580853
-)
-
-SELECT
-    date_trunc('MONTH', RECORD_DATE) AS MONTH_OF_DL,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct USER_ID) UNIQUE_USERS,
-    round(sum(content_size) / power(2, 40), 2) AS TB_DOWNLOADED
-FROM
-    dedup_downloads
-GROUP BY
-    MONTH_OF_DL
-ORDER BY
-    MONTH_OF_DL DESC
-    NULLS LAST;  """
-
-    return sql_query
-
-
-execute_query(query_5_2())
-
-
-@st.fragment
-def cell_5_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### TB downloaded per month")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_5_2",
-                help="Refresh tb_downloaded_per_month data",
-            ):
-                execute_query.clear(query_5_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_5_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for line chart with aggregation
-            if len(df) > 0:
-                df = (
-                    df.groupby(by="MONTH_OF_DL", sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .reset_index()
-                )
-
-                st.area_chart(
-                    df.set_index("MONTH_OF_DL"),
-                    width="stretch",
-                    height=400,
-                    x_label="MONTH",
-                    y_label="TB_DOWNLOADED",
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 5: 2 Cells
-col5_1, col5_2 = st.columns(2)
-with col5_1:
-    cell_5_1()
-with col5_2:
-    cell_5_2()
 
 
 def query_6_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
 --- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
 
 with node_annotations as (
     select
+        id,
         file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType,
+        annotations:annotations:dataType:value[0]::string as dataType,
     from
         synapse_data_warehouse.synapse.node_latest
     where
@@ -1272,7 +899,9 @@ with node_annotations as (
     inner join
         node_annotations
     on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
+        objectdownload_event.association_object_id = node_annotations.id
+    where
+        {window_filter_sql('objectdownload_event.record_date')}
 ), external_users as (
     select
         id as user_id
@@ -1302,6 +931,7 @@ left join
     on dedup_downloads.file_handle_id = file_size.id
 where
     dataType is not null
+    and dataType in ({sql_in_list(input_datatypes)})
 group by
     dataType
 order by
@@ -1327,8 +957,6 @@ order by
     return sql_query
 
 
-execute_query(query_6_1())
-
 
 @st.fragment
 def cell_6_1():
@@ -1339,12 +967,12 @@ def cell_6_1():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Total downloads by datatype")
+                st.markdown("### Total downloads by datatype (non-Sagers)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_6_1",
-                help="Refresh total_downloads_by_datatype data",
+                help="Refresh total_downloads_by_datatype_(non-sagers) data",
             ):
                 execute_query.clear(query_6_1())
 
@@ -1419,14 +1047,15 @@ def cell_6_1():
 
 
 def query_6_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
 --- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
 
 with node_annotations as (
     select
+        id,
         file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType,
+        annotations:annotations:dataType:value[0]::string as dataType,
     from
         synapse_data_warehouse.synapse.node_latest
     where
@@ -1441,7 +1070,9 @@ with node_annotations as (
     inner join
         node_annotations
     on
-        filedownload.file_handle_id = node_annotations.file_handle_id
+        filedownload.association_object_id = node_annotations.id
+    where
+        {window_filter_sql('filedownload.record_date')}
 ), external_users as (
     select id as user_id
     from
@@ -1470,6 +1101,7 @@ left join
     on dedup_downloads.file_handle_id = file_size.id
 where
     dataType is not null
+    and dataType in ({sql_in_list(input_datatypes)})
 group by
     dataType
 order by
@@ -1477,8 +1109,6 @@ order by
 
     return sql_query
 
-
-execute_query(query_6_2())
 
 
 @st.fragment
@@ -1490,12 +1120,12 @@ def cell_6_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Unique users downloading by datatype")
+                st.markdown("### Unique users downloading by datatype (non-Sagers)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_6_2",
-                help="Refresh unique_users_downloading_by_datatype data",
+                help="Refresh unique_users_downloading_by_datatype_(non-sagers) data",
             ):
                 execute_query.clear(query_6_2())
 
@@ -1567,29 +1197,23 @@ def cell_6_2():
             st.error(f"Error: {str(e)}")
 
 
-# Row 6: 2 Cells
-col6_1, col6_2 = st.columns(2)
-with col6_1:
-    cell_6_1()
-with col6_2:
-    cell_6_2()
-
-
 def query_7_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
 --- Excludes Sage users
 
 with node_annotations as (
     select
+        id,
         file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType,
+        annotations:annotations:dataType:value[0]::string as dataType,
     from
         synapse_data_warehouse.synapse.node_latest
     where
         project_id in (
             2580853
         )
+        and node_type = 'file'
 ), dedup_downloads as (
     select
         objectdownload_event.user_id,
@@ -1600,38 +1224,44 @@ with node_annotations as (
         synapse_data_warehouse.synapse_event.objectdownload_event
     inner join
         node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
+        objectdownload_event.association_object_id = node_annotations.id
+    where
+        {window_filter_sql('objectdownload_event.record_date')}
 ), external_users as (
     select id as user_id
     from
         synapse_data_warehouse.synapse.userprofile_latest
     where
         email not ilike '%@sagebase.org' and email not ilike '%sagebionetworks.org'
-), annotation_count as (
-  select count(file_handle_id) as total_annotations
-  from node_annotations
+), files_per_datatype as (
+    -- includes files with no downloads, so the mean is per file in the datatype
+    select
+        dataType,
+        count(distinct id) as number_of_files
+    from node_annotations
+    group by dataType
 )
 select
-    dataType,
-  round(count(record_date) / max(annotation_count.total_annotations), 2) as mean_downloads_per_file
+    dedup_downloads.dataType,
+    round(count(dedup_downloads.record_date) / max(files_per_datatype.number_of_files), 2) as mean_downloads_per_file
 from
     dedup_downloads
-cross join
-  annotation_count
+inner join
+    files_per_datatype
+    on dedup_downloads.dataType = files_per_datatype.dataType
 inner join
     external_users
     on dedup_downloads.user_id = external_users.user_id
 where
-    dataType is not null
+    dedup_downloads.dataType is not null
+    and dedup_downloads.dataType in ({sql_in_list(input_datatypes)})
 group by
-    dataType
+    dedup_downloads.dataType
 order by
     mean_downloads_per_file desc, dataType desc;  """
 
     return sql_query
 
-
-execute_query(query_7_1())
 
 
 @st.fragment
@@ -1643,12 +1273,12 @@ def cell_7_1():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Mean downloads per file by datatype")
+                st.markdown("### Mean downloads per file by datatype (non-Sagers)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_7_1",
-                help="Refresh mean_downloads_per_file_by_datatype data",
+                help="Refresh mean_downloads_per_file_by_datatype_(non-sagers) data",
             ):
                 execute_query.clear(query_7_1())
 
@@ -1718,14 +1348,15 @@ def cell_7_1():
 
 
 def query_7_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 
 --- Excludes files labelled "resouceType = metadata" to avoid miscounting files annotated with multiple studies
 
 with node_annotations as (
     select
+        id,
         file_handle_id,
-        annotations:annotations:dataType:value[0] as dataType,
+        annotations:annotations:dataType:value[0]::string as dataType,
     from
         synapse_data_warehouse.synapse.node_latest
     where
@@ -1742,7 +1373,9 @@ with node_annotations as (
         synapse_data_warehouse.synapse_event.objectdownload_event
     inner join
         node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
+        objectdownload_event.association_object_id = node_annotations.id
+    where
+        {window_filter_sql('objectdownload_event.record_date')}
 ), external_users as (
     select id as user_id
     from
@@ -1771,6 +1404,7 @@ left join
     on dedup_downloads.file_handle_id = file_size.id
 where
     dataType is not null
+    and dataType in ({sql_in_list(input_datatypes)})
 group by
     dataType
 order by
@@ -1778,8 +1412,6 @@ order by
 
     return sql_query
 
-
-execute_query(query_7_2())
 
 
 @st.fragment
@@ -1791,12 +1423,12 @@ def cell_7_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Volume downloaded (TB) by data type")
+                st.markdown("### Volume downloaded (TB) by data type (non-Sagers)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_7_2",
-                help="Refresh volume_downloaded_(tb)_by_data_type data",
+                help="Refresh volume_downloaded_(tb)_by_data_type_(non-sagers) data",
             ):
                 execute_query.clear(query_7_2())
 
@@ -1865,102 +1497,13 @@ def cell_7_2():
             st.error(f"Error: {str(e)}")
 
 
-# Row 7: 2 Cells
-col7_1, col7_2 = st.columns(2)
-with col7_1:
-    cell_7_1()
-with col7_2:
-    cell_7_2()
-
-
-def query_8_1() -> str:
-    sql_query = r"""
--- Distribution of downloads, users, and TB downloaded over months
-with dedup_downloads as (
-    select 
-        objectdownload_event.user_id,
-        objectdownload_event.file_handle_id,
-        objectdownload_event.record_date,
-        file_latest.content_size
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    join
-        synapse_data_warehouse.synapse.file_latest
-        on objectdownload_event.file_handle_id = file_latest.id
-    where
-        project_id = 2580853
-)
-SELECT
-    date_trunc('MONTH', RECORD_DATE) AS MONTH_OF_DL,
-    count(RECORD_DATE) AS NUMBER_OF_DOWNLOADS,
-    count(distinct USER_ID) UNIQUE_USERS,
-    round(sum(content_size) / power(2, 40), 2) AS TB_DOWNLOADED
-FROM
-    dedup_downloads
-GROUP BY
-    MONTH_OF_DL
-ORDER BY
-    MONTH_OF_DL DESC
-    NULLS LAST;  """
-
-    return sql_query
-
-
-execute_query(query_8_1())
-
-
-@st.fragment
-def cell_8_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### unique users per month")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_8_1",
-                help="Refresh unique_users_per_month data",
-            ):
-                execute_query.clear(query_8_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_8_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
 def query_8_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 select 
     record_date,
     sum("'TRUE'") AS internal_users,
     sum("'FALSE'") AS external_users
-    from sage.ad.user_frequency
+    from (select * from sage.ad.user_frequency where {window_filter_sql('record_date')})
     pivot(count(user_id) for sage_internal in ('TRUE', 'FALSE'))
         as p
     group by record_date
@@ -2031,275 +1574,8 @@ def cell_8_2():
             st.error(f"Error: {str(e)}")
 
 
-# Row 8: 2 Cells
-col8_1, col8_2 = st.columns(2)
-with col8_1:
-    cell_8_1()
-with col8_2:
-    cell_8_2()
-
-
-def query_9_1() -> str:
-    sql_query = r"""
---- AD Portal monthly downloads by study 
---- does NOT exclude users with a sagebionetworks email domain (not a great proxy for internal/external)
-
-with node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:study:value[0]::string as study,
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        project_id in (
-            2580853
-        )
-), dedup_downloads as (
-    select
-        objectdownload_event.user_id,
-        objectdownload_event.record_date,
-        objectdownload_event.file_handle_id,
-        node_annotations.study
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
-        
-), file_size as(
-    select
-        id,
-        content_size  
-    from synapse_data_warehouse.synapse.file_latest
-)
-select
-    study,
-    date_trunc('month', record_date) as month,
-    count(record_date) AS number_of_downloads,
-    count(distinct dedup_downloads.user_id) as number_of_unique_users,
-    round(sum(file_size.content_size) / power(2, 30), 2) AS GiB_downloaded
-from
-    dedup_downloads
-left join
-    file_size
-on
-    dedup_downloads.file_handle_id = file_size.id
-where study is not null
-group by
-    month, study
-order by
-    month desc, number_of_unique_users desc, study desc
-;  """
-
-    return sql_query
-
-
-execute_query(query_9_1())
-
-
-@st.fragment
-def cell_9_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Study x Month - AD Portal Unique Users Downloading")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_9_1",
-                help="Refresh study_x_month_-_ad_portal_unique_users_downloading data",
-            ):
-                execute_query.clear(query_9_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_9_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_9_2() -> str:
-    sql_query = r"""
---- AD Portal monthly downloads by study 
---- does NOT exclude users with a sagebionetworks email domain (not a great proxy for internal/external)
-
-with node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:study:value[0]::string as study,
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        project_id in (
-            2580853
-        )
-), dedup_downloads as (
-    select
-        objectdownload_event.user_id,
-        objectdownload_event.record_date,
-        objectdownload_event.file_handle_id,
-        node_annotations.study
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
-        
-), file_size as(
-    select
-        id,
-        content_size  
-    from synapse_data_warehouse.synapse.file_latest
-)
-select
-    study,
-    date_trunc('month', record_date) as month,
-    count(record_date) AS number_of_downloads,
-    count(distinct dedup_downloads.user_id) as number_of_unique_users,
-    round(sum(file_size.content_size) / power(2, 30), 2) AS GiB_downloaded
-from
-    dedup_downloads
-left join
-    file_size
-on
-    dedup_downloads.file_handle_id = file_size.id
-where study is not null
-group by
-    month, study
-order by
-    month desc, number_of_unique_users desc, study desc
-;  """
-
-    return sql_query
-
-
-execute_query(query_9_2())
-
-
-@st.fragment
-def cell_9_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Study x Month - AD Portal Unique Users Downloading")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_9_2",
-                help="Refresh study_x_month_-_ad_portal_unique_users_downloading data",
-            ):
-                execute_query.clear(query_9_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_9_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for bar chart
-            if len(df) > 0:
-                df = (
-                    df.groupby(by=["MONTH", "STUDY"], sort=False)
-                    .agg(col1=("NUMBER_OF_UNIQUE_USERS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_UNIQUE_USERS (sum)"})
-                    .unstack(level=1)
-                )
-
-                df.columns = [
-                    " | ".join(map(str, c[::-1])).replace(":", "_") for c in df.columns
-                ]
-
-                df = df.reset_index()
-
-                df["/* Order Key (Generated by Snowflake) */"] = df["MONTH"]
-
-                datetime_primary_column = None
-                if pd.api.types.is_datetime64_dtype(df["MONTH"]):
-                    datetime_primary_column = df["MONTH"]
-                elif df["MONTH"].dtype == "object" and isinstance(
-                    df["MONTH"].get(df["MONTH"].first_valid_index()), dt.date
-                ):
-                    datetime_primary_column = pd.to_datetime(
-                        df["MONTH"], errors="coerce"
-                    )
-                if (
-                    datetime_primary_column is not None
-                    and (
-                        datetime_primary_column.max() - datetime_primary_column.min()
-                    ).days
-                    > len(df) * 2
-                ):
-                    # Use string type for sparse date range
-                    df["MONTH"] = df["MONTH"].astype("string")
-
-                st.bar_chart(
-                    df,
-                    x="MONTH",
-                    y=[
-                        c
-                        for c in df.columns
-                        if c != "MONTH"
-                        and c != "/* Order Key (Generated by Snowflake) */"
-                    ],
-                    sort="-/* Order Key (Generated by Snowflake) */",
-                    width="stretch",
-                    height=400,
-                    horizontal=True,
-                    stack=True,
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 9: 2 Cells
-col9_1, col9_2 = st.columns(2)
-with col9_1:
-    cell_9_1()
-with col9_2:
-    cell_9_2()
-
-
 def query_10_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 select 
     --datebucket(RECORD_DATE) as MONTH_OF_DL,
     year(month_created) as year,
@@ -2313,6 +1589,7 @@ where
     simple_assay is not null 
     and simple_assay not in ('', 'Blood Chemistry Measurement', 'polymeraseChainReaction')
     and year >= 2015
+    and {window_filter_sql('month_created')}
 order by 
     measurement_point desc,
     cumulative_volume_TB desc
@@ -2410,230 +1687,8 @@ def cell_10_1():
             st.error(f"Error: {str(e)}")
 
 
-# Row 10: Single Cell
-cell_10_1()
-
-
-def query_11_1() -> str:
-    sql_query = r"""
--- Grouping by the simplified combination assay/data type categories
--- how many total file downloads and total download volume since Jan 2022
-
-select
-    simple_assay,
-    sum(total_downloads) as total_downloads,
-    round(sum(content_size * total_downloads) / power(2, 40), 3) as total_download_volume_TB
-from sage.ad.cumulative_downloads_simple_assay
-where simple_assay is not null
-group by simple_assay
-order by total_downloads desc
-;  """
-
-    return sql_query
-
-
-execute_query(query_11_1())
-
-
-@st.fragment
-def cell_11_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### Combined Downloads by Data Type since Jan 2022")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_11_1",
-                help="Refresh combined_downloads_by_data_type_since_jan_2022 data",
-            ):
-                execute_query.clear(query_11_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_11_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for bar chart
-            if len(df) > 0:
-                df = df[["SIMPLE_ASSAY", "TOTAL_DOWNLOADS"]]
-
-                df["/* Order Key (Generated by Snowflake) */"] = df.drop(
-                    columns="SIMPLE_ASSAY"
-                ).sum(axis=1)
-
-                datetime_primary_column = None
-                if pd.api.types.is_datetime64_dtype(df["SIMPLE_ASSAY"]):
-                    datetime_primary_column = df["SIMPLE_ASSAY"]
-                elif df["SIMPLE_ASSAY"].dtype == "object" and isinstance(
-                    df["SIMPLE_ASSAY"].get(df["SIMPLE_ASSAY"].first_valid_index()),
-                    dt.date,
-                ):
-                    datetime_primary_column = pd.to_datetime(
-                        df["SIMPLE_ASSAY"], errors="coerce"
-                    )
-                if (
-                    datetime_primary_column is not None
-                    and (
-                        datetime_primary_column.max() - datetime_primary_column.min()
-                    ).days
-                    > len(df) * 2
-                ):
-                    # Use string type for sparse date range
-                    df["SIMPLE_ASSAY"] = df["SIMPLE_ASSAY"].astype("string")
-
-                st.bar_chart(
-                    df,
-                    x="SIMPLE_ASSAY",
-                    y=[
-                        c
-                        for c in df.columns
-                        if c != "SIMPLE_ASSAY"
-                        and c != "/* Order Key (Generated by Snowflake) */"
-                    ],
-                    sort="-/* Order Key (Generated by Snowflake) */",
-                    width="stretch",
-                    height=400,
-                    horizontal=True,
-                    stack=False,
-                    x_label="TOTAL_DOWNLOADS",
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-def query_11_2() -> str:
-    sql_query = r"""
--- Grouping by the simplified combination assay/data type categories
--- how many total file downloads and total download volume since Jan 2022
-
-select
-    simple_assay,
-    sum(total_downloads) as total_downloads,
-    round(sum(content_size * total_downloads) / power(2, 40), 3) as total_download_volume_TB
-from sage.ad.cumulative_downloads_simple_assay
-where simple_assay is not null
-group by simple_assay
-order by total_downloads desc
-;  """
-
-    return sql_query
-
-
-execute_query(query_11_2())
-
-
-@st.fragment
-def cell_11_2():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown(
-                    "### Combined Total Download Volume by Data Type since Jan 2022"
-                )
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_11_2",
-                help="Refresh combined_total_download_volume_by_data_type_since_jan_2022 data",
-            ):
-                execute_query.clear(query_11_2())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_11_2())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for bar chart
-            if len(df) > 0:
-                df = df[["SIMPLE_ASSAY", "TOTAL_DOWNLOAD_VOLUME_TB"]]
-
-                df["/* Order Key (Generated by Snowflake) */"] = df.drop(
-                    columns="SIMPLE_ASSAY"
-                ).sum(axis=1)
-
-                datetime_primary_column = None
-                if pd.api.types.is_datetime64_dtype(df["SIMPLE_ASSAY"]):
-                    datetime_primary_column = df["SIMPLE_ASSAY"]
-                elif df["SIMPLE_ASSAY"].dtype == "object" and isinstance(
-                    df["SIMPLE_ASSAY"].get(df["SIMPLE_ASSAY"].first_valid_index()),
-                    dt.date,
-                ):
-                    datetime_primary_column = pd.to_datetime(
-                        df["SIMPLE_ASSAY"], errors="coerce"
-                    )
-                if (
-                    datetime_primary_column is not None
-                    and (
-                        datetime_primary_column.max() - datetime_primary_column.min()
-                    ).days
-                    > len(df) * 2
-                ):
-                    # Use string type for sparse date range
-                    df["SIMPLE_ASSAY"] = df["SIMPLE_ASSAY"].astype("string")
-
-                st.bar_chart(
-                    df,
-                    x="SIMPLE_ASSAY",
-                    y=[
-                        c
-                        for c in df.columns
-                        if c != "SIMPLE_ASSAY"
-                        and c != "/* Order Key (Generated by Snowflake) */"
-                    ],
-                    sort="-/* Order Key (Generated by Snowflake) */",
-                    width="stretch",
-                    height=400,
-                    horizontal=True,
-                    stack=False,
-                    x_label="TOTAL_DOWNLOAD_VOLUME_TB",
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
-# Row 11: 2 Cells
-col11_1, col11_2 = st.columns(2)
-with col11_1:
-    cell_11_1()
-with col11_2:
-    cell_11_2()
-
-
 def query_12_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 -- uploaded files by consortium
 
 with file_size as (
@@ -2650,6 +1705,7 @@ from synapse_data_warehouse.synapse.node_latest nl
 left join file_size as fs
     on nl.file_handle_id = fs.file_handle_id, lateral split_to_table(annotations:annotations:consortium:value::VARCHAR, ',') spl
 where project_id = '2580853' and node_type = 'file' and is_public = 'true' and consortium != 'ROSMAP'
+    and {window_filter_sql('nl.created_on')}
 group by consortium
 order by number_files desc;  """
 
@@ -2692,20 +1748,13 @@ def cell_12_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
 def query_12_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with file_size as (
     select
         id as file_handle_id,
@@ -2721,6 +1770,7 @@ left join file_size as fs
     on nl.file_handle_id = fs.file_handle_id,
 where project_id = '2580853' 
     and node_type = 'file' 
+    and {window_filter_sql('nl.created_on')}
     and is_public = 'true'
     and annotations:annotations:species:value[0] = 'Human'
     and organ is not null
@@ -2767,28 +1817,13 @@ def cell_12_2():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
-# Row 12: 2 Cells
-col12_1, col12_2 = st.columns(2)
-with col12_1:
-    cell_12_1()
-with col12_2:
-    cell_12_2()
-
-
 def query_13_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 -- average users per month
 -- Distribution of downloads, users, and TB downloaded over months
 with dedup_downloads as (
@@ -2801,6 +1836,7 @@ with dedup_downloads as (
         on filedownload.file_handle_id = file_latest.id
     where
         project_id = 2580853
+        and {window_filter_sql('filedownload.record_date')}
 ),
 
 monthly_downloads as (
@@ -2841,12 +1877,12 @@ def cell_13_1():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### monthly average usage")
+                st.markdown("### Average monthly downloads, users, and volume (TB)")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_13_1",
-                help="Refresh monthly_average_usage data",
+                help="Refresh average_monthly_downloads,_users,_and_volume_(tb) data",
             ):
                 execute_query.clear(query_13_1())
 
@@ -2865,29 +1901,19 @@ def cell_13_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True)
+            render_dataframe(df, height="auto")
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
-# Row 13: Single Cell
-cell_13_1()
-
-
 def query_14_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 --- Excludes Sage users, since 2022
 --- excludes metadata files
 
 with node_annotations as (
     select
+        id,
         file_handle_id,
         annotations:annotations:dataType:value[0] as data_type,
         annotations:annotations:dataSubtype:value[0] as data_subtype,
@@ -2911,7 +1937,9 @@ with node_annotations as (
     inner join
         node_annotations
     on
-        filedownload.file_handle_id = node_annotations.file_handle_id
+        filedownload.association_object_id = node_annotations.id
+    where
+        {window_filter_sql('filedownload.record_date')}
 ), external_users as (
     select id as user_id
     from
@@ -2953,13 +1981,13 @@ def cell_14_1():
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
                 st.markdown(
-                    "### gene expression downloads by file format and data subtype"
+                    "### gene expression downloads by file format and data subtype (non-Sagers)"
                 )
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
                 key=f"refresh_button_cell_14_1",
-                help="Refresh gene_expression_downloads_by_file_format_and_data_subtype data",
+                help="Refresh gene_expression_downloads_by_file_format_and_data_subtype_(non-sagers) data",
             ):
                 execute_query.clear(query_14_1())
 
@@ -2978,21 +2006,14 @@ def cell_14_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True, height=400)
+            render_dataframe(df)
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
 def query_14_2() -> str:
-    sql_query = r"""
--- data usage for last 30 days from all buckets provisioned by the synapse-service-ad-data-curation-01 service account in the STRIDES service catalog
+    sql_query = rf"""
+-- data usage within the date window from all buckets provisioned by the synapse-service-ad-data-curation-01 service account in the STRIDES service catalog
 
 with bucket_info as (
     select 
@@ -3011,7 +2032,7 @@ dedup_last_month_downloads as (
         user_id, record_date, file_handle_id, 
     from
         synapse_data_warehouse.synapse_event.objectdownload_event
-    where record_date between dateadd('month', -1, current_date()) and current_date()           
+    where {window_filter_sql('record_date')}
 )
 select
     case 
@@ -3049,7 +2070,7 @@ def cell_14_2():
             vertical_alignment="center",
         ):
             with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### STRIDES bucket downloads - previous 30 days")
+                st.markdown("### STRIDES bucket downloads")
             if st.button(
                 ":material/refresh:",
                 type="tertiary",
@@ -3100,132 +2121,8 @@ def cell_14_2():
             st.error(f"Error: {str(e)}")
 
 
-# Row 14: 2 Cells
-col14_1, col14_2 = st.columns(2)
-with col14_1:
-    cell_14_1()
-with col14_2:
-    cell_14_2()
-
-
-def query_15_1() -> str:
-    sql_query = r"""
---- AD Portal monthly downloads by study 
---- does NOT exclude users with a sagebionetworks email domain (not a great proxy for internal/external)
-
-with node_annotations as (
-    select
-        file_handle_id,
-        annotations:annotations:study:value[0]::string as study,
-    from
-        synapse_data_warehouse.synapse.node_latest
-    where
-        project_id in (
-            2580853
-        )
-), dedup_downloads as (
-    select
-        objectdownload_event.user_id,
-        objectdownload_event.record_date,
-        objectdownload_event.file_handle_id,
-        node_annotations.study
-    from
-        synapse_data_warehouse.synapse_event.objectdownload_event
-    inner join
-        node_annotations on
-        objectdownload_event.file_handle_id = node_annotations.file_handle_id
-        
-), file_size as(
-    select
-        id,
-        content_size  
-    from synapse_data_warehouse.synapse.file_latest
-)
-select
-    study,
-    record_date,
-    count(record_date) AS number_of_downloads,
-    count(distinct dedup_downloads.user_id) as number_of_unique_users,
-    round(sum(file_size.content_size) / power(2, 30), 2) AS GiB_downloaded
-from
-    dedup_downloads
-left join
-    file_size
-on
-    dedup_downloads.file_handle_id = file_size.id
-where study is not null and record_date > DATE('2025-01-01')
-group by
-    record_date, study
-order by
-    record_date desc, GIB_DOWNLOADED desc, study desc  """
-
-    return sql_query
-
-
-execute_query(query_15_1())
-
-
-@st.fragment
-def cell_15_1():
-    with st.container(border=True):
-        with st.container(
-            horizontal=True,
-            horizontal_alignment="distribute",
-            vertical_alignment="center",
-        ):
-            with st.container(height=80, border=False, vertical_alignment="center"):
-                st.markdown("### 2025-01-28 6:51am")
-            if st.button(
-                ":material/refresh:",
-                type="tertiary",
-                key=f"refresh_button_cell_15_1",
-                help="Refresh 2025-01-28_6:51am data",
-            ):
-                execute_query.clear(query_15_1())
-
-        try:
-            with st.spinner("Executing query", show_time=True):
-                df = session.create_async_job(execute_query(query_15_1())).result(
-                    "pandas"
-                )
-
-            if any(df.columns.duplicated()):
-                new_names = []
-                name_indexes = {}
-                for name in df.columns:
-                    name_index = name_indexes.get(name, 0) + 1
-                    name_indexes[name] = name_index
-                    new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
-                df.columns = new_names
-
-            # Prepare data for line chart with aggregation
-            if len(df) > 0:
-                df = (
-                    df.groupby(by=["RECORD_DATE", "STUDY"], sort=False)
-                    .agg(col1=("NUMBER_OF_DOWNLOADS", "sum"))
-                    .rename(columns={"col1": "NUMBER_OF_DOWNLOADS (sum)"})
-                    .unstack(level=1)
-                )
-
-                df.columns = [
-                    " | ".join(map(str, c[::-1])).replace(":", "_") for c in df.columns
-                ]
-
-                df = df.reset_index()
-
-                st.line_chart(
-                    df.set_index("RECORD_DATE"),
-                    width="stretch",
-                    height=400,
-                )
-            else:
-                st.warning("No data available")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-
 def query_15_2() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 with individuals as (
     select
         annotations:annotations:individualID:value as individualID,
@@ -3236,6 +2133,7 @@ with individuals as (
         project_id in (
             2580853
         )
+        and {window_filter_sql('created_on')}
 )
 select
     case 
@@ -3337,16 +2235,8 @@ def cell_15_2():
             st.error(f"Error: {str(e)}")
 
 
-# Row 15: 2 Cells
-col15_1, col15_2 = st.columns(2)
-with col15_1:
-    cell_15_1()
-with col15_2:
-    cell_15_2()
-
-
 def query_16_1() -> str:
-    sql_query = r"""
+    sql_query = rf"""
 select
     node_latest.name as entity_name,
     acl_latest.owner_id as entity_id,
@@ -3358,7 +2248,8 @@ join
     synapse_data_warehouse.synapse.acl_latest on
     node_latest.id = acl_latest.owner_id
 where
-    node_latest.project_id = 2580853;  """
+    node_latest.project_id = 2580853
+    and {window_filter_sql('acl_latest.created_on')};  """
 
     return sql_query
 
@@ -3399,20 +2290,157 @@ def cell_16_1():
                     new_names.append(f"{name}_{name_index}" if name_index > 1 else name)
                 df.columns = new_names
 
-            if len(df) == 1 and len(df.columns) == 1:
-                st.metric(
-                    label=df.columns[0],
-                    value=str(df.iloc[0, 0]),
-                    label_visibility="collapsed",
-                )
-            else:
-                st.dataframe(df, width="stretch", hide_index=True)
+            render_dataframe(df, height="auto")
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
 
-# Row 16: Single Cell
-cell_16_1()
+def query_17_1() -> str:
+    # 9603055 is the "AD Knowledge Portal" access requirement (the ADKP clickwrap);
+    # it has by far the highest submission volume of any access requirement
+    sql_query = f"""
+select
+    coalesce(sum(received_count), 0) as "TOTAL SUBMISSIONS RECEIVED (INCL. RESUBMISSIONS)",
+    coalesce(sum(approved_count), 0) as total_submissions_approved
+from
+    synapse_data_warehouse.synapse_aggregate.data_access_submission_aggregate
+where
+    agg_access_requirement_id = 9603055
+    and agg_period = '{AGGREGATE_PERIODS[input_datebucket]}'
+    and {window_filter_sql('agg_period_start')};  """
+
+    return sql_query
+
+
+execute_query(query_17_1())
+
+
+@st.fragment
+def cell_17_1():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### Access request submissions")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_button_cell_17_1",
+                help="Refresh access_request_submissions data",
+            ):
+                execute_query.clear(query_17_1())
+
+        try:
+            with st.spinner("Executing query", show_time=True):
+                df = session.create_async_job(execute_query(query_17_1())).result(
+                    "pandas"
+                )
+
+            render_dataframe(df)
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
+def cell_date_window() -> None:
+    # Shows the window the queries actually cover, rounded out to whole date-bucket periods
+    with st.container(border=True):
+        with st.container(height=80, border=False, vertical_alignment="center"):
+            st.markdown("### Date window")
+        render_dataframe(
+            pd.DataFrame(
+                {
+                    "START": [bucket_floor(window_start, input_datebucket)],
+                    "END": [bucket_end(window_end, input_datebucket)],
+                }
+            )
+        )
+
+
+def render_cells(cells, num_columns: int) -> None:
+    for i in range(0, len(cells), num_columns):
+        for col, cell in zip(st.columns(num_columns), cells[i : i + num_columns]):
+            with col:
+                cell()
+
+
+# Layout: cells grouped by category, one expander each
+with st.expander("Overview", expanded=True):
+    render_cells(
+        [cell_date_window, cell_1_2, cell_1_3, cell_4_1, cell_4_2, cell_12_2, cell_15_2],
+        num_columns=2,
+    )
+
+with st.expander("Downloads"):
+    render_cells(
+        [
+            cell_date_window, cell_2_1, cell_2_2, cell_13_1, cell_downloads_count, cell_downloads_users,
+            cell_downloads_volume, cell_14_1, cell_14_2,
+        ],
+        num_columns=2,
+    )
+
+    st.markdown("#### By study")
+    try:
+        study_options = (
+            session.create_async_job(execute_query(query_study_options()))
+            .result("pandas")["STUDY"]
+            .tolist()
+        )
+    except Exception as e:
+        study_options = []
+        st.error(f"Error: {str(e)}")
+    # Hundreds of studies make for unreadable charts, so default to the five with the
+    # most downloads (study_options is already sorted by downloads)
+    input_studies = st.multiselect(
+        "Studies",
+        options=study_options,
+        default=study_options[:5],
+        key="study_param",
+    )
+    render_cells(
+        [
+            cell_study_downloads_count,
+            cell_study_downloads_users,
+            cell_study_downloads_volume,
+        ],
+        num_columns=2,
+    )
+
+    st.markdown("#### By datatype")
+    try:
+        datatype_options = (
+            session.create_async_job(execute_query(query_datatype_options()))
+            .result("pandas")["DATATYPE"]
+            .tolist()
+        )
+    except Exception as e:
+        datatype_options = []
+        st.error(f"Error: {str(e)}")
+    # Default to the ten most-downloaded datatypes
+    input_datatypes = st.multiselect(
+        "Datatypes",
+        options=datatype_options,
+        default=datatype_options[:10],
+        key="datatype_param",
+    )
+    render_cells([cell_6_1, cell_6_2, cell_7_2, cell_7_1], num_columns=2)
+
+with st.expander("Uploads"):
+    render_cells([cell_date_window, cell_10_1, cell_12_1], num_columns=2)
+
+with st.expander("Access Requests"):
+    st.markdown(
+        'All charts are with respect to the "AD Knowledge Portal" (9603055) '
+        "access requirement."
+    )
+    render_cells([cell_date_window, cell_17_1], num_columns=2)
+
+# Cells that don't fit Overview/Downloads/Uploads; pending review
+with st.expander("Misc."):
+    render_cells([cell_date_window, cell_8_2, cell_16_1], num_columns=2)
 
 
 # Footer
