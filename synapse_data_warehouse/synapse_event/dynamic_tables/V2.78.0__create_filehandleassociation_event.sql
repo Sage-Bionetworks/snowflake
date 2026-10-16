@@ -1,9 +1,11 @@
 USE SCHEMA {{database_name}}.synapse_event; --noqa: JJ01,PRS,TMP
 
 -- The association stage is stack-specific within each warehouse database.
+-- Uses COMPUTE_MEDIUM so the initial refresh over the full snapshot history fits within the
+-- XSMALL warehouse statement timeout; V2.78.2 moves it back to COMPUTE_XSMALL.
 CREATE DYNAMIC TABLE IF NOT EXISTS filehandleassociation_event
     TARGET_LAG = '5 hours'
-    WAREHOUSE = COMPUTE_XSMALL
+    WAREHOUSE = COMPUTE_MEDIUM
     COMMENT = 'This dynamic table, indexed by the `associateid`, `associatetype`, and `filehandleid` columns, contains every file handle association for each Synapse object. In other words, for any given Synapse object, this table contains the complete set of file handles which have ever been associated with it. For example, when a new version of a file entity is uploaded, a new file handle is associated with that file entity. Table entities are more complicated: a new file handle is associated with a table entity only when a row with a FILEHANDLEID column is added or updated in that table. 
 
 h2. Associate Types
