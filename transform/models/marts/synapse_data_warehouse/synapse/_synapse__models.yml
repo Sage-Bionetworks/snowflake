@@ -1,8 +1,6 @@
 version: 2
 models:
   - name: research_project
-    config:
-      schema: synapse
     description: "One row per research project, enriched with the current access requirement name and creator and modifier usernames."
     constraints:
       - type: primary_key
