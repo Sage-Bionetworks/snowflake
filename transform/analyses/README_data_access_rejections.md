@@ -4,6 +4,8 @@ The standalone staging view, `stg_synapse__data_access_submission_rejection`, co
 
 The category macro defines the agreed 16 labels and their boundary descriptions. Classification uses multi-label output so one submission can contribute to several categories. `Other` covers both unclear explanations and explicitly stated reasons outside the catalog; it can accompany a specific category when the explanation contains an additional unmapped problem.
 
+The [evaluation findings](data_access_rejection_classification_findings.md) record the sample distributions, observed mistakes, and measured inference usage.
+
 ## Environment
 
 The draft PR workflow creates the feature database and staging view. For this experiment, the production source is copied into the corresponding clone location:
@@ -57,11 +59,15 @@ The classification SELECT calls a paid AI function. Queries against the persiste
 
 Inspect all ten reasons and labels before increasing the sample size. The historical sample uses a deterministic hash of submission ID and seed. Set `rejection_sample_order` to `recent` to order by the raw status modification time. For example, compile a historical sample of 1,000 and a recent sample of 500, then execute each in its own result table.
 
+The default prompt is the baseline used for the larger samples. Set `rejection_use_examples` to the boolean `true` to try the optional refinement with illustrative examples, a stronger task description, and explicit ethics exemption wording. This refinement was tested on targeted cases and is not promoted to the default because its results were mixed.
+
 ## Evaluate persisted results
+
+The result table preserves the raw classification. Read-only evaluation queries map successful empty label arrays to `Other`, mark those records with `used_other_fallback`, and retain the raw labels for inspection. Function errors remain errors and are not converted to `Other`. This makes output completeness explicit without treating a fallback as a correct classification.
 
 Compile these read-only analyses with `rejection_result_table` set to the unqualified result table name:
 
-- `data_access_rejection_classification_validation`: errors, blank inputs, missing or malformed label arrays, and labels outside the catalog.
+- `data_access_rejection_classification_validation`: errors, blank inputs, empty-label fallback counts, missing or malformed effective labels, and labels outside the catalog.
 - `data_access_rejection_category_distribution`: counts and percentages for all 16 categories, including zero counts. Percentages can sum to more than 100 because classification is multi-label.
 - `data_access_rejection_classification_review`: all `Other` assignments and missing labels or errors, with the original explanation for review.
 

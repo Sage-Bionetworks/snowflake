@@ -9,7 +9,9 @@ assignments AS (
         results.data_access_submission_id,
         label.value::VARCHAR AS category
     FROM {{ target.database }}.RDS_RAW.{{ result_table }} AS results,
-        LATERAL FLATTEN(INPUT => results.classification:value:labels) AS label
+        LATERAL FLATTEN(
+            INPUT => {{ data_access_rejection_effective_labels('results.classification') }}
+        ) AS label
 ),
 sample_totals AS (
     SELECT COUNT(*) AS sampled_submissions

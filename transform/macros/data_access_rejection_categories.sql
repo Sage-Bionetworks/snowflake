@@ -46,7 +46,11 @@
         },
         {
             'label': 'Documentation - Ethics approval issue',
+            {% if var('rejection_use_examples', false) %}
+            'description': 'Required ethics committee approval or exemption documentation, such as IRB, IEC, or ERC evidence, is missing or inadequate.'
+            {% else %}
             'description': 'Required IRB, IEC, or ERC approval documentation is missing or inadequate.'
+            {% endif %}
         },
         {
             'label': 'Eligibility - Research outside permitted scope',
@@ -65,4 +69,15 @@
             'description': 'A stated rejection reason falls outside the defined categories, or the explanation is too vague to classify.'
         }
     ]
+{% endmacro %}
+
+{% macro data_access_rejection_effective_labels(classification) %}
+    CASE
+        WHEN {{ classification }}:error::VARCHAR IS NOT NULL THEN NULL
+        WHEN
+            TYPEOF({{ classification }}:value:labels) = 'ARRAY'
+            AND ARRAY_SIZE({{ classification }}:value:labels) = 0
+            THEN ['Other - Unmapped or unclear reason']
+        ELSE {{ classification }}:value:labels
+    END
 {% endmacro %}

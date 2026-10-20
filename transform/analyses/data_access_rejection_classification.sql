@@ -36,10 +36,7 @@ SELECT
     AI_CLASSIFY(
         rejection_reason,
         {{ data_access_rejection_categories() }},
-        {
-            'task_description': 'Classify explicitly stated rejection reasons. DUC means Data Use Certification; IDU means Intended Data Use. Select all independent problems, using the most specific label per problem. Distinguish inadequate explanations from prohibited research. Exclude boilerplate and hypothetical requirements. Use Other for unmapped or unclear reasons.',
-            'output_mode': 'multi'
-        },
+        {{ data_access_rejection_classifier_config() }},
         TRUE
     ) AS classification
 FROM sampled_rejections
