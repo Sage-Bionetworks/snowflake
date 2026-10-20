@@ -12,4 +12,5 @@ select
     project_lead,
     institution,
     intended_data_use
-from {{ ref('int_synapse_research_project') }}
+from
+    dynamic_table_refresh_boundary({{ ref('int_synapse_research_project') }})
