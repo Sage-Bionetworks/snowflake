@@ -1,7 +1,85 @@
 version: 2
 models:
+  - name: int_synapse_accessor_changes
+    description: "Requested accessor changes from data access submissions, with one row per submission and principal.
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id, principal_id]
+      - type: foreign_key
+        columns: [data_access_submission_id, principal_id]
+        to: ref('stg_synapse__data_access_submission_accessor_changes')
+        to_columns: [data_access_submission_id, principal_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [access_requirement_id, access_requirement_version_reviewed_against]
+        to: ref('int_synapse_access_requirement')
+        to_columns: [access_requirement_id, access_requirement_version]
+        warn_unenforced: false
+    columns:
+      - name: data_access_submission_id
+        description: "Identifier of the submission requesting this access change."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_submission')
+            to_columns: [data_access_submission_id]
+            warn_unenforced: false
+        data_tests:
+          - not_null
+      - name: principal_id
+        description: "Identifier of the accessor whose access is requested to change."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: access_type
+        description: "Requested access change: GAIN_ACCESS, RENEW_ACCESS, or REVOKE_ACCESS. The change is confirmed only when the submission is Approved."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
+      - name: access_requirement_id
+        description: "Identifier of the access requirement affected by the submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version_submitted_against
+        description: "Access requirement revision recorded at submission time. We retain this for additional context; it's not used to derive effective terms, which are contingent on the current access requirement version at time of review."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version_reviewed_against
+        description: "Current access requirement revision when the submission was approved or rejected. Null for Submitted or Cancelled submissions, or when no eligible access requirement revision is available."
+        data_type: NUMBER
+      - name: state
+        description: "Current submission review state: Submitted, Approved, Rejected, or Cancelled. Only Approved confirms the requested accessor change."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Submitted', 'Approved', 'Rejected', 'Cancelled']
+      - name: state_modified_on
+        description: "UTC timestamp when the current submission state was set. For Submitted submissions, this equals the submission's creation time. For Approved, Rejected, or Cancelled submissions, this records the terminal state transition. Only Approved confirms the requested accessor changes; a populated timestamp alone does not indicate review or approval."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: derived_expired_on
+        description: "Derived UTC expiration of gained or renewed access: approval timestamp plus the active access requirement revision's expiration period. Null for non-approved submissions, revocations, unlimited duration (zero), unavailable periods, or invalid nonpositive periods. Later requirement revisions do not recalculate this event's expiration."
+        data_type: TIMESTAMP_NTZ
+
   - name: int_synapse_access_requirement
-    description: "Intermediate model combining access requirement data with its current revision and associated projects. Provides a denormalized view of access requirements with metadata, modification history, and project relationships."
+    description: "Access requirement data with one row per access requirement and access requirement version."
     constraints:
       - type: primary_key
         columns: [access_requirement_id, access_requirement_version]
@@ -17,20 +95,18 @@ models:
         constraints:
           - type: not_null
       - name: access_requirement_name
-        description: "Unique human-readable name for the access requirement"
+        description: "Human-readable requirement name for this revision. Null when absent or empty."
         data_type: VARCHAR
-        constraints:
-          - type: not_null
       - name: access_requirement_type
         description: "The type of access requirement"
         data_type: VARCHAR
       - name: created_by
-        description: "Identifier of the user who created this access requirement"
+        description: "Identifier of the user who created this access requirement revision."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: created_on
-        description: "UTC timestamp when this access requirement was initially created"
+        description: "UTC timestamp when this access requirement was initially created, from the base requirement."
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
@@ -45,16 +121,38 @@ models:
         constraints:
           - type: not_null
       - name: is_two_fa_required
-        description: "Boolean flag indicating whether two-factor authentication is required for this access. Null except for the most recent revision."
+        description: "Whether 2FA was required at this revision. If 2FA is unset for this revision, we match the 2FA setting of the current revision."
         data_type: BOOLEAN
       - name: access_type
-        description: "Type of access controlled by this requirement"
+        description: "Permission controlled by this requirement at this revision."
         data_type: VARCHAR
-        constraints:
-          - type: not_null
+      - name: is_certified_user_required
+        description: "Whether this revision requires accessors to be Synapse Certified Users. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_validated_profile_required
+        description: "Whether this revision requires accessors to have validated Synapse profiles. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_duc_required
+        description: "Whether this revision requires a signed Data Use Certificate. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_irb_approval_required
+        description: "Whether this revision requires an Institutional Review Board approval document. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: are_other_attachments_required
+        description: "Whether this revision requires attachments in addition to DUC and IRB documents. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_idu_required
+        description: "Whether this revision requires an Intended Data Use statement. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_idu_public
+        description: "Whether this revision makes submitted Intended Data Use statements public. Null when absent or unrecognized."
+        data_type: BOOLEAN
       - name: access_requirement_raw
         description: "Serialized representation of the complete access requirement object at this revision"
         data_type: BINARY
+      - name: expiration_period
+        description: "Approval validity period in milliseconds for this revision. Zero means no expiration. Null when absent or malformed."
+        data_type: NUMBER
 
   - name: int_synapse_acl
     description: "Intermediate model flattening ACL data to show which principals have which access types for each resource."
