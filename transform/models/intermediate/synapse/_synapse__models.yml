@@ -1,7 +1,7 @@
 version: 2
 models:
   - name: int_synapse_accessor_changes
-    description: "Requested accessor changes from data access submissions, with one row per submission and principal.
+    description: "Requested accessor changes from data access submissions, with one row per submission and principal."
     constraints:
       - type: primary_key
         columns: [data_access_submission_id, principal_id]
