@@ -21,8 +21,9 @@ WITH base AS (
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
 ),
 access_requirements AS (
-    SELECT DISTINCT
+    SELECT
         access_requirement_id,
+        access_requirement_version,
         access_requirement_name
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
 )
@@ -49,3 +50,4 @@ SELECT
 FROM base
 LEFT JOIN access_requirements
     ON base.access_requirement_id = access_requirements.access_requirement_id
+    AND base.access_requirement_version = access_requirements.access_requirement_version
