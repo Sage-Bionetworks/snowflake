@@ -1,0 +1,54 @@
+version: 2
+
+unit_tests:
+  - name: access_requirement_revisions_decode_historical_settings
+    description: "Decodes historical metadata, eligibility, document, IDU, 2FA, and expiration settings; preserves false, zero, and negative values; and returns null for missing or unrecognized settings. Requirement type comes from concreteType when present and otherwise the XML root tag."
+    model: stg_synapse__access_requirement_revision
+    given:
+      - input: source('rds', 'access_requirement_revision')
+        format: sql
+        rows: |
+          select
+              100 as owner_id,
+              0 as number,
+              10 as modified_by,
+              1767225600000 as modified_on,
+              to_binary('1f8b08000000000002139d92c14e834010865f8527004c8ce9614282109326a69006f43c658776e2c2e2ecb6d5b777a93d60410feef1ffbf6f26d95d30b20f2dee69c7a6277736f26643a1c1849d51a4c334abd2a6216bb7f47e64a18e7a97408f1d259324b88be340e8c4d64f0962882e00e0c5ac3e074af2e275f35ca439449310d85667f384d7492a69515b82e836f65c46e2b86552b52599f3cbb5f75e50b34247aa14d3b2a6b9fa2be1edbccee6c234f4cc7afb980e839813ea39bb54020a15ee40923a87cd61bc3f7b6bfe858c3bf37a61d724fc66cae34e73f383b846401f030b3aff5c25091b95ac1eeee3f14034ab20facf27f902ef81f8295a020000', 'HEX') as serialized_entity
+          union all
+          select
+              100, 1, 10, 1767225600000,
+              to_binary('1f8b08000000000002139592c14ec33010447f255f10275ce0b08a64529072404451c2ddb5b7ad451287b5d3c2dfe3841e4c5d40f864cdbcd991d60643fbd48a3d6eb519d19d0cbdda947032e96014f6299712ad6df06dd684038eae80510c58044a9267594278d4d68f4872602b00d28c92d061fb3161f147cb9318bda978d9467dc0be0d02b102ebbde64d5b9555cddb0760810edab627f328ce5354e168466097aac74a24a7771a55679122fcbaeb632fa2d74a385435999dee314afe08f8f0a62b233ed43c5235f77c9ac81c451fa1d73c1084cfee80c49d13f2b0accd5e047f2396c64d173705da1752cfdb5ecb10382b80ef9326e1fcebd648daa822bfbdb9cb96032cf280fdfbd37d0206fe5876a7020000', 'HEX')
+          union all
+          select
+              100, 2, 10, 1767225600000,
+              to_binary('1f8b0800000000000213b3c92f4ad72b4e4c4f4dcacccf4b2d29cf2fca2ed62b4a2dc8d7cbcd4f49cdd1f34dcc034aa6383a87382627a7161707a516966616a5e6a6e695d8d9e853a019003e77256e79000000', 'HEX')
+          union all
+          select
+              100, 3, 10, 1767225600000,
+              to_binary('1f8b0800000000000213a592d14e833014865f852780196f1b1206313151210be87547ffb113a1c5d3b24d9fde6eee824cea8db7e7fffeafcd6985e12eb6b2c3968c863b1a7eb7316334f16014faf8596a1faa2cafb3b685b51b7c4cc418a05d2ab41c90ce26d1dd6a15310e64bd2cba17c90510f2d2ac3f47a445f9f6f254668548664341b63e9a077935a974d28cd6749abea044729b7a3c073bda115463c1c1da32e5ebafb227251d54c566473d828620e8254593077bf3cca38f9b75368e6c0eb20f5696182119a5db8333e764bb3fafd806047f91e71b144df8e459f68356d3b6a77609bc2602a791583affcc1598ccadf4572c927ffcb36f472572d2a4020000', 'HEX')
+          union all
+          select
+              100, 4, 10, 1767225600000,
+              null::binary
+          union all
+          select
+              100, 5, 10, 1767225600000,
+              to_binary('1f8b0800000000000213a592414ec33010456f14738091a590080909481425b09ec693d6c289ddb143db23f51cbd186e40346a0a1b967eff8dbf651b2caf138f6b5a693b50d8597ef70993b3496f1599e4198718aa34abd3b625ef2bda8e9aa9a7214818b027599d8e7eec4f4710d31270f2ea832399176f2f4f459a839841d0beded907fcde49c9c02381b8a651cb8883ee34a9c613ff041d1a3ff9b7e338f78a462b0ca44ab69d36b468fa5588c379932dabe6303a8fd57dea1cdb0f348bbd6f65804c45d810a72160bb395f9ebf2ef94b3957e6cdb26ac6be94725c19dd5ece7d41407ba719437ce592585b25ef402c18887f7c874f6a2c91e64b020000', 'HEX')
+          union all
+          select
+              100, 6, 10, 1767225600000,
+              to_binary('1f8b0800000000000213a592416e83301045afc2050ac9a6ab11924b5a89455584a0fb099e24a3184cc726696f5f8756290ab49b6edf7f33dfb20d56f6b1c33d6dd976e4cf568e2e16ea6ddc5a4d267ec62e845a65956a1a72aea4b781855aea7c0a1db6944e48b45ead22a113bbb02cba87641400c7c9eaa3a7b45065956779a1aa4748261cd85567fb84dfcb74ba43e308925b1cbc8cc4f38e49d78ee41a7819467d390d63af6858a3275d88ddb1a179d3af4698ded4d9ac6aca8292970faaefc59ed0cc772f8580422ffe40a2bcc7e670b9407753f29771a9dcd40b5513f8e514c3d670733df70f017aef59d087d72a48d8eaf46e0dc90c42f28f4ff209ee966bed61020000', 'HEX')
+          union all
+          select
+              100, 7, 10, 1767225600000,
+              to_binary('1f8b0800000000000213a58ecd0ac2301084df2811044f4ba0b4170f4211fb0069b296c5245b3709f5f1ad3f20e2d1b90ccc37870f582695ed842371c2b2b05cb2129c5945f618d4c1a615faa63d35ce61ce47bc56128c988a8164231ad0afa2dc0ded1b7b73b62123e8ef71fdecbba1af6320678ad4e7e1b300de66125b56931e85d89bed6ef308e81f02fa0ff13b42a09a44f5000000', 'HEX')
+    expect:
+      rows:
+        - {access_requirement_id: 100, access_requirement_version: 0, access_requirement_name: Requirement 100 revision 0, access_requirement_type: ACTAccessRequirement, access_type: DOWNLOAD, is_two_fa_required: false, expiration_period: 86400000, is_certified_user_required: false, is_validated_profile_required: false, is_duc_required: false, is_irb_approval_required: false, are_other_attachments_required: false, is_idu_required: false, is_idu_public: false}
+        - {access_requirement_id: 100, access_requirement_version: 1, access_requirement_name: Requirement 100 revision 1, access_requirement_type: ManagedACTAccessRequirement, access_type: PARTICIPATE, is_two_fa_required: true, expiration_period: 172800000, is_certified_user_required: true, is_validated_profile_required: true, is_duc_required: true, is_irb_approval_required: true, are_other_attachments_required: true, is_idu_required: true, is_idu_public: true}
+        - {access_requirement_id: 100, access_requirement_version: 2, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_type: null, is_two_fa_required: null, expiration_period: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+        - {access_requirement_id: 100, access_requirement_version: 3, access_requirement_name: Requirement 100 revision 3, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_two_fa_required: null, expiration_period: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+        - {access_requirement_id: 100, access_requirement_version: 4, access_requirement_name: null, access_requirement_type: null, access_type: null, is_two_fa_required: null, expiration_period: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+        - {access_requirement_id: 100, access_requirement_version: 5, access_requirement_name: "R\xE9sum\xE9", access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_two_fa_required: true, expiration_period: 0, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
+        - {access_requirement_id: 100, access_requirement_version: 6, access_requirement_name: Requirement 100 revision 6, access_requirement_type: ManagedACTAccessRequirement, access_type: PARTICIPATE, is_two_fa_required: false, expiration_period: -1, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
+        - {access_requirement_id: 100, access_requirement_version: 7, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_type: null, is_two_fa_required: null, expiration_period: 3600000, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: false, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: true}

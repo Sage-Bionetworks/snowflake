@@ -1,0 +1,166 @@
+version: 2
+
+unit_tests:
+  - name: accessor_changes_include_all_review_states_and_recorded_accessors
+    description: Preserves requested gains, renewals, and revocations across all review states; excludes unmatched rows and never invents a submitter row.
+    model: int_synapse_accessor_changes
+    given:
+      - input: ref('stg_synapse__data_access_submission_accessor_changes')
+        rows:
+          - {data_access_submission_id: 1, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 1, principal_id: 11, access_type: RENEW_ACCESS}
+          - {data_access_submission_id: 1, principal_id: 12, access_type: REVOKE_ACCESS}
+          - {data_access_submission_id: 2, principal_id: 10, access_type: RENEW_ACCESS}
+          - {data_access_submission_id: 3, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 4, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 5, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 6, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 8, principal_id: 10, access_type: GAIN_ACCESS}
+      - input: ref('stg_synapse__data_access_submission')
+        rows:
+          - {data_access_submission_id: 1, access_requirement_id: 100, access_requirement_version: 2, created_by: 10, created_on: '2026-01-01 12:00:00'}
+          - {data_access_submission_id: 2, access_requirement_id: 100, access_requirement_version: 3, created_by: 99, created_on: '2026-02-01 12:00:00'}
+          - {data_access_submission_id: 3, access_requirement_id: 100, access_requirement_version: 3, created_by: 10, created_on: '2026-03-04 12:00:00'}
+          - {data_access_submission_id: 4, access_requirement_id: 100, access_requirement_version: 3, created_by: 10, created_on: '2026-03-01 12:00:00'}
+          - {data_access_submission_id: 5, access_requirement_id: 100, access_requirement_version: 3, created_by: 10, created_on: '2026-03-01 12:00:00'}
+          - {data_access_submission_id: 6, access_requirement_id: 100, access_requirement_version: 3, created_by: 10, created_on: '2026-03-01 12:00:00'}
+          - {data_access_submission_id: 7, access_requirement_id: 100, access_requirement_version: 3, created_by: 10, created_on: '2026-03-01 12:00:00'}
+      - input: ref('stg_synapse__data_access_submission_status')
+        rows:
+          - {data_access_submission_id: 1, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-02 12:00:00'}
+          - {data_access_submission_id: 2, state: Approved, state_modified_by: 21, state_modified_on: '2026-02-03 12:00:00'}
+          - {data_access_submission_id: 3, state: Submitted, state_modified_by: 10, state_modified_on: '2026-03-04 12:00:00'}
+          - {data_access_submission_id: 4, state: Rejected, state_modified_by: 20, state_modified_on: '2026-03-04 12:00:00'}
+          - {data_access_submission_id: 5, state: Cancelled, state_modified_by: 10, state_modified_on: '2026-03-04 12:00:00'}
+          - {data_access_submission_id: 7, state: Approved, state_modified_by: 20, state_modified_on: '2026-03-04 12:00:00'}
+          - {data_access_submission_id: 8, state: Approved, state_modified_by: 20, state_modified_on: '2026-03-04 12:00:00'}
+      - input: ref('int_synapse_access_requirement')
+        rows:
+          - {access_requirement_id: 999, access_requirement_version: 0, modified_on: '2026-01-01 00:00:00', expiration_period: 3600000}
+    expect:
+      rows:
+        - {data_access_submission_id: 1, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 2, state: Approved, state_modified_on: '2026-01-02 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 1, principal_id: 11, access_type: RENEW_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 2, state: Approved, state_modified_on: '2026-01-02 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 1, principal_id: 12, access_type: REVOKE_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 2, state: Approved, state_modified_on: '2026-01-02 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 2, principal_id: 10, access_type: RENEW_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 3, state: Approved, state_modified_on: '2026-02-03 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 3, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 3, state: Submitted, state_modified_on: '2026-03-04 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 4, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 3, state: Rejected, state_modified_on: '2026-03-04 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+        - {data_access_submission_id: 5, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_id: 100, access_requirement_version_submitted_against: 3, state: Cancelled, state_modified_on: '2026-03-04 12:00:00', access_requirement_version_reviewed_against: null, derived_expired_on: null}
+
+  - name: accessor_changes_identify_review_versions_and_derive_only_approved_expiration
+    description: Identifies review-time revisions for approved and rejected submissions, derives expiration only for approved gains and renewals, preserves submitted versions, and retains every review state. Submitted and cancelled rows have no reviewed version. Covers intervening and future revisions, missing history, timestamp boundaries and ties, revocations, and unlimited, missing, or invalid periods.
+    model: int_synapse_accessor_changes
+    given:
+      - input: ref('stg_synapse__data_access_submission_accessor_changes')
+        rows:
+          - {data_access_submission_id: 1, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 1, principal_id: 11, access_type: RENEW_ACCESS}
+          - {data_access_submission_id: 1, principal_id: 12, access_type: REVOKE_ACCESS}
+          - {data_access_submission_id: 2, principal_id: 10, access_type: RENEW_ACCESS}
+          - {data_access_submission_id: 3, principal_id: 10, access_type: REVOKE_ACCESS}
+          - {data_access_submission_id: 4, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 5, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 6, principal_id: 10, access_type: RENEW_ACCESS}
+          - {data_access_submission_id: 7, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 8, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 9, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 10, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 11, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 12, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 13, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 14, principal_id: 10, access_type: GAIN_ACCESS}
+          - {data_access_submission_id: 15, principal_id: 10, access_type: GAIN_ACCESS}
+      - input: ref('stg_synapse__data_access_submission')
+        rows:
+          - {data_access_submission_id: 1, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 2, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 3, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 4, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 5, access_requirement_id: 101, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 6, access_requirement_id: 102, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 7, access_requirement_id: 100, access_requirement_version: 1, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 8, access_requirement_id: 103, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 9, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 10, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 11, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 12, access_requirement_id: 104, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 13, access_requirement_id: 105, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 14, access_requirement_id: 100, access_requirement_version: 2, created_on: '2026-01-01 12:00:00', created_by: 10}
+          - {data_access_submission_id: 15, access_requirement_id: 106, access_requirement_version: 1, created_on: '2026-01-01 12:00:00', created_by: 10}
+      - input: ref('stg_synapse__data_access_submission_status')
+        rows:
+          - {data_access_submission_id: 1, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 2, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 3, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 4, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-10 12:00:00'}
+          - {data_access_submission_id: 5, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 6, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 7, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 8, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 9, state: Rejected, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 10, state: Submitted, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 11, state: Cancelled, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 12, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 13, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+          - {data_access_submission_id: 14, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-15 12:00:00'}
+          - {data_access_submission_id: 15, state: Approved, state_modified_by: 20, state_modified_on: '2026-01-31 12:00:00.123'}
+      - input: ref('int_synapse_access_requirement')
+        rows:
+          - {access_requirement_id: 100, access_requirement_version: 2, modified_on: '2026-01-01 00:00:00', expiration_period: 86400000}
+          - {access_requirement_id: 100, access_requirement_version: 3, modified_on: '2026-01-15 12:00:00', expiration_period: 172800000}
+          - {access_requirement_id: 100, access_requirement_version: 4, modified_on: '2026-02-10 00:00:00', expiration_period: 604800000}
+          - {access_requirement_id: 101, access_requirement_version: 2, modified_on: '2026-01-01 00:00:00', expiration_period: 0}
+          - {access_requirement_id: 102, access_requirement_version: 1, modified_on: '2026-01-01 00:00:00', expiration_period: 3600000}
+          - {access_requirement_id: 102, access_requirement_version: 2, modified_on: '2026-01-20 00:00:00', expiration_period: null}
+          - {access_requirement_id: 103, access_requirement_version: 2, modified_on: '2026-01-01 00:00:00', expiration_period: -1}
+          - {access_requirement_id: 104, access_requirement_version: 2, modified_on: '2026-02-01 00:00:00', expiration_period: 86400000}
+          - {access_requirement_id: 106, access_requirement_version: 1, modified_on: '2026-01-20 00:00:00', expiration_period: 3600000}
+          - {access_requirement_id: 106, access_requirement_version: 2, modified_on: '2026-01-20 00:00:00', expiration_period: 7200000}
+    expect:
+      rows:
+        - {data_access_submission_id: 1, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: '2026-02-02 12:00:00.123', state: Approved}
+        - {data_access_submission_id: 1, principal_id: 11, access_type: RENEW_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: '2026-02-02 12:00:00.123', state: Approved}
+        - {data_access_submission_id: 1, principal_id: 12, access_type: REVOKE_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 2, principal_id: 10, access_type: RENEW_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: '2026-02-02 12:00:00.123', state: Approved}
+        - {data_access_submission_id: 3, principal_id: 10, access_type: REVOKE_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 4, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 2, derived_expired_on: '2026-01-11 12:00:00', state: Approved}
+        - {data_access_submission_id: 5, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 2, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 6, principal_id: 10, access_type: RENEW_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 2, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 7, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 1, access_requirement_version_reviewed_against: 3, derived_expired_on: '2026-02-02 12:00:00.123', state: Approved}
+        - {data_access_submission_id: 8, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 2, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 12, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: null, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 13, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: null, derived_expired_on: null, state: Approved}
+        - {data_access_submission_id: 14, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: '2026-01-17 12:00:00', state: Approved}
+        - {data_access_submission_id: 15, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 1, access_requirement_version_reviewed_against: 2, derived_expired_on: '2026-01-31 14:00:00.123', state: Approved}
+        - {data_access_submission_id: 9, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: 3, derived_expired_on: null, state: Rejected}
+        - {data_access_submission_id: 10, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: null, derived_expired_on: null, state: Submitted}
+        - {data_access_submission_id: 11, principal_id: 10, access_type: GAIN_ACCESS, access_requirement_version_submitted_against: 2, access_requirement_version_reviewed_against: null, derived_expired_on: null, state: Cancelled}
+
+  - name: access_requirements_expose_expiration_for_each_exact_revision
+    description: "Uses historical names, types, permissions, and settings from each RDS revision, including null values; retains revisions without expiration data or revision zero. Creation metadata comes directly from the base requirement, even when revision zero differs. Current 2FA is a fallback only for the current revision."
+    model: int_synapse_access_requirement
+    given:
+      - input: ref('stg_synapse__access_requirement')
+        rows:
+          - {access_requirement_id: 100, access_requirement_current_version: 3, access_requirement_name: Requirement 100, access_requirement_type: ManagedACTAccessRequirement, created_by: 99, created_on: '2026-01-01 11:00:00', is_two_fa_required: false, access_type: DOWNLOAD}
+          - {access_requirement_id: 101, access_requirement_current_version: 0, access_requirement_name: Requirement 101, access_requirement_type: ManagedACTAccessRequirement, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: false, access_type: DOWNLOAD}
+          - {access_requirement_id: 102, access_requirement_current_version: 0, access_requirement_name: Requirement 102, access_requirement_type: ManagedACTAccessRequirement, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: false, access_type: DOWNLOAD}
+          - {access_requirement_id: 103, access_requirement_current_version: 1, access_requirement_name: Requirement 103, access_requirement_type: ManagedACTAccessRequirement, created_by: 14, created_on: '2025-12-01 12:00:00', is_two_fa_required: true, access_type: DOWNLOAD}
+      - input: ref('stg_synapse__access_requirement_revision')
+        rows:
+          - {access_requirement_id: 100, access_requirement_version: 0, modified_by: 10, modified_on: '2026-01-01 12:00:00', is_two_fa_required: false, expiration_period: 3600000, access_requirement_raw: null, access_requirement_name: Original requirement, access_requirement_type: ACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
+          - {access_requirement_id: 100, access_requirement_version: 1, modified_by: 11, modified_on: '2026-01-02 12:00:00', is_two_fa_required: null, expiration_period: null, access_requirement_raw: null, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_type: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+          - {access_requirement_id: 100, access_requirement_version: 2, modified_by: 12, modified_on: '2026-01-03 12:00:00', is_two_fa_required: true, expiration_period: 86400000, access_requirement_raw: null, access_requirement_name: Revised requirement, access_requirement_type: ManagedACTAccessRequirement, access_type: PARTICIPATE, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
+          - {access_requirement_id: 100, access_requirement_version: 3, modified_by: 13, modified_on: '2026-01-04 12:00:00', is_two_fa_required: false, expiration_period: 172800000, access_requirement_raw: null, access_requirement_name: Final requirement, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
+          - {access_requirement_id: 101, access_requirement_version: 0, modified_by: 10, modified_on: '2026-01-01 12:00:00', is_two_fa_required: null, expiration_period: null, access_requirement_raw: null, access_requirement_name: null, access_requirement_type: null, access_type: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+          - {access_requirement_id: 102, access_requirement_version: 0, modified_by: 10, modified_on: '2026-01-01 12:00:00', is_two_fa_required: false, expiration_period: 0, access_requirement_raw: null, access_requirement_name: Requirement 102, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
+          - {access_requirement_id: 103, access_requirement_version: 1, modified_by: 15, modified_on: '2026-01-01 12:00:00', is_two_fa_required: null, expiration_period: 3600000, access_requirement_raw: null, access_requirement_name: Requirement 103, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+    expect:
+      rows:
+        - {access_requirement_id: 100, access_requirement_version: 0, expiration_period: 3600000, created_by: 99, created_on: '2026-01-01 11:00:00', is_two_fa_required: false, access_requirement_name: Original requirement, access_requirement_type: ACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
+        - {access_requirement_id: 100, access_requirement_version: 1, expiration_period: null, created_by: 99, created_on: '2026-01-01 11:00:00', is_two_fa_required: null, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_type: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+        - {access_requirement_id: 100, access_requirement_version: 2, expiration_period: 86400000, created_by: 99, created_on: '2026-01-01 11:00:00', is_two_fa_required: true, access_requirement_name: Revised requirement, access_requirement_type: ManagedACTAccessRequirement, access_type: PARTICIPATE, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
+        - {access_requirement_id: 100, access_requirement_version: 3, expiration_period: 172800000, created_by: 99, created_on: '2026-01-01 11:00:00', is_two_fa_required: false, access_requirement_name: Final requirement, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
+        - {access_requirement_id: 101, access_requirement_version: 0, expiration_period: null, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: false, access_requirement_name: null, access_requirement_type: null, access_type: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}
+        - {access_requirement_id: 102, access_requirement_version: 0, expiration_period: 0, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: false, access_requirement_name: Requirement 102, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
+        - {access_requirement_id: 103, access_requirement_version: 1, expiration_period: 3600000, created_by: 14, created_on: '2025-12-01 12:00:00', is_two_fa_required: true, access_requirement_name: Requirement 103, access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null}

@@ -6,7 +6,7 @@ LANGUAGE PYTHON
 STRICT
 IMMUTABLE
 RUNTIME_VERSION = '3.12'
-COMMENT = 'Decodes gzip-compressed UTF-8 text. Snowflake's built-in SQL function `DECOMPRESS_STRING` does not support gzip.'
+COMMENT = 'Decodes gzip-compressed UTF-8 text. Snowflake''s built-in SQL function `DECOMPRESS_STRING` does not support gzip.'
 HANDLER = 'decompress'
 AS
 $$
