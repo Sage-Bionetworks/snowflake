@@ -3,7 +3,10 @@ models:
   - name: data_access_submission_dashboard
     config:
       schema: governance
-    description: "Dashboard view of data access submissions with additional, governance-specific enrichment"
+    description: "Dashboard view of data access submissions with governance enrichment, including the requirement name from the exact submitted revision."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
     columns:
       - name: data_access_submission_id
         description: "Unique identifier for the data access submission."
@@ -20,6 +23,9 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
+      - name: access_requirement_name
+        description: "Requirement name recorded in the exact revision associated with this submission. Null when historical metadata is unavailable."
+        data_type: VARCHAR
       - name: access_requirement_version
         description: "Version of the access requirement at the time of submission."
         data_type: NUMBER
