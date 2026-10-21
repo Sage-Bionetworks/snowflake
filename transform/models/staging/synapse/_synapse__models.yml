@@ -144,7 +144,7 @@ models:
           - type: not_null
 
   - name: stg_synapse__access_requirement_revision
-    description: "Staging model for historical revisions of access requirements. Each modification creates a new revision to maintain a complete audit trail."
+    description: "Historical access requirement revisions from RDS, with metadata, eligibility, document, IDU, 2FA, and expiration settings decoded from each revision's gzip-compressed XML. Missing or unrecognized boolean settings remain null."
     constraints:
       - type: primary_key
         columns: [access_requirement_id, access_requirement_version]
@@ -176,6 +176,42 @@ models:
       - name: access_requirement_raw
         description: "Serialized representation of the complete access requirement object at this revision"
         data_type: BINARY
+      - name: is_two_fa_required
+        description: "2FA requirement recorded in this revision's serialized XML. Null when absent or unrecognized; values are not inferred from the current requirement or event snapshots."
+        data_type: BOOLEAN
+      - name: access_requirement_name
+        description: "Human-readable requirement name recorded in this revision. Null when absent or empty."
+        data_type: VARCHAR
+      - name: access_requirement_type
+        description: "Unqualified concrete requirement class at this revision, decoded from concreteType or the XML root tag."
+        data_type: VARCHAR
+      - name: access_type
+        description: "Permission controlled by this requirement at this revision, such as DOWNLOAD or PARTICIPATE. Null when absent."
+        data_type: VARCHAR
+      - name: is_certified_user_required
+        description: "Whether this revision requires accessors to be Synapse Certified Users. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_validated_profile_required
+        description: "Whether this revision requires accessors to have validated Synapse profiles. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_duc_required
+        description: "Whether this revision requires a signed Data Use Certificate. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_irb_approval_required
+        description: "Whether this revision requires an Institutional Review Board approval document. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: are_other_attachments_required
+        description: "Whether this revision requires attachments in addition to DUC and IRB documents. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_idu_required
+        description: "Whether this revision requires an Intended Data Use statement. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: is_idu_public
+        description: "Whether this revision makes submitted Intended Data Use statements public. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: expiration_period
+        description: "Approval validity period in milliseconds recorded in this revision's serialized XML. Zero means no expiration. Null when absent or unrecognized; values are not inferred from the current requirement."
+        data_type: NUMBER
 
   - name: stg_synapse__acl
     description: "Staging model for ACLs. Defines who can access an entity and with what permissions."
