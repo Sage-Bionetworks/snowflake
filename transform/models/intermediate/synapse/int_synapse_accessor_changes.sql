@@ -4,7 +4,7 @@ accessor_changes as (
     select
         data_access_submission_id,
         principal_id,
-        access_type
+        accessor_change_type
     from {{ ref('stg_synapse__data_access_submission_accessor_changes') }}
 ),
 
@@ -36,7 +36,7 @@ access_requirements as (
 select
     accessor_changes.data_access_submission_id,
     accessor_changes.principal_id,
-    accessor_changes.access_type,
+    accessor_changes.accessor_change_type,
     submissions.access_requirement_id,
     submissions.access_requirement_version as access_requirement_version_submitted_against,
     access_requirements.access_requirement_version as access_requirement_version_reviewed_against,
@@ -46,7 +46,7 @@ select
     case
         when
             submission_status.state = 'Approved'
-            and accessor_changes.access_type in ('GAIN_ACCESS', 'RENEW_ACCESS')
+            and accessor_changes.accessor_change_type in ('GAIN_ACCESS', 'RENEW_ACCESS')
             and access_requirements.expiration_period > 0
         then dateadd(
             millisecond,
@@ -67,7 +67,7 @@ qualify row_number() over (
     partition by
         accessor_changes.data_access_submission_id,
         accessor_changes.principal_id,
-        accessor_changes.access_type
+        accessor_changes.accessor_change_type
     order by
         access_requirements.modified_on desc nulls last,
         access_requirements.access_requirement_version desc nulls last
