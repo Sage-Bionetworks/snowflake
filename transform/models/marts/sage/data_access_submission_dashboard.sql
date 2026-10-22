@@ -24,18 +24,7 @@ access_requirements AS (
     SELECT
         access_requirement_id,
         access_requirement_version,
-        access_requirement_name,
-        access_requirement_type,
-        access_type,
-        is_two_fa_required,
-        is_certified_user_required,
-        is_validated_profile_required,
-        is_duc_required,
-        is_irb_approval_required,
-        are_other_attachments_required,
-        is_idu_required,
-        is_idu_public,
-        expiration_period
+        access_requirement_name
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
 ),
 access_requirements_most_recent AS (
@@ -55,17 +44,6 @@ SELECT
     access_requirements.access_requirement_name,
     access_requirements_most_recent.access_requirement_name AS access_requirement_name_most_recent,
     base.access_requirement_version,
-    access_requirements.access_requirement_type,
-    access_requirements.access_type,
-    access_requirements.is_two_fa_required,
-    access_requirements.is_certified_user_required,
-    access_requirements.is_validated_profile_required,
-    access_requirements.is_duc_required,
-    access_requirements.is_irb_approval_required,
-    access_requirements.are_other_attachments_required,
-    access_requirements.is_idu_required,
-    access_requirements.is_idu_public,
-    access_requirements.expiration_period,
     base.research_project_id,
     base.created_by as submitted_by,
     created_by_user_name as submitted_by_user_name,
