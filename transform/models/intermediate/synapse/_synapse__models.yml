@@ -121,7 +121,7 @@ models:
         constraints:
           - type: not_null
       - name: is_two_fa_required
-        description: "Whether 2FA was required at this revision. If 2FA is unset for this revision, we match the 2FA setting of the current revision."
+        description: "2FA flag decoded from this exact revision. Null when absent or unrecognized; no fallback to the current requirement setting."
         data_type: BOOLEAN
       - name: access_requirement_access_type
         description: "Permission controlled by this requirement at this revision."
