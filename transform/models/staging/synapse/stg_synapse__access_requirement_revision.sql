@@ -101,18 +101,7 @@ staging as (
                     'type', xmlget(subject, 'type'):"$"::varchar
                 )
             )
-        end as subject_ids,
-        try_to_number(xmlget(access_requirement_xml, 'createdBy'):"$"::varchar) as serialized_created_by,
-        try_to_timestamp_ntz(
-            xmlget(access_requirement_xml, 'createdOn'):"$"::varchar,
-            'YYYY-MM-DD HH24:MI:SS.FF "UTC"'
-        ) as serialized_created_on,
-        try_to_number(xmlget(access_requirement_xml, 'modifiedBy'):"$"::varchar) as serialized_modified_by,
-        try_to_timestamp_ntz(
-            xmlget(access_requirement_xml, 'modifiedOn'):"$"::varchar,
-            'YYYY-MM-DD HH24:MI:SS.FF "UTC"'
-        ) as serialized_modified_on,
-        access_requirement_xml::variant as access_requirement_xml
+        end as subject_ids
     from decoded
 )
 
@@ -145,10 +134,5 @@ select
     subjects_defined_by_annotations,
     form_template_id,
     form_template_version,
-    subject_ids,
-    serialized_created_by,
-    serialized_created_on,
-    serialized_modified_by,
-    serialized_modified_on,
-    access_requirement_xml
+    subject_ids
 from staging
