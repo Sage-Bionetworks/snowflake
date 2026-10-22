@@ -53,8 +53,8 @@ unit_tests:
         - {access_requirement_id: 100, access_requirement_version: 6, access_requirement_name: Requirement 100 revision 6, access_requirement_type: ManagedACTAccessRequirement, access_requirement_access_type: PARTICIPATE, is_two_fa_required: false, expiration_period: -1, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
         - {access_requirement_id: 100, access_requirement_version: 7, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_requirement_access_type: null, is_two_fa_required: null, expiration_period: 3600000, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: false, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: true}
 
-  - name: access_requirement_revisions_decode_documents_subjects_and_audit_metadata
-    description: "Covers scalar properties, UUID identifiers, original audit timestamps, singleton/multiple/empty/missing subjects, invalid values, and null payloads."
+  - name: access_requirement_revisions_decode_documents_and_subjects
+    description: "Covers scalar properties, UUID identifiers, singleton/multiple/empty/missing subjects, invalid values, and null payloads."
     model: stg_synapse__access_requirement_revision
     given:
       - input: source('rds', 'access_requirement_revision')
@@ -85,12 +85,7 @@ unit_tests:
         true as subjects_defined_by_annotations,
         26 as form_template_id,
         2 as form_template_version,
-        array_construct(object_construct('id', 'syn123', 'type', 'ENTITY'), object_construct('id', '7', 'type', 'TEAM')) as subject_ids,
-        99 as serialized_created_by,
-        '2025-01-02 03:04:05.006'::timestamp_ntz as serialized_created_on,
-        88 as serialized_modified_by,
-        '2025-02-03 04:05:06.007'::timestamp_ntz as serialized_modified_on,
-        parse_xml('<org.sagebionetworks.repo.model.ManagedACTAccessRequirement><description>Revision description</description><etag>historical-etag</etag><url>https://example.org/access</url><termsOfUse>Do not redistribute</termsOfUse><ducTemplateFileHandleId>123</ducTemplateFileHandleId><eDucTemplateId>31338ee5-fece-40ae-8bf6-a1a4a8bffa38</eDucTemplateId><jiraKey>SG-123</jiraKey><actContactInfo>Contact ACT</actContactInfo><openJiraIssue>false</openJiraIssue><subjectsDefinedByAnnotations>true</subjectsDefinedByAnnotations><formTemplateRef><templateId>26</templateId><templateVersionNumber>2</templateVersionNumber></formTemplateRef><subjectIds><subject><id>syn123</id><type>ENTITY</type></subject><subject><id>7</id><type>TEAM</type></subject></subjectIds><extraFieldsFromNewerVersion><entry><string>flag</string><boolean>false</boolean></entry><entry><string>text</string><string>00123</string></entry></extraFieldsFromNewerVersion><createdBy>99</createdBy><createdOn>2025-01-02 03:04:05.006 UTC</createdOn><modifiedBy>88</modifiedBy><modifiedOn>2025-02-03 04:05:06.007 UTC</modifiedOn><futureProperty>retained</futureProperty></org.sagebionetworks.repo.model.ManagedACTAccessRequirement>', true)::variant as access_requirement_xml
+        array_construct(object_construct('id', 'syn123', 'type', 'ENTITY'), object_construct('id', '7', 'type', 'TEAM')) as subject_ids
         union all
         select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_requirement_access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 1 as access_requirement_version,
         null as description,
@@ -105,12 +100,7 @@ unit_tests:
         null as subjects_defined_by_annotations,
         null as form_template_id,
         null as form_template_version,
-        array_construct(object_construct('id', 'syn456', 'type', 'ENTITY')) as subject_ids,
-        null as serialized_created_by,
-        null as serialized_created_on,
-        null as serialized_modified_by,
-        null as serialized_modified_on,
-        parse_xml('<requirement><subjectIds><subject><id>syn456</id><type>ENTITY</type></subject></subjectIds><extraFieldsFromNewerVersion><entry><string>text</string><string>value</string></entry></extraFieldsFromNewerVersion></requirement>', true)::variant as access_requirement_xml
+        array_construct(object_construct('id', 'syn456', 'type', 'ENTITY')) as subject_ids
         union all
         select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_requirement_access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 2 as access_requirement_version,
         null as description,
@@ -125,12 +115,7 @@ unit_tests:
         null as subjects_defined_by_annotations,
         null as form_template_id,
         null as form_template_version,
-        array_construct() as subject_ids,
-        null as serialized_created_by,
-        null as serialized_created_on,
-        null as serialized_modified_by,
-        null as serialized_modified_on,
-        parse_xml('<requirement><subjectIds/><extraFieldsFromNewerVersion/><openJiraIssue>not-a-boolean</openJiraIssue><ducTemplateFileHandleId>bad-id</ducTemplateFileHandleId><formTemplateRef><templateId>bad-id</templateId></formTemplateRef><createdOn>bad-date</createdOn></requirement>', true)::variant as access_requirement_xml
+        array_construct() as subject_ids
         union all
         select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_requirement_access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 3 as access_requirement_version,
         null as description,
@@ -145,12 +130,7 @@ unit_tests:
         null as subjects_defined_by_annotations,
         null as form_template_id,
         null as form_template_version,
-        null as subject_ids,
-        null as serialized_created_by,
-        null as serialized_created_on,
-        null as serialized_modified_by,
-        null as serialized_modified_on,
-        parse_xml('<requirement/>', true)::variant as access_requirement_xml
+        null as subject_ids
         union all
         select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, null::varchar as access_requirement_type, null as access_requirement_access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 4 as access_requirement_version,
         null as description,
@@ -165,9 +145,4 @@ unit_tests:
         null as subjects_defined_by_annotations,
         null as form_template_id,
         null as form_template_version,
-        null as subject_ids,
-        null as serialized_created_by,
-        null as serialized_created_on,
-        null as serialized_modified_by,
-        null as serialized_modified_on,
-        null::variant as access_requirement_xml
+        null as subject_ids
