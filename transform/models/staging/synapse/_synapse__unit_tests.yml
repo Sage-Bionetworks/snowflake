@@ -52,3 +52,122 @@ unit_tests:
         - {access_requirement_id: 100, access_requirement_version: 5, access_requirement_name: "R\xE9sum\xE9", access_requirement_type: ManagedACTAccessRequirement, access_type: DOWNLOAD, is_two_fa_required: true, expiration_period: 0, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false}
         - {access_requirement_id: 100, access_requirement_version: 6, access_requirement_name: Requirement 100 revision 6, access_requirement_type: ManagedACTAccessRequirement, access_type: PARTICIPATE, is_two_fa_required: false, expiration_period: -1, is_certified_user_required: true, is_validated_profile_required: false, is_duc_required: true, is_irb_approval_required: false, are_other_attachments_required: true, is_idu_required: false, is_idu_public: true}
         - {access_requirement_id: 100, access_requirement_version: 7, access_requirement_name: null, access_requirement_type: ManagedACTAccessRequirement, access_type: null, is_two_fa_required: null, expiration_period: 3600000, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: false, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: true}
+
+  - name: access_requirement_revisions_decode_documents_subjects_and_audit_metadata
+    description: "Covers scalar properties, UUID identifiers, original audit timestamps, singleton/multiple/empty/missing subjects, invalid values, and null payloads."
+    model: stg_synapse__access_requirement_revision
+    given:
+      - input: source('rds', 'access_requirement_revision')
+        format: sql
+        rows: |
+          select 200 as owner_id, 0 as number, 10 as modified_by, 1767225600000 as modified_on, to_binary('1f8b08000000000002139d54db729b3010fd157e004b06db713c1acdb876dcba9d241d9774a68f02568e5290a8249af8efbb1083a199e6a14fdaddb367efc08c3d4e9c3842aa8c06ff6cec4f37b150994969722826b7422398af37c93acbc0b903fcaa958512b4e72c0797595579a4f203fc560e8560606464e8c1c08b237f54ce1bab3251848dce486b65b52df8a3f7955b11022fa2ac0a98606944b459196970e6c196ee5e3e38e05b1368e3030b39c6b32aad3d3032c0595e67096018e161a70af824745ec03ee7d328c6b2fe0132d85e10d4e3691c2f01e6a1840cc21915102e53b908c554cc044a52c44bec604c624fca8a2f70e2df3e866db64e6722f31ba33d3e7b2d0d3fcb010e9791bf30662ad09f91b877ae062e45e1b0c1b191b93a7d82ccbb2d48a521ff705a6b1c8a68a6edb8b73532de7561d2d8b2abfc00b29970df46b468067ae9aa93bf836df67c579729581e5d9cc600236f829f6bd9e7ae973953397727ddce4935594e15f09bbb649ffcc0c88dd2f730265d0dfc939bf5ed5b6f32cc072fde8a9d8222773b6bca3b78067b2e1841ed2daea739247de4b268cef2acb0d4980284ee36d0a9b8f557d298eb31cf857b7e296ddbebac1d93bc5b536601e7860be3d7d78c5cb40eb8d73ca2d13ca4d39046018d5774b6a2f309a58be021d9f40c7463f8252ba95af612cf75a0f6501f2d0a691cb4a1567481d1ae5ea30dfc98ac7d6de1abc563b4fec42d7ec0cd69e1c2c7009eebffff5bfe00f306c74598040000', 'HEX') as serialized_entity
+          union all
+          select 200 as owner_id, 1 as number, 10 as modified_by, 1767225600000 as modified_on, to_binary('1f8b08000000000002137d4fbb0ec2300cfc242fc06465a352974e151263212714d4a6603b40febe5181d289edee7c0f9905f7140403a239d674bae26cb5d7053b0ede698e9bed8ea940b67c83db376ddd1e9966c2b47869dd8097495705f45e2b1987064fc801a2618ce5184d72593109f1e2ac784bf84dbee2a3eb137e2a7d22f4b797d60f4d4c0b80a3de000000', 'HEX') as serialized_entity
+          union all
+          select 200 as owner_id, 2 as number, 10 as modified_by, 1767225600000 as modified_on, to_binary('1f8b0800000000000213758fc10ac2301044bfa8e407961c8bf5a020e23ded4e2192ecea26413fdf228a15f136336fe63064b8b668c890eaa9b4f18ca90e5c9c27dcab853e2271e94df30e37d80956a2ca42f502d9460b43290d5eb476a11b55138290fb86c46d3a225f52a8e863c22608270cecc7c05d6472ff38cd6af94d0e983dd597598d5711b99fc1645824efe5d9e74593fb64e4d6f71f13189f660c010000', 'HEX') as serialized_entity
+          union all
+          select 200 as owner_id, 3 as number, 10 as modified_by, 1767225600000 as modified_on, to_binary('1f8b0800000000000213b3294a2d2ccd2c4acd4dcd2bd1b70300f5fef26c0e000000', 'HEX') as serialized_entity
+          union all
+          select 200 as owner_id, 4 as number, 10 as modified_by, 1767225600000 as modified_on, null::binary as serialized_entity
+    expect:
+      format: sql
+      rows: |
+        select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'ManagedACTAccessRequirement' as access_requirement_type, null as access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 0 as access_requirement_version,
+        'Revision description' as description,
+        'historical-etag' as etag,
+        'https://example.org/access' as url,
+        'Do not redistribute' as terms_of_use,
+        123 as duc_template_file_handle_id,
+        '31338ee5-fece-40ae-8bf6-a1a4a8bffa38' as e_duc_template_id,
+        'SG-123' as jira_key,
+        'Contact ACT' as act_contact_info,
+        false as open_jira_issue,
+        true as subjects_defined_by_annotations,
+        26 as form_template_id,
+        2 as form_template_version,
+        array_construct(object_construct('id', 'syn123', 'type', 'ENTITY'), object_construct('id', '7', 'type', 'TEAM')) as subject_ids,
+        99 as serialized_created_by,
+        '2025-01-02 03:04:05.006'::timestamp_ntz as serialized_created_on,
+        88 as serialized_modified_by,
+        '2025-02-03 04:05:06.007'::timestamp_ntz as serialized_modified_on,
+        parse_xml('<org.sagebionetworks.repo.model.ManagedACTAccessRequirement><description>Revision description</description><etag>historical-etag</etag><url>https://example.org/access</url><termsOfUse>Do not redistribute</termsOfUse><ducTemplateFileHandleId>123</ducTemplateFileHandleId><eDucTemplateId>31338ee5-fece-40ae-8bf6-a1a4a8bffa38</eDucTemplateId><jiraKey>SG-123</jiraKey><actContactInfo>Contact ACT</actContactInfo><openJiraIssue>false</openJiraIssue><subjectsDefinedByAnnotations>true</subjectsDefinedByAnnotations><formTemplateRef><templateId>26</templateId><templateVersionNumber>2</templateVersionNumber></formTemplateRef><subjectIds><subject><id>syn123</id><type>ENTITY</type></subject><subject><id>7</id><type>TEAM</type></subject></subjectIds><extraFieldsFromNewerVersion><entry><string>flag</string><boolean>false</boolean></entry><entry><string>text</string><string>00123</string></entry></extraFieldsFromNewerVersion><createdBy>99</createdBy><createdOn>2025-01-02 03:04:05.006 UTC</createdOn><modifiedBy>88</modifiedBy><modifiedOn>2025-02-03 04:05:06.007 UTC</modifiedOn><futureProperty>retained</futureProperty></org.sagebionetworks.repo.model.ManagedACTAccessRequirement>', true)::variant as access_requirement_xml
+        union all
+        select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 1 as access_requirement_version,
+        null as description,
+        null as etag,
+        null as url,
+        null as terms_of_use,
+        null as duc_template_file_handle_id,
+        null as e_duc_template_id,
+        null as jira_key,
+        null as act_contact_info,
+        null as open_jira_issue,
+        null as subjects_defined_by_annotations,
+        null as form_template_id,
+        null as form_template_version,
+        array_construct(object_construct('id', 'syn456', 'type', 'ENTITY')) as subject_ids,
+        null as serialized_created_by,
+        null as serialized_created_on,
+        null as serialized_modified_by,
+        null as serialized_modified_on,
+        parse_xml('<requirement><subjectIds><subject><id>syn456</id><type>ENTITY</type></subject></subjectIds><extraFieldsFromNewerVersion><entry><string>text</string><string>value</string></entry></extraFieldsFromNewerVersion></requirement>', true)::variant as access_requirement_xml
+        union all
+        select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 2 as access_requirement_version,
+        null as description,
+        null as etag,
+        null as url,
+        null as terms_of_use,
+        null as duc_template_file_handle_id,
+        null as e_duc_template_id,
+        null as jira_key,
+        null as act_contact_info,
+        null as open_jira_issue,
+        null as subjects_defined_by_annotations,
+        null as form_template_id,
+        null as form_template_version,
+        array_construct() as subject_ids,
+        null as serialized_created_by,
+        null as serialized_created_on,
+        null as serialized_modified_by,
+        null as serialized_modified_on,
+        parse_xml('<requirement><subjectIds/><extraFieldsFromNewerVersion/><openJiraIssue>not-a-boolean</openJiraIssue><ducTemplateFileHandleId>bad-id</ducTemplateFileHandleId><formTemplateRef><templateId>bad-id</templateId></formTemplateRef><createdOn>bad-date</createdOn></requirement>', true)::variant as access_requirement_xml
+        union all
+        select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, 'requirement' as access_requirement_type, null as access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 3 as access_requirement_version,
+        null as description,
+        null as etag,
+        null as url,
+        null as terms_of_use,
+        null as duc_template_file_handle_id,
+        null as e_duc_template_id,
+        null as jira_key,
+        null as act_contact_info,
+        null as open_jira_issue,
+        null as subjects_defined_by_annotations,
+        null as form_template_id,
+        null as form_template_version,
+        null as subject_ids,
+        null as serialized_created_by,
+        null as serialized_created_on,
+        null as serialized_modified_by,
+        null as serialized_modified_on,
+        parse_xml('<requirement/>', true)::variant as access_requirement_xml
+        union all
+        select 10 as modified_by, '2026-01-01 00:00:00'::timestamp_ntz as modified_on, null::varchar as access_requirement_name, null::varchar as access_requirement_type, null as access_type, null as is_two_fa_required, null as is_certified_user_required, null as is_validated_profile_required, null as is_duc_required, null as is_irb_approval_required, null as are_other_attachments_required, null as is_idu_required, null as is_idu_public, null as expiration_period, 200 as access_requirement_id, 4 as access_requirement_version,
+        null as description,
+        null as etag,
+        null as url,
+        null as terms_of_use,
+        null as duc_template_file_handle_id,
+        null as e_duc_template_id,
+        null as jira_key,
+        null as act_contact_info,
+        null as open_jira_issue,
+        null as subjects_defined_by_annotations,
+        null as form_template_id,
+        null as form_template_version,
+        null as subject_ids,
+        null as serialized_created_by,
+        null as serialized_created_on,
+        null as serialized_modified_by,
+        null as serialized_modified_on,
+        null::variant as access_requirement_xml

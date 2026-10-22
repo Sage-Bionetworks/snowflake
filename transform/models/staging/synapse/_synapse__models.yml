@@ -144,7 +144,7 @@ models:
           - type: not_null
 
   - name: stg_synapse__access_requirement_revision
-    description: "Historical access requirement revisions from RDS, with metadata, eligibility, document, IDU, 2FA, and expiration settings decoded from each revision's gzip-compressed XML. Missing or unrecognized boolean settings remain null."
+    description: "Historical access requirement revisions from RDS, with metadata, eligibility, document and form templates, subjects, terms, IDU, 2FA, and expiration settings decoded from each revision's gzip-compressed XML. Serialized audit metadata is separate from RDS metadata. Complete parsed XML is retained; missing or unrecognized boolean settings remain null."
     constraints:
       - type: primary_key
         columns: [access_requirement_id, access_requirement_version]
@@ -173,9 +173,60 @@ models:
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
-      - name: access_requirement_raw
-        description: "Serialized representation of the complete access requirement object at this revision"
-        data_type: BINARY
+      - name: description
+        description: "Description recorded in this access requirement revision."
+        data_type: VARCHAR
+      - name: etag
+        description: "Entity tag recorded in this serialized access requirement revision; not the current base requirement etag."
+        data_type: VARCHAR
+      - name: url
+        description: "URL recorded in this revision, including external participation requirements."
+        data_type: VARCHAR
+      - name: terms_of_use
+        description: "Terms of use text recorded in this revision."
+        data_type: VARCHAR
+      - name: duc_template_file_handle_id
+        description: "File handle identifier of the Data Use Certificate template for this revision."
+        data_type: NUMBER
+      - name: e_duc_template_id
+        description: "Electronic Data Use Certificate template identifier. May be a UUID."
+        data_type: VARCHAR
+      - name: jira_key
+        description: "Jira issue key recorded in this revision."
+        data_type: VARCHAR
+      - name: act_contact_info
+        description: "Access and Compliance Team contact information recorded in this revision."
+        data_type: VARCHAR
+      - name: open_jira_issue
+        description: "Whether this revision requests opening a Jira issue. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: subjects_defined_by_annotations
+        description: "Whether this revision defines its subjects through annotations. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: form_template_id
+        description: "Form template identifier from this revision's formTemplateRef."
+        data_type: NUMBER
+      - name: form_template_version
+        description: "Form template version from this revision's formTemplateRef."
+        data_type: NUMBER
+      - name: subject_ids
+        description: "Subjects recorded in this revision as an ordered array of objects with string id and type. Null when absent; an empty array when explicitly empty."
+        data_type: ARRAY
+      - name: serialized_created_by
+        description: "Creator identifier embedded in this serialized revision, separate from source metadata."
+        data_type: NUMBER
+      - name: serialized_created_on
+        description: "UTC creation timestamp embedded in this serialized revision; may differ from source metadata."
+        data_type: TIMESTAMP_NTZ
+      - name: serialized_modified_by
+        description: "Modifier identifier embedded in this serialized revision, separate from source metadata."
+        data_type: NUMBER
+      - name: serialized_modified_on
+        description: "UTC modification timestamp embedded in this serialized revision; may differ from source metadata."
+        data_type: TIMESTAMP_NTZ
+      - name: access_requirement_xml
+        description: "Complete parsed revision XML with automatic scalar conversion disabled, retaining embedded metadata and properties not extracted into typed columns. Original compressed bytes remain in the raw source."
+        data_type: VARIANT
       - name: is_two_fa_required
         description: "2FA requirement recorded in this revision's serialized XML. Null when absent or unrecognized; values are not inferred from the current requirement or event snapshots."
         data_type: BOOLEAN
