@@ -41,12 +41,7 @@ access_requirement_revision as (
         subjects_defined_by_annotations,
         form_template_id,
         form_template_version,
-        subject_ids,
-        serialized_created_by,
-        serialized_created_on,
-        serialized_modified_by,
-        serialized_modified_on,
-        access_requirement_xml
+        subject_ids
     from
         {{ ref('stg_synapse__access_requirement_revision') }}
 )
@@ -88,12 +83,7 @@ select
     revision.subjects_defined_by_annotations,
     revision.form_template_id,
     revision.form_template_version,
-    revision.subject_ids,
-    revision.serialized_created_by,
-    revision.serialized_created_on,
-    revision.serialized_modified_by,
-    revision.serialized_modified_on,
-    revision.access_requirement_xml
+    revision.subject_ids
 from
     access_requirement_base base
 inner join

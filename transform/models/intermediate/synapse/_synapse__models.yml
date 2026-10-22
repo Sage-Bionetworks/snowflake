@@ -186,21 +186,6 @@ models:
       - name: subject_ids
         description: "Subjects recorded in this revision as an ordered array of objects with string id and type. Null when absent; an empty array when explicitly empty."
         data_type: ARRAY
-      - name: serialized_created_by
-        description: "Creator identifier embedded in this serialized revision, separate from source metadata."
-        data_type: NUMBER
-      - name: serialized_created_on
-        description: "UTC creation timestamp embedded in this serialized revision; may differ from source metadata."
-        data_type: TIMESTAMP_NTZ
-      - name: serialized_modified_by
-        description: "Modifier identifier embedded in this serialized revision, separate from source metadata."
-        data_type: NUMBER
-      - name: serialized_modified_on
-        description: "UTC modification timestamp embedded in this serialized revision; may differ from source metadata."
-        data_type: TIMESTAMP_NTZ
-      - name: access_requirement_xml
-        description: "Complete parsed revision XML with automatic scalar conversion disabled, retaining embedded metadata and properties not extracted into typed columns. Original compressed bytes remain in the raw source."
-        data_type: VARIANT
       - name: expiration_period
         description: "Approval validity period in milliseconds for this revision. Zero means no expiration. Null when absent or malformed."
         data_type: NUMBER
