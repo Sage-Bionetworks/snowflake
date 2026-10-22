@@ -29,7 +29,24 @@ access_requirement_revision as (
         is_idu_required,
         is_idu_public,
         expiration_period,
-        access_requirement_raw
+        description,
+        etag,
+        url,
+        terms_of_use,
+        duc_template_file_handle_id,
+        e_duc_template_id,
+        jira_key,
+        act_contact_info,
+        open_jira_issue,
+        subjects_defined_by_annotations,
+        form_template_id,
+        form_template_version,
+        subject_ids,
+        serialized_created_by,
+        serialized_created_on,
+        serialized_modified_by,
+        serialized_modified_on,
+        access_requirement_xml
     from
         {{ ref('stg_synapse__access_requirement_revision') }}
 )
@@ -59,7 +76,24 @@ select
     revision.is_idu_public,
     revision.access_type,
     revision.expiration_period,
-    revision.access_requirement_raw
+    revision.description,
+    revision.etag,
+    revision.url,
+    revision.terms_of_use,
+    revision.duc_template_file_handle_id,
+    revision.e_duc_template_id,
+    revision.jira_key,
+    revision.act_contact_info,
+    revision.open_jira_issue,
+    revision.subjects_defined_by_annotations,
+    revision.form_template_id,
+    revision.form_template_version,
+    revision.subject_ids,
+    revision.serialized_created_by,
+    revision.serialized_created_on,
+    revision.serialized_modified_by,
+    revision.serialized_modified_on,
+    revision.access_requirement_xml
 from
     access_requirement_base base
 inner join

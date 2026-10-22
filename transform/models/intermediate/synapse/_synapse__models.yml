@@ -79,7 +79,7 @@ models:
         data_type: TIMESTAMP_NTZ
 
   - name: int_synapse_access_requirement
-    description: "Access requirement data with one row per access requirement and access requirement version."
+    description: "Access requirement data with one row per access requirement and access requirement version, including decoded revision properties and complete parsed XML. Creation metadata comes from the base requirement; serialized audit metadata is exposed separately."
     constraints:
       - type: primary_key
         columns: [access_requirement_id, access_requirement_version]
@@ -147,9 +147,60 @@ models:
       - name: is_idu_public
         description: "Whether this revision makes submitted Intended Data Use statements public. Null when absent or unrecognized."
         data_type: BOOLEAN
-      - name: access_requirement_raw
-        description: "Serialized representation of the complete access requirement object at this revision"
-        data_type: BINARY
+      - name: description
+        description: "Description recorded in this access requirement revision."
+        data_type: VARCHAR
+      - name: etag
+        description: "Entity tag recorded in this serialized access requirement revision; not the current base requirement etag."
+        data_type: VARCHAR
+      - name: url
+        description: "URL recorded in this revision, including external participation requirements."
+        data_type: VARCHAR
+      - name: terms_of_use
+        description: "Terms of use text recorded in this revision."
+        data_type: VARCHAR
+      - name: duc_template_file_handle_id
+        description: "File handle identifier of the Data Use Certificate template for this revision."
+        data_type: NUMBER
+      - name: e_duc_template_id
+        description: "Electronic Data Use Certificate template identifier. May be a UUID."
+        data_type: VARCHAR
+      - name: jira_key
+        description: "Jira issue key recorded in this revision."
+        data_type: VARCHAR
+      - name: act_contact_info
+        description: "Access and Compliance Team contact information recorded in this revision."
+        data_type: VARCHAR
+      - name: open_jira_issue
+        description: "Whether this revision requests opening a Jira issue. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: subjects_defined_by_annotations
+        description: "Whether this revision defines its subjects through annotations. Null when absent or unrecognized."
+        data_type: BOOLEAN
+      - name: form_template_id
+        description: "Form template identifier from this revision's formTemplateRef."
+        data_type: NUMBER
+      - name: form_template_version
+        description: "Form template version from this revision's formTemplateRef."
+        data_type: NUMBER
+      - name: subject_ids
+        description: "Subjects recorded in this revision as an ordered array of objects with string id and type. Null when absent; an empty array when explicitly empty."
+        data_type: ARRAY
+      - name: serialized_created_by
+        description: "Creator identifier embedded in this serialized revision, separate from source metadata."
+        data_type: NUMBER
+      - name: serialized_created_on
+        description: "UTC creation timestamp embedded in this serialized revision; may differ from source metadata."
+        data_type: TIMESTAMP_NTZ
+      - name: serialized_modified_by
+        description: "Modifier identifier embedded in this serialized revision, separate from source metadata."
+        data_type: NUMBER
+      - name: serialized_modified_on
+        description: "UTC modification timestamp embedded in this serialized revision; may differ from source metadata."
+        data_type: TIMESTAMP_NTZ
+      - name: access_requirement_xml
+        description: "Complete parsed revision XML with automatic scalar conversion disabled, retaining embedded metadata and properties not extracted into typed columns. Original compressed bytes remain in the raw source."
+        data_type: VARIANT
       - name: expiration_period
         description: "Approval validity period in milliseconds for this revision. Zero means no expiration. Null when absent or malformed."
         data_type: NUMBER
@@ -293,42 +344,6 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
-      - name: access_requirement_name
-        description: "Human-readable requirement name for this revision. Null when absent or empty. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: VARCHAR
-      - name: access_requirement_type
-        description: "The type of access requirement. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: VARCHAR
-      - name: access_type
-        description: "Permission controlled by this requirement at this revision. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: VARCHAR
-      - name: is_two_fa_required
-        description: "Whether 2FA was required at the submitted revision. Inherits the intermediate model fallback to the base 2FA setting only when the submitted revision is the current revision. Null when unavailable."
-        data_type: BOOLEAN
-      - name: is_certified_user_required
-        description: "Whether this revision requires accessors to be Synapse Certified Users. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: is_validated_profile_required
-        description: "Whether this revision requires accessors to have validated Synapse profiles. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: is_duc_required
-        description: "Whether this revision requires a signed Data Use Certificate. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: is_irb_approval_required
-        description: "Whether this revision requires an Institutional Review Board approval document. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: are_other_attachments_required
-        description: "Whether this revision requires attachments in addition to DUC and IRB documents. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: is_idu_required
-        description: "Whether this revision requires an Intended Data Use statement. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: is_idu_public
-        description: "Whether this revision makes submitted Intended Data Use statements public. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: BOOLEAN
-      - name: expiration_period
-        description: "Approval validity period in milliseconds for this revision. Zero means no expiration. Null when absent or malformed. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
-        data_type: NUMBER
       - name: research_project_id
         description: "The research project associated with this submission."
         data_type: NUMBER

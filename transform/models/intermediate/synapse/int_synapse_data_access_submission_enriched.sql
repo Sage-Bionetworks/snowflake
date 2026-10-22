@@ -83,18 +83,6 @@ SELECT
     base.data_access_request_id,
     base.access_requirement_id,
     base.access_requirement_version,
-    access_requirements.access_requirement_name,
-    access_requirements.access_requirement_type,
-    access_requirements.access_type,
-    access_requirements.is_two_fa_required,
-    access_requirements.is_certified_user_required,
-    access_requirements.is_validated_profile_required,
-    access_requirements.is_duc_required,
-    access_requirements.is_irb_approval_required,
-    access_requirements.are_other_attachments_required,
-    access_requirements.is_idu_required,
-    access_requirements.is_idu_public,
-    access_requirements.expiration_period,
     base.research_project_id,
     base.created_by,
     pa_created.alias_display AS created_by_user_name,
@@ -117,6 +105,3 @@ LEFT JOIN principal_usernames pa_modified
     ON base.state_modified_by = pa_modified.principal_id
 LEFT JOIN attempts
     ON base.data_access_submission_id = attempts.data_access_submission_id
-LEFT JOIN {{ ref('int_synapse_access_requirement') }} access_requirements
-    ON base.access_requirement_id = access_requirements.access_requirement_id
-    AND base.access_requirement_version = access_requirements.access_requirement_version
