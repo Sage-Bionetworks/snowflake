@@ -5,6 +5,18 @@ WITH base AS (
         data_access_request_id,
         access_requirement_id,
         access_requirement_version,
+        access_requirement_name,
+        access_requirement_type,
+        access_type,
+        is_two_fa_required,
+        is_certified_user_required,
+        is_validated_profile_required,
+        is_duc_required,
+        is_irb_approval_required,
+        are_other_attachments_required,
+        is_idu_required,
+        is_idu_public,
+        expiration_period,
         research_project_id,
         created_by,
         created_by_user_name,
@@ -26,13 +38,35 @@ access_requirements AS (
         access_requirement_version,
         access_requirement_name
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
+),
+access_requirements_most_recent AS (
+    SELECT
+        access_requirement_id,
+        access_requirement_name
+    FROM access_requirements
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY access_requirement_id
+        ORDER BY access_requirement_version DESC
+    ) = 1
 )
 SELECT
     base.data_access_submission_id,
     base.data_access_request_id,
     base.access_requirement_id,
-    access_requirements.access_requirement_name,
+    base.access_requirement_name,
+    access_requirements_most_recent.access_requirement_name AS access_requirement_name_most_recent,
     base.access_requirement_version,
+    base.access_requirement_type,
+    base.access_type,
+    base.is_two_fa_required,
+    base.is_certified_user_required,
+    base.is_validated_profile_required,
+    base.is_duc_required,
+    base.is_irb_approval_required,
+    base.are_other_attachments_required,
+    base.is_idu_required,
+    base.is_idu_public,
+    base.expiration_period,
     base.research_project_id,
     base.created_by as submitted_by,
     created_by_user_name as submitted_by_user_name,
@@ -48,6 +82,5 @@ SELECT
     ARRAY_SIZE(OBJECT_KEYS(base.accessor_changes)) AS accessor_count,
     base.data_access_submission_raw
 FROM base
-LEFT JOIN access_requirements
-    ON base.access_requirement_id = access_requirements.access_requirement_id
-    AND base.access_requirement_version = access_requirements.access_requirement_version
+LEFT JOIN access_requirements_most_recent
+    ON base.access_requirement_id = access_requirements_most_recent.access_requirement_id
