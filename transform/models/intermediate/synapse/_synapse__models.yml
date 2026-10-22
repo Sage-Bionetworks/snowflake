@@ -293,6 +293,42 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
+      - name: access_requirement_name
+        description: "Human-readable requirement name for this revision. Null when absent or empty. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: VARCHAR
+      - name: access_requirement_type
+        description: "The type of access requirement. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: VARCHAR
+      - name: access_type
+        description: "Permission controlled by this requirement at this revision. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: VARCHAR
+      - name: is_two_fa_required
+        description: "Whether 2FA was required at the submitted revision. Inherits the intermediate model fallback to the base 2FA setting only when the submitted revision is the current revision. Null when unavailable."
+        data_type: BOOLEAN
+      - name: is_certified_user_required
+        description: "Whether this revision requires accessors to be Synapse Certified Users. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: is_validated_profile_required
+        description: "Whether this revision requires accessors to have validated Synapse profiles. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: is_duc_required
+        description: "Whether this revision requires a signed Data Use Certificate. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: is_irb_approval_required
+        description: "Whether this revision requires an Institutional Review Board approval document. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: are_other_attachments_required
+        description: "Whether this revision requires attachments in addition to DUC and IRB documents. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: is_idu_required
+        description: "Whether this revision requires an Intended Data Use statement. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: is_idu_public
+        description: "Whether this revision makes submitted Intended Data Use statements public. Null when absent or unrecognized. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: BOOLEAN
+      - name: expiration_period
+        description: "Approval validity period in milliseconds for this revision. Zero means no expiration. Null when absent or malformed. Uses the exact requirement version associated with the submission; null when that revision is unavailable."
+        data_type: NUMBER
       - name: research_project_id
         description: "The research project associated with this submission."
         data_type: NUMBER
