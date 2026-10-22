@@ -111,7 +111,7 @@ models:
         data_type: BOOLEAN
         constraints:
           - type: not_null
-      - name: access_type
+      - name: access_requirement_access_type
         description: "Type of access controlled by this requirement"
         data_type: VARCHAR
         constraints:
@@ -236,7 +236,7 @@ models:
       - name: access_requirement_type
         description: "Unqualified concrete requirement class at this revision, decoded from concreteType or the XML root tag."
         data_type: VARCHAR
-      - name: access_type
+      - name: access_requirement_access_type
         description: "Permission controlled by this requirement at this revision, such as DOWNLOAD or PARTICIPATE. Null when absent."
         data_type: VARCHAR
       - name: is_certified_user_required
@@ -546,7 +546,7 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
-      - name: access_type
+      - name: accessor_change_type
         description: "Type of access change. One of: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
         data_type: VARCHAR
         constraints:

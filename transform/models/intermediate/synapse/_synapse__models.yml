@@ -34,7 +34,7 @@ models:
           - type: not_null
         data_tests:
           - not_null
-      - name: access_type
+      - name: accessor_change_type
         description: "Requested access change: GAIN_ACCESS, RENEW_ACCESS, or REVOKE_ACCESS. The change is confirmed only when the submission is Approved."
         data_type: VARCHAR
         constraints:
@@ -123,7 +123,7 @@ models:
       - name: is_two_fa_required
         description: "Whether 2FA was required at this revision. If 2FA is unset for this revision, we match the 2FA setting of the current revision."
         data_type: BOOLEAN
-      - name: access_type
+      - name: access_requirement_access_type
         description: "Permission controlled by this requirement at this revision."
         data_type: VARCHAR
       - name: is_certified_user_required
