@@ -39,7 +39,7 @@ staging as (
                 access_requirement_xml:"@"::varchar
             ), '.', -1
         ) as access_requirement_type,
-        xmlget(access_requirement_xml, 'accessType'):"$"::varchar as access_type,
+        xmlget(access_requirement_xml, 'accessType'):"$"::varchar as access_requirement_access_type,
         try_to_boolean(
             xmlget(access_requirement_xml, 'isTwoFaRequired'):"$"::varchar
         ) as is_two_fa_required,
@@ -123,7 +123,7 @@ select
     modified_on,
     access_requirement_name,
     access_requirement_type,
-    access_type,
+    access_requirement_access_type,
     is_two_fa_required,
     is_certified_user_required,
     is_validated_profile_required,
