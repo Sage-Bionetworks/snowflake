@@ -74,7 +74,7 @@ models:
           - type: not_null
         data_tests:
           - not_null
-      - name: derived_expired_on
+      - name: access_expires_on
         description: "Derived UTC expiration of gained or renewed access: approval timestamp plus the active access requirement revision's expiration period. Null for non-approved submissions, revocations, unlimited duration (zero), unavailable periods, or invalid nonpositive periods. Later requirement revisions do not recalculate this event's expiration."
         data_type: TIMESTAMP_NTZ
 
