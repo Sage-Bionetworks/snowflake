@@ -3,7 +3,7 @@ with
 accessor_changes as (
     select
         data_access_submission_id,
-        principal_id,
+        principal_id as accessor_id,
         accessor_change_type
     from {{ ref('stg_synapse__data_access_submission_accessor_changes') }}
 ),
@@ -36,7 +36,7 @@ access_requirements as (
 submission_accessor_changes as (
     select
         accessor_changes.data_access_submission_id,
-        accessor_changes.principal_id,
+        accessor_changes.accessor_id,
         accessor_changes.accessor_change_type,
         submissions.access_requirement_id,
         submissions.access_requirement_version as access_requirement_version_submitted_against,
@@ -52,7 +52,7 @@ submission_accessor_changes as (
 accessor_change_expiration as (
     select
         changes.data_access_submission_id,
-        changes.principal_id,
+        changes.accessor_id,
         changes.accessor_change_type,
         access_requirements.access_requirement_version as access_requirement_version_reviewed_against,
         -- Synapse calculates expiration before recording the approval status timestamp.
@@ -75,7 +75,7 @@ accessor_change_expiration as (
     qualify row_number() over (
         partition by
             changes.data_access_submission_id,
-            changes.principal_id,
+            changes.accessor_id,
             changes.accessor_change_type
         order by
             access_requirements.modified_on desc nulls last,
@@ -85,7 +85,7 @@ accessor_change_expiration as (
 
 select
     changes.data_access_submission_id,
-    changes.principal_id,
+    changes.accessor_id,
     changes.accessor_change_type,
     changes.access_requirement_id,
     changes.access_requirement_version_submitted_against,
@@ -96,5 +96,5 @@ select
 from submission_accessor_changes changes
 inner join accessor_change_expiration expiration
     on changes.data_access_submission_id = expiration.data_access_submission_id
-    and changes.principal_id = expiration.principal_id
+    and changes.accessor_id = expiration.accessor_id
     and changes.accessor_change_type = expiration.accessor_change_type

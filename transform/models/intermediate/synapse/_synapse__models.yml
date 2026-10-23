@@ -1,12 +1,12 @@
 version: 2
 models:
   - name: int_synapse_accessor_changes
-    description: "Requested accessor changes from data access submissions, with one row per submission and principal."
+    description: "Requested accessor changes from data access submissions, with one row per submission and accessor."
     constraints:
       - type: primary_key
-        columns: [data_access_submission_id, principal_id]
+        columns: [data_access_submission_id, accessor_id]
       - type: foreign_key
-        columns: [data_access_submission_id, principal_id]
+        columns: [data_access_submission_id, accessor_id]
         to: ref('stg_synapse__data_access_submission_accessor_changes')
         to_columns: [data_access_submission_id, principal_id]
         warn_unenforced: false
@@ -27,8 +27,8 @@ models:
             warn_unenforced: false
         data_tests:
           - not_null
-      - name: principal_id
-        description: "Identifier of the accessor whose access is requested to change."
+      - name: accessor_id
+        description: "Identifier of the user whose access is requested to change."
         data_type: NUMBER
         constraints:
           - type: not_null
@@ -45,7 +45,7 @@ models:
               arguments:
                 values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
       - name: access_requirement_id
-        description: "Identifier of the access requirement affected by the submission."
+        description: "Identifier of the access requirement towards which this submission has been made."
         data_type: NUMBER
         constraints:
           - type: not_null
@@ -101,7 +101,7 @@ models:
         description: "The type of access requirement"
         data_type: VARCHAR
       - name: created_by
-        description: "Identifier of the user who created this access requirement revision."
+        description: "Identifier of the user who initially created this access requirement, from the base requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
