@@ -1,0 +1,236 @@
+version: 2
+unit_tests:
+- name: accessor_change_aggregate_preserves_expirations_after_later_renewals
+  description: Covers timely and late renewals across revisions, repeated expirations
+    of one user, revocations, unknown revisions, the current-date expiration boundary,
+    and exclusion of unapproved changes.
+  model: accessor_change_aggregate
+  given:
+  - input: ref('int_synapse_accessor_changes')
+    format: sql
+    rows: |
+      select
+          column1::number as data_access_submission_id,
+          column2::number as accessor_id,
+          column3::varchar as accessor_change_type,
+          column4::number as access_requirement_id,
+          column5::number as access_requirement_version_reviewed_against,
+          column6::timestamp_ntz as state_modified_on,
+          column7::timestamp_ntz as access_expires_on,
+          'Approved'::varchar as state
+      from values
+          (1, 10, 'GAIN_ACCESS', 100, 1, '2020-01-01', '2020-01-02'),
+          (2, 10, 'RENEW_ACCESS', 100, 2, '2020-01-03', '2020-01-04'),
+          (3, 20, 'GAIN_ACCESS', 100, 1, '2020-01-01', '2020-01-05'),
+          (4, 20, 'RENEW_ACCESS', 100, 2, '2020-01-03', null),
+          (5, 30, 'GAIN_ACCESS', 100, 1, '2020-01-01', '2020-01-02'),
+          (6, 30, 'REVOKE_ACCESS', 100, 1, '2020-01-01 12:00:00', null),
+          (7, 40, 'GAIN_ACCESS', 100, 1, '2020-01-01', '2020-01-02'),
+          (8, 40, 'RENEW_ACCESS', 100, null, '2020-01-01 12:00:00', null),
+          (9, 10, 'RENEW_ACCESS', 100, 2, '2020-01-06', '2020-01-07')
+      union all
+      select 10, 50, 'GAIN_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, current_date::timestamp_ntz, 'Approved'
+      union all
+      select 11, 10, 'RENEW_ACCESS', 100, 2, '2020-01-01 12:00:00'::timestamp_ntz, null::timestamp_ntz, 'Rejected'
+      union all
+      select 12, 20, 'GAIN_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, '2020-01-02'::timestamp_ntz, 'Submitted'
+      union all
+      select 13, 30, 'REVOKE_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, null::timestamp_ntz, 'Cancelled'
+  expect:
+    rows:
+    - agg_period: ALL TIME
+      agg_year: null
+      agg_quarter: null
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: null
+      agg_period_end: null
+      agg_period_is_complete: false
+      gain_access_count: 5
+      renew_access_count: 0
+      revoke_access_count: 1
+      expired_access_count: 2
+    - agg_period: YEARLY
+      agg_year: 2020
+      agg_quarter: null
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-12-31'
+      agg_period_is_complete: true
+      gain_access_count: 5
+      renew_access_count: 0
+      revoke_access_count: 1
+      expired_access_count: 2
+    - agg_period: QUARTERLY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-03-31'
+      agg_period_is_complete: true
+      gain_access_count: 5
+      renew_access_count: 0
+      revoke_access_count: 1
+      expired_access_count: 2
+    - agg_period: MONTHLY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-01-31'
+      agg_period_is_complete: true
+      gain_access_count: 5
+      renew_access_count: 0
+      revoke_access_count: 1
+      expired_access_count: 2
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 1
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-01-01'
+      agg_period_is_complete: true
+      gain_access_count: 5
+      renew_access_count: 0
+      revoke_access_count: 1
+      expired_access_count: 0
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 2
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 1
+      agg_period_start: '2020-01-02'
+      agg_period_end: '2020-01-02'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 0
+      revoke_access_count: 0
+      expired_access_count: 2
+    - agg_period: ALL TIME
+      agg_year: null
+      agg_quarter: null
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: null
+      agg_period_end: null
+      agg_period_is_complete: false
+      gain_access_count: 0
+      renew_access_count: 3
+      revoke_access_count: 0
+      expired_access_count: 1
+    - agg_period: YEARLY
+      agg_year: 2020
+      agg_quarter: null
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-12-31'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 3
+      revoke_access_count: 0
+      expired_access_count: 1
+    - agg_period: QUARTERLY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: null
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-03-31'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 3
+      revoke_access_count: 0
+      expired_access_count: 1
+    - agg_period: MONTHLY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: null
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-01'
+      agg_period_end: '2020-01-31'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 3
+      revoke_access_count: 0
+      expired_access_count: 1
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 3
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-03'
+      agg_period_end: '2020-01-03'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 2
+      revoke_access_count: 0
+      expired_access_count: 0
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 4
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-04'
+      agg_period_end: '2020-01-04'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 0
+      revoke_access_count: 0
+      expired_access_count: 1
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 6
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-06'
+      agg_period_end: '2020-01-06'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 1
+      revoke_access_count: 0
+      expired_access_count: 0
+    - agg_period: DAILY
+      agg_year: 2020
+      agg_quarter: 1
+      agg_month: 1
+      agg_day: 7
+      agg_access_requirement_id: 100
+      agg_access_requirement_revision: 2
+      agg_period_start: '2020-01-07'
+      agg_period_end: '2020-01-07'
+      agg_period_is_complete: true
+      gain_access_count: 0
+      renew_access_count: 0
+      revoke_access_count: 0
+      expired_access_count: 1
