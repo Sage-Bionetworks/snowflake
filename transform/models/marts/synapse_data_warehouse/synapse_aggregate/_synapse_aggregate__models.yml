@@ -1,5 +1,102 @@
 version: 2
 models:
+  - name: accessor_change_aggregate
+    description: >
+      Approved accessor changes aggregated by access requirement, reviewed requirement revision,
+      and daily, monthly, quarterly, yearly, or all-time period. Gains, renewals, and revocations
+      are dated by approval. Expired users are dated by the expiration of their most recent
+      approved gain or renewal at that time, across all revisions of the same requirement.
+      A gain or renewal established before or at expiration supersedes the earlier expiration;
+      a later gain or renewal preserves it. Revocations are counted separately and do not
+      supersede gain or renewal records when determining expirations.
+      Expiration is counted only when its timestamp is before CURRENT_DATE.
+      Expired users are distinct within each period and requirement revision, so expiration
+      counts cannot be summed across periods to obtain a distinct-user total.
+      Period completeness indicates the calendar period has ended, rather than guaranteeing
+      that late-arriving records cannot change its metrics.
+      Events with an unknown reviewed requirement revision are excluded. Their grants remain
+      in the expiration history so they can supersede an earlier known-revision grant.
+    constraints:
+      - type: primary_key
+        columns: [agg_row_id, agg_access_requirement_id, agg_access_requirement_revision]
+      - type: foreign_key
+        columns: [agg_access_requirement_id, agg_access_requirement_revision]
+        to: ref('int_synapse_access_requirement')
+        to_columns: [access_requirement_id, access_requirement_version]
+        warn_unenforced: false
+    columns:
+      - name: agg_row_id
+        description: "Deterministic surrogate key hashing the period, calendar dimensions, access requirement ID, and requirement revision."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+          - type: unique
+        data_tests:
+          - not_null
+          - unique
+      - name: agg_period
+        description: "Time grain: ALL TIME, YEARLY, QUARTERLY, MONTHLY, or DAILY."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['ALL TIME', 'YEARLY', 'QUARTERLY', 'MONTHLY', 'DAILY']
+      - name: agg_year
+        description: "Calendar year of the period. Null for ALL TIME."
+        data_type: NUMBER
+      - name: agg_quarter
+        description: "Calendar quarter (1-4) of the period. Null for YEARLY and ALL TIME."
+        data_type: NUMBER
+      - name: agg_month
+        description: "Calendar month (1-12) of the period. Null for QUARTERLY, YEARLY, and ALL TIME."
+        data_type: NUMBER
+      - name: agg_day
+        description: "Calendar day of month of the period. Null for grains above DAILY."
+        data_type: NUMBER
+      - name: agg_access_requirement_id
+        description: "Identifier of the access requirement for this aggregate."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: agg_access_requirement_revision
+        description: "Reviewed access requirement revision associated with the change or expiring gain or renewal."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: agg_period_start
+        description: "Inclusive start date of the period. Null for ALL TIME."
+        data_type: DATE
+      - name: agg_period_end
+        description: "Inclusive end date of the period. Null for ALL TIME."
+        data_type: DATE
+      - name: agg_period_is_complete
+        description: "True when CURRENT_DATE is past the period end. Always false for ALL TIME. Indicates calendar completeness; late-arriving records can still revise metrics."
+        data_type: BOOLEAN
+        constraints:
+          - type: not_null
+      - name: gain_access_count
+        description: "Count of approved gains established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: renew_access_count
+        description: "Count of approved renewals established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: revoke_access_count
+        description: "Count of approved revocations established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: expired_access_count
+        description: "Distinct users whose gain or renewal expired in the period for this requirement revision, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Renewals after expiration preserve the earlier count."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+
   - name: data_access_submission_aggregate
     description: >
       This table contains aggregate statistics over data access submissions associated with a given access requirement.
