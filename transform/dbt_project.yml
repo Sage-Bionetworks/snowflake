@@ -41,3 +41,5 @@ models:
       synapse_data_warehouse:
         synapse_aggregate:
           +schema: synapse_aggregate
+        synapse_event:
+          +schema: synapse_event
