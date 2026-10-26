@@ -3,7 +3,7 @@ unit_tests:
 - name: accessor_change_aggregate_preserves_expirations_after_later_renewals
   description: Covers timely and late renewals across revisions, repeated expirations
     of one user, revocations, unknown revisions, the current-date expiration boundary,
-    and exclusion of unapproved changes.
+    exclusion of unapproved changes, and total events versus distinct users for repeated changes within and across days.
   model: accessor_change_aggregate
   given:
   - input: ref('int_synapse_accessor_changes')
@@ -27,7 +27,10 @@ unit_tests:
           (6, 30, 'REVOKE_ACCESS', 100, 1, '2020-01-01 12:00:00', null),
           (7, 40, 'GAIN_ACCESS', 100, 1, '2020-01-01', '2020-01-02'),
           (8, 40, 'RENEW_ACCESS', 100, null, '2020-01-01 12:00:00', null),
-          (9, 10, 'RENEW_ACCESS', 100, 2, '2020-01-06', '2020-01-07')
+          (9, 10, 'RENEW_ACCESS', 100, 2, '2020-01-06', '2020-01-07'),
+          (14, 50, 'GAIN_ACCESS', 100, 1, '2020-01-01 12:00:00', null),
+          (15, 30, 'REVOKE_ACCESS', 100, 1, '2020-01-01 13:00:00', null),
+          (16, 20, 'RENEW_ACCESS', 100, 2, '2020-01-03 12:00:00', null)
       union all
       select 10, 50, 'GAIN_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, current_date::timestamp_ntz, 'Approved'
       union all
@@ -48,10 +51,14 @@ unit_tests:
       agg_period_start: null
       agg_period_end: null
       agg_period_is_complete: false
-      gain_access_count: 5
+      gain_access_count: 6
+      gain_access_user_count: 5
       renew_access_count: 0
-      revoke_access_count: 1
+      renew_access_user_count: 0
+      revoke_access_count: 2
+      revoke_access_user_count: 1
       expired_access_count: 2
+      expired_access_user_count: 2
     - agg_period: YEARLY
       agg_year: 2020
       agg_quarter: null
@@ -62,10 +69,14 @@ unit_tests:
       agg_period_start: '2020-01-01'
       agg_period_end: '2020-12-31'
       agg_period_is_complete: true
-      gain_access_count: 5
+      gain_access_count: 6
+      gain_access_user_count: 5
       renew_access_count: 0
-      revoke_access_count: 1
+      renew_access_user_count: 0
+      revoke_access_count: 2
+      revoke_access_user_count: 1
       expired_access_count: 2
+      expired_access_user_count: 2
     - agg_period: QUARTERLY
       agg_year: 2020
       agg_quarter: 1
@@ -76,10 +87,14 @@ unit_tests:
       agg_period_start: '2020-01-01'
       agg_period_end: '2020-03-31'
       agg_period_is_complete: true
-      gain_access_count: 5
+      gain_access_count: 6
+      gain_access_user_count: 5
       renew_access_count: 0
-      revoke_access_count: 1
+      renew_access_user_count: 0
+      revoke_access_count: 2
+      revoke_access_user_count: 1
       expired_access_count: 2
+      expired_access_user_count: 2
     - agg_period: MONTHLY
       agg_year: 2020
       agg_quarter: 1
@@ -90,10 +105,14 @@ unit_tests:
       agg_period_start: '2020-01-01'
       agg_period_end: '2020-01-31'
       agg_period_is_complete: true
-      gain_access_count: 5
+      gain_access_count: 6
+      gain_access_user_count: 5
       renew_access_count: 0
-      revoke_access_count: 1
+      renew_access_user_count: 0
+      revoke_access_count: 2
+      revoke_access_user_count: 1
       expired_access_count: 2
+      expired_access_user_count: 2
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -104,10 +123,14 @@ unit_tests:
       agg_period_start: '2020-01-01'
       agg_period_end: '2020-01-01'
       agg_period_is_complete: true
-      gain_access_count: 5
+      gain_access_count: 6
+      gain_access_user_count: 5
       renew_access_count: 0
-      revoke_access_count: 1
+      renew_access_user_count: 0
+      revoke_access_count: 2
+      revoke_access_user_count: 1
       expired_access_count: 0
+      expired_access_user_count: 0
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -119,9 +142,13 @@ unit_tests:
       agg_period_end: '2020-01-02'
       agg_period_is_complete: true
       gain_access_count: 0
+      gain_access_user_count: 0
       renew_access_count: 0
+      renew_access_user_count: 0
       revoke_access_count: 0
+      revoke_access_user_count: 0
       expired_access_count: 2
+      expired_access_user_count: 2
     - agg_period: ALL TIME
       agg_year: null
       agg_quarter: null
@@ -133,9 +160,13 @@ unit_tests:
       agg_period_end: null
       agg_period_is_complete: false
       gain_access_count: 0
-      renew_access_count: 3
+      gain_access_user_count: 0
+      renew_access_count: 4
+      renew_access_user_count: 2
       revoke_access_count: 0
-      expired_access_count: 1
+      revoke_access_user_count: 0
+      expired_access_count: 2
+      expired_access_user_count: 1
     - agg_period: YEARLY
       agg_year: 2020
       agg_quarter: null
@@ -147,9 +178,13 @@ unit_tests:
       agg_period_end: '2020-12-31'
       agg_period_is_complete: true
       gain_access_count: 0
-      renew_access_count: 3
+      gain_access_user_count: 0
+      renew_access_count: 4
+      renew_access_user_count: 2
       revoke_access_count: 0
-      expired_access_count: 1
+      revoke_access_user_count: 0
+      expired_access_count: 2
+      expired_access_user_count: 1
     - agg_period: QUARTERLY
       agg_year: 2020
       agg_quarter: 1
@@ -161,9 +196,13 @@ unit_tests:
       agg_period_end: '2020-03-31'
       agg_period_is_complete: true
       gain_access_count: 0
-      renew_access_count: 3
+      gain_access_user_count: 0
+      renew_access_count: 4
+      renew_access_user_count: 2
       revoke_access_count: 0
-      expired_access_count: 1
+      revoke_access_user_count: 0
+      expired_access_count: 2
+      expired_access_user_count: 1
     - agg_period: MONTHLY
       agg_year: 2020
       agg_quarter: 1
@@ -175,9 +214,13 @@ unit_tests:
       agg_period_end: '2020-01-31'
       agg_period_is_complete: true
       gain_access_count: 0
-      renew_access_count: 3
+      gain_access_user_count: 0
+      renew_access_count: 4
+      renew_access_user_count: 2
       revoke_access_count: 0
-      expired_access_count: 1
+      revoke_access_user_count: 0
+      expired_access_count: 2
+      expired_access_user_count: 1
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -189,9 +232,13 @@ unit_tests:
       agg_period_end: '2020-01-03'
       agg_period_is_complete: true
       gain_access_count: 0
-      renew_access_count: 2
+      gain_access_user_count: 0
+      renew_access_count: 3
+      renew_access_user_count: 2
       revoke_access_count: 0
+      revoke_access_user_count: 0
       expired_access_count: 0
+      expired_access_user_count: 0
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -203,9 +250,13 @@ unit_tests:
       agg_period_end: '2020-01-04'
       agg_period_is_complete: true
       gain_access_count: 0
+      gain_access_user_count: 0
       renew_access_count: 0
+      renew_access_user_count: 0
       revoke_access_count: 0
+      revoke_access_user_count: 0
       expired_access_count: 1
+      expired_access_user_count: 1
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -217,9 +268,13 @@ unit_tests:
       agg_period_end: '2020-01-06'
       agg_period_is_complete: true
       gain_access_count: 0
+      gain_access_user_count: 0
       renew_access_count: 1
+      renew_access_user_count: 1
       revoke_access_count: 0
+      revoke_access_user_count: 0
       expired_access_count: 0
+      expired_access_user_count: 0
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -231,6 +286,10 @@ unit_tests:
       agg_period_end: '2020-01-07'
       agg_period_is_complete: true
       gain_access_count: 0
+      gain_access_user_count: 0
       renew_access_count: 0
+      renew_access_user_count: 0
       revoke_access_count: 0
+      revoke_access_user_count: 0
       expired_access_count: 1
+      expired_access_user_count: 1
