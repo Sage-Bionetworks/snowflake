@@ -238,24 +238,28 @@ unit_tests:
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 3
       expired_access_unique_user_count: 2
+      agg_day: null
     - agg_period: YEARLY
       agg_access_requirement_id: 200
       gain_access_unique_user_count: 3
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 3
       expired_access_unique_user_count: 2
+      agg_day: null
     - agg_period: QUARTERLY
       agg_access_requirement_id: 200
       gain_access_unique_user_count: 3
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 3
       expired_access_unique_user_count: 2
+      agg_day: null
     - agg_period: MONTHLY
       agg_access_requirement_id: 200
       gain_access_unique_user_count: 3
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 3
       expired_access_unique_user_count: 2
+      agg_day: null
     - agg_period: DAILY
       agg_access_requirement_id: 200
       gain_access_unique_user_count: 3
