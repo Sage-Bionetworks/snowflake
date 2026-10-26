@@ -2,33 +2,31 @@ version: 2
 models:
   - name: accessor_change_aggregate
     description: >
-      Approved accessor changes aggregated by access requirement, reviewed requirement revision,
-      and daily, monthly, quarterly, yearly, or all-time period. Gains, renewals, and revocations
-      are dated by approval. Expired users are dated by the expiration of their most recent
+      Approved accessor changes aggregated by access requirement and daily, monthly, quarterly,
+      yearly, or all-time period. Gains, renewals, and revocations are dated by approval. Expired users are dated by the expiration of their most recent
       approved gain or renewal at that time, across all revisions of the same requirement.
       A gain or renewal established before or at expiration supersedes the earlier expiration;
       a later gain or renewal preserves it. Revocations are counted separately and do not
       supersede gain or renewal records when determining expirations.
       Expiration is counted only when its timestamp is before CURRENT_DATE.
       Each event type provides a total event count and a distinct-user count within each
-      period and requirement revision. Distinct-user counts cannot be summed across
-      periods or revisions to obtain a distinct-user total;
+      period and access requirement, combining all revisions. Distinct-user counts cannot be
+      summed across periods to obtain a distinct-user total;
       a user can also be counted in multiple event types within the same period.
       Period completeness indicates the calendar period has ended, rather than guaranteeing
       that late-arriving records cannot change its metrics.
-      Events with an unknown reviewed requirement revision are excluded. Their grants remain
-      in the expiration history so they can supersede an earlier known-revision grant.
+      Approved changes with an unknown reviewed requirement revision are included.
     constraints:
       - type: primary_key
-        columns: [agg_row_id, agg_access_requirement_id, agg_access_requirement_revision]
+        columns: [agg_row_id]
       - type: foreign_key
-        columns: [agg_access_requirement_id, agg_access_requirement_revision]
-        to: ref('int_synapse_access_requirement')
-        to_columns: [access_requirement_id, access_requirement_version]
+        columns: [agg_access_requirement_id]
+        to: ref('stg_synapse__access_requirement')
+        to_columns: [access_requirement_id]
         warn_unenforced: false
     columns:
       - name: agg_row_id
-        description: "Deterministic surrogate key hashing the period, calendar dimensions, access requirement ID, and requirement revision."
+        description: "Deterministic surrogate key hashing the period, calendar dimensions, and access requirement ID."
         data_type: VARCHAR
         constraints:
           - type: not_null
@@ -62,11 +60,6 @@ models:
         data_type: NUMBER
         constraints:
           - type: not_null
-      - name: agg_access_requirement_revision
-        description: "Reviewed access requirement revision associated with the change or expiring gain or renewal."
-        data_type: NUMBER
-        constraints:
-          - type: not_null
       - name: agg_period_start
         description: "Inclusive start date of the period. Null for ALL TIME."
         data_type: DATE
@@ -79,42 +72,42 @@ models:
         constraints:
           - type: not_null
       - name: gain_access_count
-        description: "Total approved gains established in the period for this requirement revision."
+        description: "Total approved gains established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: gain_access_user_count
-        description: "Distinct users with approved gains established in the period for this requirement revision."
+        description: "Distinct users with approved gains established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: renew_access_count
-        description: "Total approved renewals established in the period for this requirement revision."
+        description: "Total approved renewals established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: renew_access_user_count
-        description: "Distinct users with approved renewals established in the period for this requirement revision."
+        description: "Distinct users with approved renewals established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: revoke_access_count
-        description: "Total approved revocations established in the period for this requirement revision."
+        description: "Total approved revocations established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: revoke_access_user_count
-        description: "Distinct users with approved revocations established in the period for this requirement revision."
+        description: "Distinct users with approved revocations established in the period for this access requirement."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: expired_access_count
-        description: "Total inferred gain or renewal expirations in the period for this requirement revision, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Repeated expirations of one user are counted separately."
+        description: "Total inferred gain or renewal expirations in the period for this access requirement, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Repeated expirations of one user are counted separately."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: expired_access_user_count
-        description: "Distinct users whose gain or renewal expired in the period for this requirement revision, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Renewals after expiration preserve the earlier count."
+        description: "Distinct users whose gain or renewal expired in the period for this access requirement, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Renewals after expiration preserve the earlier count."
         data_type: NUMBER
         constraints:
           - type: not_null
