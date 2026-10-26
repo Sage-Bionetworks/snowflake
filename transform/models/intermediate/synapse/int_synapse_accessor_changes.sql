@@ -53,7 +53,6 @@ accessor_change_expiration as (
     select
         changes.data_access_submission_id,
         changes.accessor_id,
-        changes.accessor_change_type,
         access_requirements.access_requirement_version as access_requirement_version_reviewed_against,
         -- Synapse calculates expiration before recording the approval status timestamp.
         case
@@ -75,8 +74,7 @@ accessor_change_expiration as (
     qualify row_number() over (
         partition by
             changes.data_access_submission_id,
-            changes.accessor_id,
-            changes.accessor_change_type
+            changes.accessor_id
         order by
             access_requirements.modified_on desc nulls last,
             access_requirements.access_requirement_version desc nulls last
@@ -97,4 +95,3 @@ from submission_accessor_changes changes
 inner join accessor_change_expiration expiration
     on changes.data_access_submission_id = expiration.data_access_submission_id
     and changes.accessor_id = expiration.accessor_id
-    and changes.accessor_change_type = expiration.accessor_change_type
