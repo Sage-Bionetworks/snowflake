@@ -58,14 +58,10 @@ event_rollup as (
         grouping(agg_quarter) as g_quarter,
         grouping(agg_year) as g_year,
         access_requirement_id,
-        count(case when event_type = 'GAIN_ACCESS' then 1 end) as gain_access_count,
-        count(distinct case when event_type = 'GAIN_ACCESS' then accessor_id end) as gain_access_user_count,
-        count(case when event_type = 'RENEW_ACCESS' then 1 end) as renew_access_count,
-        count(distinct case when event_type = 'RENEW_ACCESS' then accessor_id end) as renew_access_user_count,
-        count(case when event_type = 'REVOKE_ACCESS' then 1 end) as revoke_access_count,
-        count(distinct case when event_type = 'REVOKE_ACCESS' then accessor_id end) as revoke_access_user_count,
-        count(case when event_type = 'EXPIRED_ACCESS' then 1 end) as expired_access_count,
-        count(distinct case when event_type = 'EXPIRED_ACCESS' then accessor_id end) as expired_access_user_count
+        count(distinct case when event_type = 'GAIN_ACCESS' then accessor_id end) as gain_access_unique_user_count,
+        count(distinct case when event_type = 'RENEW_ACCESS' then accessor_id end) as renew_access_unique_user_count,
+        count(distinct case when event_type = 'REVOKE_ACCESS' then accessor_id end) as revoke_access_unique_user_count,
+        count(distinct case when event_type = 'EXPIRED_ACCESS' then accessor_id end) as expired_access_unique_user_count
     from lifecycle_events
     group by
         rollup(agg_year, agg_quarter, agg_month, agg_day),
@@ -98,14 +94,10 @@ agg_period_calculations as (
             when g_month = 0 and g_day = 1 then last_day(date_from_parts(agg_year, agg_month, 1))
             when g_day = 0 then date_from_parts(agg_year, agg_month, agg_day)
         end as agg_period_end,
-        gain_access_count,
-        gain_access_user_count,
-        renew_access_count,
-        renew_access_user_count,
-        revoke_access_count,
-        revoke_access_user_count,
-        expired_access_count,
-        expired_access_user_count
+        gain_access_unique_user_count,
+        renew_access_unique_user_count,
+        revoke_access_unique_user_count,
+        expired_access_unique_user_count
     from event_rollup
 )
 
@@ -127,12 +119,8 @@ select
         coalesce(to_varchar(agg_day), '_'),
         to_varchar(access_requirement_id)
     )) as agg_row_id,
-    gain_access_count,
-    gain_access_user_count,
-    renew_access_count,
-    renew_access_user_count,
-    revoke_access_count,
-    revoke_access_user_count,
-    expired_access_count,
-    expired_access_user_count
+    gain_access_unique_user_count,
+    renew_access_unique_user_count,
+    revoke_access_unique_user_count,
+    expired_access_unique_user_count
 from agg_period_calculations
