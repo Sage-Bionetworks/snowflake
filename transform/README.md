@@ -106,7 +106,7 @@ Most of the time, we haven't configured a model's database in this dbt project. 
 
 Because we deploy models defined in, for example, [`models/staging/synapse`](./models/staging/synapse/) to a consistent schema, irrespective of the database, we usually configure schemas in [`dbt_project.yml`](./dbt_project.yml) based on the model subdirectory.
 
-Since mart models can be surfaced in a variety of different schemas, even when those models live in the same directory, we typically configure their schema in the model properties file (e.g., [`models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml`](./models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml)) on a per-model basis.
+Synapse data warehouse marts are grouped by destination schema in `synapse_aggregate/` and `synapse_event/` under [`models/marts/synapse_data_warehouse/`](./models/marts/synapse_data_warehouse/). Their schemas are configured once per directory in [`dbt_project.yml`](./dbt_project.yml).
 
 ### Deploy by Environment
 
@@ -185,4 +185,6 @@ For dbt developer guidelines, including structure and style conventions, see [CO
 - **Data Models**: Model layers follow dbt conventions, with [sources](https://docs.getdbt.com/docs/build/sources?version=1.12#selecting-from-a-source) and transformation guidance from the dbt docs on [staging models](https://docs.getdbt.com/best-practices/how-we-structure/2-staging), [intermediate models](https://docs.getdbt.com/best-practices/how-we-structure/3-intermediate), and [mart models](https://docs.getdbt.com/best-practices/how-we-structure/4-marts).
 - **Model Materialization**: Deployment behavior is controlled hierarchically through [model properties](https://docs.getdbt.com/reference/model-configs), which can be configured at the user level in the [dbt profiles](https://docs.getdbt.com/docs/local/profiles.yml) file, at the project level in the [dbt project](./dbt_project.yml) file, at the model subdirectory level in a [model property](https://docs.getdbt.com/reference/model-properties) file, or at [the model level](https://docs.getdbt.com/reference/model-configs?version=1.12#apply-configurations-to-one-model-only) using an inline jinja macro. We can define subsets of models to deploy in [`selectors.yml`](./selectors.yml) in conjunction with [selection syntax](https://docs.getdbt.com/reference/node-selection/syntax).
 - **Developer Guidelines**: Follow local dbt structure and style conventions in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+*This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
 
