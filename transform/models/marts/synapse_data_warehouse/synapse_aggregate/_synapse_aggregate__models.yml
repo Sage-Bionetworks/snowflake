@@ -10,8 +10,10 @@ models:
       a later gain or renewal preserves it. Revocations are counted separately and do not
       supersede gain or renewal records when determining expirations.
       Expiration is counted only when its timestamp is before CURRENT_DATE.
-      Expired users are distinct within each period and requirement revision, so expiration
-      counts cannot be summed across periods to obtain a distinct-user total.
+      Each event type provides a total event count and a distinct-user count within each
+      period and requirement revision. Distinct-user counts cannot be summed across
+      periods or revisions to obtain a distinct-user total;
+      a user can also be counted in multiple event types within the same period.
       Period completeness indicates the calendar period has ended, rather than guaranteeing
       that late-arriving records cannot change its metrics.
       Events with an unknown reviewed requirement revision are excluded. Their grants remain
@@ -77,21 +79,41 @@ models:
         constraints:
           - type: not_null
       - name: gain_access_count
-        description: "Count of approved gains established in the period for this requirement revision."
+        description: "Total approved gains established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: gain_access_user_count
+        description: "Distinct users with approved gains established in the period for this requirement revision."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: renew_access_count
-        description: "Count of approved renewals established in the period for this requirement revision."
+        description: "Total approved renewals established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: renew_access_user_count
+        description: "Distinct users with approved renewals established in the period for this requirement revision."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: revoke_access_count
-        description: "Count of approved revocations established in the period for this requirement revision."
+        description: "Total approved revocations established in the period for this requirement revision."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: revoke_access_user_count
+        description: "Distinct users with approved revocations established in the period for this requirement revision."
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: expired_access_count
+        description: "Total inferred gain or renewal expirations in the period for this requirement revision, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Repeated expirations of one user are counted separately."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: expired_access_user_count
         description: "Distinct users whose gain or renewal expired in the period for this requirement revision, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Renewals after expiration preserve the earlier count."
         data_type: NUMBER
         constraints:
