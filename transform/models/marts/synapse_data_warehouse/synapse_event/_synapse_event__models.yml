@@ -1,8 +1,6 @@
 version: 2
 models:
   - name: accessor_change_event
-    config:
-      schema: synapse_event
     description: "Accessor changes established by approved data access submissions, with one row per submission and accessor. Includes gains, renewals, and revocations."
     constraints:
       - type: primary_key

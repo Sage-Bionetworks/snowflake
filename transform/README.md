@@ -110,6 +110,8 @@ Individual models can override these defaults in their model properties file or 
 
 Our custom [`generate_schema_name` macro](./macros/generate_schema_name.sql) uses the configured schema name directly, without prefixing it with the profile's schema. If no schema is configured for a model, it uses the schema from your dbt profile.
 
+Synapse data warehouse marts are grouped by destination schema in `synapse_aggregate/` and `synapse_event/` under [`models/marts/synapse_data_warehouse/`](./models/marts/synapse_data_warehouse/). Their schemas are configured once per directory in [`dbt_project.yml`](./dbt_project.yml).
+
 ### Deploy by Environment
 
 While only the Synapse data warehouse environment is relevant for deploying to our development database, we have other environments, too. Use selectors to deploy models to a specific environment:
