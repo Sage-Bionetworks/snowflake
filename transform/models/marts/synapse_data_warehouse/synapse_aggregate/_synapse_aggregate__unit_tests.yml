@@ -2,7 +2,7 @@ version: 2
 unit_tests:
 - name: accessor_change_aggregate_preserves_expirations_after_later_renewals
   description: Covers timely and late renewals across revisions, repeated expirations
-    of one user, revocations, unknown revisions, the current-date expiration boundary,
+    of one user, suppression by revocations, unknown revisions, the current-date expiration boundary,
     exclusion of unapproved changes, and distinct users for repeated changes within and across days
     and requirement revisions, including changes with unknown reviewed revisions.
   model: accessor_change_aggregate
@@ -40,6 +40,8 @@ unit_tests:
       select 12, 20, 'GAIN_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, '2020-01-02'::timestamp_ntz, 'Submitted'
       union all
       select 13, 30, 'REVOKE_ACCESS', 100, 1, '2020-01-01'::timestamp_ntz, null::timestamp_ntz, 'Cancelled'
+      union all
+      select 17, 10, 'REVOKE_ACCESS', 100, 1, '2020-01-01 12:00:00'::timestamp_ntz, null::timestamp_ntz, 'Rejected'
   expect:
     rows:
     - agg_period: ALL TIME
@@ -54,7 +56,7 @@ unit_tests:
       gain_access_unique_user_count: 5
       renew_access_unique_user_count: 3
       revoke_access_unique_user_count: 1
-      expired_access_unique_user_count: 2
+      expired_access_unique_user_count: 1
     - agg_period: YEARLY
       agg_year: 2020
       agg_quarter: null
@@ -67,7 +69,7 @@ unit_tests:
       gain_access_unique_user_count: 5
       renew_access_unique_user_count: 3
       revoke_access_unique_user_count: 1
-      expired_access_unique_user_count: 2
+      expired_access_unique_user_count: 1
     - agg_period: QUARTERLY
       agg_year: 2020
       agg_quarter: 1
@@ -80,7 +82,7 @@ unit_tests:
       gain_access_unique_user_count: 5
       renew_access_unique_user_count: 3
       revoke_access_unique_user_count: 1
-      expired_access_unique_user_count: 2
+      expired_access_unique_user_count: 1
     - agg_period: MONTHLY
       agg_year: 2020
       agg_quarter: 1
@@ -93,7 +95,7 @@ unit_tests:
       gain_access_unique_user_count: 5
       renew_access_unique_user_count: 3
       revoke_access_unique_user_count: 1
-      expired_access_unique_user_count: 2
+      expired_access_unique_user_count: 1
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -119,7 +121,7 @@ unit_tests:
       gain_access_unique_user_count: 0
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 0
-      expired_access_unique_user_count: 2
+      expired_access_unique_user_count: 1
     - agg_period: DAILY
       agg_year: 2020
       agg_quarter: 1
@@ -172,3 +174,113 @@ unit_tests:
       renew_access_unique_user_count: 0
       revoke_access_unique_user_count: 0
       expired_access_unique_user_count: 1
+- name: accessor_change_aggregate_handles_revocation_expiration_boundaries
+  description: Covers revocation at expiration, revocation after expiration, and a
+    new gain that expires after an earlier revocation.
+  model: accessor_change_aggregate
+  given:
+  - input: ref('int_synapse_accessor_changes')
+    rows:
+    - data_access_submission_id: 1
+      accessor_id: 60
+      accessor_change_type: GAIN_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-01'
+      access_expires_on: '2020-01-02'
+      state: Approved
+    - data_access_submission_id: 2
+      accessor_id: 60
+      accessor_change_type: REVOKE_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-02'
+      access_expires_on: null
+      state: Approved
+    - data_access_submission_id: 3
+      accessor_id: 70
+      accessor_change_type: GAIN_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-01'
+      access_expires_on: '2020-01-02'
+      state: Approved
+    - data_access_submission_id: 4
+      accessor_id: 70
+      accessor_change_type: REVOKE_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-03'
+      access_expires_on: null
+      state: Approved
+    - data_access_submission_id: 5
+      accessor_id: 80
+      accessor_change_type: GAIN_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-01'
+      access_expires_on: '2020-01-02'
+      state: Approved
+    - data_access_submission_id: 6
+      accessor_id: 80
+      accessor_change_type: REVOKE_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-01 12:00:00'
+      access_expires_on: null
+      state: Approved
+    - data_access_submission_id: 7
+      accessor_id: 80
+      accessor_change_type: GAIN_ACCESS
+      access_requirement_id: 200
+      state_modified_on: '2020-01-03'
+      access_expires_on: '2020-01-04'
+      state: Approved
+  expect:
+    rows:
+    - agg_period: ALL TIME
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 3
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 3
+      expired_access_unique_user_count: 2
+    - agg_period: YEARLY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 3
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 3
+      expired_access_unique_user_count: 2
+    - agg_period: QUARTERLY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 3
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 3
+      expired_access_unique_user_count: 2
+    - agg_period: MONTHLY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 3
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 3
+      expired_access_unique_user_count: 2
+    - agg_period: DAILY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 3
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 1
+      expired_access_unique_user_count: 0
+      agg_day: 1
+    - agg_period: DAILY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 0
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 1
+      expired_access_unique_user_count: 1
+      agg_day: 2
+    - agg_period: DAILY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 1
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 1
+      expired_access_unique_user_count: 0
+      agg_day: 3
+    - agg_period: DAILY
+      agg_access_requirement_id: 200
+      gain_access_unique_user_count: 0
+      renew_access_unique_user_count: 0
+      revoke_access_unique_user_count: 0
+      expired_access_unique_user_count: 1
+      agg_day: 4

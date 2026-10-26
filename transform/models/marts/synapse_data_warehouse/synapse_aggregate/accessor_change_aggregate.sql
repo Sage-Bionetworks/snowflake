@@ -12,17 +12,18 @@ accessor_changes as (
     where state = 'Approved'
 ),
 
-access_grants as (
+access_history as (
     select
         accessor_id,
         access_requirement_id,
         access_expires_on,
+        accessor_change_type,
         lead(change_established_on) over (
             partition by access_requirement_id, accessor_id
             order by change_established_on, data_access_submission_id
-        ) as next_grant_on
+        ) as next_change_on
     from accessor_changes
-    where accessor_change_type in ('GAIN_ACCESS', 'RENEW_ACCESS')
+    where accessor_change_type in ('GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS')
 ),
 
 lifecycle_events as (
@@ -40,11 +41,12 @@ lifecycle_events as (
         access_requirement_id,
         'EXPIRED_ACCESS' as event_type,
         access_expires_on as event_on
-    from access_grants
+    from access_history
     where
-        access_expires_on < current_date
-        -- A later grant supersedes expiration only if it was established before or at expiration.
-        and (next_grant_on is null or next_grant_on > access_expires_on)
+        accessor_change_type in ('GAIN_ACCESS', 'RENEW_ACCESS')
+        and access_expires_on < current_date
+        -- A gain, renewal, or revocation before or at expiration prevents that expiration.
+        and (next_change_on is null or next_change_on > access_expires_on)
 ),
 
 event_rollup as (

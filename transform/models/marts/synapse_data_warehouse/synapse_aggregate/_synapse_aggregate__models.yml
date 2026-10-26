@@ -5,9 +5,9 @@ models:
       Approved accessor changes aggregated by access requirement and daily, monthly, quarterly,
       yearly, or all-time period. Gains, renewals, and revocations are dated by approval. Expired users are dated by the expiration of their most recent
       approved gain or renewal at that time, across all revisions of the same requirement.
-      A gain or renewal established before or at expiration supersedes the earlier expiration;
-      a later gain or renewal preserves it. Revocations are counted separately and do not
-      supersede gain or renewal records when determining expirations.
+      A gain, renewal, or revocation established before or at expiration suppresses the
+      earlier expiration; a later change preserves it. Access granted again after a
+      revocation can expire independently.
       Expiration is counted only when its timestamp is before CURRENT_DATE.
       Each event type provides a distinct-user count within each
       period and access requirement, combining all revisions. Distinct-user counts cannot be
@@ -87,7 +87,7 @@ models:
         constraints:
           - type: not_null
       - name: expired_access_unique_user_count
-        description: "Distinct users whose gain or renewal expired in the period for this access requirement, before CURRENT_DATE, without a superseding gain or renewal established before or at expiration. Renewals after expiration preserve the earlier count."
+        description: "Distinct users whose gain or renewal expired in the period for this access requirement, before CURRENT_DATE, without a gain, renewal, or revocation established after that grant and before or at expiration. Changes after expiration preserve the earlier count."
         data_type: NUMBER
         constraints:
           - type: not_null
