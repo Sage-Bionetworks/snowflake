@@ -6,7 +6,6 @@ accessor_changes as (
         accessor_id,
         accessor_change_type,
         access_requirement_id,
-        access_requirement_version_reviewed_against as access_requirement_version,
         state_modified_on as change_established_on,
         access_expires_on
     from dynamic_table_refresh_boundary({{ ref('int_synapse_accessor_changes') }})
@@ -17,7 +16,6 @@ access_grants as (
     select
         accessor_id,
         access_requirement_id,
-        access_requirement_version,
         access_expires_on,
         lead(change_established_on) over (
             partition by access_requirement_id, accessor_id
@@ -31,7 +29,6 @@ lifecycle_events as (
     select
         accessor_id,
         access_requirement_id,
-        access_requirement_version,
         accessor_change_type as event_type,
         change_established_on as event_on
     from accessor_changes
@@ -41,7 +38,6 @@ lifecycle_events as (
     select
         accessor_id,
         access_requirement_id,
-        access_requirement_version,
         'EXPIRED_ACCESS' as event_type,
         access_expires_on as event_on
     from access_grants
@@ -62,7 +58,6 @@ event_rollup as (
         grouping(agg_quarter) as g_quarter,
         grouping(agg_year) as g_year,
         access_requirement_id,
-        access_requirement_version,
         count(case when event_type = 'GAIN_ACCESS' then 1 end) as gain_access_count,
         count(distinct case when event_type = 'GAIN_ACCESS' then accessor_id end) as gain_access_user_count,
         count(case when event_type = 'RENEW_ACCESS' then 1 end) as renew_access_count,
@@ -72,17 +67,14 @@ event_rollup as (
         count(case when event_type = 'EXPIRED_ACCESS' then 1 end) as expired_access_count,
         count(distinct case when event_type = 'EXPIRED_ACCESS' then accessor_id end) as expired_access_user_count
     from lifecycle_events
-    where access_requirement_version is not null
     group by
         rollup(agg_year, agg_quarter, agg_month, agg_day),
-        access_requirement_id,
-        access_requirement_version
+        access_requirement_id
 ),
 
 agg_period_calculations as (
     select
         access_requirement_id,
-        access_requirement_version,
         agg_year,
         agg_quarter,
         agg_month,
@@ -124,7 +116,6 @@ select
     agg_month,
     agg_day,
     access_requirement_id as agg_access_requirement_id,
-    access_requirement_version as agg_access_requirement_revision,
     agg_period_start,
     agg_period_end,
     coalesce(current_date > agg_period_end, false) as agg_period_is_complete,
@@ -134,8 +125,7 @@ select
         coalesce(to_varchar(agg_quarter), '_'),
         coalesce(to_varchar(agg_month), '_'),
         coalesce(to_varchar(agg_day), '_'),
-        to_varchar(access_requirement_id),
-        to_varchar(access_requirement_version)
+        to_varchar(access_requirement_id)
     )) as agg_row_id,
     gain_access_count,
     gain_access_user_count,
