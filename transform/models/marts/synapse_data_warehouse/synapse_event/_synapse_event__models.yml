@@ -1,8 +1,58 @@
 version: 2
 models:
+  - name: accessor_change_event
+    description: "Accessor changes established by approved data access submissions, with one row per submission and accessor. Includes gains, renewals, and revocations."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id, accessor_id]
+      - type: foreign_key
+        columns: [data_access_submission_id, accessor_id]
+        to: ref('int_synapse_accessor_changes')
+        to_columns: [data_access_submission_id, accessor_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [access_requirement_id, access_requirement_version]
+        to: ref('int_synapse_access_requirement')
+        to_columns: [access_requirement_id, access_requirement_version]
+        warn_unenforced: false
+    columns:
+      - name: data_access_submission_id
+        description: "Identifier of the approved submission that established this access change."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: accessor_id
+        description: "Identifier of the user whose access changed."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: accessor_change_type
+        description: "Established access change: GAIN_ACCESS, RENEW_ACCESS, or REVOKE_ACCESS."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
+      - name: access_requirement_id
+        description: "Identifier of the access requirement associated with this access change."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version
+        description: "Current access requirement revision when the submission was approved. Null when no eligible revision is available."
+        data_type: NUMBER
+      - name: change_established_on
+        description: "UTC timestamp when the submission was approved and this access change took effect."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: access_expires_on
+        description: "Derived UTC expiration of gained or renewed access: approval timestamp plus the active access requirement revision's expiration period. Null for revocations, unlimited duration (zero), unavailable periods, or invalid nonpositive periods. Later requirement revisions do not recalculate this event's expiration."
+        data_type: TIMESTAMP_NTZ
+
   - name: data_access_submission_event
-    config:
-      schema: synapse_event
     description: "This event table contains all data access submissions and their associated state. A data access submission is created each time a user makes a revision of their data access request."
     constraints:
       - type: primary_key
