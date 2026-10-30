@@ -59,4 +59,6 @@ Adding a column to model SQL without updating the YAML will cause a contract vio
 
 **Docs persistence:** `+persist_docs: {relation: true, columns: true}` is set at root. Every model and column must have a `description` in its YAML file.
 
+**Description style:** When writing or reviewing table and column descriptions, use the repository skill [write-table-column-documentation](../../.agents/skills/write-table-column-documentation/SKILL.md). It covers source, staging, intermediate, and mart descriptions.
+
 **Source YAML:** `staging/synapse/_synapse__sources.yml` — all `RDS_RAW` source tables are defined here. Add new source tables here before referencing with `{{ source() }}`.
