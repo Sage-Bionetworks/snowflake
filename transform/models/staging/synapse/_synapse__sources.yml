@@ -576,6 +576,43 @@ sources:
                   arguments:
                     values: ['USER_NAME', 'TEAM_NAME', 'USER_EMAIL', 'USER_OPEN_ID', 'USER_ORCID']
 
+      - name: research_project
+        description: "Research projects associated with data access requirements, including project lead, institution, and intended data use."
+        columns:
+          - name: id
+            description: "Unique identifier for the research project"
+            data_type: NUMBER
+            data_tests:
+              - not_null
+              - unique
+          - name: access_requirement_id
+            description: "Identifier of the access requirement associated with this research project"
+            data_type: NUMBER
+          - name: created_by
+            description: "Identifier of the user who created this research project"
+            data_type: NUMBER
+          - name: created_on
+            description: "Timestamp (Unix epoch in milliseconds) when the research project was created"
+            data_type: NUMBER
+          - name: modified_by
+            description: "Identifier of the user who last modified this research project"
+            data_type: NUMBER
+          - name: modified_on
+            description: "Timestamp (Unix epoch in milliseconds) when the research project was last modified"
+            data_type: NUMBER
+          - name: etag
+            description: "Entity tag for optimistic concurrency control (36-character UUID)"
+            data_type: VARCHAR
+          - name: project_lead
+            description: "Name of the principal investigator or project lead"
+            data_type: VARCHAR
+          - name: institution
+            description: "Name of the institution affiliated with this research project"
+            data_type: VARCHAR
+          - name: idu
+            description: "Intended data use statement stored as UTF-8 encoded binary"
+            data_type: BINARY
+
   - name: synapse_event
     schema: SYNAPSE_EVENT
     description: "Deduplicated change-event history for SYNAPSE_RAW data types that cannot be fully reconstructed from RDS data types."
