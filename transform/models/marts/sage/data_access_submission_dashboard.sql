@@ -21,16 +21,28 @@ WITH base AS (
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
 ),
 access_requirements AS (
-    SELECT DISTINCT
+    SELECT
         access_requirement_id,
+        access_requirement_version,
         access_requirement_name
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_access_requirement') }})
+),
+access_requirements_most_recent AS (
+    SELECT
+        access_requirement_id,
+        access_requirement_name
+    FROM access_requirements
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY access_requirement_id
+        ORDER BY access_requirement_version DESC
+    ) = 1
 )
 SELECT
     base.data_access_submission_id,
     base.data_access_request_id,
     base.access_requirement_id,
     access_requirements.access_requirement_name,
+    access_requirements_most_recent.access_requirement_name AS access_requirement_name_most_recent,
     base.access_requirement_version,
     base.research_project_id,
     base.created_by as submitted_by,
@@ -49,3 +61,6 @@ SELECT
 FROM base
 LEFT JOIN access_requirements
     ON base.access_requirement_id = access_requirements.access_requirement_id
+    AND base.access_requirement_version = access_requirements.access_requirement_version
+LEFT JOIN access_requirements_most_recent
+    ON base.access_requirement_id = access_requirements_most_recent.access_requirement_id

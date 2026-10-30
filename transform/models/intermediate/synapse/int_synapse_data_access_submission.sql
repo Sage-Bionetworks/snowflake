@@ -43,14 +43,14 @@ data_access_submission_submitter as (
 ),
 
 -- Create a single column `accessor_changes`
--- mapping principal IDs to access type for each data access submission
+-- mapping principal IDs to accessor change type for each data access submission
 data_access_submission_accessor_changes_aggregated as (
     select
         data_access_submission_id,
         to_variant(
             object_agg(
                 principal_id::varchar,
-                to_variant(access_type)
+                to_variant(accessor_change_type)
         )
     ) as accessor_changes
     from
