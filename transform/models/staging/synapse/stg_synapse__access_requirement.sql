@@ -20,7 +20,7 @@ staging as (
         to_timestamp(created_on / 1000) as created_on,
         current_rev_num as access_requirement_current_version,
         to_boolean(is_two_fa_required) as is_two_fa_required,
-        access_type,
+        access_type as access_requirement_access_type,
         etag
     from
         source
