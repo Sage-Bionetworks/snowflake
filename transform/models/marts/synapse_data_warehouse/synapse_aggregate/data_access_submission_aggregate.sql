@@ -15,6 +15,7 @@ WITH submissions AS (
         created_on,
         state,
         attempt,
+        weekdays_to_review,
         state_modified_on
     FROM dynamic_table_refresh_boundary({{ ref('int_synapse_data_access_submission_enriched') }})
 ),
@@ -29,7 +30,7 @@ lifecycle_event AS (
         'RECEIVED' AS event_type,
         created_on AS event_on,
         CAST(NULL AS NUMBER) AS attempt,
-        CAST(NULL AS NUMBER) AS days_to_review,
+        CAST(NULL AS NUMBER) AS weekdays_to_review,
         CAST(NULL AS NUMBER) AS attempts_to_approval
     FROM submissions
 
@@ -40,11 +41,7 @@ lifecycle_event AS (
         UPPER(state) AS event_type,
         state_modified_on AS event_on,
         attempt,
-        -- Latency is only meaningful for a review decision; a cancellation is not a review
-        CASE
-            WHEN state IN ('Approved', 'Rejected')
-                THEN DATEDIFF(day, created_on, state_modified_on)
-        END AS days_to_review,
+        weekdays_to_review,
         -- `attempt` is the submission's ordinal within its approval cycle, and an approved
         -- submission is always the last of its cycle, so for an approval this is the total
         -- number of attempts that cycle took to succeed
@@ -76,7 +73,7 @@ event_rollup AS (
         -- "Reviewed" means a review decision was reached (Approved/Rejected);
         -- Cancelled was withdrawn before a decision, so it is neither a review nor an attempt (by convention)
         COUNT(CASE WHEN event_type IN ('APPROVED', 'REJECTED') THEN 1 END) AS reviewed_count,
-        SUM(days_to_review) AS sum_days_to_review,
+        SUM(weekdays_to_review) AS sum_weekdays_to_review,
         SUM(attempts_to_approval) AS sum_attempts_to_approval,
         MAX(attempt) AS max_attempt
     FROM lifecycle_event
@@ -121,7 +118,7 @@ agg_period_calculations AS (
         approved_count,
         rejected_count,
         reviewed_count,
-        sum_days_to_review,
+        sum_weekdays_to_review,
         sum_attempts_to_approval,
         max_attempt
     FROM event_rollup
@@ -154,7 +151,7 @@ SELECT
     approved_count,
     rejected_count,
     reviewed_count,
-    sum_days_to_review,
+    sum_weekdays_to_review,
     sum_attempts_to_approval,
     max_attempt
 FROM agg_period_calculations

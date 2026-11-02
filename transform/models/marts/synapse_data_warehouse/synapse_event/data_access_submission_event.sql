@@ -12,6 +12,7 @@ select
     state_modified_on,
     state,
     submission_type,
+    weekdays_to_review,
     state_reason,
     accessor_changes,
     data_access_submission_raw

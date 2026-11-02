@@ -113,6 +113,12 @@ models:
           The UTC timestamp when the submission was approved or rejected. NULL for Submitted or
           Cancelled submissions, which have no review decision.
         data_type: TIMESTAMP_NTZ
+      - name: weekdays_to_review
+        description: |-
+          Number of weekdays (Monday–Friday) from submission to a review decision (Approved or Rejected), excluding the submission date and including the decision date, so same-day reviews are 0. Includes weekday holidays. NULL for Submitted or Cancelled submissions.
+
+          *This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
+        data_type: NUMBER
       - name: submission_status_reason
         description: >-
           The explanation recorded for the current submission state, particularly rejection or
