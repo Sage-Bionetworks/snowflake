@@ -94,7 +94,7 @@ These apply to every schemachange-managed directory in this repo (`synapse_data_
 - **Never reuse or edit an applied version number** — increment the minor or patch version instead.
 - **Do not use repeatable scripts to create objects with downstream dependencies** — if a task or dynamic table references a table, create that table in a V-script first.
 - **Scripts that reference an object must have a higher version number than the script that creates it** — schemachange applies versioned scripts in ascending order, so a grant or DDL that depends on an object (e.g. a database role) must come after the script that creates it.
-- **All `GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`** — adding them inside DDL migration scripts will auto-suspend tasks.
+- **`GRANT OWNERSHIP` statements belong in `admin/ownership_grants/`, except for database-role ownership** — establish database-role ownership in the database's versioned `database_roles/` migration, after creating the role and before granting inheritance. Task ownership transfers auto-suspend tasks and must remain in `admin/ownership_grants/`.
 - **Schema subdirectories contain only object DDL** — scripts under a schema subdir (e.g. `synapse_data_warehouse/rds_landing/`) must only create or alter objects (tables, tasks, stages, etc.). Database role creation, ownership, and inheritance belong in that database's `database_roles/` subdir; all other grants belong in `admin/` (see `admin/AGENTS.md` for the full split across `ownership_grants/`, `future_grants/`, and `grants.sql`).
 - **SQLFluff noqa:** Use `--noqa: JJ01,PRS,TMP` on lines with template variables. Add `CP01` or `CP02` only if that specific line also triggers capitalization rules.
 
@@ -118,3 +118,5 @@ Snowflake can be interfaced with via the `snow` CLI tool.
 - **Google Analytics 4**: source for `sage/google_analytics_aggregate/` via service account (`Ga4_service_account.json`).
 - Jira project: SNOW (`https://sagebionetworks.jira.com/browse/SNOW`)
 - Internal developer docs: `https://sagebionetworks.jira.com/wiki/spaces/DPE/pages/3015508258/Sage+Data+Warehouse+Snowflake`
+
+*This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
