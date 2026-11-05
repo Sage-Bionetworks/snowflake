@@ -102,6 +102,14 @@ There are multiple ways to configure where a model is deployed to. The following
 
 Most of the time, we haven't configured a model's database in this dbt project. This enables you to easily deploy to a development database by configuring the database once in your `~/.dbt/profiles.yml` file. In cases where the database is configured within this dbt project, you can override the destination database by editing one of the files above.
 
+### Schema configuration
+
+We configure schema defaults by model subdirectory in [`dbt_project.yml`](./dbt_project.yml). Staging and intermediate models under `synapse/` deploy to `rds_raw`. Mart models under `marts/synapse_data_warehouse/synapse/`, `synapse_event/`, and `synapse_aggregate/` deploy to the corresponding schema, irrespective of the destination database.
+
+Individual models can override these defaults in their model properties file or inline configuration, following the hierarchy above. For example, the Sage mart specifies `schema: governance` in [`_sage__models.yml`](./models/marts/sage/_sage__models.yml).
+
+Our custom [`generate_schema_name` macro](./macros/generate_schema_name.sql) uses the configured schema name directly, without prefixing it with the profile's schema. If no schema is configured for a model, it uses the schema from your dbt profile.
+
 ### Deploy by Environment
 
 While only the Synapse data warehouse environment is relevant for deploying to our development database, we have other environments, too. Use selectors to deploy models to a specific environment:
