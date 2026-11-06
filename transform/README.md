@@ -106,7 +106,7 @@ Most of the time, we haven't configured a model's database in this dbt project. 
 
 Because we deploy models defined in, for example, [`models/staging/synapse`](./models/staging/synapse/) to a consistent schema, irrespective of the database, we usually configure schemas in [`dbt_project.yml`](./dbt_project.yml) based on the model subdirectory.
 
-Since mart models can be surfaced in a variety of different schemas, even when those models live in the same directory, we typically configure their schema in the model properties file (e.g., [`models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml`](./models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml)) on a per-model basis.
+Synapse data warehouse marts are grouped by destination schema in `synapse_aggregate/` and `synapse_event/` under [`models/marts/synapse_data_warehouse/`](./models/marts/synapse_data_warehouse/). Their schemas are configured once per directory in [`dbt_project.yml`](./dbt_project.yml).
 
 ### Deploy by Environment
 
@@ -185,4 +185,77 @@ For dbt developer guidelines, including structure and style conventions, see [CO
 - **Data Models**: Model layers follow dbt conventions, with [sources](https://docs.getdbt.com/docs/build/sources?version=1.12#selecting-from-a-source) and transformation guidance from the dbt docs on [staging models](https://docs.getdbt.com/best-practices/how-we-structure/2-staging), [intermediate models](https://docs.getdbt.com/best-practices/how-we-structure/3-intermediate), and [mart models](https://docs.getdbt.com/best-practices/how-we-structure/4-marts).
 - **Model Materialization**: Deployment behavior is controlled hierarchically through [model properties](https://docs.getdbt.com/reference/model-configs), which can be configured at the user level in the [dbt profiles](https://docs.getdbt.com/docs/local/profiles.yml) file, at the project level in the [dbt project](./dbt_project.yml) file, at the model subdirectory level in a [model property](https://docs.getdbt.com/reference/model-properties) file, or at [the model level](https://docs.getdbt.com/reference/model-configs?version=1.12#apply-configurations-to-one-model-only) using an inline jinja macro. We can define subsets of models to deploy in [`selectors.yml`](./selectors.yml) in conjunction with [selection syntax](https://docs.getdbt.com/reference/node-selection/syntax).
 - **Developer Guidelines**: Follow local dbt structure and style conventions in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+# SNOW-595 access requirement prototype
+
+`accessrequirement_latest_rds` prototypes the business columns of
+`SYNAPSE.ACCESSREQUIREMENT_LATEST` using only the RDS requirement and revision
+sources. The prototype mart is enabled automatically for the `clone` target.
+For other targets, it is disabled unless
+`enable_accessrequirement_rds_prototype: true` is supplied as a dbt variable.
+The mart uses a separate name in `SYNAPSE` so it can be compared with the
+existing schemachange table.
+
+The standard staging and intermediate access requirement models match PR 445
+at commit `4083b20aaa328c57690aa87f1608f0e2aff8cc5b`.
+`stg_synapse__access_requirement_revision` uses
+`RDS_RAW.GZIP_DECOMPRESS_STRING(BINARY)` followed
+by `PARSE_XML(..., true)`, `XMLGET`, tolerant Boolean/numeric conversions,
+and reconstruction of `subjectIds` as an array of `{id, type}` objects.
+It requires the shared UDF and function permissions from SNOW-577 to be
+available in the target database; the decoder migration is inherited from PR 445. It has not been deployed
+as part of this prototype. The standard staging and intermediate models, their contracts, and their
+unit-test fixtures are inherited from PR 445 rather than duplicated in SNOW-595.
+
+The intermediate model exposes all revisions, taking creation fields from
+the base requirement and revision properties from the decoded payload.
+The mart joins `current_rev_num` to the exact revision number. It reconstructs
+the fully qualified concrete type from the intermediate model's short class
+name. The dashboard joins requirements by both ID and revision to avoid
+duplicating submissions when names change between revisions.
+The models do not require revision zero to exist. Missing policy fields remain NULL,
+and an explicitly empty subject list remains an empty array. The mart
+retains the legacy spellings `subjects_ids` and `terms_of_user`.
+
+This is not yet a drop-in replacement. RDS does not provide the Glue
+`change_timestamp`, `change_type`, `change_user_id`, `snapshot_timestamp`,
+or `snapshot_date` fields, so the prototype omits them. Its current-state
+membership follows the RDS base table, rather than the latest nondeleted
+Glue records in a 14-day window. The existing `RDS_RAW` source definitions
+filter to today's snapshot; missing or incomplete ingestion can therefore
+produce empty sources or missing current revisions. The
+`access_requirement_current_revision_exists` test detects missing pointers,
+and the mart tests ID uniqueness and non-nullness.
+
+Parse the opt-in project without deploying objects:
+
+```sh
+uv run --group dbt dbt parse --project-dir transform \
+  --vars '{enable_accessrequirement_rds_prototype: true}'
+```
+
+Before deploying to a feature database, verify the shared decoder exists and
+both RDS sources are populated with coherent snapshots. Validate the output
+against the legacy table across concrete requirement types, comparing
+business fields and recording differences in row membership separately.
+Missing fields, XStream reference attributes, and whitespace-sensitive policy
+text need particular attention; the decoder decompresses XML without resolving
+XStream object references. No production cutover or database mutation is part
+of this prototype.
+
+Initial prototype validation passed dbt parsing with the mart both disabled and
+enabled, and verified that its contract covers all 26 legacy business columns.
+A read-only Snowflake query over one locally decompressed current payload per
+available concrete type returned six rows across six types: four subject
+arrays, including one empty array, and two absent subject lists. This checks
+the SQL extraction and current-revision join; it does not establish full
+parity or validate UDF permissions/materialization in a feature database.
+
+After aligning the standard models with PR 445, both dbt parse configurations
+passed again. The two staging fixtures and one intermediate fixture copied
+from that PR passed as read-only SELECT comparisons using the existing
+`SYNAPSE_DATA_WAREHOUSE_DEV_SNOW_577_ACCESSOR_EVENTS` decoder, with no
+unexpected or missing rows. This validation created no test objects.
+
+*This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
 

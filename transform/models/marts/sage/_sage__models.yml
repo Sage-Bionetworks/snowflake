@@ -3,77 +3,137 @@ models:
   - name: data_access_submission_dashboard
     config:
       schema: governance
-    description: "Dashboard view of data access submissions with additional, governance-specific enrichment"
+    description: >-
+      This table contains data access submissions with user names, requirement names, and review
+      details for governance reporting. One row represents a submission, uniquely identified by
+      data_access_submission_id. Submissions in all workflow states are included; reviewer fields
+      are populated only for Approved or Rejected submissions. Both the name at the submitted
+      requirement revision and the most recent available requirement name are provided, so
+      historical submissions can be interpreted in their original context or grouped under the
+      latest name.
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
     columns:
       - name: data_access_submission_id
-        description: "Unique identifier for the data access submission."
+        description: >-
+          PRIMARY KEY. The unique identifier of the data access submission.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: data_access_request_id
-        description: "The identifier of the access request that this submission was created from."
+        description: >-
+          The unique identifier of the data access request from which this submission was created. A
+          request can have multiple submissions.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: access_requirement_id
-        description: "The identifier of the access requirement that the access request associates with."
+        description: >-
+          The unique identifier of the access requirement.
         data_type: NUMBER
         constraints:
           - type: not_null
+      - name: access_requirement_name
+        description: >-
+          The human-readable access requirement name at the revision recorded when this submission
+          was made. NULL when that revision is unavailable or has no name; the most recent name is
+          not substituted.
+        data_type: VARCHAR
+      - name: access_requirement_name_most_recent
+        description: >-
+          The human-readable access requirement name from the largest available revision number,
+          regardless of the submitted revision. NULL when requirement metadata is unavailable or
+          that revision has no name; an older named revision is not substituted.
+        data_type: VARCHAR
       - name: access_requirement_version
-        description: "Version of the access requirement at the time of submission."
+        description: >-
+          The access requirement revision recorded when the submission was made. This need not be
+          the revision in effect at review time.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: research_project_id
-        description: "The research project associated with this submission."
+        description: >-
+          The unique identifier of the research project associated with this submission.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: submitted_by
-        description: "Identifier of the user who made this submission."
+        description: >-
+          The unique identifier of the user who made the submission. This user need not be the only
+          accessor requesting a change.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: submitted_by_user_name
-        description: "Username of the user who made this submission."
+        description: >-
+          The Synapse username of the user who made the submission. NULL when a USER_NAME alias is
+          unavailable.
         data_type: VARCHAR
       - name: submitted_on
-        description: "UTC timestamp when the submission was created."
+        description: >-
+          UTC timestamp when the submission was created.
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
       - name: attempt
-        description: "The submission attempt number within the current approval cycle for this data access request. Cancelled submissions do not count toward this sequence and are shown as NULL."
+        description: >-
+          The submission attempt number within the current approval cycle for this data access
+          request, beginning at 1 and restarting after an approved submission. Cancelled submissions
+          do not count toward the sequence and have NULL attempts.
         data_type: NUMBER
       - name: submission_status
-        description: "Current state in the submission workflow. One of: 'Submitted', 'Approved', 'Rejected', 'Cancelled'"
+        description: >-
+          The current submission workflow state. Submitted means awaiting a decision; Approved
+          confirms the requested access changes; Rejected declines them; Cancelled means the
+          submission was withdrawn.
         data_type: VARCHAR
       - name: submission_type
-        description: "Submission classification. One of: 'New', 'Update', or 'Annual Renewal'. A submission is 'New' when it is the first submission for the data access request or when no previously approved submission exists for that request. A submission is 'Update' when the most recently approved submission associated with the data access request was approved less than 10 months before the current submission was created. A submission is 'Annual Renewal' when the most recently approved submission associated with the data access request was approved more than 10 months before this submission was created."
+        description: >-
+          The submission classification: New, Update, or Annual Renewal. New means the first
+          submission for a request or no earlier approved submission exists. Update means the most
+          recent approval among earlier submissions is fewer than 10 calendar month boundaries
+          before submission; Annual Renewal means 10 or more, using DATEDIFF(month).
         data_type: VARCHAR
         constraints:
           - type: not_null
       - name: reviewed_by
-        description: "Identifier of the user who last modified the submission status. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
+        description: >-
+          The unique identifier of the user who approved or rejected the submission. NULL for
+          Submitted or Cancelled submissions, which have no review decision.
         data_type: NUMBER
       - name: reviewed_by_user_name
-        description: "Username of the user who last modified the submission status. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
+        description: >-
+          The Synapse username of the user who approved or rejected the submission. NULL for
+          Submitted or Cancelled submissions or when a USER_NAME alias is unavailable.
         data_type: VARCHAR
       - name: reviewed_on
-        description: "UTC timestamp when the submission status was last modified. Null if `submission_status` is 'Submitted' or 'Cancelled', since those states have no reviewer."
+        description: >-
+          The UTC timestamp when the submission was approved or rejected. NULL for Submitted or
+          Cancelled submissions, which have no review decision.
         data_type: TIMESTAMP_NTZ
       - name: submission_status_reason
-        description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations."
+        description: >-
+          The explanation recorded for the current submission state, particularly rejection or
+          cancellation. NULL when no reason is available or the source status record predates 2019,
+          because historical reason bytes may not decode as UTF-8.
         data_type: VARCHAR
       - name: accessor_changes
-        description: "A mapping of principal IDs (as strings) to their access type changes (e.g., {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}). Access types include: 'GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS'"
+        description: >-
+          The requested changes to user access, represented as a mapping from string user IDs to
+          GAIN_ACCESS (new access), RENEW_ACCESS (renewal), or REVOKE_ACCESS (removal), for example
+          {'123': 'GAIN_ACCESS', '456': 'RENEW_ACCESS'}. Only Approved confirms these requests. NULL
+          when no accessor change rows are available.
         data_type: VARIANT
       - name: accessor_count
-        description: "The number of accessors (principals) affected by this submission."
+        description: >-
+          The number of distinct accessor IDs listed in accessor_changes. Counts requested changes,
+          regardless of review state; NULL when accessor_changes is NULL.
         data_type: NUMBER
       - name: data_access_submission_raw
-        description: "Serialized representation of the complete submission object."
+        description: >-
+          Serialized representation of the complete submission object.
         data_type: BINARY
         constraints:
           - type: not_null

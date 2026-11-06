@@ -1,0 +1,117 @@
+version: 2
+models:
+- name: accessrequirement_latest_rds
+  config:
+    enabled: '{{ var(''enable_accessrequirement_rds_prototype'', target.name == ''clone'') }}'
+    schema: synapse
+  description: Opt-in RDS current-state prototype. Selects the revision referenced
+    by current_rev_num; does not reconstruct Glue change or snapshot metadata. Requires
+    the SNOW-577 RDS_RAW.gzip_decompress_string function.
+  constraints:
+  - type: primary_key
+    columns:
+    - id
+  columns:
+  - name: id
+    description: Unique access requirement identifier.
+    data_type: NUMBER
+    constraints:
+    - type: not_null
+    data_tests:
+    - not_null
+    - unique
+  - name: version_number
+    description: The current revision selected by the RDS current_rev_num pointer.
+    data_type: NUMBER
+  - name: name
+    description: Requirement name from the decoded current revision.
+    data_type: VARCHAR
+  - name: description
+    description: Requirement description from the serialized revision.
+    data_type: VARCHAR
+  - name: created_by
+    description: User who created the requirement.
+    data_type: NUMBER
+  - name: modified_by
+    description: User who modified the current revision.
+    data_type: NUMBER
+  - name: created_on
+    description: UTC requirement creation time.
+    data_type: TIMESTAMP_NTZ
+  - name: modified_on
+    description: UTC current revision modification time.
+    data_type: TIMESTAMP_NTZ
+  - name: access_type
+    description: Type of access from the decoded current revision.
+    data_type: VARCHAR
+  - name: concrete_type
+    description: Fully qualified requirement class.
+    data_type: VARCHAR
+  - name: subjects_defined_by_annotations
+    description: Whether subjects are inferred from annotations.
+    data_type: BOOLEAN
+  - name: subjects_ids
+    description: Restricted object descriptors reconstructed from subjectIds XML.
+    data_type: ARRAY
+  - name: duc_template_file_handle_id
+    description: The unique identifier of the file handle containing the Data Use
+      Certificate template for this revision. NULL when absent or not numeric.
+    data_type: NUMBER
+  - name: jira_key
+    description: The Jira issue key recorded for this access requirement revision.
+      NULL when absent from the revision.
+    data_type: VARCHAR
+  - name: act_contact_info
+    description: The Access and Compliance Team contact information recorded for this
+      access requirement revision. NULL when absent from the revision.
+    data_type: VARCHAR
+  - name: open_jira_issue
+    description: If true, this revision requests opening a Jira issue. NULL when absent
+      or not recognized as a Boolean; values are not inferred from the current requirement.
+    data_type: BOOLEAN
+  - name: is_certified_user_required
+    description: If true, accessors must be Synapse Certified Users to satisfy this
+      revision. NULL when absent or not recognized as a Boolean; values are not inferred
+      from the current requirement.
+    data_type: BOOLEAN
+  - name: is_validated_profile_required
+    description: If true, accessors must have validated Synapse profiles to satisfy
+      this revision. NULL when absent or not recognized as a Boolean; values are not
+      inferred from the current requirement.
+    data_type: BOOLEAN
+  - name: is_duc_required
+    description: If true, this revision requires a signed Data Use Certificate. NULL
+      when absent or not recognized as a Boolean; values are not inferred from the
+      current requirement.
+    data_type: BOOLEAN
+  - name: is_irb_approval_required
+    description: If true, this revision requires an Institutional Review Board approval
+      document. NULL when absent or not recognized as a Boolean; values are not inferred
+      from the current requirement.
+    data_type: BOOLEAN
+  - name: are_other_attachments_required
+    description: If true, this revision requires attachments in addition to Data Use
+      Certificate and Institutional Review Board documents. NULL when absent or not
+      recognized as a Boolean; values are not inferred from the current requirement.
+    data_type: BOOLEAN
+  - name: is_idu_required
+    description: If true, this revision requires an Intended Data Use statement. NULL
+      when absent or not recognized as a Boolean; values are not inferred from the
+      current requirement.
+    data_type: BOOLEAN
+  - name: is_idu_public
+    description: If true, this revision makes submitted Intended Data Use statements
+      public. NULL when absent or not recognized as a Boolean; values are not inferred
+      from the current requirement.
+    data_type: BOOLEAN
+  - name: expiration_period
+    description: The validity period of approved access under this revision, in milliseconds.
+      Zero means no expiration. NULL when absent or not numeric. Negative values are
+      retained here but do not produce an expiration timestamp downstream.
+    data_type: NUMBER
+  - name: is_two_fa_required
+    description: Two-factor authentication flag from the decoded current revision.
+    data_type: BOOLEAN
+  - name: terms_of_user
+    description: Terms of use; retains the legacy snapshot column spelling.
+    data_type: VARCHAR

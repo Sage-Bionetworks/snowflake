@@ -1,60 +1,303 @@
 version: 2
 models:
+  - name: int_synapse_accessor_changes
+    description: >-
+      The intermediate model for requested accessor change data. One row represents a submission and
+      accessor, identified by data_access_submission_id and accessor_id. It joins recorded accessor
+      changes to submissions and their current status, excluding rows without a matching submission
+      or status and adding no implicit submitter accessor. Requests in all review states are
+      retained; only Approved establishes a change. Available requirement history is used to select
+      the revision at review time and estimate expiration for approved gains and renewals.
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id, accessor_id]
+      - type: foreign_key
+        columns: [data_access_submission_id, accessor_id]
+        to: ref('stg_synapse__data_access_submission_accessor_changes')
+        to_columns: [data_access_submission_id, principal_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [access_requirement_id, access_requirement_version_reviewed_against]
+        to: ref('int_synapse_access_requirement')
+        to_columns: [access_requirement_id, access_requirement_version]
+        warn_unenforced: false
+    columns:
+      - name: data_access_submission_id
+        description: >-
+          The unique identifier of the data access submission requesting this change.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stg_synapse__data_access_submission')
+            to_columns: [data_access_submission_id]
+            warn_unenforced: false
+        data_tests:
+          - not_null
+      - name: accessor_id
+        description: >-
+          The unique identifier of the Synapse user whose access is requested to change. The
+          accessor need not be the user who submitted the request.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: accessor_change_type
+        description: >-
+          The requested change to the user's access. GAIN_ACCESS requests new access; RENEW_ACCESS
+          requests renewal of existing access; REVOKE_ACCESS requests removal of access. Only an
+          Approved submission confirms the requested change.
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
+      - name: access_requirement_id
+        description: >-
+          The unique identifier of the access requirement.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version_submitted_against
+        description: >-
+          The access requirement revision recorded when the submission was made. Retained for
+          context; expiration is derived from the revision selected at review time instead.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version_reviewed_against
+        description: >-
+          The access requirement revision selected for the submission review. Uses the latest
+          available revision modified at or before the approval or rejection timestamp, breaking
+          modification-time ties by the largest revision number. NULL for Submitted or Cancelled
+          submissions or when no eligible revision is available. Join to
+          int_synapse_access_requirement using access_requirement_id and matching this column to
+          access_requirement_version to inspect the selected terms.
+        data_type: NUMBER
+      - name: state
+        description: >-
+          The current submission workflow state. Submitted means awaiting a decision; Approved
+          confirms the requested access changes; Rejected declines them; Cancelled means the
+          submission was withdrawn.
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Submitted', 'Approved', 'Rejected', 'Cancelled']
+      - name: state_modified_on
+        description: >-
+          The UTC timestamp when the current submission state was set. For Submitted, this records
+          the initial submission state; for Approved, Rejected, or Cancelled, it records the
+          terminal transition. A populated timestamp alone does not indicate review or approval.
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: access_expires_on
+        description: >-
+          The estimated UTC expiration timestamp of gained or renewed access. Calculated as the
+          approval timestamp plus the positive expiration period of the requirement revision
+          selected at review time; Synapse calculates expiration before recording the approval
+          status timestamp, so this is an approximation. NULL for non-approved submissions,
+          revocations, zero (unlimited), missing, or negative expiration periods, or when no
+          eligible requirement revision is available. Later requirement revisions do not by
+          themselves recalculate this expiration, and later accessor changes can supersede the
+          grant.
+        data_type: TIMESTAMP_NTZ
+
   - name: int_synapse_access_requirement
-    description: "Intermediate model combining access requirement data with its current revision and associated projects. Provides a denormalized view of access requirements with metadata, modification history, and project relationships."
+    description: >-
+      The intermediate model for access requirement revision data. One row represents an access
+      requirement revision, identified by access_requirement_id and access_requirement_version. It
+      joins decoded revision properties to creation metadata from the base requirement and includes
+      only revisions with a matching base requirement. Historical settings come from the exact
+      revision; missing values are not filled from the current requirement.
     constraints:
       - type: primary_key
         columns: [access_requirement_id, access_requirement_version]
     columns:
       - name: access_requirement_id
-        description: "Unique identifier for the access requirement"
+        description: >-
+          The unique identifier of the access requirement.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: access_requirement_version
-        description: "Revision number of this access requirement. Revision numbers begin from 0."
+        description: >-
+          The revision number of the access requirement. Revision numbers begin at 0.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: access_requirement_name
-        description: "Unique human-readable name for the access requirement"
+        description: >-
+          The human-readable name of the access requirement at this revision. NULL when the revision
+          has no name or an empty name.
         data_type: VARCHAR
-        constraints:
-          - type: not_null
       - name: access_requirement_type
-        description: "The type of access requirement"
+        description: >-
+          The unqualified class name identifying the access requirement type at this revision, such
+          as ManagedACTAccessRequirement. Extracted from concreteType, falling back to the XML root
+          tag; NULL when neither is available.
         data_type: VARCHAR
       - name: created_by
-        description: "Identifier of the user who created this access requirement"
+        description: >-
+          The unique identifier of the user who initially created the access requirement. Taken from
+          the base requirement, rather than the revision payload.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: created_on
-        description: "UTC timestamp when this access requirement was initially created"
+        description: >-
+          The UTC timestamp when the access requirement was initially created. Taken from the base
+          requirement, rather than the revision payload.
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
       - name: modified_by
-        description: "Identifier of the user who created this revision"
+        description: >-
+          The unique identifier of the user who created this access requirement revision.
         data_type: NUMBER
         constraints:
           - type: not_null
       - name: modified_on
-        description: "UTC timestamp when this revision was created"
+        description: >-
+          The UTC timestamp when this access requirement revision was created.
         data_type: TIMESTAMP_NTZ
         constraints:
           - type: not_null
       - name: is_two_fa_required
-        description: "Boolean flag indicating whether two-factor authentication is required for this access. Null except for the most recent revision."
+        description: >-
+          If true, accessors must use two-factor authentication to satisfy this access requirement
+          revision. NULL when absent or not recognized as a Boolean; values are not inferred from
+          the current requirement.
         data_type: BOOLEAN
-      - name: access_type
-        description: "Type of access controlled by this requirement"
+      - name: access_requirement_access_type
+        description: >-
+          The permission controlled by the access requirement at this revision, such as DOWNLOAD or
+          PARTICIPATE. NULL when absent from the revision.
         data_type: VARCHAR
-        constraints:
-          - type: not_null
-      - name: access_requirement_raw
-        description: "Serialized representation of the complete access requirement object at this revision"
-        data_type: BINARY
+      - name: is_certified_user_required
+        description: >-
+          If true, accessors must be Synapse Certified Users to satisfy this revision. NULL when
+          absent or not recognized as a Boolean; values are not inferred from the current
+          requirement.
+        data_type: BOOLEAN
+      - name: is_validated_profile_required
+        description: >-
+          If true, accessors must have validated Synapse profiles to satisfy this revision. NULL
+          when absent or not recognized as a Boolean; values are not inferred from the current
+          requirement.
+        data_type: BOOLEAN
+      - name: is_duc_required
+        description: >-
+          If true, this revision requires a signed Data Use Certificate. NULL when absent or not
+          recognized as a Boolean; values are not inferred from the current requirement.
+        data_type: BOOLEAN
+      - name: is_irb_approval_required
+        description: >-
+          If true, this revision requires an Institutional Review Board approval document. NULL when
+          absent or not recognized as a Boolean; values are not inferred from the current
+          requirement.
+        data_type: BOOLEAN
+      - name: are_other_attachments_required
+        description: >-
+          If true, this revision requires attachments in addition to Data Use Certificate and
+          Institutional Review Board documents. NULL when absent or not recognized as a Boolean;
+          values are not inferred from the current requirement.
+        data_type: BOOLEAN
+      - name: is_idu_required
+        description: >-
+          If true, this revision requires an Intended Data Use statement. NULL when absent or not
+          recognized as a Boolean; values are not inferred from the current requirement.
+        data_type: BOOLEAN
+      - name: is_idu_public
+        description: >-
+          If true, this revision makes submitted Intended Data Use statements public. NULL when
+          absent or not recognized as a Boolean; values are not inferred from the current
+          requirement.
+        data_type: BOOLEAN
+      - name: description
+        description: >-
+          The descriptive text recorded for the access requirement at this revision. NULL when
+          absent from the revision.
+        data_type: VARCHAR
+      - name: etag
+        description: >-
+          The entity tag recorded for this access requirement revision. This is the historical tag
+          from the revision payload, rather than the current base requirement tag. NULL when absent
+          from the revision.
+        data_type: VARCHAR
+      - name: url
+        description: >-
+          The URL recorded for the access requirement at this revision, for example a link to an
+          external participation requirement. NULL when absent from the revision.
+        data_type: VARCHAR
+      - name: terms_of_use
+        description: >-
+          The terms of use text recorded for the access requirement at this revision. NULL when
+          absent from the revision.
+        data_type: VARCHAR
+      - name: duc_template_file_handle_id
+        description: >-
+          The unique identifier of the file handle containing the Data Use Certificate template for
+          this revision. NULL when absent or not numeric.
+        data_type: NUMBER
+      - name: e_duc_template_id
+        description: >-
+          The identifier of the electronic Data Use Certificate template for this revision.
+          Identifiers may be UUIDs. NULL when absent from the revision.
+        data_type: VARCHAR
+      - name: jira_key
+        description: >-
+          The Jira issue key recorded for this access requirement revision. NULL when absent from
+          the revision.
+        data_type: VARCHAR
+      - name: act_contact_info
+        description: >-
+          The Access and Compliance Team contact information recorded for this access requirement
+          revision. NULL when absent from the revision.
+        data_type: VARCHAR
+      - name: open_jira_issue
+        description: >-
+          If true, this revision requests opening a Jira issue. NULL when absent or not recognized
+          as a Boolean; values are not inferred from the current requirement.
+        data_type: BOOLEAN
+      - name: subjects_defined_by_annotations
+        description: >-
+          If true, this revision defines its subjects through annotations. NULL when absent or not
+          recognized as a Boolean; values are not inferred from the current requirement.
+        data_type: BOOLEAN
+      - name: form_template_id
+        description: >-
+          The identifier of the form template referenced by this revision's formTemplateRef. NULL
+          when absent or not numeric.
+        data_type: NUMBER
+      - name: form_template_version
+        description: >-
+          The version of the form template referenced by this revision's formTemplateRef. NULL when
+          absent or not numeric.
+        data_type: NUMBER
+      - name: subject_ids
+        description: >-
+          The subjects governed by this access requirement revision, represented as an ordered array
+          of objects with string id and type fields. NULL when subjectIds is absent; an empty array
+          when explicitly empty. Non-object entries are omitted, and absent id or type fields are
+          omitted from individual objects.
+        data_type: ARRAY
+      - name: expiration_period
+        description: >-
+          The validity period of approved access under this revision, in milliseconds. Zero means no
+          expiration. NULL when absent or not numeric. Negative values are retained here but do not
+          produce an expiration timestamp downstream.
+        data_type: NUMBER
 
   - name: int_synapse_acl
     description: "Intermediate model flattening ACL data to show which principals have which access types for each resource."
