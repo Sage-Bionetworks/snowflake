@@ -64,6 +64,12 @@ models:
         data_type: VARCHAR
         constraints:
           - type: not_null
+      - name: weekdays_to_review
+        description: |-
+          Number of weekdays (Monday–Friday) from submission to a review decision (Approved or Rejected), excluding the submission date and including the decision date, so same-day reviews are 0. Includes weekday holidays. NULL for Submitted or Cancelled submissions.
+
+          *This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
+        data_type: NUMBER
       - name: state_reason
         description: "UTF-8 encoded string containing an explanation for the current state, particularly for rejections or cancellations. Null for records before 2019 due to invalid utf-8 characters."
         data_type: VARCHAR

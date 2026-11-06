@@ -93,6 +93,23 @@ SELECT
     base.state,
     submission_types.submission_type,
     attempts.attempt,
+    -- Count weekdays after submission through the decision date using UTC dates.
+    -- ISO weekdays keep this independent of the WEEK_START session parameter.
+    CASE
+        WHEN base.state IN ('Approved', 'Rejected') THEN
+            -- Each whole week between the dates' Mondays contributes five weekdays.
+            5 * FLOOR((
+                -- Calendar days between submission and decision.
+                DATEDIFF(day, base.created_on, base.state_modified_on)
+                -- Shift both dates to Monday so the interval contains whole weeks.
+                + DAYOFWEEKISO(base.created_on)
+                - DAYOFWEEKISO(base.state_modified_on)
+            ) / 7)
+            -- Add weekdays through the decision date within its week; weekends cap at five.
+            + LEAST(DAYOFWEEKISO(base.state_modified_on), 5)
+            -- Subtract weekdays through the submission date to exclude that date.
+            - LEAST(DAYOFWEEKISO(base.created_on), 5)
+    END AS weekdays_to_review,
     base.state_reason,
     base.accessor_changes,
     base.data_access_submission_raw

@@ -15,6 +15,7 @@ WITH base AS (
         state,
         submission_type,
         attempt,
+        weekdays_to_review,
         state_reason,
         accessor_changes,
         data_access_submission_raw
@@ -42,6 +43,7 @@ SELECT
     case when base.state in ('Cancelled', 'Submitted') then null else base.state_modified_by end as reviewed_by,
     case when base.state in ('Cancelled', 'Submitted') then null else state_modified_by_user_name end as reviewed_by_user_name,
     case when base.state in ('Cancelled', 'Submitted') then null else base.state_modified_on end as reviewed_on,
+    base.weekdays_to_review,
     base.state_reason as submission_status_reason,
     base.accessor_changes,
     ARRAY_SIZE(OBJECT_KEYS(base.accessor_changes)) AS accessor_count,

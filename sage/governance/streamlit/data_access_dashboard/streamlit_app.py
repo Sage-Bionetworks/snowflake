@@ -69,6 +69,7 @@ def load_submission_dashboard_data(snowflake_session: Session) -> pd.DataFrame:
             submitted_on as "Submitted On",
             reviewed_by_user_name as "Reviewed By",
             reviewed_on as "Reviewed On",
+            weekdays_to_review as "Weekdays to Review",
             attempt as "Attempt",
             accessor_count as "Number of Requestors",
             submission_type as "Type",

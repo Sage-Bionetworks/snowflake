@@ -118,8 +118,11 @@ models:
           - type: not_null
         data_tests:
           - not_null
-      - name: sum_days_to_review
-        description: "Sum of days between `created_on` and `state_modified_on` across submissions reviewed in this period. Divide by `reviewed_count` downstream to get the average turnaround of reviews completed in the period. NULL if no submissions were reviewed in this period."
+      - name: sum_weekdays_to_review
+        description: |-
+          Sum of `weekdays_to_review` across submissions approved or rejected in this period. Counts Monday–Friday using UTC dates, excluding each submission date and including its decision date. Includes weekday holidays. Divide by `reviewed_count` to calculate average review turnaround in weekdays. NULL if no submissions were reviewed in this period.
+
+          *This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
         data_type: NUMBER
       - name: sum_attempts_to_approval
         description: "Sum of `attempt`s across submissions approved in this period. Divide by `approved_count` downstream to get the average attempts per approval granted in the period. NULL if no submissions were approved in this period."
