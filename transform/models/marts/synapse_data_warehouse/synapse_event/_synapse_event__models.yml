@@ -1,8 +1,6 @@
 version: 2
 models:
   - name: data_access_submission_event
-    config:
-      schema: synapse_event
     description: "This event table contains all data access submissions and their associated state. A data access submission is created each time a user makes a revision of their data access request."
     constraints:
       - type: primary_key
