@@ -11,6 +11,7 @@ staging as (
         case 
             when concrete_type='org.sagebionetworks.repo.model.LockAccessRequirement' then 'LockAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.ManagedACTAccessRequirement' then 'ManagedACTAccessRequirement'
+            when concrete_type='org.sagebionetworks.repo.model.JsonSchemaAccessRequirement' then 'JsonSchemaAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.ACTAccessRequirement' then 'ACTAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.SelfSignAccessRequirement' then 'SelfSignAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.TermsOfUseAccessRequirement' then 'TermsOfUseAccessRequirement'
