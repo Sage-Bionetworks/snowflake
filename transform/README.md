@@ -106,7 +106,7 @@ Most of the time, we haven't configured a model's database in this dbt project. 
 
 Because we deploy models defined in, for example, [`models/staging/synapse`](./models/staging/synapse/) to a consistent schema, irrespective of the database, we usually configure schemas in [`dbt_project.yml`](./dbt_project.yml) based on the model subdirectory.
 
-Since mart models can be surfaced in a variety of different schemas, even when those models live in the same directory, we typically configure their schema in the model properties file (e.g., [`models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml`](./models/marts/synapse_data_warehouse/_synapse_data_warehouse__models.yml)) on a per-model basis.
+Synapse data warehouse marts are grouped by destination schema in `synapse_aggregate/` and `synapse_event/` under [`models/marts/synapse_data_warehouse/`](./models/marts/synapse_data_warehouse/). Their schemas are configured once per directory in [`dbt_project.yml`](./dbt_project.yml).
 
 ### Deploy by Environment
 
