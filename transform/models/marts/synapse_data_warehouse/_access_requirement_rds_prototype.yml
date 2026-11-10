@@ -24,7 +24,8 @@ models:
     description: The current revision selected by the RDS current_rev_num pointer.
     data_type: NUMBER
   - name: name
-    description: Requirement name from the decoded current revision.
+    description: Requirement name from the RDS access requirement table, which is
+      populated for every requirement. The revision XML often omits it.
     data_type: VARCHAR
   - name: description
     description: Requirement description from the serialized revision.
@@ -51,7 +52,8 @@ models:
     description: Whether subjects are inferred from annotations.
     data_type: BOOLEAN
   - name: subjects_ids
-    description: Restricted object descriptors reconstructed from subjectIds XML.
+    description: Restricted object descriptors reconstructed from subjectIds XML. An
+      empty array when the revision specifies no subjects.
     data_type: ARRAY
   - name: duc_template_file_handle_id
     description: The unique identifier of the file handle containing the Data Use

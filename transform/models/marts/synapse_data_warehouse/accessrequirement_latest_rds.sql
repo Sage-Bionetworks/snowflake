@@ -6,6 +6,7 @@ with requirements as (
 current_requirements as (
     select
         access_requirement_id,
+        access_requirement_name,
         access_requirement_current_version
     from dynamic_table_refresh_boundary({{ ref('stg_synapse__access_requirement') }})
 )
@@ -13,7 +14,7 @@ current_requirements as (
 select
     requirements.access_requirement_id as id,
     requirements.access_requirement_version as version_number,
-    requirements.access_requirement_name as name,
+    current_requirements.access_requirement_name as name,
     requirements.description,
     requirements.created_by,
     requirements.modified_by,
