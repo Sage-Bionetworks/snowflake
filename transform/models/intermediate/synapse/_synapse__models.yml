@@ -288,8 +288,8 @@ models:
       - name: subject_ids
         description: >-
           The subjects governed by this access requirement revision, represented as an ordered array
-          of objects with string id and type fields. NULL when subjectIds is absent; an empty array
-          when explicitly empty. Non-object entries are omitted, and absent id or type fields are
+          of objects with string id and type fields. An empty array when subjectIds is absent or
+          explicitly empty. Non-object entries are omitted, and absent id or type fields are
           omitted from individual objects.
         data_type: ARRAY
       - name: expiration_period

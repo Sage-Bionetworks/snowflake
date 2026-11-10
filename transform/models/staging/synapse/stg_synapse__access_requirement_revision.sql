@@ -89,19 +89,17 @@ staging as (
         try_to_number(
             xmlget(xmlget(access_requirement_xml, 'formTemplateRef'), 'templateVersionNumber'):"$"::varchar
         ) as form_template_version,
-        case
-            when xmlget(access_requirement_xml, 'subjectIds') is not null
-            then transform(
-                filter(
-                    coalesce(to_array(xmlget(access_requirement_xml, 'subjectIds'):"$"), array_construct()),
-                    subject -> is_object(subject)
-                ),
-                subject -> object_construct(
-                    'id', xmlget(subject, 'id'):"$"::varchar,
-                    'type', xmlget(subject, 'type'):"$"::varchar
-                )
+        -- An absent subjectIds element means no subjects, so default to an empty array.
+        transform(
+            filter(
+                coalesce(to_array(xmlget(access_requirement_xml, 'subjectIds'):"$"), array_construct()),
+                subject -> is_object(subject)
+            ),
+            subject -> object_construct(
+                'id', xmlget(subject, 'id'):"$"::varchar,
+                'type', xmlget(subject, 'type'):"$"::varchar
             )
-        end as subject_ids
+        ) as subject_ids
     from decoded
 )
 
