@@ -634,3 +634,31 @@ models:
         data_type: VARCHAR(36)
         constraints:
           - type: not_null
+
+  - name: stg_synapse__teammembersnapshots
+    description: "Staging model for team member snapshots, with duplicate rows removed. Each row states that a user was a member of a team at the time of a snapshot."
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, snapshot_timestamp]
+    columns:
+      - name: team_id
+        description: "The unique identifier of the team"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: user_id
+        description: "The unique identifier of the Synapse user who is a member of the team"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: is_admin
+        description: "If true, the user is a manager of the team"
+        data_type: BOOLEAN
+      - name: snapshot_date
+        description: "The date the snapshot was taken"
+        data_type: DATE
+      - name: snapshot_timestamp
+        description: "The time the snapshot was taken. Rows of a single snapshot can differ by milliseconds."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null

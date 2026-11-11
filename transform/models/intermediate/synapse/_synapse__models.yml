@@ -306,3 +306,33 @@ models:
         data_type: BINARY
         constraints:
           - type: not_null
+
+  - name: int_synapse_teammember_event
+    description: "Team membership events (join, update, leave) derived by comparing consecutive snapshots of a team's members. Currently limited to team 273957 (Sage employees). Events are only as precise as the snapshots: the event time is the snapshot_timestamp of the snapshot in which the change was first observed."
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, snapshot_timestamp]
+    columns:
+      - name: team_id
+        description: "The unique identifier of the team"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: user_id
+        description: "The unique identifier of the Synapse user the event applies to"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: snapshot_timestamp
+        description: "Time of the team snapshot in which the event was first observed"
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: event_type
+        description: "One of: 'join', 'update', 'leave'"
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: is_admin
+        description: "Whether the user is a team manager after the event. Null for 'leave' events."
+        data_type: BOOLEAN

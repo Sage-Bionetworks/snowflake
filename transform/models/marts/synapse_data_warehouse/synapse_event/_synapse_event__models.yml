@@ -73,3 +73,33 @@ models:
         data_type: BINARY
         constraints:
           - type: not_null
+
+  - name: teammember_event
+    description: "Team membership events, indexed by team_id, user_id and snapshot_timestamp. Events are derived from periodic snapshots of team members, so event times are approximate. A 'join' is dated at the first snapshot that includes the user, so the user joined at or shortly before that time (for users already present in a team's earliest snapshot, 2022-01-05 for team 273957, the true join date is unknown and may be much earlier). A 'leave' is dated at the first snapshot that no longer includes the user, because removals are not snapshotted, so the user left at or shortly before that time, anywhere from the previous snapshot onward (typically within 5 days, at most 28). An 'update' is dated at the first snapshot that shows a changed manager status. Currently limited to team 273957 (Sage employees). To find whether a user was a member at time T, take the user's latest event at or before T: the user is a member unless it is a 'leave'. Events at snapshots after T may still describe changes made before T."
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, snapshot_timestamp]
+    columns:
+      - name: team_id
+        description: "PRIMARY KEY (Composite). The unique identifier of the team."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: user_id
+        description: "PRIMARY KEY (Composite). The unique identifier of the Synapse user the event applies to."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: snapshot_timestamp
+        description: "PRIMARY KEY (Composite). The time of the team snapshot in which the event was first observed. This is not the exact time of the event, which happened at or shortly before this time."
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: event_type
+        description: "One of: 'join' (user first observed in the team, or observed again after a leave), 'update' (manager status changed), 'leave' (user first observed absent from the team)."
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+      - name: is_admin
+        description: "Whether the user is a team manager after the event. Null for 'leave' events."
+        data_type: BOOLEAN
