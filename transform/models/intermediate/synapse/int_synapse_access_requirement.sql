@@ -3,6 +3,8 @@ with
 access_requirement_base as (
     select
         access_requirement_id,
+        access_requirement_name,
+        access_requirement_current_version,
         created_by,
         created_on
     from
@@ -47,7 +49,16 @@ access_requirement_revision as (
 select
     base.access_requirement_id,
     revision.access_requirement_version,
-    revision.access_requirement_name,
+    -- Synapse cannot rename a requirement without writing a new revision, so the base name is the
+    -- current revision's name even when its XML omits one. Earlier revisions keep only what they
+    -- recorded. Unnamed requirements store an empty string or their own ID as a placeholder.
+    coalesce(
+        revision.access_requirement_name,
+        case
+            when revision.access_requirement_version = base.access_requirement_current_version
+            then nullif(nullif(base.access_requirement_name, ''), base.access_requirement_id::varchar)
+        end
+    ) as access_requirement_name,
     revision.access_requirement_type,
     base.created_by,
     base.created_on,
