@@ -37,7 +37,7 @@ models:
       +target_lag: "8 hours"
       +snowflake_warehouse: compute_xsmall
       sage:
-        +database: "SAGE"
+        +database: "{{ env_var('SNOWFLAKE_SAGE_DATABASE', 'SAGE') }}"
       synapse_data_warehouse:
         synapse_aggregate:
           +schema: synapse_aggregate

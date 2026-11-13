@@ -1,4 +1,5 @@
 import argparse
+import os
 from dataclasses import dataclass
 from typing import Optional
 
@@ -61,7 +62,10 @@ def load_submission_dashboard_data(snowflake_session: Session) -> pd.DataFrame:
     Returns:
         A pandas DataFrame with aliased columns for display in the dashboard.
     """
-    query = """
+    database = os.environ.get("SNOWFLAKE_SAGE_DATABASE", "SAGE")
+    if not database.replace("_", "").isalnum():
+        raise ValueError("SNOWFLAKE_SAGE_DATABASE must be a database identifier")
+    query = f"""
         SELECT
             access_requirement_name as "Access Requirement Name",
             data_access_request_id as "Data Access Request ID",
@@ -75,7 +79,7 @@ def load_submission_dashboard_data(snowflake_session: Session) -> pd.DataFrame:
             submission_type as "Type",
             submission_status as "Status",
             submission_status_reason as "Status Reason"
-        FROM sage.governance.data_access_submission_dashboard
+        FROM {database}.governance.data_access_submission_dashboard
         ORDER BY
             data_access_submission_id desc,
             submitted_by_user_name,

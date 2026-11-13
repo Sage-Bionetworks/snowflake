@@ -122,6 +122,8 @@ models:
         description: |-
           Sum of `weekdays_to_review` across submissions approved or rejected in this period. Counts Monday–Friday using UTC dates, excluding each submission date and including its decision date. Includes weekday holidays. Divide by `reviewed_count` to calculate average review turnaround in weekdays. NULL if no submissions were reviewed in this period.
 
+          Example contributions using UTC dates: a submission made on Friday and reviewed the following Saturday contributes 0 weekdays, because the submission date is excluded and Saturday is not a weekday. A submission made on Saturday and reviewed the following Monday contributes 1 weekday, because Monday is counted and the weekend is excluded.
+
           *This text was generated in whole or part by AI and has been reviewed for correctness by myself.*
         data_type: NUMBER
       - name: sum_attempts_to_approval
