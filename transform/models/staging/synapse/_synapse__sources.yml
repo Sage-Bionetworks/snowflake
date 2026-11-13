@@ -830,8 +830,9 @@ sources:
       - name: teammembersnapshots
         description: |
           Observed team membership and manager status. Each capture includes all
-          members of a team; captures occur on joins and periodically. Departures
-          and manager changes do not trigger a capture. An empty team has no rows.
+          members of a team; captures occur on team joins and periodically. Departures
+          and manager changes do not trigger a capture, and are instead dependent on
+          the snapshots which occur during a Synapse stack release across all teams.
         columns:
           - name: team_id
             data_type: NUMBER

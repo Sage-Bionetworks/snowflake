@@ -310,16 +310,19 @@ models:
   - name: int_synapse_teammember_event
     description: |
       Compares membership across reconstructed captures within each team.
-      Distinct member timestamps are ordered within the team. A gap of at least
-      60,000 milliseconds starts a new capture group; smaller adjacent gaps keep
-      rows together across second, minute, and date boundaries. Chained adjacent
-      gaps can produce a group whose total span exceeds 60 seconds. The earliest
-      timestamp labels the group, and the latest row for each member supplies
-      manager status. Nearby separate captures may be merged, and a pause of
-      at least 60 seconds within a capture may split it; no capture ID is available.
-      Gaps in one member's sequence produce a leave at the next observed team
-      capture and a new join if the member subsequently returns. No leave is
-      inferred beyond the final observed capture or from a team with no member rows.
+      Distinct member timestamps are ordered within the team.
+      
+      Because team members are snapshotted individually, rather than as a team, we
+      need to assign individual records to a snapshot capture group. A gap of at least
+      60 seconds starts a new capture group; smaller adjacent gaps between rows for
+      members of the same team are considered to be part of the same capture group.
+      Chained adjacent gaps such as these can produce a group whose total span exceeds
+      60 seconds. The earliest timestamp labels the group, and the latest row for each
+      member supplies their metadata. Following this heuristic, snapshots which were
+      triggered by separate events may be merged into a single capture group, and a pause of
+      at least 60 seconds within a snapshot may split the records into separate capture groups;
+      no capture ID is available, so we're not able to definitively assign records from a single 
+      snapshot event to a single capture group.
     constraints:
       - type: primary_key
         columns: [team_id, user_id, snapshot_timestamp]

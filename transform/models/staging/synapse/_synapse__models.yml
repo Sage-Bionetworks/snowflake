@@ -639,7 +639,6 @@ models:
     description: |
       Normalizes member identifiers and retains one row per team, user, and member
       capture timestamp, selecting the greatest change_timestamp for duplicate keys.
-      The source timestamps are already timestamps and need no epoch conversion.
     constraints:
       - type: primary_key
         columns: [team_id, user_id, snapshot_timestamp]
@@ -663,7 +662,7 @@ models:
       - name: snapshot_timestamp
         data_type: TIMESTAMP_NTZ
         description: |
-          UTC timestamp of the raw member capture.
+          UTC timestamp of when this specific record was snapshotted.
         constraints:
           - type: not_null
         data_tests:

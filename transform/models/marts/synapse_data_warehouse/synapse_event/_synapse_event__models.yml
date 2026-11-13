@@ -76,47 +76,46 @@ models:
 
   - name: teammember_event
     description: |
-      Membership history for every observed Synapse team, derived from
-      SYNAPSE_RAW.TEAMMEMBERSNAPSHOTS and materialized as a dynamic table with
-      full refresh. Each row represents a join, manager-status update, or leave;
-      unchanged membership is omitted. The key is (team_id, user_id, snapshot_timestamp).
+      Membership history for every Synapse team.
+      Each row represents a join, team manager promotion or demotion, or departure event.
+      The key is (team_id, user_id, approximate_event_timestamp).
 
-      A member in a team's first capture receives a join at that capture time.
-      The Sage team history described in SNOW-498 starts on 2022-01-05. Actual
-      join dates for existing members and membership before a team's first
-      observed capture are unknown. Joins trigger captures,
-      so their observation times are usually close to the join. Departures and
-      manager changes are observed only at a later capture: their timestamps are
-      upper bounds on the actual change, which can occur after the previous capture.
-      Periodic captures are usually weekly, but the Sage team (273957) has shown
-      gaps as long as 28 days. Manager updates from 2023-11-14 through 2023-11-17
-      may reflect a bulk Glue artifact rather than real promotions. These events
-      are retained. Departures leaving a team with no captured members cannot
-      be inferred from this source.
+      Because of the way in which this data was captured via "snapshots", we do not have exact
+      timestamps for membership events, although we can make certain
+      guarantees about the true event time, given the type of event and when it was snapshotted.
+      As such, this table is not suitable for permission auditing, although it may still
+      be useful for approximating team membership at an arbitrary time.
+      
+      The type of event is specified by a records `event_type`. Event times are approximated
+      by the `approximate_event_timestamp` field according to the following rules:
+      
+      * `join` snapshot timestamps are the most nuanced, but also generally the closest
+      to the actual event time. In the majority of cases, the `snapshot_timestamp` of a 
+      join event is practically equivalent to the true event timestamp. In more complicated
+      cases, where a team was snapshotted repeatedly within overlapping 60-second windows,
+      the `snapshot_timestamp` of an event may be earlier than the true event timestamp.
+      The worst case we saw in historical data spanning from 2021 to late 2026 is a potential 
+      backdate of 7 minutes and 50 seconds of a join event. As a rule-of-thumb, you can 
+      treat the `snapshot_timestamp` to be a lower bound on the true
+      join event timestamp -- but it's important to note that we aren't able to make
+      strict guarantees. A join event may be backdated arbitrarily far in the
+      past in exceptional circumstances, particularly if many users are joining a team
+      in overlapping 60-second time windows.
+      * `update` snapshot timestamps are an upper bound on the true event timestamp,
+      usually up to 7 days, but potentially up to a month or more in exceptional circumstances.
+      * `depart` snapshot timestamps provide the same guarantees as `update` timestamps.
+      They are an upper bound on the true event timestamp, usually up to 7 days, but
+      potentially up to a month or more in exceptional circumstances.
 
-      Capture boundaries are reconstructed from timestamps, not calendar buckets.
-      Within each team, a gap of at least 60,000 milliseconds between adjacent
-      distinct timestamps starts a new group. Smaller gaps keep rows together
-      even across clock and date boundaries, preserving separate same-day captures
-      when their timestamps are separated by at least 60 seconds. A chain of
-      smaller gaps can span more than 60 seconds. Each group uses its earliest
-      timestamp, and each member's latest row supplies manager status. This is
-      a heuristic: nearby separate captures may merge, and a pause of at least
-      60 seconds within a capture may split it and create false membership events.
-      Merging captures retains their combined membership and the latest observed
-      manager status for each member. It can hide departures and rejoins or
-      intermediate manager changes. Joins and manager updates can be backdated
-      to before the actual change, so their reconstructed timestamps are not
-      guaranteed upper bounds. Departures may be delayed until a later group.
+      In rare circumstances where an `update` or `depart` event happened within a 60-second
+      window of a join event, it may be backdated according to the same behavior as the
+      `join` event. Again -- do not use this table for auditing! If your analysis is too
+      sensitive for the margins of error desribed above, we strongly discourage the use of
+      this table.
 
-      For membership at time T, filter to the desired team and to join/leave events,
-      then compute LEAD(snapshot_timestamp) over (PARTITION BY team_id, user_id
-      ORDER BY snapshot_timestamp) before keeping only joins. Each join starts a
-      half-open interval [join, next leave); a null end means still observed as a
-      member. Ignore update events when constructing membership intervals. To
-      exclude members from activity queries, put both the user match and interval
-      bounds in a LEFT JOIN and retain rows whose joined user_id is null. This
-      handles users with multiple membership periods.
+      Additionally, we only have snapshots back to 2022-01-05. Users which were already
+      members of a team at this point in time have a `join` event record on this date,
+      although the true join date may be much further in the past.
     constraints:
       - type: primary_key
         columns: [team_id, user_id, snapshot_timestamp]
