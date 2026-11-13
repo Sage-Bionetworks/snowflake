@@ -138,6 +138,48 @@ def query_new_external_users() -> str:
         """
 
 
+def query_new_external_users_list() -> str:
+    """Usernames of external users whose first download fell in the last 3 months."""
+    return f"""
+        WITH
+            {CTE_NON_SAGERS},
+            project_files AS (
+                SELECT DISTINCT file_handle_id
+                FROM synapse_data_warehouse.synapse.node_latest
+                WHERE
+                    project_id = {_PROJECT_ID}
+                    AND node_type = 'file'
+                    AND name NOT ILIKE '{MANIFEST_FILTER}'
+            ),
+            first_downloads AS (
+                SELECT
+                    dl.user_id,
+                    MIN(dl.record_date) AS first_download_date
+                FROM
+                    synapse_data_warehouse.synapse_event.objectdownload_event dl
+                INNER JOIN
+                    non_sagers ON dl.user_id = non_sagers.user_id
+                INNER JOIN
+                    project_files ON dl.file_handle_id = project_files.file_handle_id
+                WHERE
+                    dl.project_id = {_PROJECT_ID}
+                GROUP BY 1
+            )
+
+        SELECT
+            ns.user_id,
+            ns.user_name,
+            fd.first_download_date
+        FROM
+            first_downloads fd
+        INNER JOIN
+            non_sagers ns ON fd.user_id = ns.user_id
+        WHERE
+            fd.first_download_date >= DATEADD('month', -3, CURRENT_DATE)
+        ORDER BY 3 DESC;
+        """
+
+
 def query_file_type_breakdown() -> str:
     """External download counts grouped by file extension."""
     return f"""
@@ -421,6 +463,49 @@ def _cell_new_external_users():
 
 
 @st.fragment
+def _cell_new_external_users_list():
+    with st.container(border=True):
+        with st.container(
+            horizontal=True,
+            horizontal_alignment="distribute",
+            vertical_alignment="center",
+        ):
+            with st.container(height=80, border=False, vertical_alignment="center"):
+                st.markdown("### New External Users (Last 3 Months)")
+            if st.button(
+                ":material/refresh:",
+                type="tertiary",
+                key="refresh_mc2_new_external_users_list",
+                help="Refresh new users list",
+            ):
+                execute_query.clear(query_new_external_users_list())
+
+        try:
+            with st.spinner("Loading data", show_time=True):
+                df = st.session_state.session.create_async_job(
+                    execute_query(query_new_external_users_list())
+                ).result("pandas")
+            df = rename_duplicate_columns(df)
+            df["PROFILE_URL"] = "https://www.synapse.org/Profile:" + df["USER_ID"].astype(str) + "/profile"
+            st.caption(f"{len(df):,} new external users")
+            st.dataframe(
+                df.drop(columns=["USER_ID"]),
+                width="stretch",
+                hide_index=True,
+                height=300,
+                column_config={
+                    "USER_NAME": st.column_config.TextColumn("Username"),
+                    "FIRST_DOWNLOAD_DATE": st.column_config.DateColumn("First Download"),
+                    "PROFILE_URL": st.column_config.LinkColumn(
+                        "Profile", display_text="View Profile"
+                    ),
+                },
+            )
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+
+@st.fragment
 def _cell_cumulative():
     with st.container(border=True):
         with st.container(
@@ -684,6 +769,7 @@ def prefetch():
     execute_query(query_kpis())
     execute_query(query_monthly_downloads())
     execute_query(query_new_external_users())
+    execute_query(query_new_external_users_list())
     execute_query(query_file_type_breakdown())
     execute_query(query_downloads_by_folder())
     execute_query(query_files_browser())
@@ -694,7 +780,7 @@ def render():
     st.info(
         """
         This tab displays metrics specific to the **Multi-Consortia Coordinating (MC2) Center**
-        ([syn7080714](https://www.synapse.org/Synapse:syn7080714)).
+        ([syn7080714](https://www.synapse.org/Synapse:syn7080714)) project.
         """,
         icon=":material/info:",
     )
@@ -704,6 +790,7 @@ def render():
         _cell_trends()
     with col_new_users:
         _cell_new_external_users()
+    _cell_new_external_users_list()
     _cell_cumulative()
     col_types, col_folders = st.columns(2)
     with col_types:

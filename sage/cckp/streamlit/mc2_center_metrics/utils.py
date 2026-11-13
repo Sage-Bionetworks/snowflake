@@ -49,7 +49,6 @@ CTE_MC2_FILE_NODES = f"""
 # Get all MC2 project dataset nodes.
 CTE_MC2_DATASET_NODES = """
     mc2_dataset_nodes AS (
-        -- TODO: remove QUALIFY workaround once duplicate node ids are fixed in sage.cckp.mc2_nodes
         SELECT
             id,
             node_type,
@@ -59,7 +58,6 @@ CTE_MC2_DATASET_NODES = """
             project_name
         FROM sage.cckp.mc2_nodes
         WHERE node_type IN ('dataset', 'datasetcollection')
-        QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY change_timestamp DESC) = 1
     )"""
 
 # Expand dataset/datasetcollection items into file rows, where:
@@ -72,7 +70,7 @@ CTE_MC2_DATASET_FILES = """
             d.dataset_name,
             d.project_id,
             d.project_name,
-            n.id              AS file_entity_id,
+            n.id AS file_entity_id,
             n.file_handle_id
         FROM mc2_dataset_nodes d
         INNER JOIN synapse_data_warehouse.synapse.node_latest nl ON nl.id = d.id,
@@ -89,7 +87,7 @@ CTE_MC2_DATASET_FILES = """
             dc.dataset_name,
             dc.project_id,
             dc.project_name,
-            n.id              AS file_entity_id,
+            n.id AS file_entity_id,
             n.file_handle_id
         FROM mc2_dataset_nodes dc
         INNER JOIN synapse_data_warehouse.synapse.node_latest nl_dc ON nl_dc.id = dc.id,

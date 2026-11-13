@@ -48,7 +48,7 @@ st.markdown(
 )
 
 
-_, col_logo, _ = st.columns([2, 1, 2])
+_, col_logo, _ = st.columns([2, 4, 2])
 with col_logo:
     st.image("mc2-logo.png", width="stretch")
     st.markdown(
