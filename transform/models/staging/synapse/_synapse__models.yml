@@ -634,3 +634,45 @@ models:
         data_type: VARCHAR(36)
         constraints:
           - type: not_null
+
+  - name: stg_synapse__teammembersnapshots
+    description: |
+      Normalizes member identifiers and retains one row per team, user, and member
+      capture timestamp, selecting the greatest change_timestamp for duplicate keys.
+      The source timestamps are already timestamps and need no epoch conversion.
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, snapshot_timestamp]
+    columns:
+      - name: team_id
+        data_type: NUMBER
+        description: |
+          Synapse team identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: user_id
+        data_type: NUMBER
+        description: |
+          Synapse user identifier for the team member.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: snapshot_timestamp
+        data_type: TIMESTAMP_NTZ
+        description: |
+          UTC timestamp of the raw member capture.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: is_admin
+        data_type: BOOLEAN
+        description: |
+          Manager status after a join or update; null for a leave. A null source value remains unknown.
+      - name: snapshot_date
+        data_type: DATE
+        description: |
+          Source date partition retained for lineage; capture grouping uses snapshot timestamps.

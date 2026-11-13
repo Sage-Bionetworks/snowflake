@@ -1,0 +1,302 @@
+version: 2
+unit_tests:
+  - name: teammember_membership_transitions
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-01-05'
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-05'
+            snapshot_timestamp: '2022-01-05 00:00:00.001'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-01-12'
+            snapshot_timestamp: '2022-01-12 00:00:00.000'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-12'
+            snapshot_timestamp: '2022-01-12 00:00:00.001'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-19'
+            snapshot_timestamp: '2022-01-19 00:00:00.000'
+            is_admin: true
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-02-16'
+            snapshot_timestamp: '2022-02-16 00:00:00.000'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-02-16'
+            snapshot_timestamp: '2022-02-16 00:00:00.001'
+            is_admin: false
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-06'
+            snapshot_timestamp: '2022-01-06 00:00:00.000'
+            is_admin: null
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-13'
+            snapshot_timestamp: '2022-01-13 00:00:00.000'
+            is_admin: false
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-20'
+            snapshot_timestamp: '2022-01-20 00:00:00.000'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-01-12 00:00:00.000'
+          event_type: update
+          is_admin: true
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-19 00:00:00.000'
+          event_type: leave
+          is_admin: null
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-02-16 00:00:00.000'
+          event_type: join
+          is_admin: true
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-02-16 00:00:00.000'
+          event_type: update
+          is_admin: false
+        - team_id: 2
+          user_id: 10
+          snapshot_timestamp: '2022-01-06 00:00:00.000'
+          event_type: join
+          is_admin: null
+        - team_id: 2
+          user_id: 10
+          snapshot_timestamp: '2022-01-13 00:00:00.000'
+          event_type: update
+          is_admin: false
+  - name: teammember_duplicate_capture_rows
+    model: stg_synapse__teammembersnapshots
+    given:
+      - input: source('synapse_raw', 'teammembersnapshots')
+        rows:
+          - team_id: 1
+            member_id: 10
+            is_admin: true
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 01:00:00'
+          - team_id: 1
+            member_id: 10
+            is_admin: false
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 02:00:00'
+          - team_id: 1
+            member_id: 10
+            is_admin: false
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 02:00:00'
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_date: '2022-01-05'
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          is_admin: false
+  - name: teammember_empty_history
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows: []
+    expect:
+      rows: []
+  - name: teammember_clock_boundaries_and_same_day_transitions
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 23:59:59.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 00:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-06 09:00:00.000'
+            snapshot_date: '2022-01-06'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 09:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-06 09:00:00.002'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 15:00:00.000'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-06 15:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 23:59:59.999'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-01-05 23:59:59.999'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-06 09:00:00.000'
+          event_type: update
+          is_admin: true
+        - team_id: 1
+          user_id: 30
+          snapshot_timestamp: '2022-01-06 09:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-06 15:00:00.000'
+          event_type: leave
+          is_admin: null
+  - name: teammember_chained_gaps_and_exact_sixty_second_boundary
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-05 00:00:40.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-05 00:01:20.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 40
+            snapshot_timestamp: '2022-01-05 00:02:19.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-05 00:03:19.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 40
+            snapshot_timestamp: '2022-01-05 00:03:20.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 30
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 40
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 00:03:19.999'
+          event_type: leave
+          is_admin: null
+        - team_id: 1
+          user_id: 20
+          snapshot_timestamp: '2022-01-05 00:03:19.999'
+          event_type: leave
+          is_admin: null
+  - name: teammember_latest_manager_status_in_group
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.600'
+            snapshot_date: '2022-01-05'
+            is_admin: true
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:02:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: true
+        - team_id: 1
+          user_id: 10
+          snapshot_timestamp: '2022-01-05 00:02:00.000'
+          event_type: update
+          is_admin: false
