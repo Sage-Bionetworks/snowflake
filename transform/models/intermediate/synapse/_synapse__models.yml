@@ -306,3 +306,61 @@ models:
         data_type: BINARY
         constraints:
           - type: not_null
+
+  - name: int_synapse_teammember_event
+    description: |
+      Compares membership across reconstructed captures within each team.
+      Distinct member timestamps are ordered within the team.
+      
+      Because team members are snapshotted individually, rather than as a team, we
+      need to assign individual records to a snapshot capture group. A gap of at least
+      60 seconds starts a new capture group; smaller adjacent gaps between rows for
+      members of the same team are considered to be part of the same capture group.
+      Chained adjacent gaps such as these can produce a group whose total span exceeds
+      60 seconds. The earliest timestamp labels the group, and the latest row for each
+      member supplies their metadata. Following this heuristic, snapshots which were
+      triggered by separate events may be merged into a single capture group, and a pause of
+      at least 60 seconds within a snapshot may split the records into separate capture groups;
+      no capture ID is available, so we're not able to definitively assign records from a single 
+      snapshot event to a single capture group.
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, approximate_event_timestamp]
+    columns:
+      - name: team_id
+        data_type: NUMBER
+        description: |
+          Synapse team identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: user_id
+        data_type: NUMBER
+        description: |
+          Synapse user identifier for the team member.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: approximate_event_timestamp
+        data_type: TIMESTAMP_NTZ
+        description: |
+          UTC time of the earliest member row in the reconstructed team capture group; an observation time rather than an exact change time.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: event_type
+        data_type: VARCHAR
+        description: |
+          Observed transition: join when newly present, update when a continuing member changes manager status, or depart when absent from the next reconstructed team capture.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['join', 'update', 'depart']
+      - name: is_admin
+        data_type: BOOLEAN
+        description: |
+          Manager status after a join or update; null for a depart event. A null source value remains unknown.

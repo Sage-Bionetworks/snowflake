@@ -43,5 +43,7 @@ models:
           +schema: synapse
         synapse_event:
           +schema: synapse_event
+          teammember_event:
+            +refresh_mode: FULL
         synapse_aggregate:
           +schema: synapse_aggregate

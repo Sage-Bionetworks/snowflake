@@ -821,3 +821,40 @@ sources:
             data_type: DATE
             data_tests:
               - not_null
+
+  - name: synapse_raw
+    schema: SYNAPSE_RAW
+    description: |
+      Synapse platform snapshots ingested from S3 by Glue.
+    tables:
+      - name: teammembersnapshots
+        description: |
+          Observed team membership and manager status. Each capture includes all
+          members of a team; captures occur on team joins and periodically. Departures
+          and manager changes do not trigger a capture, and are instead dependent on
+          the snapshots which occur during a Synapse stack release across all teams.
+        columns:
+          - name: team_id
+            data_type: NUMBER
+            description: |
+              Synapse team identifier.
+          - name: member_id
+            data_type: NUMBER
+            description: |
+              Synapse user identifier for the member.
+          - name: is_admin
+            data_type: BOOLEAN
+            description: |
+              Whether the member manages the team at capture time.
+          - name: snapshot_timestamp
+            data_type: TIMESTAMP_NTZ
+            description: |
+              UTC timestamp recorded for this member during the capture.
+          - name: snapshot_date
+            data_type: DATE
+            description: |
+              Date partition identifying the day of the capture.
+          - name: change_timestamp
+            data_type: TIMESTAMP_NTZ
+            description: |
+              Reported change timestamp, used to select among duplicate captured rows.
