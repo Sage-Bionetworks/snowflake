@@ -325,7 +325,7 @@ models:
       snapshot event to a single capture group.
     constraints:
       - type: primary_key
-        columns: [team_id, user_id, snapshot_timestamp]
+        columns: [team_id, user_id, approximate_event_timestamp]
     columns:
       - name: team_id
         data_type: NUMBER
@@ -343,7 +343,7 @@ models:
           - type: not_null
         data_tests:
           - not_null
-      - name: snapshot_timestamp
+      - name: approximate_event_timestamp
         data_type: TIMESTAMP_NTZ
         description: |
           UTC time of the earliest member row in the reconstructed team capture group; an observation time rather than an exact change time.
@@ -354,13 +354,13 @@ models:
       - name: event_type
         data_type: VARCHAR
         description: |
-          Observed transition: join when newly present, update when a continuing member changes manager status, or leave when absent from the next reconstructed team capture.
+          Observed transition: join when newly present, update when a continuing member changes manager status, or depart when absent from the next reconstructed team capture.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['join', 'update', 'leave']
+                values: ['join', 'update', 'depart']
       - name: is_admin
         data_type: BOOLEAN
         description: |
-          Manager status after a join or update; null for a leave. A null source value remains unknown.
+          Manager status after a join or update; null for a depart event. A null source value remains unknown.

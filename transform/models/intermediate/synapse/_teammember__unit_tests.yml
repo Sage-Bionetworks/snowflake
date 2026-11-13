@@ -59,42 +59,42 @@ unit_tests:
       rows:
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-01-12 00:00:00.000'
+          approximate_event_timestamp: '2022-01-12 00:00:00.000'
           event_type: update
           is_admin: true
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-19 00:00:00.000'
-          event_type: leave
+          approximate_event_timestamp: '2022-01-19 00:00:00.000'
+          event_type: depart
           is_admin: null
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-02-16 00:00:00.000'
+          approximate_event_timestamp: '2022-02-16 00:00:00.000'
           event_type: join
           is_admin: true
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-02-16 00:00:00.000'
+          approximate_event_timestamp: '2022-02-16 00:00:00.000'
           event_type: update
           is_admin: false
         - team_id: 2
           user_id: 10
-          snapshot_timestamp: '2022-01-06 00:00:00.000'
+          approximate_event_timestamp: '2022-01-06 00:00:00.000'
           event_type: join
           is_admin: null
         - team_id: 2
           user_id: 10
-          snapshot_timestamp: '2022-01-13 00:00:00.000'
+          approximate_event_timestamp: '2022-01-13 00:00:00.000'
           event_type: update
           is_admin: false
   - name: teammember_duplicate_capture_rows
@@ -178,28 +178,28 @@ unit_tests:
       rows:
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 23:59:59.999'
+          approximate_event_timestamp: '2022-01-05 23:59:59.999'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-01-05 23:59:59.999'
+          approximate_event_timestamp: '2022-01-05 23:59:59.999'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-06 09:00:00.000'
+          approximate_event_timestamp: '2022-01-06 09:00:00.000'
           event_type: update
           is_admin: true
         - team_id: 1
           user_id: 30
-          snapshot_timestamp: '2022-01-06 09:00:00.000'
+          approximate_event_timestamp: '2022-01-06 09:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-06 15:00:00.000'
-          event_type: leave
+          approximate_event_timestamp: '2022-01-06 15:00:00.000'
+          event_type: depart
           is_admin: null
   - name: teammember_chained_gaps_and_exact_sixty_second_boundary
     model: int_synapse_teammember_event
@@ -240,33 +240,33 @@ unit_tests:
       rows:
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 30
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 40
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: false
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 00:03:19.999'
-          event_type: leave
+          approximate_event_timestamp: '2022-01-05 00:03:19.999'
+          event_type: depart
           is_admin: null
         - team_id: 1
           user_id: 20
-          snapshot_timestamp: '2022-01-05 00:03:19.999'
-          event_type: leave
+          approximate_event_timestamp: '2022-01-05 00:03:19.999'
+          event_type: depart
           is_admin: null
   - name: teammember_latest_manager_status_in_group
     model: int_synapse_teammember_event
@@ -292,11 +292,11 @@ unit_tests:
       rows:
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
           event_type: join
           is_admin: true
         - team_id: 1
           user_id: 10
-          snapshot_timestamp: '2022-01-05 00:02:00.000'
+          approximate_event_timestamp: '2022-01-05 00:02:00.000'
           event_type: update
           is_admin: false

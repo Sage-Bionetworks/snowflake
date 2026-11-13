@@ -62,7 +62,7 @@ team_snapshots as (
     select distinct
         team_id,
         snapshot_seq,
-        group_timestamp as snapshot_timestamp
+        group_timestamp as approximate_event_timestamp
     from
         grouped_timestamps
 ),
@@ -72,7 +72,7 @@ memberships as (
         snapshot_rows.team_id,
         snapshot_rows.user_id,
         grouped_timestamps.snapshot_seq,
-        grouped_timestamps.group_timestamp as snapshot_timestamp,
+        grouped_timestamps.group_timestamp as approximate_event_timestamp,
         max_by(snapshot_rows.is_admin, snapshot_rows.snapshot_timestamp) as is_admin
     from
         snapshot_rows
@@ -99,7 +99,7 @@ joins as (
     select
         team_id,
         user_id,
-        snapshot_timestamp,
+        approximate_event_timestamp,
         'join' as event_type,
         is_admin
     from
@@ -113,7 +113,7 @@ updates as (
     select
         team_id,
         user_id,
-        snapshot_timestamp,
+        approximate_event_timestamp,
         'update' as event_type,
         is_admin
     from
@@ -123,13 +123,13 @@ updates as (
         and is_admin is distinct from previous_is_admin
 ),
 
--- A leave is dated at the first team snapshot that no longer includes the user
-leaves as (
+-- A departure is dated at the first team snapshot that no longer includes the user
+departures as (
     select
         transitions.team_id,
         transitions.user_id,
-        next_snapshot.snapshot_timestamp,
-        'leave' as event_type,
+        next_snapshot.approximate_event_timestamp,
+        'depart' as event_type,
         null::boolean as is_admin
     from
         transitions
@@ -146,4 +146,4 @@ select * from joins
 union all
 select * from updates
 union all
-select * from leaves
+select * from departures

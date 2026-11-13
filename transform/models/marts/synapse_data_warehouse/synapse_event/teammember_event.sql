@@ -1,7 +1,7 @@
 select
     team_id,
     user_id,
-    snapshot_timestamp,
+    approximate_event_timestamp,
     event_type,
     is_admin
 from

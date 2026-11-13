@@ -90,13 +90,13 @@ models:
       by the `approximate_event_timestamp` field according to the following rules:
       
       * `join` snapshot timestamps are the most nuanced, but also generally the closest
-      to the actual event time. In the majority of cases, the `snapshot_timestamp` of a 
+      to the actual event time. In the majority of cases, the `approximate_event_timestamp` of a
       join event is practically equivalent to the true event timestamp. In more complicated
       cases, where a team was snapshotted repeatedly within overlapping 60-second windows,
-      the `snapshot_timestamp` of an event may be earlier than the true event timestamp.
+      the `approximate_event_timestamp` of an event may be earlier than the true event timestamp.
       The worst case we saw in historical data spanning from 2021 to late 2026 is a potential 
       backdate of 7 minutes and 50 seconds of a join event. As a rule-of-thumb, you can 
-      treat the `snapshot_timestamp` to be a lower bound on the true
+      treat the `approximate_event_timestamp` to be a lower bound on the true
       join event timestamp -- but it's important to note that we aren't able to make
       strict guarantees. A join event may be backdated arbitrarily far in the
       past in exceptional circumstances, particularly if many users are joining a team
@@ -118,7 +118,7 @@ models:
       although the true join date may be much further in the past.
     constraints:
       - type: primary_key
-        columns: [team_id, user_id, snapshot_timestamp]
+        columns: [team_id, user_id, approximate_event_timestamp]
     columns:
       - name: team_id
         data_type: NUMBER
@@ -136,7 +136,7 @@ models:
           - type: not_null
         data_tests:
           - not_null
-      - name: snapshot_timestamp
+      - name: approximate_event_timestamp
         data_type: TIMESTAMP_NTZ
         description: |
           UTC time of the earliest member row in the reconstructed team capture group; an observation time rather than an exact change time.
@@ -147,13 +147,13 @@ models:
       - name: event_type
         data_type: VARCHAR
         description: |
-          Observed transition: join when newly present, update when a continuing member changes manager status, or leave when absent from the next reconstructed team capture.
+          Observed transition: join when newly present, update when a continuing member changes manager status, or depart when absent from the next reconstructed team capture.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['join', 'update', 'leave']
+                values: ['join', 'update', 'depart']
       - name: is_admin
         data_type: BOOLEAN
         description: |
-          Manager status after a join or update; null for a leave. A null source value remains unknown.
+          Manager status after a join or update; null for a depart event. A null source value remains unknown.
