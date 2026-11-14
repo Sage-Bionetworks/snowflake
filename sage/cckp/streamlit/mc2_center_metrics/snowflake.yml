@@ -12,4 +12,7 @@ entities:
     artifacts:
       - environment.yml
       - streamlit_app.py
+      - utils.py
+      - mc2-logo.png
+      - tabs/
       - .streamlit/config.toml
