@@ -121,7 +121,8 @@ def query_dataset_files() -> str:
         LEFT JOIN
             -- TODO: fix source table to remove duplicate node ids, then remove QUALIFY workaround
             -- sage.cckp.mc2_nodes n ON n.id = f.file_entity_id
-            (SELECT * FROM sage.cckp.mc2_nodes QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY change_timestamp DESC) = 1) n
+            (SELECT * FROM sage.cckp.mc2_nodes
+                QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY change_timestamp DESC) = 1) n
                 ON n.id = f.file_entity_id
         ORDER BY 3 ASC, 9 DESC;
         """
@@ -154,7 +155,8 @@ def query_dataset_downloads_over_time() -> str:
 
 
 @st.fragment
-def _cell_downloads_by_dataset():
+def _cell_downloads_by_dataset() -> None:
+    """Render the download counts table, grouped by dataset, with project/type filters."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -249,7 +251,8 @@ def _cell_downloads_by_dataset():
 
 
 @st.fragment
-def _cell_downloads_over_time():
+def _cell_downloads_over_time() -> None:
+    """Render the dataset downloads-over-time line chart with dataset/granularity filters."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -269,7 +272,7 @@ def _cell_downloads_over_time():
                     del st.session_state["dataset_downloads_over_time_df"]
                 if "dataset_downloads_over_time_qid" in st.session_state:
                     del st.session_state["dataset_downloads_over_time_qid"]
-    
+
         current_qid = execute_query(query_dataset_downloads_over_time())
         if (
             "dataset_downloads_over_time_df" not in st.session_state
@@ -325,7 +328,8 @@ def _cell_downloads_over_time():
 
 
 @st.fragment
-def _cell_file_browser():
+def _cell_file_browser() -> None:
+    """Render the per-file download detail table with dataset/type filters."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -415,13 +419,15 @@ def _cell_file_browser():
         )
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_downloads_by_dataset())
     execute_query(query_dataset_downloads_over_time())
     execute_query(query_dataset_files())
 
 
-def render():
+def render() -> None:
+    """Render the Datasets tab."""
     ## TODO: remove this warning once downloadType annotation are available
     st.warning(
         """

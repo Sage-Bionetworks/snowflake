@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 # Global constants.
@@ -8,7 +9,7 @@ MANIFEST_FILTER = "synapse_storage_manifest_%view.csv"
 # Get external users (non-Sagers) only.
 CTE_NON_SAGERS = """
     non_sagers AS (
-        SELECT 
+        SELECT
             id AS user_id,
             user_name
         FROM
@@ -107,7 +108,7 @@ def execute_query(query: str) -> str:
     return st.session_state.session.sql(query).collect_nowait().query_id
 
 
-def rename_duplicate_columns(df):
+def rename_duplicate_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Append a numeric suffix to duplicate column names.
 
     This function acts as a safety net, in case a query produces duplicate

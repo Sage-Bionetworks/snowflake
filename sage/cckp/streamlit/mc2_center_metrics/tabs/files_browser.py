@@ -100,7 +100,8 @@ def query_projects_without_files() -> str:
 
 
 @st.fragment
-def _cell_files_browser():
+def _cell_files_browser() -> None:
+    """Render the all-files table with project/public/dataset filters."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -174,7 +175,7 @@ def _cell_files_browser():
                 options=["All", "Yes", "No"],
                 key="files_browser_dataset_filter",
             )
-        
+
         mask = pd.Series(True, index=df.index)
         if selected_projects:
             selected_names = {s.rsplit(" (", 1)[0] for s in selected_projects}
@@ -223,7 +224,8 @@ def _cell_files_browser():
 
 
 @st.fragment
-def _cell_projects_without_files():
+def _cell_projects_without_files() -> None:
+    """Render an expander listing MC2 projects that have no files."""
     current_qid = execute_query(query_projects_without_files())
     if (
         "projects_without_files_df" not in st.session_state
@@ -255,7 +257,8 @@ def _cell_projects_without_files():
 
 
 @st.fragment
-def _cell_recently_added():
+def _cell_recently_added() -> None:
+    """Render the table of files added in the last 30 days."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -325,12 +328,14 @@ def _cell_recently_added():
             )
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_all_files())
     execute_query(query_projects_without_files())
 
 
-def render():
+def render() -> None:
+    """Render the Files Browser tab."""
     _cell_files_browser()
     _cell_projects_without_files()
     _cell_recently_added()

@@ -9,8 +9,6 @@ from utils import (
     CTE_NON_SAGERS,
     CTE_SYNAPSE_USERS,
     MANIFEST_FILTER,
-    GRANULARITY_OPTIONS,
-    RESAMPLE_FREQ,
     execute_query,
     rename_duplicate_columns,
 )
@@ -334,7 +332,8 @@ def query_top_users() -> str:
 
 
 @st.fragment
-def _cell_kpis():
+def _cell_kpis() -> None:
+    """Render the top-level KPI metrics for the MC2 Center project."""
     _, col_btn = st.columns([9, 1])
     with col_btn:
         if st.button(
@@ -400,7 +399,8 @@ def _cell_kpis():
 
 
 @st.fragment
-def _cell_trends():
+def _cell_trends() -> None:
+    """Render the monthly external user downloads bar chart."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -432,7 +432,8 @@ def _cell_trends():
 
 
 @st.fragment
-def _cell_new_external_users():
+def _cell_new_external_users() -> None:
+    """Render the new-external-users-over-time bar chart."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -463,7 +464,8 @@ def _cell_new_external_users():
 
 
 @st.fragment
-def _cell_new_external_users_list():
+def _cell_new_external_users_list() -> None:
+    """Render the table of new external users from the last 3 months."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -506,7 +508,8 @@ def _cell_new_external_users_list():
 
 
 @st.fragment
-def _cell_cumulative():
+def _cell_cumulative() -> None:
+    """Render the cumulative external downloads area chart."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -539,7 +542,8 @@ def _cell_cumulative():
 
 
 @st.fragment
-def _cell_file_type_breakdown():
+def _cell_file_type_breakdown() -> None:
+    """Render the downloads-by-file-type table."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -583,7 +587,8 @@ def _cell_file_type_breakdown():
 
 
 @st.fragment
-def _cell_downloads_by_folder():
+def _cell_downloads_by_folder() -> None:
+    """Render the downloads-by-folder table."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -628,7 +633,8 @@ def _cell_downloads_by_folder():
 
 
 @st.fragment
-def _cell_files_browser():
+def _cell_files_browser() -> None:
+    """Render the all-files table with folder/public filters."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -720,7 +726,8 @@ def _cell_files_browser():
 
 
 @st.fragment
-def _cell_top_users():
+def _cell_top_users() -> None:
+    """Render the table of top external users by download count."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -765,7 +772,8 @@ def _cell_top_users():
             st.error(f"Error: {e}")
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_kpis())
     execute_query(query_monthly_downloads())
     execute_query(query_new_external_users())
@@ -776,7 +784,8 @@ def prefetch():
     execute_query(query_top_users())
 
 
-def render():
+def render() -> None:
+    """Render the MC2 Center tab."""
     st.info(
         """
         This tab displays metrics specific to the **Multi-Consortia Coordinating (MC2) Center**

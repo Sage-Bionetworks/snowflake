@@ -106,7 +106,7 @@ with st.sidebar:
         st.markdown(
             """
             A "public file" is any file that can be viewed by anyone on the web.
-            
+
             It does not necessarily mean the file is open for unrestricted download (a.k.a. `OPEN_DATA`).
             """
         )
@@ -114,7 +114,7 @@ with st.sidebar:
         st.markdown(
             """
             In this dashboard, a "dataset" is any entity with a type of `dataset` or `datasetcollection`.
-            
+
             Legacy datasets uploaded as `file` or `folder` types are excluded from the total datasets count
             and the **Datasets Browser**, but will automatically be included once they are converted to the
             `dataset` or `datasetcollection` type.
@@ -167,9 +167,10 @@ st.divider()
 st.markdown(
     """
     <p style="text-align: center; color: #cc0000; font-size: 0.8rem;">
-        This app is <a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md" target="_blank">managed on GitHub</a>.
+        This app is <a href="https://github.com/Sage-Bionetworks/snowflake/blob/dev/STREAMLIT.md"
+        target="_blank">managed on GitHub</a>.
         Any local edits will not be retained.
-    </p> 
+    </p>
     """,
     unsafe_allow_html=True,
 )

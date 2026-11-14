@@ -77,7 +77,8 @@ def _resample(df: pd.DataFrame, granularity: str) -> pd.DataFrame:
 
 
 @st.fragment
-def _cell_downloads(granularity: str):
+def _cell_downloads(granularity: str) -> None:
+    """Render the downloads-over-time line chart at the given granularity."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -108,7 +109,8 @@ def _cell_downloads(granularity: str):
 
 
 @st.fragment
-def _cell_new_users(granularity: str):
+def _cell_new_users(granularity: str) -> None:
+    """Render the new-external-users-over-time bar chart at the given granularity."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -139,7 +141,8 @@ def _cell_new_users(granularity: str):
 
 
 @st.fragment
-def _cell_cumulative(granularity: str):
+def _cell_cumulative(granularity: str) -> None:
+    """Render the cumulative external downloads area chart at the given granularity."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -172,12 +175,14 @@ def _cell_cumulative(granularity: str):
             st.error(f"Error: {str(e)}")
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_daily_downloads())
     execute_query(query_new_external_users_by_day())
 
 
-def render():
+def render() -> None:
+    """Render the Trends tab."""
     _, col_label, col_select = st.columns([7, 1, 2])
     with col_label:
         st.markdown("**View by:**")

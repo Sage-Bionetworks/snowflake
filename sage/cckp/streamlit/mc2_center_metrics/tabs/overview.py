@@ -96,7 +96,8 @@ def query_downloads_by_project() -> str:
 
 
 @st.fragment
-def _cell_kpis():
+def _cell_kpis() -> None:
+    """Render the top-level KPI metrics (project/dataset/file/download counts)."""
     _, col_btn = st.columns([11, 1])
     with col_btn:
         if st.button(
@@ -172,7 +173,8 @@ def _cell_kpis():
 
 
 @st.fragment
-def _cell_downloads_by_project():
+def _cell_downloads_by_project() -> None:
+    """Render the download counts table, grouped by project."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -231,12 +233,14 @@ def _cell_downloads_by_project():
             st.error(f"Error: {str(e)}")
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_kpi_counts())
     execute_query(query_kpi_downloads())
     execute_query(query_downloads_by_project())
 
 
-def render():
+def render() -> None:
+    """Render the Overview tab."""
     _cell_kpis()
     _cell_downloads_by_project()

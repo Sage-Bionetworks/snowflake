@@ -80,7 +80,8 @@ def query_user_project_breakdown() -> str:
 
 
 @st.fragment
-def _cell_returning_vs_onetime():
+def _cell_returning_vs_onetime() -> None:
+    """Render the returning-vs-one-time external user breakdown."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -137,7 +138,8 @@ def _cell_returning_vs_onetime():
 
 
 @st.fragment
-def _cell_user_table():
+def _cell_user_table() -> None:
+    """Render the table of all external users."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -186,7 +188,8 @@ def _cell_user_table():
 
 
 @st.fragment
-def _cell_user_project_breakdown():
+def _cell_user_project_breakdown() -> None:
+    """Render the downloads-by-user-and-project table with a username filter."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -249,7 +252,8 @@ def _cell_user_project_breakdown():
 
 
 @st.fragment
-def _cell_projects_per_user():
+def _cell_projects_per_user() -> None:
+    """Render the projects-downloaded-per-user table with a username filter."""
     with st.container(border=True):
         with st.container(
             horizontal=True,
@@ -303,12 +307,14 @@ def _cell_projects_per_user():
             st.error(f"Error: {str(e)}")
 
 
-def prefetch():
+def prefetch() -> None:
+    """Kick off this tab's queries so results are ready before the tab is rendered."""
     execute_query(query_user_summary())
     execute_query(query_user_project_breakdown())
 
 
-def render():
+def render() -> None:
+    """Render the External Users tab."""
     _cell_returning_vs_onetime()
     _cell_user_table()
 
