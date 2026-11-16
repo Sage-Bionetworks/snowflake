@@ -11,6 +11,7 @@ staging as (
         case 
             when concrete_type='org.sagebionetworks.repo.model.LockAccessRequirement' then 'LockAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.ManagedACTAccessRequirement' then 'ManagedACTAccessRequirement'
+            when concrete_type='org.sagebionetworks.repo.model.JsonSchemaAccessRequirement' then 'JsonSchemaAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.ACTAccessRequirement' then 'ACTAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.SelfSignAccessRequirement' then 'SelfSignAccessRequirement'
             when concrete_type='org.sagebionetworks.repo.model.TermsOfUseAccessRequirement' then 'TermsOfUseAccessRequirement'
@@ -20,7 +21,7 @@ staging as (
         to_timestamp(created_on / 1000) as created_on,
         current_rev_num as access_requirement_current_version,
         to_boolean(is_two_fa_required) as is_two_fa_required,
-        access_type,
+        access_type as access_requirement_access_type,
         etag
     from
         source

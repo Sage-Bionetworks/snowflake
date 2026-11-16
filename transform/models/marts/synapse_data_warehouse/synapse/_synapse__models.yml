@@ -1,0 +1,59 @@
+version: 2
+models:
+  - name: research_project
+    description: "One row per research project, enriched with the current access requirement name and creator and modifier usernames."
+    constraints:
+      - type: primary_key
+        columns: [research_project_id]
+    columns:
+      - name: research_project_id
+        description: "Unique identifier for the research project"
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+          - type: foreign_key
+            to: ref('int_synapse_research_project')
+            to_columns: [research_project_id]
+            warn_unenforced: false
+      - name: access_requirement_id
+        description: "Identifier of the access requirement associated with this research project"
+        data_type: NUMBER
+        constraints:
+          - type: foreign_key
+            to: ref('stg_synapse__access_requirement')
+            to_columns: [access_requirement_id]
+            warn_unenforced: false
+      - name: access_requirement_name
+        description: "Current name of the associated access requirement"
+        data_type: VARCHAR
+      - name: created_by
+        description: "Identifier of the user who created this research project"
+        data_type: NUMBER
+      - name: created_by_user_name
+        description: "Current username of the user who created this research project; null when no username is available"
+        data_type: VARCHAR
+      - name: created_on
+        description: "UTC timestamp when the research project was created"
+        data_type: TIMESTAMP_NTZ
+      - name: modified_by
+        description: "Identifier of the user who last modified this research project"
+        data_type: NUMBER
+      - name: modified_by_user_name
+        description: "Current username of the user who last modified this research project; null when no username is available"
+        data_type: VARCHAR
+      - name: modified_on
+        description: "UTC timestamp when the research project was last modified"
+        data_type: TIMESTAMP_NTZ
+      - name: etag
+        description: "Entity tag for optimistic concurrency control (36-character UUID)"
+        data_type: VARCHAR
+      - name: project_lead
+        description: "Name of the principal investigator or project lead"
+        data_type: VARCHAR
+      - name: institution
+        description: "Name of the institution affiliated with this research project"
+        data_type: VARCHAR
+      - name: intended_data_use
+        description: "Intended data use statement decoded from UTF-8 binary into text"
+        data_type: VARCHAR
