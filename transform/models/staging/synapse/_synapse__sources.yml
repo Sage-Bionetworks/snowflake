@@ -613,6 +613,32 @@ sources:
             description: "Intended data use statement stored as UTF-8 encoded binary"
             data_type: BINARY
 
+  - name: synapse_raw
+    schema: SYNAPSE_RAW
+    description: "Raw snapshot tables ingested from Synapse S3 event data, for data types not available in RDS_RAW."
+    tables:
+      - name: teammembersnapshots
+        description: "Snapshots of team members. Snapshots are captured when a team or its members are modified, and also periodically and independently of changes. Snapshotting does not capture removals."
+        columns:
+          - name: team_id
+            description: "The unique identifier of the team."
+            data_type: NUMBER
+          - name: member_id
+            description: "The unique identifier of the member of the team. The member is a Synapse user."
+            data_type: NUMBER
+          - name: is_admin
+            description: "If true, then the member is a manager of the team."
+            data_type: BOOLEAN
+          - name: change_timestamp
+            description: "The time when any change to the team was made (e.g. update of the team or a change to its members)."
+            data_type: TIMESTAMP_NTZ
+          - name: snapshot_timestamp
+            description: "The time when the snapshot was taken. Rows of a single snapshot can differ by milliseconds."
+            data_type: TIMESTAMP_NTZ
+          - name: snapshot_date
+            description: "The date of snapshot_timestamp, used for partitioning."
+            data_type: DATE
+
   - name: synapse_event
     schema: SYNAPSE_EVENT
     description: "Deduplicated change-event history for SYNAPSE_RAW data types that cannot be fully reconstructed from RDS data types."
