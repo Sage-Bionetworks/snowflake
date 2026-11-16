@@ -4,3 +4,10 @@
 
 [snowflake.sleep]
 streamlitSleepTimeoutMinutes = 5
+
+[theme]
+primaryColor = "#1D8A7A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F4F8"
+textColor = "#1B2A4A"
+font = "sans serif"
