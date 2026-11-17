@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_synapse__data_access_submission_rejection
+    description: "Standalone rejection input for categorization experiments. Contains one rejected submission per row and its decoded reason; performs no AI inference."
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id]
+    columns:
+      - name: data_access_submission_id
+        description: "Identifier of the rejected data access submission."
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+          - type: unique
+        data_tests:
+          - not_null
+          - unique
+      - name: rejection_reason
+        description: "UTF-8 decoded rejection explanation. Null for status records created before 2019 because some older reasons contain invalid UTF-8."
+        data_type: VARCHAR
