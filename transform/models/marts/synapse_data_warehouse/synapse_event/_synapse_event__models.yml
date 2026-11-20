@@ -177,11 +177,10 @@ models:
           - not_null
       - name: access_requirement_name
         description: >-
-          The human-readable name of the access requirement at this revision. Uses the name recorded
-          in the revision. at the current revision, falls back to the requirement's name when the
-          revision records none. NULL for earlier revisions without a recorded name and for
-          requirements that were never named (Synapse stores an empty string or the requirement ID
-          as a placeholder).
+          Name recorded for this access requirement revision. If the current revision has no
+          recorded name, it uses the current access requirement's name. Returns NULL when no
+          name is available. An empty string or the requirement ID in the fallback name is treated
+          as missing.
         data_type: VARCHAR
       - name: access_requirement_type
         description: >-
