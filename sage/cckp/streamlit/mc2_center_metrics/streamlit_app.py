@@ -29,7 +29,12 @@ def read_args() -> argparse.Namespace:
 
 def get_session(local_dev: bool) -> Session:
     if local_dev:
-        return Session.builder.config("connection_name", "default").create()
+        local_session = Session.builder.config("connection_name", "default").create()
+        try:
+            local_session.use_role("SAGE_CCKP_ADMIN")
+        except Exception:
+            pass
+        return local_session
 
     return get_active_session()
 
