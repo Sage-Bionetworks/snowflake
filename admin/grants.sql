@@ -209,6 +209,7 @@ GRANT ROLE DATA_ANALYTICS TO USER "jon.long@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "jessica.lundin@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "pranita.atri@sagebase.org";
 GRANT ROLE DATA_ANALYTICS TO USER "amelia.kallaher@sagebase.org";
+GRANT ROLE DATA_ANALYTICS TO USER "ernesto.ramirez@sagebase.org";
 
 // Leaders
 GRANT ROLE SAGE_LEADERS TO USER "kim.baggett@sagebase.org";
@@ -226,6 +227,7 @@ GRANT ROLE SAGE_LEADERS TO USER "brandon.morgan@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "thomas.yu@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "milen.nikolov@sagebase.org";
 GRANT ROLE SAGE_LEADERS TO USER "andrea.varsavsky@sagebase.org";
+GRANT ROLE SAGE_LEADERS TO USER "ernesto.ramirez@sagebase.org";
 
 // Setting up the role hierarchy
 GRANT ROLE SAGE_LEADERS TO ROLE SYSADMIN;

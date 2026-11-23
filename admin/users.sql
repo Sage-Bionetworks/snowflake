@@ -127,6 +127,8 @@ CREATE USER IF NOT EXISTS "ranell.nystrom@sagebase.org";
 CREATE USER IF NOT EXISTS "luisa.chekrygin@sagebase.org";
 CREATE USER IF NOT EXISTS "laurielle.roberson@sagebase.org";
 
+//PARTNERSHIPS
+CREATE USER IF NOT EXISTS "ernesto.ramirez@sagebase.org";
 
 // SERVICE users
 CREATE USER IF NOT EXISTS DPE_SERVICE
