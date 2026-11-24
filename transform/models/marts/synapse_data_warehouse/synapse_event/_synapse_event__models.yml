@@ -194,30 +194,15 @@ models:
       2023-11-14 through 2023-11-17. Treat manager-status updates around that
       discontinuity as potentially reflecting a change in the source data.
 
-      To exclude downloads made while a user was on the Sage team (273957),
-      build half-open membership intervals from joins and departures. Filter out
-      updates before computing `lead` so manager changes do not end an interval.
+      To estimate membership at a given time, build a separate interval for each
+      `join` within each `(team_id, user_id)` pair. Use only `join` and `depart`
+      events to compute interval boundaries. Include the join timestamp and
+      exclude the departure timestamp. An interval without a recorded departure
+      has no observed end.
 
-      ```sql
-      with sage_memberships as (
-          select
-              user_id,
-              approximate_event_timestamp as joined_at,
-              lead(approximate_event_timestamp) over (
-                  partition by team_id, user_id order by approximate_event_timestamp
-              ) as departed_at
-          from synapse_data_warehouse.synapse_event.teammember_event
-          where team_id = 273957 and event_type in ('join', 'depart')
-          qualify event_type = 'join'
-      )
-      select d.*
-      from synapse_data_warehouse.synapse_event.objectdownload_event as d
-      left join sage_memberships as m
-          on d.user_id = m.user_id
-          and d.timestamp >= m.joined_at
-          and (d.timestamp < m.departed_at or m.departed_at is null)
-      where m.user_id is null
-      ```
+      When a team is deleted, there is no later membership snapshot for that
+      team. The model therefore emits no `depart` events for members still in
+      the last snapshot, and their membership intervals remain open.
     constraints:
       - type: primary_key
         columns: [team_id, user_id, approximate_event_timestamp]
