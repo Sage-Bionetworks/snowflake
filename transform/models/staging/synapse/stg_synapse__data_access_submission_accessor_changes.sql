@@ -8,7 +8,7 @@ staging as (
     select
         submission_id as data_access_submission_id,
         accessor_id as principal_id,
-        access_type
+        access_type as accessor_change_type
     from
         source
 )

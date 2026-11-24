@@ -1,5 +1,143 @@
 version: 2
 models:
+  - name: accessor_change_aggregate
+    description: >-
+      This table contains distinct-user statistics for approved access gains, renewals, revocations,
+      and derived expirations by access requirement. One row represents an access requirement and an
+      aggregation period, uniquely identified by agg_period, agg_year, agg_quarter, agg_month,
+      agg_day, and agg_access_requirement_id; agg_row_id is the surrogate primary key. Daily,
+      monthly, quarterly, yearly, and all-time periods combine all revisions of the same
+      requirement.
+
+      Any columns in this table which contain information about the aggregate itself, such as the
+      particular period, date, or the access requirement ID have their column name prefixed with
+      `agg_`. Columns which represent aggregate statistics, such as distinct users gaining,
+      renewing, losing, or reaching expiration of access, lack this prefix.
+
+      Gains, renewals, and revocations are dated by approval. Expirations are dated by the estimated
+      expiration of a gain or renewal and counted only before the start of the current date. A
+      subsequent approved gain, renewal, or revocation before or at expiration prevents that earlier
+      expiration from being counted; a change after expiration preserves it. Access granted again
+      after revocation can expire independently. Approved changes with an unknown reviewed
+      requirement revision are included, but unknown expiration timestamps produce no expiration
+      event.
+
+      Each metric counts a user once per period and requirement, regardless of repeated changes of
+      that type. Users can appear in multiple metrics in the same period, so the metrics are not
+      mutually exclusive and do not describe current access. Distinct-user counts cannot be summed
+      across periods or requirements to obtain an overall distinct-user total. Only
+      requirement-period combinations with an approval or qualifying expiration event have rows;
+      missing rows are not explicitly filled with zeros.
+
+      Period completeness means the calendar period has ended. Late-arriving records can change
+      metrics, including whether a previously counted expiration is superseded.
+    constraints:
+      - type: primary_key
+        columns: [agg_row_id]
+      - type: foreign_key
+        columns: [agg_access_requirement_id]
+        to: ref('stg_synapse__access_requirement')
+        to_columns: [access_requirement_id]
+        warn_unenforced: false
+    columns:
+      - name: agg_row_id
+        description: >-
+          PRIMARY KEY. The deterministic surrogate identifier of this aggregate row, hashing
+          agg_period, agg_year, agg_quarter, agg_month, agg_day, and agg_access_requirement_id.
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+          - type: unique
+        data_tests:
+          - not_null
+          - unique
+      - name: agg_period
+        description: >-
+          The time grain of this row. One of: 'ALL TIME', 'YEARLY', 'QUARTERLY', 'MONTHLY', 'DAILY'.
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['ALL TIME', 'YEARLY', 'QUARTERLY', 'MONTHLY', 'DAILY']
+      - name: agg_year
+        description: >-
+          Calendar year of the aggregation period. NULL for the 'ALL TIME' grain.
+        data_type: NUMBER
+      - name: agg_quarter
+        description: >-
+          Calendar quarter (1-4) of the aggregation period. NULL for the 'YEARLY' and 'ALL TIME'
+          grains.
+        data_type: NUMBER
+      - name: agg_month
+        description: >-
+          Calendar month (1-12) of the aggregation period. NULL for the 'QUARTERLY', 'YEARLY', and
+          'ALL TIME' grains.
+        data_type: NUMBER
+      - name: agg_day
+        description: >-
+          Calendar day of month of the aggregation period. NULL for every grain above 'DAILY'.
+        data_type: NUMBER
+      - name: agg_access_requirement_id
+        description: >-
+          The access requirement this row is scoped to.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: agg_period_start
+        description: >-
+          Inclusive start date of the aggregation period. NULL for the 'ALL TIME' grain, which has
+          no fixed start.
+        data_type: DATE
+      - name: agg_period_end
+        description: >-
+          Inclusive end date of the aggregation period. NULL for the 'ALL TIME' grain, which has no
+          fixed end.
+        data_type: DATE
+      - name: agg_period_is_complete
+        description: >-
+          If true, the calendar aggregation period has ended because CURRENT_DATE is past
+          agg_period_end. Always false for ALL TIME. This does not guarantee final metrics;
+          late-arriving records can change counts.
+        data_type: BOOLEAN
+        constraints:
+          - type: not_null
+      - name: gain_access_unique_user_count
+        description: >-
+          The number of distinct users with an approved GAIN_ACCESS change for this access
+          requirement during the period, dated by approval. Repeated gains for the same user count
+          once; zero when the row has no qualifying gains.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: renew_access_unique_user_count
+        description: >-
+          The number of distinct users with an approved RENEW_ACCESS change for this access
+          requirement during the period, dated by approval. Repeated renewals for the same user
+          count once; zero when the row has no qualifying renewals.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: revoke_access_unique_user_count
+        description: >-
+          The number of distinct users with an approved REVOKE_ACCESS change for this access
+          requirement during the period, dated by approval. Repeated revocations for the same user
+          count once; zero when the row has no qualifying revocations.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: expired_access_unique_user_count
+        description: >-
+          The number of distinct users with a qualifying estimated access expiration for this
+          requirement during the period. Expiration must be before CURRENT_DATE and follow an
+          approved gain or renewal without a subsequent approved gain, renewal, or revocation before
+          or at expiration. Changes after expiration preserve the earlier expiration. Repeated
+          qualifying expirations for the same user count once; zero when none qualify.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+
   - name: data_access_submission_aggregate
     description: >
       This table contains aggregate statistics over data access submissions associated with a given access requirement.

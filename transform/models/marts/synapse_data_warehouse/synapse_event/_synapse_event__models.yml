@@ -1,5 +1,83 @@
 version: 2
 models:
+  - name: accessor_change_event
+    description: >-
+      This table contains gains, renewals, and revocations of user access established by approved
+      data access submissions. One row represents an approved submission and accessor, uniquely
+      identified by data_access_submission_id and accessor_id. Changes are dated by approval and
+      remain in the history even if later changes supersede them; this table does not describe
+      current access. Submitted, Rejected, and Cancelled requests are excluded. Approved changes
+      remain included when historical requirement terms or expiration are unavailable.
+    constraints:
+      - type: primary_key
+        columns: [data_access_submission_id, accessor_id]
+      - type: foreign_key
+        columns: [data_access_submission_id, accessor_id]
+        to: ref('int_synapse_accessor_changes')
+        to_columns: [data_access_submission_id, accessor_id]
+        warn_unenforced: false
+      - type: foreign_key
+        columns: [access_requirement_id, access_requirement_version]
+        to: ref('int_synapse_access_requirement')
+        to_columns: [access_requirement_id, access_requirement_version]
+        warn_unenforced: false
+    columns:
+      - name: data_access_submission_id
+        description: >-
+          PRIMARY KEY (Composite). The unique identifier of the approved data access submission that
+          established this change.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: accessor_id
+        description: >-
+          PRIMARY KEY (Composite). The unique identifier of the Synapse user whose access changed.
+          The accessor need not be the user who submitted the request.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: accessor_change_type
+        description: >-
+          The access change established by approval. GAIN_ACCESS grants new access; RENEW_ACCESS
+          renews existing access; REVOKE_ACCESS removes access.
+        data_type: VARCHAR
+        constraints:
+          - type: not_null
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['GAIN_ACCESS', 'RENEW_ACCESS', 'REVOKE_ACCESS']
+      - name: access_requirement_id
+        description: >-
+          The unique identifier of the access requirement.
+        data_type: NUMBER
+        constraints:
+          - type: not_null
+      - name: access_requirement_version
+        description: >-
+          The access requirement revision selected for the submission review. Uses the latest
+          available revision modified at or before the approval timestamp, breaking
+          modification-time ties by the largest revision number. NULL when no eligible revision is
+          available. Join to int_synapse_access_requirement on access_requirement_id and
+          access_requirement_version to inspect the selected terms.
+        data_type: NUMBER
+      - name: change_established_on
+        description: >-
+          The UTC timestamp when the submission was approved and this access change was established.
+        data_type: TIMESTAMP_NTZ
+        constraints:
+          - type: not_null
+      - name: access_expires_on
+        description: >-
+          The estimated UTC expiration timestamp of gained or renewed access. Calculated as the
+          approval timestamp plus the positive expiration period of the requirement revision
+          selected at review time; Synapse calculates expiration before recording the approval
+          status timestamp, so this is an approximation. NULL for revocations, zero (unlimited),
+          missing, or negative expiration periods, or when no eligible requirement revision is
+          available. Later requirement revisions do not by themselves recalculate this expiration,
+          and later accessor changes can supersede the grant.
+        data_type: TIMESTAMP_NTZ
+
   - name: data_access_submission_event
     description: "This event table contains all data access submissions and their associated state. A data access submission is created each time a user makes a revision of their data access request."
     constraints:
@@ -85,22 +163,18 @@ models:
       guarantees about the true event time, given the type of event and when it was snapshotted.
       As such, this table is not suitable for permission auditing, although it may still
       be useful for approximating team membership at an arbitrary time.
-      
-      The type of event is specified by a records `event_type`. Event times are approximated
+
+      The type of event is specified by each record's `event_type`. Event times are approximated
       by the `approximate_event_timestamp` field according to the following rules:
-      
+
       * `join` snapshot timestamps are the most nuanced, but also generally the closest
       to the actual event time. In the majority of cases, the `approximate_event_timestamp` of a
       join event is practically equivalent to the true event timestamp. In more complicated
       cases, where a team was snapshotted repeatedly within overlapping 60-second windows,
       the `approximate_event_timestamp` of an event may be earlier than the true event timestamp.
-      The worst case we saw in historical data spanning from 2021 to late 2026 is a potential 
-      backdate of 7 minutes and 50 seconds of a join event. As a rule-of-thumb, you can 
-      treat the `approximate_event_timestamp` to be a lower bound on the true
-      join event timestamp -- but it's important to note that we aren't able to make
-      strict guarantees. A join event may be backdated arbitrarily far in the
-      past in exceptional circumstances, particularly if many users are joining a team
-      in overlapping 60-second time windows.
+      The largest potential backdate observed in data from 2022 to late 2026 was
+      7 minutes and 50 seconds. Joins are usually recorded at or shortly after the
+      true join time, but chained captures can move the timestamp earlier.
       * `update` snapshot timestamps are an upper bound on the true event timestamp,
       usually up to 7 days, but potentially up to a month or more in exceptional circumstances.
       * `depart` snapshot timestamps provide the same guarantees as `update` timestamps.
@@ -110,15 +184,48 @@ models:
       In rare circumstances where an `update` or `depart` event happened within a 60-second
       window of a join event, it may be backdated according to the same behavior as the
       `join` event. Again -- do not use this table for auditing! If your analysis is too
-      sensitive for the margins of error desribed above, we strongly discourage the use of
+      sensitive to the margins of error described above, we strongly discourage the use of
       this table.
 
-      Additionally, we only have snapshots back to 2022-01-05. Users which were already
-      members of a team at this point in time have a `join` event record on this date,
-      although the true join date may be much further in the past.
+      Snapshots begin on 2022-01-05. Members already present in a team's earliest
+      capture receive a `join` at that capture, which may be later than their true join.
+
+      Thousands of team memberships first report `is_admin = true` during
+      2023-11-14 through 2023-11-17. Treat manager-status updates around that
+      discontinuity as potentially reflecting a change in the source data.
+
+      To exclude downloads made while a user was on the Sage team (273957),
+      build half-open membership intervals from joins and departures. Filter out
+      updates before computing `lead` so manager changes do not end an interval.
+
+      ```sql
+      with sage_memberships as (
+          select
+              user_id,
+              approximate_event_timestamp as joined_at,
+              lead(approximate_event_timestamp) over (
+                  partition by team_id, user_id order by approximate_event_timestamp
+              ) as departed_at
+          from synapse_data_warehouse.synapse_event.teammember_event
+          where team_id = 273957 and event_type in ('join', 'depart')
+          qualify event_type = 'join'
+      )
+      select d.*
+      from synapse_data_warehouse.synapse_event.objectdownload_event as d
+      left join sage_memberships as m
+          on d.user_id = m.user_id
+          and d.timestamp >= m.joined_at
+          and (d.timestamp < m.departed_at or m.departed_at is null)
+      where m.user_id is null
+      ```
     constraints:
       - type: primary_key
         columns: [team_id, user_id, approximate_event_timestamp]
+      - type: foreign_key
+        columns: [team_id, user_id, approximate_event_timestamp]
+        to: ref('int_synapse_teammember_event')
+        to_columns: [team_id, user_id, approximate_event_timestamp]
+        warn_unenforced: false
     columns:
       - name: team_id
         data_type: NUMBER
@@ -139,7 +246,8 @@ models:
       - name: approximate_event_timestamp
         data_type: TIMESTAMP_NTZ
         description: |
-          UTC time of the earliest member row in the reconstructed team capture group; an observation time rather than an exact change time.
+          UTC start of the reconstructed team capture group that first showed the transition.
+          For a depart event, this is the start of the first subsequent group without the user.
         constraints:
           - type: not_null
         data_tests:
@@ -147,7 +255,9 @@ models:
       - name: event_type
         data_type: VARCHAR
         description: |
-          Observed transition: join when newly present, update when a continuing member changes manager status, or depart when absent from the next reconstructed team capture.
+          Observed transition: join when newly present, update when a continuing member's recorded
+          manager status changes (including to or from null), or depart when absent from the next
+          reconstructed team capture.
         data_tests:
           - not_null
           - accepted_values:
