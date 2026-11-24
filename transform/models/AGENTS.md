@@ -59,4 +59,4 @@ Adding a column to model SQL without updating the YAML will cause a contract vio
 
 **Docs persistence:** `+persist_docs: {relation: true, columns: true}` is set at root. Every model and column must have a `description` in its YAML file.
 
-**Source YAML:** `staging/synapse/_synapse__sources.yml` defines Synapse sources. Use `SYNAPSE_RAW` snapshots for history unavailable in RDS. Declare new tables under the appropriate source before referencing them with `{{ source() }}`.
+**Source YAML:** `staging/synapse/_synapse__sources.yml` defines Synapse sources. Declare new tables under the appropriate source before referencing them with `{{ source() }}`.
