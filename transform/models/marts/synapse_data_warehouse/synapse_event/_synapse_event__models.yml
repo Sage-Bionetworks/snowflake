@@ -159,3 +159,104 @@ models:
         data_type: BINARY
         constraints:
           - type: not_null
+
+  - name: teammember_event
+    description: |
+      Membership history for every Synapse team.
+      Each row represents a join, team manager promotion or demotion, or departure event.
+      The key is (team_id, user_id, approximate_event_timestamp).
+
+      Because of the way in which this data was captured via "snapshots", we do not have exact
+      timestamps for membership events, although we can make certain
+      guarantees about the true event time, given the type of event and when it was snapshotted.
+      As such, this table is not suitable for permission auditing, although it may still
+      be useful for approximating team membership at an arbitrary time.
+
+      The type of event is specified by each record's `event_type`. Event times are approximated
+      by the `approximate_event_timestamp` field according to the following rules:
+
+      * `join` snapshot timestamps are the most nuanced, but also generally the closest
+      to the actual event time. In the majority of cases, the `approximate_event_timestamp` of a
+      join event is practically equivalent to the true event timestamp. In more complicated
+      cases, where a team was snapshotted repeatedly within overlapping 60-second windows,
+      the `approximate_event_timestamp` of an event may be earlier than the true event timestamp.
+      The largest potential backdate observed in data from 2022 to late 2026 was
+      7 minutes and 50 seconds. Joins are usually recorded at or shortly after the
+      true join time, but chained captures can move the timestamp earlier.
+      * `update` snapshot timestamps are an upper bound on the true event timestamp,
+      usually up to 7 days, but potentially up to a month or more in exceptional circumstances.
+      * `depart` snapshot timestamps provide the same guarantees as `update` timestamps.
+      They are an upper bound on the true event timestamp, usually up to 7 days, but
+      potentially up to a month or more in exceptional circumstances.
+
+      In rare circumstances where an `update` or `depart` event happened within a 60-second
+      window of a join event, it may be backdated according to the same behavior as the
+      `join` event. Again -- do not use this table for auditing! If your analysis is too
+      sensitive to the margins of error described above, we strongly discourage the use of
+      this table.
+
+      Snapshots begin on 2022-01-05. Members already present in a team's earliest
+      capture receive a `join` at that capture, which may be later than their true join.
+
+      Thousands of team memberships first report `is_admin = true` during
+      2023-11-14 through 2023-11-17. Treat manager-status updates around that
+      discontinuity as potentially reflecting a change in the source data.
+
+      To estimate membership at a given time, build a separate interval for each
+      `join` within each `(team_id, user_id)` pair. Use only `join` and `depart`
+      events to compute interval boundaries. Include the join timestamp and
+      exclude the departure timestamp. An interval without a recorded departure
+      has no observed end.
+
+      When a team is deleted, there is no later membership snapshot for that
+      team. The model therefore emits no `depart` events for members still in
+      the last snapshot, and their membership intervals remain open.
+    constraints:
+      - type: primary_key
+        columns: [team_id, user_id, approximate_event_timestamp]
+      - type: foreign_key
+        columns: [team_id, user_id, approximate_event_timestamp]
+        to: ref('int_synapse_teammember_event')
+        to_columns: [team_id, user_id, approximate_event_timestamp]
+        warn_unenforced: false
+    columns:
+      - name: team_id
+        data_type: NUMBER
+        description: |
+          Synapse team identifier.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: user_id
+        data_type: NUMBER
+        description: |
+          Synapse user identifier for the team member.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: approximate_event_timestamp
+        data_type: TIMESTAMP_NTZ
+        description: |
+          UTC start of the reconstructed team capture group that first showed the transition.
+          For a depart event, this is the start of the first subsequent group without the user.
+        constraints:
+          - type: not_null
+        data_tests:
+          - not_null
+      - name: event_type
+        data_type: VARCHAR
+        description: |
+          Observed transition: join when newly present, update when a continuing member's recorded
+          manager status changes (including to or from null), or depart when absent from the next
+          reconstructed team capture.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['join', 'update', 'depart']
+      - name: is_admin
+        data_type: BOOLEAN
+        description: |
+          Manager status after a join or update; null for a depart event. A null source value remains unknown.

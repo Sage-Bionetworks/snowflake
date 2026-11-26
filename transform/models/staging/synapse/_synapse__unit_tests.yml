@@ -146,3 +146,35 @@ unit_tests:
         null as form_template_id,
         null as form_template_version,
         array_construct() as subject_ids
+
+  - name: teammember_duplicate_capture_rows
+    description: Keeps the newest change for each team, member, and exact capture timestamp.
+    model: stg_synapse__teammembersnapshots
+    given:
+      - input: source('synapse_raw', 'teammembersnapshots')
+        rows:
+          - team_id: 1
+            member_id: 10
+            is_admin: true
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 01:00:00'
+          - team_id: 1
+            member_id: 10
+            is_admin: false
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 02:00:00'
+          - team_id: 1
+            member_id: 10
+            is_admin: false
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            change_timestamp: '2022-01-05 02:00:00'
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          snapshot_date: '2022-01-05'
+          snapshot_timestamp: '2022-01-05 00:00:00.000'
+          is_admin: false

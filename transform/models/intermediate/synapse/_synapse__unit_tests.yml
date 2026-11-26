@@ -170,3 +170,283 @@ unit_tests:
         - {access_requirement_id: 105, access_requirement_version: 0, expiration_period: null, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: null, access_requirement_name: null, access_requirement_type: null, access_requirement_access_type: null, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null, description: null, etag: null, url: null, terms_of_use: null, duc_template_file_handle_id: null, e_duc_template_id: null, jira_key: null, act_contact_info: null, open_jira_issue: null, subjects_defined_by_annotations: null, form_template_id: null, form_template_version: null}
         - {access_requirement_id: 102, access_requirement_version: 0, expiration_period: 0, created_by: 10, created_on: '2026-01-01 12:00:00', is_two_fa_required: false, access_requirement_name: Requirement 102, access_requirement_type: ManagedACTAccessRequirement, access_requirement_access_type: DOWNLOAD, is_certified_user_required: false, is_validated_profile_required: true, is_duc_required: false, is_irb_approval_required: true, are_other_attachments_required: false, is_idu_required: true, is_idu_public: false, description: null, etag: null, url: null, terms_of_use: null, duc_template_file_handle_id: null, e_duc_template_id: null, jira_key: null, act_contact_info: null, open_jira_issue: null, subjects_defined_by_annotations: null, form_template_id: null, form_template_version: null}
         - {access_requirement_id: 103, access_requirement_version: 1, expiration_period: 3600000, created_by: 14, created_on: '2025-12-01 12:00:00', is_two_fa_required: null, access_requirement_name: Requirement 103, access_requirement_type: ManagedACTAccessRequirement, access_requirement_access_type: DOWNLOAD, is_certified_user_required: null, is_validated_profile_required: null, is_duc_required: null, is_irb_approval_required: null, are_other_attachments_required: null, is_idu_required: null, is_idu_public: null, description: null, etag: null, url: null, terms_of_use: null, duc_template_file_handle_id: null, e_duc_template_id: null, jira_key: null, act_contact_info: null, open_jira_issue: null, subjects_defined_by_annotations: null, form_template_id: null, form_template_version: null}
+
+  - name: teammember_membership_transitions
+    description: Detects joins, manager-status changes, departures and rejoins across consecutive captures while omitting unchanged memberships.
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-01-05'
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-05'
+            snapshot_timestamp: '2022-01-05 00:00:00.001'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-01-12'
+            snapshot_timestamp: '2022-01-12 00:00:00.000'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-12'
+            snapshot_timestamp: '2022-01-12 00:00:00.001'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-01-19'
+            snapshot_timestamp: '2022-01-19 00:00:00.000'
+            is_admin: true
+          - team_id: 1
+            user_id: 10
+            snapshot_date: '2022-02-16'
+            snapshot_timestamp: '2022-02-16 00:00:00.000'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_date: '2022-02-16'
+            snapshot_timestamp: '2022-02-16 00:00:00.001'
+            is_admin: false
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-06'
+            snapshot_timestamp: '2022-01-06 00:00:00.000'
+            is_admin: null
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-13'
+            snapshot_timestamp: '2022-01-13 00:00:00.000'
+            is_admin: false
+          - team_id: 2
+            user_id: 10
+            snapshot_date: '2022-01-20'
+            snapshot_timestamp: '2022-01-20 00:00:00.000'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-01-12 00:00:00.000'
+          event_type: update
+          is_admin: true
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-19 00:00:00.000'
+          event_type: depart
+          is_admin: null
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-02-16 00:00:00.000'
+          event_type: join
+          is_admin: true
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-02-16 00:00:00.000'
+          event_type: update
+          is_admin: false
+        - team_id: 2
+          user_id: 10
+          approximate_event_timestamp: '2022-01-06 00:00:00.000'
+          event_type: join
+          is_admin: null
+        - team_id: 2
+          user_id: 10
+          approximate_event_timestamp: '2022-01-13 00:00:00.000'
+          event_type: update
+          is_admin: false
+
+  - name: teammember_empty_history
+    description: Emits no events when the source contains no captured memberships.
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows: []
+    expect:
+      rows: []
+
+  - name: teammember_clock_boundaries_and_same_day_transitions
+    description: Groups adjacent rows across midnight and keeps distinct captures on the same day separate.
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 23:59:59.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 00:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-06 09:00:00.000'
+            snapshot_date: '2022-01-06'
+            is_admin: true
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 09:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-06 09:00:00.002'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-06 15:00:00.000'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-06 15:00:00.001'
+            snapshot_date: '2022-01-06'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 23:59:59.999'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-01-05 23:59:59.999'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-06 09:00:00.000'
+          event_type: update
+          is_admin: true
+        - team_id: 1
+          user_id: 30
+          approximate_event_timestamp: '2022-01-06 09:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-06 15:00:00.000'
+          event_type: depart
+          is_admin: null
+
+  - name: teammember_chained_gaps_and_exact_sixty_second_boundary
+    description: Combines chained gaps under 60 seconds and starts a new capture at an exact 60-second gap.
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 20
+            snapshot_timestamp: '2022-01-05 00:00:40.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-05 00:01:20.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 40
+            snapshot_timestamp: '2022-01-05 00:02:19.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 30
+            snapshot_timestamp: '2022-01-05 00:03:19.999'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 40
+            snapshot_timestamp: '2022-01-05 00:03:20.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 30
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 40
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: false
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 00:03:19.999'
+          event_type: depart
+          is_admin: null
+        - team_id: 1
+          user_id: 20
+          approximate_event_timestamp: '2022-01-05 00:03:19.999'
+          event_type: depart
+          is_admin: null
+
+  - name: teammember_latest_manager_status_in_group
+    description: Uses the latest recorded manager status for a member within each capture group.
+    model: int_synapse_teammember_event
+    given:
+      - input: ref('stg_synapse__teammembersnapshots')
+        rows:
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:00:00.600'
+            snapshot_date: '2022-01-05'
+            is_admin: true
+          - team_id: 1
+            user_id: 10
+            snapshot_timestamp: '2022-01-05 00:02:00.000'
+            snapshot_date: '2022-01-05'
+            is_admin: false
+    expect:
+      rows:
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 00:00:00.000'
+          event_type: join
+          is_admin: true
+        - team_id: 1
+          user_id: 10
+          approximate_event_timestamp: '2022-01-05 00:02:00.000'
+          event_type: update
+          is_admin: false

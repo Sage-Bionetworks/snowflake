@@ -2,7 +2,7 @@
 
 ## Project
 
-dbt project that transforms raw Synapse RDS snapshot data into analyst-ready models deployed as Snowflake dynamic tables. Profile name: `transform`. Sources are declared against `SYNAPSE_DATA_WAREHOUSE.RDS_RAW`, but that promotion layer is still being built out (see `synapse_data_warehouse/AGENTS.md`'s schema table) — check whether a given source table is actually populated there before assuming a source is usable; the underlying data may currently exist only in `RDS_LANDING`.
+dbt project that transforms Synapse data in source tables into materialized, analyst-ready models. Most source tables are in `RDS_RAW`, although models may source their data from `SYNAPSE_RAW` when it provides fields or history which are unavailable in the RDS data. In other cases, we use `SYNAPSE_EVENT` tables as sources, although we give preference to sourcing data from `SYNAPSE_RAW` when the data is not yet available in `SYNAPSE_EVENT`.
 
 ## Stack
 
